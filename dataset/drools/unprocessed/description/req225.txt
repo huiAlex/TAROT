@@ -1,0 +1,25 @@
+Here s what I d like to be able to do:
+rule  serviceConflict
+when
+$leftProcessAssignment : MrProcessAssignment($service : service, $machine : machine, $leftId : id)
+$rightProcessAssignment : MrProcessAssignment(service == $service, machine == $machine, id &gt; $leftId)
+then
+scoreCalculator.addToHardScore(1); // No insertLogical or accumulate of those ConstraintOccurence s needed
+undo-then
+scoreCalculator.substractFromHardScore(1);
+end
+And here s a more complex example where the weight isn t a static  1 :
+rule  serviceLocationSpread
+when
+$service : MrService($locationSpread : locationSpread)
+$spreadCount : Number(intValue &lt; $locationSpread) from accumulate(
+$location : MrLocation()
+and exists MrProcessAssignment(service == $service, location == $location),
+count($location)
+)
+then
+scoreCalculator.addToHardScore($locationSpread - $spreadCount.intValue());
+undo-then
+scoreCalculator.substractFromHardScore($locationSpread - $spreadCount.intValue());
+// $spreadCount should still be the same as it used to be
+end

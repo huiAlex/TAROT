@@ -1,0 +1,12 @@
+The logic for determining the location of the hot deployable directory for Java classes currently relies on the location and name of the jboss-seam-debug jar file.  While this may work when the jar file is placed in WEB-INF/lib, relative to the WEB-INF/dev directory, and named jboss-seam-debug.jar, it breaks down when it is loaded by the application server by a different means or has a different name.
+For instance, when running a Seam application using Jetty from within Maven 2, the location of the jar file is in the local repository.
+What I find particularly scary is the hard-coded string offsets:
+String hotDeployDirectory = path.substring( 9, path.length()-46 ) +  dev ;
+To get a better understanding of the problem, I added some logging messages to capture the path resolver logic when jetty builds its classpath from the maven repository.
+META-INF/debug.xhtml detected at jar:
+Hot deploy directory is /home/dallen/.m2/repository-public/jboss/seam/jboss-seam-debug/1.2.1.GA/jbossdev
+If I place the jboss-seam-debug-1.2.1.ga.jar file in the src/main/webapp/WEB-INF/lib directory, then things get a little bit better, but still not quite right.
+META-INF/debug.xhtml detected at jar:
+Hot deploy directory is /home/dallen/projects/connoisseur/src/main/webapp/WEB-INF/lib/jbossdev
+What I propose is for the WEB-INF/dev directory to be loaded using the servlet context.  That way, it will always be the directory that is most likely located in the project of the developer.  Since this feature is intended strictly for development, this seams to make the most sense.
+I will provided a patch for both Seam 1.2.1.ga and the trunk. .

@@ -1,0 +1,15 @@
+When a component template class is being configured (such as EntityHome, EntityQuery, etc), the class attribute should be considered prior to deriving the class name from the namespace info + XML element name. By first consulting the class attribute, it can prevent the case where two components are being configured for the same name when the developer intends only to use the XML declaration for component configuration.
+Case in point:
+Let s say I create a class that extends EntityHome to provide some extra behavior.
+@Name( myEntityHome )
+public class MyEntityHome extends EntityHome {
+}
+Now I want to configure the properties of this class in components.xml
+&lt;framework:entity-home name= myEntityHome  class= org.example.model.MyEntityHome &gt;
+&lt;framework:created-message&gt;You created it! Yeah!&lt;/framework:created-message&gt;
+&lt;framework:updated-message&gt;You updated it! Yeah!&lt;/framework:updated-message&gt;
+&lt;framework:deleted-message&gt;You deleted it! Yeah!&lt;/framework:deleted-message&gt;
+&lt;/framework:entity-home&gt;
+If the class attribute is not consulted, it will look for a @Name annotation on org.jboss.seam.framework.EntityHome rather than org.example.model.MyEntityHome. When it doesn t find one on the built-in class, it tries to create a new component definition.
+Why would I want to use XML namespace tags in this case? Simple. Tag completion and property recognition support.
+Note that this works if the class resolved from XML namespace + element name is the same as the component class. In the case when the component class extends the built-in class, you get this problem. .

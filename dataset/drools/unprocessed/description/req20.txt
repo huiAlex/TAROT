@@ -1,0 +1,47 @@
+This comes under the heading of  I knew it would happen one day and I warned people about it but they didn t listen and Michael is always right in the long run, except when he predicted that the graphical web browser would NOT take off back in 1993 and was catastrophically wrong.
+Someone was having issues with concurrency (5 concurrent threads, but heavy load) and creating a newWorkingMemory - there are hangs/lock issues with the weak hashmap that points from the Single rule base to the spawned working memories. This is not surprising, blah blah blah....
+Anyway, one possible solution is to have a call where users who  want  to update an existing long lived working memory changes, pass in the WM to the rulebase, with say  refresh rules  - ie the methods like removeRule() on a rule base, require a working memory to be passed in.
+We can still keep the old WeakHashMap, just make it non default behaviour (it cannot scale the way it is now - with the default behaviour in my opinion).
+STACK trace follows:
+I m using Java 1.5_09 on Linux. The app uses 5 simultaneous threads at
+the moment. They never share WorkingMemory instances but do share the
+same RuleBase.
+A thread dump (see below) shows all threads being stuck in
+java.util.WeakHashMap, which is called from
+AbstractRuleBase.addWorkingMemory.
+Has anyone seen this before? I attempted to synchronize the method
+that s the entry point to newWorkingMemory(). That definitely made the
+problem happen less often but didn t solve it completely. Anyone knows
+any other workarounds?
+Thanks,
+Per
+CW4  prio=1 tid=0x1a4fd7a8 nid=0xc44 runnable  &#91;0x1a2fe000..0x1a2fefb0&#93;
+at
+java.util.WeakHashMap.expungeStaleEntries(WeakHashMap.java:289)
+Source)
+Source)
+Source)
+CW3  prio=1 tid=0x1a4fd5f0 nid=0xc43 runnable  &#91;0x1a6fe000..0x1a6fee30&#93;
+Source)
+Source)
+Source)
+CW2  prio=1 tid=0x1a4fd100 nid=0xc42 runnable  &#91;0x1a8e5000..0x1a8e5eb0&#93;
+at
+java.util.WeakHashMap.expungeStaleEntries(WeakHashMap.java:289)
+Source)
+Source)
+Source)
+CW1  prio=1 tid=0x19afca78 nid=0xc41 runnable  &#91;0x1a966000..0x1a967130&#93;
+at
+java.util.WeakHashMap.expungeStaleEntries(WeakHashMap.java:289)
+Source)
+Source)
+Source)
+at
+CW0  prio=1 tid=0x19afc7d8 nid=0xc40 runnable  &#91;0x1aafe000..0x1aaff1b0&#93;
+at
+java.util.WeakHashMap.expungeStaleEntries(WeakHashMap.java:289)
+Source)
+Source)
+Source)
+at

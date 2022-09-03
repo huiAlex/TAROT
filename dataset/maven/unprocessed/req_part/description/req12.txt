@@ -1,0 +1,26 @@
+Add a commandline option to enable maven to expand the reactor scope to find projects that are dependencies
+of the projects currently in the reactor, and add them.
+Currently only the current project and child projects are included in the reactor search. I m proposing
+to add a commandline switch that lets maven check parent directories to find the root of the project tree,
+and then do a normal reactor scan, only adding projects that would normally not be added if they re needed
+as dependencies of the projects that would normally be built.
+Here s a sample project tree:
+root
+p1
+c1 (depends on p2)
+p2 (depends on c2)
+p3
+c2
+And a sample algorithm:
+When building c1, the reactor would contain  &#91;c1&#93; .
+Maven would check p1, then root, etc, using the &lt;parent&gt; tags (without the versions!)
+to see if the project is still in the current reactor.
+It would then create a second list of projects (reactor2) containing ALL projects, using the newly discovered root:  &#91;root, p1, c2, p2&#93; .
+remove all projects from reactor2 contained in reactor: reactor2 =  &#91;root, p1, p2&#93;
+resolve all direct dependencies for all projects in reactor in reactor2 and add them to reactor, taking versions into account: reactor =  &#91;p2, c1&#93;
+repeat previous step until all projects have their dependencies resolved from reactor 2. first iteration would yield reactor =  &#91;c2, p2, c1&#93; ,
+next iteration would stop since c1 doesn t have any dependencies present in reactor2.
+This would ensure that when some local project s sources have changed, they ll be incorporated
+in the build, regardless of where you build. So you don t have to do a reactor build each time you change more
+than 1 project, and you don t have to remember which projects you changed and build them in the correct order
+yourself, manually.

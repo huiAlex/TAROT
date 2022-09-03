@@ -1,0 +1,15 @@
+When cache shuts down the transaction table recalculates its minViewId value based on the new topology. When the whole cluster shuts down though, the thread that recalculates might throw an exception (expected) because it s internal components (RPC in this example) are not responding anymore. This causes a lot of log noise in the logs, which should be removed:
+2011-11-16 17:08:29,045 WARN   &#91;jta&#93;  (Transaction Reaper Worker 0) ARJUNA16045: attempted rollback of &lt; formatId=131076, gtrid_length=29, bqual_length=28, tx_uid=0:ffffac11fa3e:c0a2:4ec3df75:a055, node_name=1, branch_uid=0:ffffac11fa3e:c0a2:4ec3df75:a056, eis_name=unknown eis name &gt; (TransactionXaAdapter{localTransaction=LocalXaTransaction
+{xid=&lt; formatId=131076, gtrid_length=29, bqual_length=28, tx_uid=0:ffffac11fa3e:c0a2:4ec3df75:a055, node_name=1, branch_uid=0:ffffac11fa3e:c0a2:4ec3df75:a056, eis_name=unknown eis name &gt;}
+LocalTransaction
+{remoteLockedNodes=, isMarkedForRollback=true, transaction=TransactionImple &lt; ac, BasicAction: 0:ffffac11fa3e:c0a2:4ec3df75:a055 status: ActionStatus.ABORTING &gt;, lockedKeys=null, backupKeyLocks=null, viewId=1}
+org.infinispan.transaction.xa.LocalXaTransaction@2947}) failed with exception code -
+org.infinispan.CacheException: The cache has been stopped and invocations are not allowed!
+at com.arjuna.ats.internal.jta.resources.arjunacore.XAResourceRecord.topLevelAbort(XAResourceRecord.java:337)
+at com.arjuna.ats.arjuna.coordinator.BasicAction.doAbort(BasicAction.java:2869)
+at com.arjuna.ats.arjuna.coordinator.BasicAction.doAbort(BasicAction.java:2848)
+at com.arjuna.ats.arjuna.coordinator.BasicAction.Abort(BasicAction.java:1613)
+at com.arjuna.ats.arjuna.coordinator.TwoPhaseCoordinator.cancel(TwoPhaseCoordinator.java:119)
+at com.arjuna.ats.arjuna.AtomicAction.cancel(AtomicAction.java:212)
+at com.arjuna.ats.arjuna.coordinator.TransactionReaper.doCancellations(TransactionReaper.java:367)
+at com.arjuna.ats.internal.arjuna.coordinator.ReaperWorkerThread.run(ReaperWorkerThread.java:79)

@@ -1,0 +1,19 @@
+The HotRod client should support a separate CH for each cache
+With asymmetric clusters, each cache can have its own consistent hash, so the primary owner of a key in one cache is not necessarily the owner in all the caches. Even with a symmetric cluster, the same client may be used to access both distributed and replicated caches, and those would certainly have a different CH.
+In order to send the operations to the correct owner, the HotRod client should use a different CH for each cache.   
+Revisit cache name predefinition limitation for cache servers
+There re are two primary reasons why Infinispan servers require predefined caches to be started up on startup, and do not allow invocations to undefined caches:
+1. Concurrent cache startups were resulting in NPEs ( ) - This is already solved since the 4.2.x days.
+2. Infinispan has issues dealing with asymmetric clusters ( ).
+Once these two issues have been resolved, revisit the limitation. 
+Add support for the segment-based CH in the HotRod protocol 
+The server CH changed in version 5.2 from virtual-nodes-based to segment-based, but the client CH stayed the same. The server is able to translate the server CH into a client CH, but the translation is imperfect:
+1. Sometimes the client CH computes a different primary owner than the server CH.
+2. The client CH gets slower as the number of segments increases, the server CH performance stays the same.   
+Make SyncConsistentHashFactory the default CH factory
+With   fixed, SyncConsistentHashFactory should be good enough to be the default. It still allows for more variation in the number of owned segments per node (+/-10% owned segments and +/-20% for primary-owned segments), but that should be acceptable for most purposes.
+The major advantage of SCHF is that it depends only on the cache members and not on the order they joined. Users expect a key to map to the same node in all caches (as long as the caches have the same members).
+One downside of SCHF, especially for testing, is that the segment ownership differs between test runs (being based on the random address assigned to each node). However, most tests that depend on key ownership should use  ControlledConsistentHashFactory  anyway.
+We also need to verify that the number of segments moved by SCHF is comparable to the number of segments moved by DefaultConsistentHashFactory ( ). 
+Index Affinity support
+  As described in

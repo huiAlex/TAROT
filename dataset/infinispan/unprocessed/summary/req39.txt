@@ -1,0 +1,27 @@
+Infinispan inside OSGI
+We need to import infinispan inside a OSGI repository. Tests are made with Felix.
+I added the configuration to use infinispan inside a osgi repository. We need to ignore all listed dependencies. With this configuration we can install infinispan-core.jar inside OSGI. Its achievement will be as a base installation here:
+I added the Import-Package because you are forced to put manually in Felix all dependencies as jgroups, jboss marshalling, jcip, all apache commons. I ve seen infinispan core working by default without all those libraries, so I think the same achievement should be replicated in OSGI.
+Inside the Import-Package tag I excluded those libraries so Infinispan core can be started in default mode without errors. If we want use the replication in OSGI, it is enough add manually the other packages (jgroups.jar etc etc)
+Actually the core bundle can be installed. But to be used it needs theese projects be installed as osgi bundles:
+jboss transaction api 1.0.1.GA
+We patched it. There is a new OSGI version here:   )
+jgroups 2.10.1.GA
+(it s a osgi bundle since the 3.x version)
+river 1.2.3.GA
+(opened an issue for marshalling 1.4.0 in   and   )
+marshalling-api 1.2.3.GA
+(opened an issue for marshalling 1.4.0 in   and   )
+jboss logging spi 2.0.5.GA
+(added a jira issue in   . It could be fixed in the 2.2.0.CR2 version. Fixed in the 3.x version)
+rhq plugin annotations 1.4.0.B01
+(opened a feature request in   )
+i18nlog 1.0.9
+(sent a patch in   . It could become a OSGI bundle in the 1.0.10 version. Waiting for a response. Fixed in 1.15)
+log4j 1.2.16
+(that s ok...it is a osgi bundle  )
+jcip-annotations 1.0
+(I sent a patch via email to brian@briangoetz.com and a post in  . Sent the patch in concurrency-interest@cs.oswego.edu too. They responded to me. There is a OSGI version with a different artifact name. I changed the dependency in the pom.xml of the parent project)
+We should make sure proper  Import-Package  property is specified in the MANIFEST.MF so that:
+1- it fails to load obviously when there s any missing bundles that are essential in using the very core functionality of Infinispan.
+2 - it does not fail due to the dependency that is not really essential.

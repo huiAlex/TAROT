@@ -1,0 +1,12 @@
+See  .
+Currently, most pluggable components can only be specified by a lookup class name.  While some accept a configurable Properties object (e.g. JGroupsChannelLookup), not all do (e.g. MBeanServerLookup).  Consequently, it is very awkward to implement a parameterized MBeanServerLookup implementation (e.g. to find the server using a jmx agent id, use an injected mbean server instance, etc.).
+I can think of 2 ways to improve this:
+1. Add the ability to specify properties objects for each pluggable component.  e.g. GlobalConfiguration.setMBeanServerProperties(...), MBeanServerLookup.getMBeanServer(Properties properties)
+2. Allow the user to define the instance directly.  e.g. GlobalConfiguration.setMBeanServerLookup(MBeanServerLookup lookup)
+Ideally, Infinispan could support both mechanisms. The 1st allows flexible declarative configuration.  The 2nd allows even more flexible programmatic configuration.
+Thinking this through a bit more - we can support both approaches using the following (using MBeanServerLookup as an example):
+Leave MBeanServerLookup interface as is
+Replace GlobalConfiguration.setMBeanServerLookup(String) with GlobalConfiguration.setMBeanServerLookup(MBeanServerLookup lookup)
+Create generic implementation of MBeanServerLookup that delegates to an instance constructed via class name and java bean properties
+If lookup class is specified in the xml, construct generic MBeanServerLookup object accordingly (using class name + properties)
+Just a thought.  Approach #1 is good enough.

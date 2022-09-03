@@ -1,0 +1,16 @@
+Currently the SQL length function materializes the entire lob into memory. In SQLBinary.getLength() we have
+public final int	getLength() throws StandardException
+{
+if (stream != null)
+{
+if (streamValueLength != -1)
+return streamValueLength;
+}
+return (getBytes() == null) ? 0 : getBytes().length;
+}
+Which actually is doubly bad because we call getBytes twice and materialize it twice.
+It would be good to read the length from the stream if available and otherwise stream the value to get the length, rather than materializing it into memory.
+To reproduce, run the attached repro.
+java -Xmx16M  LengthLargeLob
+It gives an out of memory exception
+Caused by: java.lang.OutOfMemoryError: Java heap space

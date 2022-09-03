@@ -1,0 +1,19 @@
+In the Component class, Interceptors are separated between client-side and server-side interceptors by mean of the @Interceptor s InterceptorType type property (see Component.addInterceptor(Interceptor)).
+The Interceptor s around and within properties allows to define the sort order (see also Component.newSort(List)).
+Problem:
+Since the client-side and server-side Interceptors are stored in two different lists, and since client-side interceptors are prioritary over server-side Interceptors, the programmer may write around/within clause that are ignored. For example, he may want to put a server-side Interceptor around a client-side Interceptor.
+In the current Component code, these cases are simply ignored.
+Solution:
+In case of bad server-side / client-side mix in the Interceptor annotation definition, the newSort(List) method should raise a warning.
+Proposition:
+insert after line 1020:
+if (interceptorAnn.type()==InterceptorType.SERVER   &amp;&amp;   cl.getAnnotation(Interceptor.class).type()==InterceptorType.CLIENT )
+log.warn( Interceptor   clazz.getName()  : a server-side Interceptor cannot be around the client-side Interceptor   cl.getName()   since client-side Interceptors are always prioritary );
+insert after line 1025:
+if (interceptorAnn.type()==InterceptorType.CLIENT   &amp;&amp;   cl.getAnnotation(Interceptor.class).type()==InterceptorType.SERVER)
+log.warn( Interceptor   clazz.getName()  : a client-side Interceptor cannot be within the server-side Interceptor   cl.getName()   since client-side Interceptors are always prioritary );
+Pros:
+programmer friendly
+Cons:
+sorting takes (a bit) more time
+.

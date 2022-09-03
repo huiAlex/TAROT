@@ -1,0 +1,74 @@
+Convert  org.apache.derbyTesting.functionTests.tests.lang.holdCursorIJ.sql  to junit.
+Convert  org.apache.derbyTesting.functionTests.tests.lang.holdCursorIJ.sql  to junit.
+Convert  org.apache.derbyTesting.functionTests.tests.store.holdCursorJDBC30.sql  to junit.
+Convert  org.apache.derbyTesting.functionTests.tests.store.holdCursorExternalSortJDBC30.sql  to junit.
+Convert derbynet/testProtocol.java to JUnit
+testProtocol.java executes DRDA commands from a file written in a special-purpose language. The statements are very much like assertions, so it should be fairly easy to convert the test to JUnit.
+Suggested approach: Change the interpreter (TestProto.java) so that is uses Assert.fail() instead of System.err.println() and System.exit(), and BaseTestCase.println() instead of System.out.println(). It should also use TestConfiguration to get the host name and port number.
+Convert derbynet/runtimeinfo to JUnit
+Convert derbynet/DerbyNetAutoStart to JUnit
+With derby client setTransactionIsolation executes and commits even if isolation has not changed
+With in EmbedConnection.setIsolation() we have a check to see if the isolation level is the same and if so just return without doing a commit:
+public void setTransactionIsolation(int level) throws SQLException {
+if (level == getTransactionIsolation())
+return;
+with org.apache.derby.client.am.Connection we have no such check. It would be good if the client driver acted like embedded.
+Finish client info api for JDBC4. Compliance task.
+The following java.sql.Connection methods need to be finished:
+getClientInfo()
+getClientInfo(java.lang.String)
+setClientInfo(java.lang.String,java.lang.String)
+Implement not implemented Embedded methods Blob.getBinaryStream(long pos, long length) and Clob.getCharacterStream(long pos, long length)
+The following methods were introduced in the java.sql.Clob and java.sql.Blob interface as part of JDBC 4.0 and need to be implemented.
+Clob
+------
+getCharacterStream(long pos, long length)
+Blob
+------
+getBinaryStream(long pos, long length)
+The implementation on the Network Client is already done as part of Derby-2444    
+Expose existing auto-generated key functionality through more JDBC APIs in Derby Client. 
+See   for details.  Desired functionality is the same as for  , except that this issue is specifically for Derby Client (  only addressed embedded mode).
+Detailed prompt for Error XCL16 is different between Client and Embed
+For the sql script below:
+create table t1(c11 int, c12 int);
+&#8211; insert data into tables
+insert into t1 values(1,1);
+insert into t1 values(2,2);
+&#8211; set autocommit off
+autocommit off;
+get with nohold cursor jdk1 as  SELECT * FROM t1 ;
+&#8211; do fetches from the cursor
+next jdk1;
+--commit
+commit;
+&#8211; now try the fetch on cursor again after commit
+&#8211; cursors jdk1 will give Error XCL16
+next jdk1;
+&#8211; clean up.
+close jdk1;
+for the line  next jdk1; , an Error XCL16 will be thrown. However, detailed prompt for Error XCL16 is different between Client and Embed.
+In client mode, we get  ERROR XCL16: ResultSet not open.  Verify that autocommit is OFF.
+While, in embed mode, we get  ERROR XCL16: ResultSet not open. Operation  next  not permitted. Verify that autocommit is OFF.
+Different behavior in Client and Embedded modes when update on an invalid cursor
+Consider the sql snippet below:
+create table test(c1 int, c2 int);
+insert into test values(1,1);
+update test set c1=2 where current of jdk4;
+for the  update  line, we get  ERROR XJ202: Invalid cursor name  JDK4 .   in Client mode, while  ERROR 42X30: Cursor  JDK4  not found. Verify that autocommit is OFF.  in Embed mode.
+Change sysinfo to print out more specific JVM information         
+It would be nice if sysinfo printed out more specific jvm information that is provided with java -version. At least with the IBM jvm the system  properties java.runtime.version and java.fullversion give some more (but not all) information.   More research is needed across multiple jvms to tie it down.  Alternatively sysinfo could dump  all  the system property information, but that could make the output pretty big and show irrelavant information in some contexts.      
+Behaviour of setTypeMap() differs between embedded and client
+On the embedded driver, Connection.setTypeMap() behaves like this (when the connection is not closed):
+if the map argument is null, throw an SQLException with SQLState XJ081
+if the map is not null and not empty, throw an SQLException with SQLState 0A000
+if the map is not null and empty, do nothing
+The behaviour on the client driver is this:
+always throw an SQLException with SQLState 0A000
+We should try to make the two drivers behave the same way when setTypeMap() is called. (This would also allow us to simplify some of the tests in J2EEDataSourceTest).   
+SQLBinary.writeBlob is inefficient, reading one byte at a time from the source BLOB
+SQLBinary.writeBlob is inefficient, since it is only reading one byte at the time from the source BLOB.
+It would be better if a transfer buffer was used to facilitate the write.   
+Release system resources in CanonTestCase thoroughly
+Now, in the method of compareCanon(String canon) in CanonTestcase, two BufferedReaders----cannonReader and testOutput are closed in try catch block, however if some exception occurs above, the two BufferReaders won t be closed, and related system resources won t be released.
+Besides, a releative problem is about the ByteArrayOutputStream rawBytes in CanonTestcase, it s created in getOutputStream() and closed in compareCanon(String canon). It s pointed out by Knut in Derby-2708, ByteArrayOutputStream s javadoc says that closing it has no effect, so tearDown() method has been added  to CanonTestCase and sets rawBytes to null. It certainly can work. However, is it also OK to null out rawBytes in compareCanon(String canon)? If so, it seems cleaner than to null it out in tearDown() method.
