@@ -29,6 +29,7 @@ public class IR {
         } catch (Exception e) {
             e.printStackTrace();
         }
+
         result.setModel(irModel.toString());
         return result;
     }
