@@ -18,7 +18,7 @@ public class IR {
                     textDataset.getTargetCollection());
             SimilarityMatrix matrix = algorithm.improve(similarityMatrix, textDataset);
             for (SingleLink link : matrix.allLinks()) {
-                if (matrix_improve.isLinkAboveThreshold(link.getSourceArtifactId(), link.getTargetArtifactId())) {
+                if (similarityMatrix.isLinkAboveThreshold(link.getSourceArtifactId(), link.getTargetArtifactId())) {
                     matrix_improve.addLink(link.getSourceArtifactId(), link.getTargetArtifactId(), link.getScore());
                 } else {
                     matrix_improve.addLink(link.getSourceArtifactId(), link.getTargetArtifactId(), 0.0);
