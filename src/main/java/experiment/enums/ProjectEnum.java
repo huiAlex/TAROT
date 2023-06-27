@@ -11,6 +11,7 @@ public enum ProjectEnum {
     DROOLS("experiment.project.Drools"),
     PIG("experiment.project.Pig"),
     DERBY("experiment.project.Derby"),
+    TEST("experiment.project.Test")
     ;
 
     String name;
@@ -43,6 +44,8 @@ public enum ProjectEnum {
                 return PIG;
             case "derby":
                 return DERBY;
+            case "test":
+                return TEST;
             default:
                 return null;
         }

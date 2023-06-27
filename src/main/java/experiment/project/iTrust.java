@@ -1,37 +1,10 @@
 package experiment.project;
 
-
 public class iTrust implements Project {
 
-    private static String projectName = "itrust";
-    private static String projectPath = "dataset/itrust/";
-
-    //    private static String rtmClassPath = projectPath + "rtm/RTM_CLASS.txt";
-//    private static String reqDirPath = projectPath + "req";
-//    private static String classDirPath = projectPath + "code";
-//
-//    private static String classNameDirPath = projectPath + "code_part/class_name";
-//    private static String methodNameDirPath = projectPath + "code_part/method_name";
-//    private static String commentDirPath = projectPath + "code_part/comment";
-//    private static String invokeMethodDirPath = projectPath + "code_part/invoke_method";
-//    private static String fieldNameDirPath = projectPath + "code_part/field/fieldName";
-//    private static String fieldTypeDirPath = projectPath + "code_part/field/fieldType";
-//    private static String paramNameDirPath = projectPath + "code_part/param/paramName";
-//    private static String paramTypeDirPath = projectPath + "code_part/param/paramType";
-//
-//
-//    private static String unProcessedUcTitleDirPath = projectPath + "/unprocessed/req_part/uc_title";
-//    private static String unProcessedUcPreconDirPath = projectPath + "/unprocessed/req_part/uc_precon";
-//    private static String unProcessedUcMainflowDirPath = projectPath + "/unprocessed/req_part/uc_mainflow";
-//    private static String unProcessedUcSubflowDirPath = projectPath + "/unprocessed/req_part/uc_subflow";
-//    private static String unProcessedUcAlterflowDirPath = projectPath + "/unprocessed/req_part/uc_alterflow";
-//
-//    private static String ucTitleBitermDirPath = projectPath + "/processed/req_biterm/uc_title";
-//    private static String ucPreconBitermDirPath = projectPath + "/processed/req_biterm/uc_precon";
-//    private static String ucMainflowBitermDirPath = projectPath + "/processed/req_biterm/uc_mainflow";
-//    private static String ucSubflowBitermDirPath = projectPath + "/processed/req_biterm/uc_subflow";
-//    private static String ucAlterflowBitermDirPath = projectPath + "/processed/req_biterm/uc_alterflow";
-    ProjectConfig config = new ProjectConfig(projectPath);
+    public static String projectName = "itrust";
+    public static String projectPath = "dataset/itrust";
+    ProjectConfig config = new ProjectConfig(projectName);
 
     @Override
     public String getRtmClassPath() {
@@ -60,67 +33,147 @@ public class iTrust implements Project {
 
     @Override
     public String getClsNameDirPath() {
-        return config.classNameDirPath;
+        return config.processedClassNameDirPath;
     }
 
     @Override
     public String getMethodNameDirPath() {
-        return config.methodNameDirPath;
+        return config.processedMethodNameDirPath;
     }
 
     @Override
     public String getCommentDirPath() {
-        return config.commentDirPath;
+        return config.processedCommentDirPath;
     }
 
     @Override
     public String getInvokeMethodDirPath() {
-        return config.invokeMethodDirPath;
+        return config.processedInvokeMethodDirPath;
     }
 
     @Override
     public String getFieldNameDirPath() {
-        return config.fieldNameDirPath;
+        return config.processedFieldNameDirPath;
     }
 
     @Override
     public String getFieldTypeDirPath() {
-        return config.fieldTypeDirPath;
+        return config.processedFieldTypeDirPath;
     }
 
     @Override
     public String getParamNameDirPath() {
-        return config.paramNameDirPath;
+        return config.processedParamNameDirPath;
     }
 
     @Override
     public String getParamTypeDirPath() {
-        return config.paramTypeDirPath;
+        return config.processedParamTypeDirPath;
     }
 
     @Override
-    public String getUnProcessedUcTitleDirPath() {
-        return config.unProcessedUcTitleDirPath;
+    public String getUnprocessedClsNameDirPath() {
+        return config.unprocessedClassNameDirPath;
     }
 
     @Override
-    public String getUnProcessedUcPreconDirPath() {
-        return config.unProcessedUcPreconDirPath;
+    public String getUnprocessedMethodNameDirPath() {
+        return config.unprocessedMethodNameDirPath;
     }
 
     @Override
-    public String getUnProcessedUcMainflowDirPath() {
-        return config.unProcessedUcMainflowDirPath;
+    public String getUnprocessedCommentDirPath() {
+        return config.unprocessedCommentDirPath;
     }
 
     @Override
-    public String getUnProcessedUcSubflowDirPath() {
-        return config.unProcessedUcSubflowDirPath;
+    public String getUnprocessedInvokeMethodDirPath() {
+        return config.unprocessedInvokeMethodDirPath;
     }
 
     @Override
-    public String getUnProcessedUcAlterflowDirPath() {
-        return config.unProcessedUcAlterflowDirPath;
+    public String getUnprocessedFieldNameDirPath() {
+        return config.unprocessedFieldNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedFieldTypeDirPath() {
+        return config.unprocessedFieldTypeDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamNameDirPath() {
+        return config.unprocessedParamNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamTypeDirPath() {
+        return config.unprocessedParamTypeDirPath;
+    }
+
+    @Override
+    public String getClsNameBitermDirPath() {
+        return config.classNameBitermDirPath;
+    }
+
+    @Override
+    public String getMethodNameBitermDirPath() {
+        return config.methodNameBitermDirPath;
+    }
+
+    @Override
+    public String getCommentBitermDirPath() {
+        return config.commentBitermDirPath;
+    }
+
+    @Override
+    public String getInvokeMethodBitermDirPath() {
+        return config.invokeMethodBitermDirPath;
+    }
+
+    @Override
+    public String getFieldNameBitermDirPath() {
+        return config.fieldNameBitermDirPath;
+    }
+
+    @Override
+    public String getFieldTypeBitermDirPath() {
+        return config.fieldTypeBitermDirPath;
+    }
+
+    @Override
+    public String getParamNameBitermDirPath() {
+        return config.paramNameBitermDirPath;
+    }
+
+    @Override
+    public String getParamTypeBitermDirPath() {
+        return config.paramTypeBitermDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcTitleDirPath() {
+        return config.unprocessedUcTitleDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcPreconDirPath() {
+        return config.unprocessedUcPreconDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcMainflowDirPath() {
+        return config.unprocessedUcMainflowDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcSubflowDirPath() {
+        return config.unprocessedUcSubflowDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcAlterflowDirPath() {
+        return config.unprocessedUcAlterflowDirPath;
     }
 
     @Override
@@ -149,12 +202,12 @@ public class iTrust implements Project {
     }
 
     @Override
-    public String getUnProcessedIssueSummDirPath() {
+    public String getUnprocessedIssueSummDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedIssueDescripDirPath() {
+    public String getUnprocessedIssueDescripDirPath() {
         return null;
     }
 

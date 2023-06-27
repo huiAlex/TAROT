@@ -2,9 +2,6 @@ package algorithm;
 
 import document.SimilarityMatrix;
 import document.TextDataset;
-import javafx.util.Pair;
-
-import java.util.List;
 
 public interface ALGO {
 

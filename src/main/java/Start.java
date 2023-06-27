@@ -18,10 +18,10 @@ public class Start {
     public static void main(String[] args) throws ClassNotFoundException, InstantiationException, IllegalAccessException {
         long startTime = System.currentTimeMillis();
 
-        Class projectClass = Class.forName(ProjectEnum.ITRUST.getName()); // select project
-        Class irModelClass = Class.forName(IREnum.JSD.getModel()); // select IR model
+        Class projectClass = Class.forName(ProjectEnum.TEST.getName()); // select project
+        Class irModelClass = Class.forName(IREnum.LSI.getModel()); // select IR model
         boolean lambdaFlag = true; // use global weight lambda
-        boolean thetaFlag = true; // use local weighr theta
+        boolean thetaFlag = true; // use local weight theta
 
         Project project = (Project) projectClass.newInstance();
         System.setProperty("project", project.getProjectName());

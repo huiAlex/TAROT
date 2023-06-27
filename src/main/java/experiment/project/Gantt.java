@@ -3,12 +3,8 @@ package experiment.project;
 public class Gantt implements Project {
 
     public static String projectName = "gantt";
-    public static String projectPath = "dataset/gantt/";
-    public static String rtmClassPath = projectPath + "rtm/RTM_CLASS.txt";
-    public static String reqPath = projectPath + "req";
-    public static String classDirPath = projectPath + "code";
-
-    ProjectConfig config = new ProjectConfig(projectPath);
+    public static String projectPath = "dataset/gantt";
+    ProjectConfig config = new ProjectConfig(projectName);
 
     @Override
     public String getRtmClassPath() {
@@ -37,67 +33,147 @@ public class Gantt implements Project {
 
     @Override
     public String getClsNameDirPath() {
-        return config.classNameDirPath;
+        return config.processedClassNameDirPath;
     }
 
     @Override
     public String getMethodNameDirPath() {
-        return config.methodNameDirPath;
+        return config.processedMethodNameDirPath;
     }
 
     @Override
     public String getCommentDirPath() {
-        return config.commentDirPath;
+        return config.processedCommentDirPath;
     }
 
     @Override
     public String getInvokeMethodDirPath() {
-        return config.invokeMethodDirPath;
+        return config.processedInvokeMethodDirPath;
     }
 
     @Override
     public String getFieldNameDirPath() {
-        return config.fieldNameDirPath;
+        return config.processedFieldNameDirPath;
     }
 
     @Override
     public String getFieldTypeDirPath() {
-        return config.fieldTypeDirPath;
+        return config.processedFieldTypeDirPath;
     }
 
     @Override
     public String getParamNameDirPath() {
-        return config.paramNameDirPath;
+        return config.processedParamNameDirPath;
     }
 
     @Override
     public String getParamTypeDirPath() {
-        return config.paramTypeDirPath;
+        return config.processedParamTypeDirPath;
     }
 
     @Override
-    public String getUnProcessedUcTitleDirPath() {
-        return config.unProcessedUcTitleDirPath;
+    public String getUnprocessedClsNameDirPath() {
+        return config.unprocessedClassNameDirPath;
     }
 
     @Override
-    public String getUnProcessedUcPreconDirPath() {
-        return config.unProcessedUcPreconDirPath;
+    public String getUnprocessedMethodNameDirPath() {
+        return config.unprocessedMethodNameDirPath;
     }
 
     @Override
-    public String getUnProcessedUcMainflowDirPath() {
-        return config.unProcessedUcMainflowDirPath;
+    public String getUnprocessedCommentDirPath() {
+        return config.unprocessedCommentDirPath;
     }
 
     @Override
-    public String getUnProcessedUcSubflowDirPath() {
-        return config.unProcessedUcSubflowDirPath;
+    public String getUnprocessedInvokeMethodDirPath() {
+        return config.unprocessedInvokeMethodDirPath;
     }
 
     @Override
-    public String getUnProcessedUcAlterflowDirPath() {
-        return config.unProcessedUcAlterflowDirPath;
+    public String getUnprocessedFieldNameDirPath() {
+        return config.unprocessedFieldNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedFieldTypeDirPath() {
+        return config.unprocessedFieldTypeDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamNameDirPath() {
+        return config.unprocessedParamNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamTypeDirPath() {
+        return config.unprocessedParamTypeDirPath;
+    }
+
+    @Override
+    public String getClsNameBitermDirPath() {
+        return config.classNameBitermDirPath;
+    }
+
+    @Override
+    public String getMethodNameBitermDirPath() {
+        return config.methodNameBitermDirPath;
+    }
+
+    @Override
+    public String getCommentBitermDirPath() {
+        return config.commentBitermDirPath;
+    }
+
+    @Override
+    public String getInvokeMethodBitermDirPath() {
+        return config.invokeMethodBitermDirPath;
+    }
+
+    @Override
+    public String getFieldNameBitermDirPath() {
+        return config.fieldNameBitermDirPath;
+    }
+
+    @Override
+    public String getFieldTypeBitermDirPath() {
+        return config.fieldTypeBitermDirPath;
+    }
+
+    @Override
+    public String getParamNameBitermDirPath() {
+        return config.paramNameBitermDirPath;
+    }
+
+    @Override
+    public String getParamTypeBitermDirPath() {
+        return config.paramTypeBitermDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcTitleDirPath() {
+        return config.unprocessedUcTitleDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcPreconDirPath() {
+        return config.unprocessedUcPreconDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcMainflowDirPath() {
+        return config.unprocessedUcMainflowDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcSubflowDirPath() {
+        return config.unprocessedUcSubflowDirPath;
+    }
+
+    @Override
+    public String getUnprocessedUcAlterflowDirPath() {
+        return config.unprocessedUcAlterflowDirPath;
     }
 
     @Override
@@ -126,12 +202,12 @@ public class Gantt implements Project {
     }
 
     @Override
-    public String getUnProcessedIssueSummDirPath() {
+    public String getUnprocessedIssueSummDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedIssueDescripDirPath() {
+    public String getUnprocessedIssueDescripDirPath() {
         return null;
     }
 

@@ -1,7 +1,5 @@
 package util;
 
-import com.sun.istack.internal.NotNull;
-import com.sun.istack.internal.Nullable;
 import document.Artifact;
 import document.ArtifactsCollection;
 
@@ -34,8 +32,7 @@ public class FileIOUtil {
         }
     }
 
-    @Nullable
-    public static String readFile(@NotNull String path) {
+    public static String readFile(String path) {
         try {
             byte[] encoded = Files.readAllBytes(Paths.get(path));
             return Charset.forName("UTF-8").decode(ByteBuffer.wrap(encoded)).toString();
@@ -44,7 +41,7 @@ public class FileIOUtil {
         }
     }
 
-    public static void writeFile(@NotNull String input, String path) {
+    public static void writeFile(String input, String path) {
         Path outPath = Paths.get(path);
         Charset charset = Charset.forName("UTF-8");
         try (BufferedWriter writer = Files.newBufferedWriter(outPath, charset)) {
@@ -54,8 +51,8 @@ public class FileIOUtil {
         }
     }
 
-    public static List<String> readFileByLine(@NotNull String path) {
-        if(!isFileExist(path))
+    public static List<String> readFileByLine(String path) {
+        if (!isFileExist(path))
             return null;
 
         List<String> list = new LinkedList<>();
@@ -65,8 +62,7 @@ public class FileIOUtil {
             BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(inputStream));
 
             String str = null;
-            while((str = bufferedReader.readLine()) != null)
-            {
+            while ((str = bufferedReader.readLine()) != null) {
                 list.add(str);
             }
         } catch (FileNotFoundException e) {
@@ -78,7 +74,7 @@ public class FileIOUtil {
 
     }
 
-    public static void continueWriteFile(@NotNull String input, String path) {
+    public static void continueWriteFile(String input, String path) {
         Path outPath = Paths.get(path);
         Charset charset = Charset.forName("UTF-8");
         File file = new File(path);
@@ -142,7 +138,7 @@ public class FileIOUtil {
     public static Set<String> getClassNameFromRTM(String rtmPath) {
         Set<String> result = new HashSet<>();
 
-        readFileByLine(rtmPath).stream().forEach(line->{
+        readFileByLine(rtmPath).stream().forEach(line -> {
             String className = line.split(" ")[1];
             if (className.contains("_jsp"))
                 className = className.substring(0, className.indexOf("_jsp"));
@@ -152,7 +148,7 @@ public class FileIOUtil {
 
     }
 
-    public static Set<String> readEachFileLine(@NotNull String dirPath){
+    public static Set<String> readEachFileLine(String dirPath) {
         Set<String> result = new HashSet<>();
         File dirFile = new File(dirPath);
         if (dirFile.exists()) {
@@ -161,6 +157,29 @@ public class FileIOUtil {
             }
         }
         return result;
+    }
+
+    //	read all files with specified file type in the project (recursive method)
+    public static ArrayList<File> getFileList(String strPath, String fileType) {
+        ArrayList<File> fileList = new ArrayList<>();
+        File dir = new File(strPath);
+//		put all files of the directory into array
+        File[] files = dir.listFiles();
+        if (files != null) {
+            for (int i = 0; i < files.length; i++) {
+                String fileName = files[i].getName();
+//				judge whether it is a directory
+                if (files[i].isDirectory()) {
+//					get the absolute path of file
+                    fileList.addAll(getFileList(files[i].getPath(), fileType));
+                }
+//				get the file of the specified type
+                else if (fileName.endsWith(fileType)) {
+                    fileList.add(files[i]);
+                }
+            }
+        }
+        return fileList;
     }
 
 

@@ -27,15 +27,48 @@ public interface Project {
 
     public String getParamTypeDirPath();
 
-    public String getUnProcessedUcTitleDirPath();
+    public String getUnprocessedClsNameDirPath();
 
-    public String getUnProcessedUcPreconDirPath();
+    public String getUnprocessedMethodNameDirPath();
 
-    public String getUnProcessedUcMainflowDirPath();
+    public String getUnprocessedCommentDirPath();
 
-    public String getUnProcessedUcSubflowDirPath();
+    public String getUnprocessedInvokeMethodDirPath();
 
-    public String getUnProcessedUcAlterflowDirPath();
+    public String getUnprocessedFieldNameDirPath();
+
+    public String getUnprocessedFieldTypeDirPath();
+
+    public String getUnprocessedParamNameDirPath();
+
+    public String getUnprocessedParamTypeDirPath();
+
+    public String getClsNameBitermDirPath();
+
+    public String getMethodNameBitermDirPath();
+
+    public String getCommentBitermDirPath();
+
+    public String getInvokeMethodBitermDirPath();
+
+    public String getFieldNameBitermDirPath();
+
+    public String getFieldTypeBitermDirPath();
+
+    public String getParamNameBitermDirPath();
+
+    public String getParamTypeBitermDirPath();
+
+
+    public String getUnprocessedUcTitleDirPath();
+
+    public String getUnprocessedUcPreconDirPath();
+
+    public String getUnprocessedUcMainflowDirPath();
+
+    public String getUnprocessedUcSubflowDirPath();
+
+    public String getUnprocessedUcAlterflowDirPath();
 
     public String getUcTitleBitermDirPath();
 
@@ -47,9 +80,9 @@ public interface Project {
 
     public String getUcAlterflowBitermDirPath();
 
-    public String getUnProcessedIssueSummDirPath();
+    public String getUnprocessedIssueSummDirPath();
 
-    public String getUnProcessedIssueDescripDirPath();
+    public String getUnprocessedIssueDescripDirPath();
 
     public String getIssueSummBitermDirPath();
 

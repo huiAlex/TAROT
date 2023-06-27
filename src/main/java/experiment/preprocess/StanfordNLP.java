@@ -52,7 +52,7 @@ public class StanfordNLP {
             SemanticGraph dependencies = sentence.get(SemanticGraphCoreAnnotations.CollapsedCCProcessedDependenciesAnnotation.class);
             for (SemanticGraphEdge edge : dependencies.edgeListSorted()) {
                 String relation = edge.getRelation().toString().split(":")[0];
-                System.out.println(edge.getSource() + " " + edge.getTarget() + " " + relation);
+//                System.out.println(edge.getSource() + " " + edge.getTarget() + " " + relation);
 
                 if (!excludeDependSet.contains(relation)) {
                     String[] ary1 = edge.getSource().toString().split("/");

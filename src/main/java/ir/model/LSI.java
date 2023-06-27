@@ -187,6 +187,7 @@ public class LSI implements IRModel {
         projectKvalueMap.put("itrust", 85);
         projectKvalueMap.put("gantt", 65);
         projectKvalueMap.put("maven", 70);
+        projectKvalueMap.put("test", 70);
         projectKvalueMap.put("pig", 140);
         projectKvalueMap.put("infinispan", 170);
         projectKvalueMap.put("drools", 180);

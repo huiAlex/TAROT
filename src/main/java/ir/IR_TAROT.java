@@ -7,7 +7,7 @@ import experiment.enums.ProjectEnum;
 import experiment.Result;
 import experiment.project.Project;
 import ir.model.IRModel;
-import ir.util.BitermUtil;
+import experiment.preprocess.biterm.ConsensualBiterm;
 import ir.util.IRUtil;
 import ir.util.WeightUtil;
 
@@ -26,14 +26,16 @@ public class IR_TAROT {
         projectEnum = ProjectEnum.getProject(project.getProjectName());
         if (projectEnum.equals(ProjectEnum.ITRUST) || projectEnum.equals(ProjectEnum.GANTT))
             isUcType = true;
-        BitermUtil bitermUtil = new BitermUtil(project);
+
+        // get consensual biterms
+        ConsensualBiterm consensualBiterm = new ConsensualBiterm(project);
         SimilarityMatrix similarityMatrix;
 
-        Map<String, Map<String, Integer>> reqBitermNumMap = bitermUtil.getReqBitermsMap();
-        Map<String, Map<String, Integer>> codeBitermNumMap = bitermUtil.getCodeBitermsMap();
-        Map<String, Map<LayerEnum, Set<String>>> reqLayerBitermMap = bitermUtil.getReqLayerBitermsMap();
+        Map<String, Map<String, Integer>> reqBitermNumMap = consensualBiterm.getReqBitermsMap();
+        Map<String, Map<String, Integer>> codeBitermNumMap = consensualBiterm.getCodeBitermsMap();
+        Map<String, Map<LayerEnum, Map<String, Integer>>> reqLayerBitermNumMap = consensualBiterm.getReqLayerBitermNumMap();
 
-        textDataset = bitermUtil.updateTextDataSet(textDataset, reqBitermNumMap, codeBitermNumMap);
+        textDataset = consensualBiterm.updateTextDataSet(textDataset, reqBitermNumMap, codeBitermNumMap);
 
         ArtifactsCollection reqCollection = textDataset.getSourceCollection();
         ArtifactsCollection clsCollection = textDataset.getTargetCollection();
@@ -58,10 +60,11 @@ public class IR_TAROT {
             for (int j = 0; j < clsTermMarix.NumDocs(); j++) {
                 String cls = clsTermMarix.getDocumentName(j);
                 double lambda = 0.0, theta = 0.0;
+                WeightUtil weightUtil = new WeightUtil(req, cls);
                 if (lambdaFlag)
-                    lambda = WeightUtil.getLambda(reqBitermNumMap.get(req).keySet(), codeBitermNumMap.get(cls).keySet(), TF, IDF);
+                    lambda = weightUtil.getLambda( reqBitermNumMap.get(req).keySet(), codeBitermNumMap.get(cls).keySet(), TF, IDF);
                 if (thetaFlag && lambda > 0)
-                    theta = WeightUtil.getTheta(isUcType, reqLayerBitermMap.get(req), codeBitermNumMap.get(cls).keySet(), TF, IDF);
+                    theta = weightUtil.getTheta(isUcType, reqLayerBitermNumMap.get(req), codeBitermNumMap.get(cls).keySet(), TF, IDF);
 
                 double newScore = 0.0;
                 if (lambda > 0) {

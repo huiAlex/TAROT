@@ -3,9 +3,8 @@ package experiment.project;
 public class Maven implements Project {
 
     public static String projectName = "maven";
-    public static String projectPath = "dataset/maven/";
-
-    ProjectConfig config = new ProjectConfig(projectPath);
+    public static String projectPath = "dataset/maven";
+    ProjectConfig config = new ProjectConfig(projectName);
 
     @Override
     public String getRtmClassPath() {
@@ -34,52 +33,133 @@ public class Maven implements Project {
 
     @Override
     public String getClsNameDirPath() {
-        return config.classNameDirPath;
+        return config.processedClassNameDirPath;
     }
 
     @Override
     public String getMethodNameDirPath() {
-        return config.methodNameDirPath;
+        return config.processedMethodNameDirPath;
     }
 
     @Override
     public String getCommentDirPath() {
-        return config.commentDirPath;
+        return config.processedCommentDirPath;
     }
 
     @Override
     public String getInvokeMethodDirPath() {
-        return config.invokeMethodDirPath;
+        return config.processedInvokeMethodDirPath;
     }
 
     @Override
     public String getFieldNameDirPath() {
-        return config.fieldNameDirPath;
+        return config.processedFieldNameDirPath;
     }
 
     @Override
     public String getFieldTypeDirPath() {
-        return config.fieldTypeDirPath;
+        return config.processedFieldTypeDirPath;
     }
 
     @Override
     public String getParamNameDirPath() {
-        return config.paramNameDirPath;
+        return config.processedParamNameDirPath;
     }
 
     @Override
     public String getParamTypeDirPath() {
-        return config.paramTypeDirPath;
+        return config.processedParamTypeDirPath;
     }
 
     @Override
-    public String getUnProcessedIssueSummDirPath() {
-        return config.unProcessedIssueSummDirPath;
+    public String getUnprocessedClsNameDirPath() {
+        return config.unprocessedClassNameDirPath;
     }
 
     @Override
-    public String getUnProcessedIssueDescripDirPath() {
-        return config.unProcessedIssueDescripDirPath;
+    public String getUnprocessedMethodNameDirPath() {
+        return config.unprocessedMethodNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedCommentDirPath() {
+        return config.unprocessedCommentDirPath;
+    }
+
+    @Override
+    public String getUnprocessedInvokeMethodDirPath() {
+        return config.unprocessedInvokeMethodDirPath;
+    }
+
+    @Override
+    public String getUnprocessedFieldNameDirPath() {
+        return config.unprocessedFieldNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedFieldTypeDirPath() {
+        return config.unprocessedFieldTypeDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamNameDirPath() {
+        return config.unprocessedParamNameDirPath;
+    }
+
+    @Override
+    public String getUnprocessedParamTypeDirPath() {
+        return config.unprocessedParamTypeDirPath;
+    }
+
+    @Override
+    public String getClsNameBitermDirPath() {
+        return config.classNameBitermDirPath;
+    }
+
+    @Override
+    public String getMethodNameBitermDirPath() {
+        return config.methodNameBitermDirPath;
+    }
+
+    @Override
+    public String getCommentBitermDirPath() {
+        return config.commentBitermDirPath;
+    }
+
+    @Override
+    public String getInvokeMethodBitermDirPath() {
+        return config.invokeMethodBitermDirPath;
+    }
+
+    @Override
+    public String getFieldNameBitermDirPath() {
+        return config.fieldNameBitermDirPath;
+    }
+
+    @Override
+    public String getFieldTypeBitermDirPath() {
+        return config.fieldTypeBitermDirPath;
+    }
+
+    @Override
+    public String getParamNameBitermDirPath() {
+        return config.paramNameBitermDirPath;
+    }
+
+    @Override
+    public String getParamTypeBitermDirPath() {
+        return config.paramTypeBitermDirPath;
+    }
+
+
+    @Override
+    public String getUnprocessedIssueSummDirPath() {
+        return config.unprocessedIssueSummDirPath;
+    }
+
+    @Override
+    public String getUnprocessedIssueDescripDirPath() {
+        return config.unprocessedIssueDescripDirPath;
     }
 
     @Override
@@ -93,27 +173,27 @@ public class Maven implements Project {
     }
 
     @Override
-    public String getUnProcessedUcTitleDirPath() {
+    public String getUnprocessedUcTitleDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedUcPreconDirPath() {
+    public String getUnprocessedUcPreconDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedUcMainflowDirPath() {
+    public String getUnprocessedUcMainflowDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedUcSubflowDirPath() {
+    public String getUnprocessedUcSubflowDirPath() {
         return null;
     }
 
     @Override
-    public String getUnProcessedUcAlterflowDirPath() {
+    public String getUnprocessedUcAlterflowDirPath() {
         return null;
     }
 

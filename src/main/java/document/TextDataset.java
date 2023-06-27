@@ -15,6 +15,7 @@ public class TextDataset {
      * @param targetDirPath: class code files' directory path
      */
     public TextDataset(String sourceDirPath, String targetDirPath, String rtmPath) {
+        System.out.println(targetDirPath);
         this.setSourceCollection(FileIOUtil.getCollections(sourceDirPath, ".txt"));
         this.setTargetCollection(FileIOUtil.getCollections(targetDirPath, ".txt"));
         this.setRtm(ReadRtmUtil.createSimilarityMatrix(rtmPath));
