@@ -1,0 +1,418 @@
+<Class>
+    <Id>159</Id>
+    <Package>org.apache.derby.impl.tools.dblook</Package>
+    <ClassName>DB_GrantRevoke</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>doAuthorizations</MethodName>
+            <MethodComment>/** 
+ * * Generate Grant and Revoke statements if sqlAuthorization is on
+ * @param conn Connection to use
+ * @param at10_6 True if the database level is 10.6 or higher
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>at10_6</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [stmt=conn.createStatement()]</InnerVar>
+                <InnerVar>ResultSet [rs]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateTablePrivs;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;generateColumnPrivs;[rs, conn]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;generateRoutinePrivs;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateTablePrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate table privilege statements
+ * @param rs Result set holding required information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>separatorStr</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>addSeparator</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tablePrivStatement</MethodName>
+            <MethodComment>/** 
+ * * Generate table privilege statement for the current row
+ * @param rs 		ResultSet holding tableperm information
+ * @param fullName	Table's qualified name
+ * @param authName	Authorization id for grant statement
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fullName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>authName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [addSeparator=false]</InnerVar>
+                <InnerVar>StringBuffer [grantStmt=new StringBuffer("GRANT ")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>grantStmt;append;[" ON " + fullName + " TO "+ authName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateColumnPrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate column privilege statements
+ * @param rs	ResultSet holding column privilege information
+ * @param conn	Connection to use. Used to get another ResultSet
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [columnStmt=conn.prepareStatement("SELECT COLUMNNUMBER, COLUMNNAME " + "FROM SYS.SYSCOLUMNS C, SYS.SYSTABLES T, SYS.SYSSCHEMAS S " + "WHERE T.TABLEID = C.REFERENCEID and S.SCHEMAID = T.SCHEMAID "+ "AND S.SCHEMANAME = ? AND T.TABLENAME = ? "+ "ORDER BY COLUMNNUMBER")]</InnerVar>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>columnStmt;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privTypeToString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>privType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapColumnsToNames</MethodName>
+            <MethodComment>/** 
+ * * Generate one column grant statement
+ * @param columns	List of columns to grant required privs
+ * @param rsCols	ResultSet for mapping column numbers to names
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rsCols</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [colNames=new StringBuffer()]</InnerVar>
+                <InnerVar>int [curColumn=1]</InnerVar>
+                <InnerVar>boolean [addSeparator=false]</InnerVar>
+                <InnerVar>StringTokenizer [st=new StringTokenizer(columns," ,{}")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rsCols;next;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>columnPrivStatement</MethodName>
+            <MethodComment>/** 
+ * *
+ * @param rs		ResultSet with info for this GRANT statement
+ * @param fullName	Full qualified name of the table
+ * @param authName	Authorization name for this GRANT
+ * @param rsCols	ResultSet for mapping column numbers to names
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fullName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>authName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rsCols</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [grantStmt=new StringBuffer("GRANT ")]</InnerVar>
+                <InnerVar>String [privType=rs.getString(4).toUpperCase()]</InnerVar>
+                <InnerVar>String [columns=rs.getString(5)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>grantStmt;append;[privTypeToString(privType)]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;["("]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[mapColumnsToNames(columns,rsCols)]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[") ON "]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[fullName]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[" TO "]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[authName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateUDTPrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate udt privilege statements
+ * @param rs ResultSet holding required information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateSequencePrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate sequence privilege statements
+ * @param rs ResultSet holding required information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateAggregatePrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate aggregate privilege statements
+ * @param rs ResultSet holding required information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genericPrivStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fullName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>authName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>permission</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>objectType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [addSeparator=false]</InnerVar>
+                <InnerVar>StringBuffer [grantStmt=new StringBuffer("GRANT " + permission + " ON "+ objectType+ " ")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>grantStmt;append;[fullName]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[" TO "]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[authName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateRoutinePrivs</MethodName>
+            <MethodComment>/** 
+ * * Generate routine privilege statements
+ * @param rs ResultSet holding required information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>routinePrivStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fullName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>authName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aliasType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [addSeparator=false]</InnerVar>
+                <InnerVar>StringBuffer [grantStmt=new StringBuffer("GRANT EXECUTE ON ")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>grantStmt;append;[(aliasType.equals("P")) ? "PROCEDURE " : "FUNCTION "]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[fullName]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[" TO "]</InnerMethodInvoke>
+                <InnerMethodInvoke>grantStmt;append;[authName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

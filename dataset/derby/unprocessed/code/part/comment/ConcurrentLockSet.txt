@@ -1,0 +1,193 @@
+/** Hash table which maps Lockable objects to
+     * Locks. */
+
+/**
+     * List containing all entries seen by the last call to
+     * addWaiters(). Makes it possible for the deadlock detection
+     * thread to lock all the entries it has visited until it has
+     * finished. This prevents false deadlocks from being reported (because all
+     * observed waiters must still be waiting when the deadlock detection has
+     * completed).
+     */
+
+/**
+		Timeout for deadlocks, in ms.
+		
+		MT - immutable
+	*/
+
+/**
+     * Class representing an entry in the lock table.
+     */
+
+/**
+     * Get an entry from the lock table. If no entry exists for the
+     * Lockable, insert an entry. The returned entry will be
+     * locked and is guaranteed to still be present in the table.
+     *
+     * @param ref the Lockable whose entry to return
+     * @return the entry for the Lockable, locked for exclusive
+     * access
+     */
+
+/**
+     * Check whether there is a deadlock. Make sure that only one thread enters
+     * deadlock detection at a time.
+     *
+     * @param entry the entry in the lock table for the lock request that
+     * triggered deadlock detection
+     * @param waitingLock the waiting lock
+     * @param wakeupReason the reason for waking up the waiter
+     * @return an object describing the deadlock
+     */
+
+/**
+	 *	Lock an object within a specific compatibility space.
+	 *
+	 *	@param	compatibilitySpace Compatibility space.
+	 *	@param	ref Lockable reference.
+	 *	@param	qualifier Qualifier.
+	 *	@param	timeout Timeout in milli-seconds
+	 *
+	 *	@return	Object that represents the lock.
+	 *
+	 *	@exception	StandardException Standard Derby policy.
+
+	*/
+
+/**
+		Unlock an object, previously locked by lockObject(). 
+
+		If unlockCOunt is not zero then the lock will be unlocked
+		that many times, otherwise the unlock count is taken from
+		item.
+
+	*/
+
+/**
+     * Unlock an object, previously locked by lockObject().
+     *
+     * @param entry the entry in which the lock is contained (the current
+     * thread must have locked the entry)
+     * @param item the item to unlock
+     * @param unlockCount the number of times to unlock the item (if zero, take
+     * the unlock count from item)
+     */
+
+/**
+     * Unlock an object once if it is present in the specified group. Also
+     * remove the object from the group.
+     *
+     * @param space the compatibility space
+     * @param ref a reference to the locked object
+     * @param qualifier qualifier of the lock
+     * @param group a map representing the locks in a group
+     * @return the corresponding lock in the group map, or null if
+     * the object was not unlocked
+     */
+
+/**
+     * {@inheritDoc}
+     */
+
+/**
+     * Set the deadlock timeout.
+     *
+     * @param timeout deadlock timeout in milliseconds
+     */
+
+/**
+     * Set the wait timeout.
+     *
+     * @param timeout wait timeout in milliseconds
+     */
+
+/**
+     * Get the wait timeout in milliseconds.
+     */
+
+/**
+     * Add all waiters in this lock table to a Map object.
+     * This method can only be called by the thread that is currently
+     * performing deadlock detection. All entries that are visited in the lock
+     * table will be locked when this method returns. The entries that have
+     * been seen and locked will be unlocked after the deadlock detection has
+     * finished.
+     */
+
+/**
+	 * make a shallow clone of myself and my lock controls
+	 */
+
+/**
+	 * Increase blockCount by one.
+	 */
+
+/**
+	 * Decrease blockCount by one.
+	 */
+
+/**
+     * Check whether anyone is blocked.
+     * @return true if someone is blocked, false
+     * otherwise
+     */
+
+/** The lock control. */
+
+/**
+         * Mutex used to ensure single-threaded access to the LockControls. To
+         * avoid Java deadlocks, no thread should ever hold the mutex of more
+         * than one entry. Excepted from this requirement is a thread which
+         * performs deadlock detection. During deadlock detection, a thread
+         * might hold several mutexes, but it is not allowed to hold any mutex
+         * when entering the deadlock detection. Only one thread is allowed to
+         * perform deadlock detection at a time.
+         */
+
+/**
+         * Condition variable which prevents calls to lock() from
+         * locking the entry. If it is not null, only the thread
+         * performing deadlock detection may lock the entry (by calling
+         * lockForDeadlockDetection()).
+         */
+
+/**
+         * Lock the entry, ensuring exclusive access to the contained
+         * Control object. The call will block until the entry can
+         * be locked. If the entry is unlocked and
+         * deadlockDetection is not null, the entry
+         * belongs to a thread which waits for deadlock detection to be
+         * initiated, and the call will block until that thread has finished
+         * its deadlock detection.
+         */
+
+/**
+         * Unlock the entry, allowing other threads to lock and access the
+         * contained Control object.
+         */
+
+/**
+         * Lock the entry while performing deadlock detection. This method will
+         * lock the entry even when deadlockDetection is not
+         * null. If deadlockDetection is not
+         * null, we know the entry and its Control
+         * will not be accessed by others until we have finished the deadlock
+         * detection, so it's OK for us to access it.
+         *
+         */
+
+/**
+         * Notify that the lock request that is currently accessing the entry
+         * will be entering deadlock detection. Unlock the entry to allow the
+         * current thread or other threads to lock the entry for deadlock
+         * detection, but set the condition variable to prevent regular locking
+         * of the entry.
+         */
+
+/**
+         * Notify that the deadlock detection triggered by the current thread
+         * has finished. Re-lock the entry and notify any waiters that the
+         * deadlock detection has completed.
+         */
+

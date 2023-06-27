@@ -1,0 +1,1384 @@
+<Class>
+    <Id>1612</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>ControlRow</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>AuxObject</SuperInterface>
+        <SuperInterface>TypedFormat</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ControlRow  /** 
+ * Base class for leaf and branch control rows. &lt;P&gt; &lt;B&gt;Concurrency Notes&lt;/B&gt; &lt;P&gt; All access through control rows is serialized by an exclusive latch on  the page the control row is for.  The page is latched when the control row is "gotten" (ControlRow#Get), and unlatched when the control row is released (ControlRow#release). &lt;P&gt; &lt;B&gt;To Do List&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; &lt;I&gt;[NOTE1]&lt;/I&gt; The code is arranged to fault in fields from the row as necessary. many of the fields of a control row are rarely used (left sibling, parent). The accessors fault in the underlying column only when requested by allocating the appropriate object and calling fetchFromSlot and only fetching the requested field. &lt;LI&gt; &lt;I&gt;[NOTE2]&lt;/I&gt;  Currently, all the fields of the control row are stored as StorableU8s for simplicity.  This is too few bits to hold the long page numbers, and too many to hold the version, level, and isRoot flag.  Some consideration will have to be given to the appropriate storage format for these values. &lt;LI&gt; &lt;I&gt;[NOTE3]&lt;/I&gt; The implementation relies on the existance of page "auxiliary" pointers  which keep Object versions of the control row. &lt;P&gt;
+ * @see ControlRow#get
+ * @see ControlRow#release
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>version</FieldName>
+            <FieldType>StorableFormatId</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftSiblingPageNumber</FieldName>
+            <FieldType>SQLLongint</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rightSiblingPageNumber</FieldName>
+            <FieldType>SQLLongint</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parentPageNumber</FieldName>
+            <FieldType>SQLLongint</FieldType>
+        </Field>
+        <Field>
+            <FieldName>level</FieldName>
+            <FieldType>SQLLongint</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isRoot</FieldName>
+            <FieldType>SQLLongint</FieldType>
+        </Field>
+        <Field>
+            <FieldName>btree</FieldName>
+            <FieldType>BTree</FieldType>
+        </Field>
+        <Field>
+            <FieldName>page</FieldName>
+            <FieldType>Page</FieldType>
+        </Field>
+        <Field>
+            <FieldName>row</FieldName>
+            <FieldType>DataValueDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scratch_row</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fetchDesc</FieldName>
+            <FieldType>FetchDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>use_last_search_result_hint</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>last_search_result</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_COLID_FIRST</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_VERSION_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_LEFTSIB_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_RIGHTSIB_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_PARENT_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_LEVEL_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_ISROOT_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_CONGLOM_COLID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_COLID_LAST</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_NCOLUMNS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_VERSION_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_LEFTSIB_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_RIGHTSIB_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_PARENT_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_LEVEL_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_ISROOT_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_CONGLOM_BITSET</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPLIT_FLAG_LAST_ON_PAGE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPLIT_FLAG_LAST_IN_TABLE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPLIT_FLAG_FIRST_ON_PAGE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPLIT_FLAG_FIRST_IN_TABLE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR_SLOT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ControlRow</MethodName>
+            <MethodComment>/** 
+ * No arg constructor. &lt;p&gt; GetControlRowForPage() will call this constructor when it uses the  monitor to create a control row dynamically given a given format id.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ControlRow</MethodName>
+            <MethodComment>/** 
+ * Constructor for making a new control row as part of allocating a new page.  Fills in all the fields but does not write them anywhere. &lt;p&gt; &lt;P&gt; Changes to this constructor will probably require changes to the corresponding accessor(s).
+ * @param btree      Static information about the btree.
+ * @param page       The page described by this control row.
+ * @param parent     The parent page of this page, "null" if this page is root or if not maintaining parent links.
+ * @param isRoot     Is this page the root of the tree?
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRoot</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>page;setAuxObject;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ControlRow</MethodName>
+            <MethodComment>/** 
+ * Constructor for making a control row for an existing page. &lt;p&gt; Not all the fields are filled in; their values will get faulted in from  the page as necessary. &lt;p&gt; Classes which extend ControlRow must delegate to this constructor and may want to override it as well. Changes to this constructor will probably require changes to the corresponding accessor(s).
+ * @param container  Open container 
+ * @param page       The page described by this control row.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;["ControlRow construct 2."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVersion</MethodName>
+            <MethodComment>/** 
+ * Get version of the control row. &lt;p&gt; Returns the version of the control row, faulting it in from the page if necessary.
+ * @return version of the control row.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setVersion</MethodName>
+            <MethodComment>/** 
+ * Set version of the control row. &lt;p&gt; Sets the version of the control row.  Updates both the in-memory  control row and the disk copy.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.version;setValue;[version]</InnerMethodInvoke>
+                <InnerMethodInvoke>this.page;updateFieldAtSlot;[CR_SLOT, CR_VERSION_COLID, this.version, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLeftSibling</MethodName>
+            <MethodComment>/** 
+ * Get the control row for this page's left sibling, or null if there is no left sibling (which probably means it's the leftmost page at its level). Since right-to-left traversal of an index level	is deadlock-prone, this  method will only get get the left sibling if it can latch it without waiting.
+ * @exception WaitError if the latch request would have had to wait.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [cr]</InnerVar>
+                <InnerVar>long [pageno=this.getleftSiblingPageNumber()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>WaitError</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLeftSibling</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftsib</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [left_sib_pageno=(leftsib == null ? ContainerHandle.INVALID_PAGE_NUMBER : leftsib.page.getPageNumber())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightSibling</MethodName>
+            <MethodComment>/** 
+ * Return the control row for this page's right sibling.  Unlike getting the left sibling, it's ok to wait for the right sibling latch since left-to-right is the deadlock-free ordering.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [pageno=this.getrightSiblingPageNumber()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRightSibling</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rightsib</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [right_sib_pageno=(rightsib == null ? ContainerHandle.INVALID_PAGE_NUMBER : rightsib.page.getPageNumber())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getleftSiblingPageNumber</MethodName>
+            <MethodComment>/** 
+ * Get the page number of the left sibling. Fault it's value in if it hasn't been yet.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getrightSiblingPageNumber</MethodName>
+            <MethodComment>/** 
+ * Get the page number of the right sibling. Fault it's value in if it hasn't been yet.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParentPageNumber</MethodName>
+            <MethodComment>/** 
+ * Get the page number of the parent, if it's being maintained. Note that there is intentionally no way to get the control row for the parent page - the b-tree code NEVER traverses up the tree, even in consistency checks.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [pageno=parentPageNumber.getLong()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParent</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.parentPageNumber;setValue;[parent]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLevel</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLevel</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newlevel</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.level;setValue;[(long)newlevel]</InnerMethodInvoke>
+                <InnerMethodInvoke>this.page;updateFieldAtSlot;[CR_SLOT, CR_LEVEL_COLID, this.level, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIsRoot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIsRoot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>isRoot</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.isRoot;setValue;[(isRoot) ? 1 : 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>this.page;updateFieldAtSlot;[CR_SLOT, CR_ISROOT_COLID, this.isRoot, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConglom</MethodName>
+            <MethodComment>/** 
+ * Get format id information for row on page. &lt;p&gt; Returns the format id information for a row on the page. faulting it  in from the page if necessary.
+ * @return format id of a row on the page.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>BTree</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>format_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * Get the control row from the given page in the b-tree. The returned control row will be of the correct type for the page (i.e., either a LeafControlRow or a BranchControlRow).
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=container.getPage(pageNumber)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNoWait</MethodName>
+            <MethodComment>/** 
+ * Get the control row for the given page if the latch on the page can be obtained without waiting, else return null.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=open_btree.container.getUserPageNoWait(pageNumber)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getControlRowForPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [cr=null]</InnerVar>
+                <InnerVar>AuxObject [auxobject=page.getAuxObject()]</InnerVar>
+                <InnerVar>StorableFormatId [version=new StorableFormatId()]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [version_ret=new DataValueDescriptor[1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>page;fetchFromSlot;[(RecordHandle)null, CR_SLOT, version_ret, new FetchDescriptor(1,CR_VERSION_BITSET,(Qualifier[][])null), false]</InnerMethodInvoke>
+                <InnerMethodInvoke>cr;controlRowInit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>page;setAuxObject;[cr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>release</MethodName>
+            <MethodComment>/** 
+ * Release this control row's resources.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchForEntry</MethodName>
+            <MethodComment>/** 
+ * Search this index page. &lt;P&gt; This method is very performance sensitive.  It is the intention that no object allocations occur during the execution of this method. &lt;P&gt; This method performs a binary search on the page and finds the entry i on the page such that entry[i] &amp;lt;= key &amp;lt; entry[i+1].  The result of the search is filled into the passed in params structure.
+ * @param params the parameters of the search
+ * @exception StandardException could be thrown by underlying raw store operations.
+ * @see SearchParameters
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>params</ParamName>
+                    <ParamType>SearchParameters</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [leftrange=1]</InnerVar>
+                <InnerVar>int [rightrange=page.recordCount() - 1]</InnerVar>
+                <InnerVar>int [leftslot=0]</InnerVar>
+                <InnerVar>int [rightslot=rightrange + 1]</InnerVar>
+                <InnerVar>int [midslot]</InnerVar>
+                <InnerVar>int [compare_ret]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchForEntryBackward</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>params</ParamName>
+                    <ParamType>SearchParameters</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [leftrange=1]</InnerVar>
+                <InnerVar>int [rightrange=page.recordCount() - 1]</InnerVar>
+                <InnerVar>int [leftslot=0]</InnerVar>
+                <InnerVar>int [rightslot=rightrange + 1]</InnerVar>
+                <InnerVar>int [midslot]</InnerVar>
+                <InnerVar>int [compare_ret]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareIndexRowFromPageToKey</MethodName>
+            <MethodComment>/** 
+ * Compare two orderable rows, considering nCompareCols, and return -1, 0, or 1 depending on whether the first row (indexrow) is less than, equal to, or  greater than the second (key).  The key may have fewer columns present  than nCompareCols. In such a case, if all the columns of the partial key match all of the  corresponding columns in the index row, then the value passed in in  partialKeyOrder is returned.  The caller should pass in partialKeyOrder=1  if the index rows which match a partial key should be considered to be  greater than the partial key, and -1 if they should be considered to be  less. This routine only reads objects off the page if it needs them, so if a  multi-part key differs in the first column the subsequent columns are not read.
+ * @param indexpage Controlrow of page to get target row from.
+ * @param slot      Slot to get control row from.
+ * @param indexrow template of the target row (the row in the index).
+ * @param key the (possibly partial) search key.
+ * @param nCompareCols the number of columns to compare.
+ * @param partialKeyOrder what to return on a partial key match.
+ * @param ascOrDesc column sort order information
+ * @throws StandardException if lower levels have a problem.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexpage</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexrow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nCompareCols</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>partialKeyOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ascOrDesc</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [compare_result]</InnerVar>
+                <InnerVar>int [partialKeyCols=key.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexpage.page;fetchFromSlot;[(RecordHandle)null, slot, indexrow, (FetchDescriptor)null, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareIndexRowToKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexrow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nCompareCols</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>partialKeyOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ascOrDesc</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [partialKeyCols=key.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkGeneric</MethodName>
+            <MethodComment>/** 
+ * Perform consistency checks which are common to all pages that derive from ControlRow (both leaf and  branch pages).  The checks are: &lt;menu&gt; &lt;li&gt; This page thinks the parent argument is actually its parent. &lt;li&gt; The level of this page is 1 less than the level of the parent. &lt;li&gt; All the rows on the page are in order. &lt;li&gt; Both left and right siblings, if they exist, are at the same level of this page. &lt;li&gt; This page is the left sibling of its right sibling, and it's the right sibling of its left sibling. &lt;li&gt; The last row on the left sibling is &amp;lt; the first row on this page. &lt;li&gt; The first row on the right sibling is &amp;gt; than the the last row on this page. &lt;/menu&gt; Note that these last two are really only true if there are never duplicate keys.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>check_other_pages</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkRowOrder</MethodName>
+            <MethodComment>/** 
+ * Check that all rows on the page are in order.  This means that each key is &amp;gt; than the previous key.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareRowsOnSiblings</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>left_sib</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right_sib</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkSiblings</MethodName>
+            <MethodComment>/** 
+ * Perform checks on the siblings of this page: make sure that they're at the same level as this page, that they're mutually linked together, and that the first/last keys on sibling pages are in order.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>linkRight</MethodName>
+            <MethodComment>/** 
+ * Link this page to the right of the target page. &lt;P&gt; Upon entry, this page and the target must be latched.  Upon exit, this page and the target remain latched. &lt;P&gt; This method carefully acquires pages from left to right in order to avoid deadlocks.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>target</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [rightSibling=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlink</MethodName>
+            <MethodComment>/** 
+ * Unlink this page from its siblings.  This method will give up and return false rather than run the risk of a deadlock. &lt;P&gt; On entry this page must be latched.  The siblings are latched and unlatched during the operation.  Upon exit, this page will remain latched, but unlinked from its siblings and deallocated from the container. &lt;P&gt; The seemingly odd situation that this page will be returned latched but deallocated is intentional. The container will not be able to reuse this page until the latch is released, and the caller may still need to read information out of it.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [leftsib=null]</InnerVar>
+                <InnerVar>ControlRow [rightsib=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRow</MethodName>
+            <MethodComment>/** 
+ * Get the row. &lt;p&gt; Return the object array that represents the control row for use in raw store fetch, insert, and/or update.
+ * @return The row.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkConsistency</MethodName>
+            <MethodComment>/** 
+ * Check consistency of the page and its children, returning the number of  pages seen, and throwing errors if inconsistencies are found. &lt;p&gt;
+ * @return The identifier to be used to open the conglomerate later.
+ * @param btree  The open btree to associate latches/locks with.
+ * @param parent The parent page of this page, "null" if this page is root or if not maintaining parent links.
+ * @param check_other_pages Should the consistency check go to other pages (this  option breaks the latch protocol).
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>check_other_pages</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLeftChild</MethodName>
+            <MethodComment>/** 
+ * Return the left child pointer for the page. &lt;p&gt; Leaf pages don't have children, so they override this and return null.
+ * @return The page which is the leftmost child of this page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightChild</MethodName>
+            <MethodComment>/** 
+ * Return the right child pointer for the page. &lt;p&gt; Leaf pages don't have children, so they override this and return null.
+ * @return The page which is the rightmost child of this page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>controlRowInit</MethodName>
+            <MethodComment>/** 
+ * Perform page specific initialization. &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isLeftmostLeaf</MethodName>
+            <MethodComment>/** 
+ * Is the current page the leftmost leaf of tree? &lt;p&gt;
+ * @return true if the current page is the leftmost leaf of the tree,else return false.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isRightmostLeaf</MethodName>
+            <MethodComment>/** 
+ * Is the current page the rightmost leaf of tree? &lt;p&gt;
+ * @return true if the current page is the rightmost leaf of the tree,else return false.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>search</MethodName>
+            <MethodComment>/** 
+ * Perform a recursive search, ultimately returning the latched leaf page and row slot after which the given key belongs. The slot is returned in the result structure.  If the key exists on the page, the resultExact field will be true.  Otherwise, resultExact field will be false, and the row slot returned will be the one immediately preceding the position at which the key belongs.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>search_params</ParamName>
+                    <ParamType>SearchParameters</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumberOfControlRowColumns</MethodName>
+            <MethodComment>/** 
+ * Get the number of columns in the control row.   &lt;p&gt; Control rows all share the first columns as defined by this class and then add columns to the end of the control row.  For instance a branch control row add a child page pointer field. &lt;p&gt;
+ * @return The total number of columns in the control row.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchLeft</MethodName>
+            <MethodComment>/** 
+ * Search and return the left most leaf page. &lt;p&gt; Perform a recursive search, ultimately returning the leftmost leaf page which is the first leaf page in the leaf sibling chain.  (This method might better be called getFirstLeafPage()).
+ * @return The leftmost leaf page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchRight</MethodName>
+            <MethodComment>/** 
+ * Search and return the right most leaf page. &lt;p&gt; Perform a recursive search, ultimately returning the rightmost leaf page which is the last leaf page in the leaf sibling chain.  (This method might better be called getLastLeafPage()).
+ * @return The rightmost leaf page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shrinkFor</MethodName>
+            <MethodComment>/** 
+ * Perform a recursive shrink operation for the key. If this method returns true, the caller should remove the corresponding entry for the page. This routine is not guaranteed to successfully shrink anything.  The page lead to by the key might turn out not to be empty by the time shrink gets there, and shrinks will give up if there is a deadlock. &lt;P&gt; As currently implemented shrinkFor must be executed while holding an exclusive container lock on the entire table.  It is expected that this call is made within an internal transaction which has been called by a post commit thread.  Latches are released by the code.  The raw  store guarantees that deallocated pages are not seen by other xacts until the transaction has been committed.   &lt;P&gt; Note that a non-table level lock implementation must hold latches on pages affected until end transaction. &lt;p&gt; On entry, the current page is latched.  On exit, all pages will have been unlatched. 
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>splitFor</MethodName>
+            <MethodComment>/** 
+ * Perform a top down split pass making room for the the key in "row". &lt;p&gt; Perform a split such that a subsequent call to insert given the argument index row will likely find room for it.  Since  latches are released the client must code for the case where another user has grabbed the space made available by the split pass and be ready to do another split. &lt;p&gt;
+ * @return page number of the newly allocated leaf page created by split.
+ * @param open_btree The open btree to associate latches with.
+ * @param template   A scratch area to use while searching for split pass.
+ * @param parentpage The parent page of the current page in the split pass.starts at null for root.
+ * @param row        The key to make room for during the split pass.
+ * @param flag       A flag used to direct where point of split should bechosen.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parentpage</ParamName>
+                    <ParamType>BranchControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printTree</MethodName>
+            <MethodComment>/** 
+ * Recursively print the tree starting at current node in tree.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>auxObjectInvalidated</MethodName>
+            <MethodComment>/** 
+ * Called when the page is being evicted from cache or when a rollback happened on the page and may possibly have changed the control row's  value
+ * @see AuxObject#auxObjectInvalidated
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowTemplate</MethodName>
+            <MethodComment>/** 
+ * Return a new template for reading a data row from the current page. &lt;p&gt; Default implementation for rows which are the same as the conglomerates template, sub-classes can alter if underlying template is different (for instance branch rows add an extra field at the end).
+ * @return Newly allocated template.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>debugPage</MethodName>
+            <MethodComment>/** 
+ * Dump complete information about control row and rows on the page. &lt;p&gt;
+ * @return string with all info.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [ret_str]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * The standard toString(). &lt;p&gt; This is a concise print out of the info in the control row, does not include anything the page. &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,287 @@
+<Class>
+    <Id>155</Id>
+    <Package>org.apache.derby.impl.store.raw.xact</Package>
+    <ClassName>RowLocking3</ClassName>
+    <SuperClass>NoLocking</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RowLocking3  /** 
+ * A locking policy that implements row level locking with isolation degree 3.
+ * @see org.apache.derby.iapi.store.raw.LockingPolicy
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>NO_LOCK</FieldName>
+            <FieldType>LockingPolicy</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lf</FieldName>
+            <FieldType>LockFactory</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RowLocking3</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lf</ParamName>
+                    <ParamType>LockFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReadLockType</MethodName>
+            <MethodComment>/** 
+ * Get type of lock to get while reading data. &lt;p&gt; This routine is provided so that class's like RowLockingRR can override just this routine to get RS2 locks vs RS3 locks, and still reuse all the other code in this class. &lt;p&gt;
+ * @return The lock type of a shared lock for this locking policy.
+ */
+</MethodComment>
+            <ReturnType>RowLock</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUpdateLockType</MethodName>
+            <MethodComment>/** 
+ * Get type of lock to get while requesting "update" lock. &lt;p&gt; This routine is provided so that class's like RowLockingRR can override just this routine to get RU2 locks vs RU3 locks, and still reuse all the other code in this class. &lt;p&gt;
+ * @return The lock type of a shared lock for this locking policy.
+ */
+</MethodComment>
+            <ReturnType>RowLock</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWriteLockType</MethodName>
+            <MethodComment>/** 
+ * Get type of lock to get while writing data. &lt;p&gt; This routine is provided so that class's like RowLockingRR can override just this routine to get RX2 locks vs RX3 locks, and still reuse all the other code in this class. &lt;p&gt;
+ * @return The lock type of a shared lock for this locking policy.
+ */
+</MethodComment>
+            <ReturnType>RowLock</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockContainer</MethodName>
+            <MethodComment>/** 
+ * Obtain container level intent lock. &lt;p&gt; This implementation of row locking is 2 level, ie. table and row locking. It will interact correctly with tables opened with ContainerLocking3 locking mode. &lt;p&gt; Updater's will get table level IX locks, and X row locks. &lt;p&gt; Reader's will get table level IS locks, and S row locks.
+ * @param t            Transaction to associate lock with.
+ * @param container    Container to lock.
+ * @param waitForLock  Should lock request wait until granted?
+ * @param forUpdate    Should container be locked for update, or read?
+ * @return true if the lock was obtained, false if it wasn't. False should only be returned if the waitForLock policy was set to "false," and the lock was unavailable.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [qualifier=forUpdate ? ContainerLock.CIX : ContainerLock.CIS]</InnerVar>
+                <InnerVar>boolean [gotLock=lf.lockObject(t.getCompatibilitySpace(),t,container.getId(),qualifier,waitForLock ? C_LockFactory.TIMED_WAIT : C_LockFactory.NO_WAIT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRecordForRead</MethodName>
+            <MethodComment>/** 
+ * Obtain lock on record being read. &lt;p&gt; Assumes that a table level IS has been acquired.  Will acquire a Shared or Update lock on the row, depending on the "forUpdate" parameter. &lt;p&gt;
+ * @param t             The transaction to associate the lock with.
+ * @param record        The record to be locked.
+ * @param waitForLock   Should lock request wait until granted?
+ * @param forUpdate     Whether to open for read or write access.
+ * @return true if the lock was granted, false if waitForLock was false and the lock could not be granted.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container_handle</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [qualifier=forUpdate ? getUpdateLockType() : getReadLockType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>zeroDurationLockRecordForWrite</MethodName>
+            <MethodComment>/** 
+ * Obtain lock on record being written. &lt;p&gt; Assumes that a table level IX has been acquired.  Will acquire an Exclusive (X) lock on the row. &lt;p&gt;
+ * @param t                        transaction to associate the lock with.
+ * @param record                   The record to be locked.
+ * @param lockForInsertPreviousKey Lock is for a previous key of a insert.
+ * @param waitForLock              Should lock request wait until granted?
+ * @return true if the lock was granted, false if waitForLock was false and the lock could not be granted.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockForInsertPreviousKey</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRecordForWrite</MethodName>
+            <MethodComment>/** 
+ * Obtain lock on record being written. &lt;p&gt; Assumes that a table level IX has been acquired.  Will acquire an Exclusive (X) lock on the row. &lt;p&gt;
+ * @param t             The transaction to associate the lock with.
+ * @param record        The record to be locked.
+ * @param lockForInsert Lock is for an insert.
+ * @param waitForLock   Should lock request wait until granted?
+ * @return true if the lock was granted, false if waitForLock was false and the lock could not be granted.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockForInsert</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

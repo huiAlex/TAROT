@@ -1,0 +1,138 @@
+<Class>
+    <Id>1619</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.storetests</Package>
+    <ClassName>st_derby1939</ClassName>
+    <SuperClass>BaseJDBCTestCase</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>st_derby1939  /** 
+ * Repro for DERBY-1939.  In effect what we have to do is execute a query (using a PreparedStatement) for which the optimizer will choose to do a Hash Join using an IndexToBaseRow result result.  But that's not enough--at execution time, we then have to force a situation where the Hash Table "spills" to disk, and only then will the error occur. In order to get the optimizer to choose the necessary plan we have a moderately complex query that has a predicate which can be pushed to table T1.  T1 in turn has an index declared on the appropriate column.  The optimizer will then choose to do a Hash Join between T2 and T1 and will use the index on T1, as desired. Then, in order to force the "spill" to disk, we use the Derby property "maxMemoryPerTable" and set it to a "magic" value that a) is large enough to allow the optimizer to choose a Hash Join, but b) is small enough to cause hash-table-spill-over at execution time.  It took a while find out what value this property should have given the data in the tables, but having found it we can now reliably reproduce the failure.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>VC_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>st_derby1939</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>suite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Test</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Properties [sysprops=new Properties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sysprops;setProperty;["derby.language.maxMemoryPerTable", "140"]</InnerMethodInvoke>
+                <InnerMethodInvoke>sysprops;setProperty;["derby.optimizer.noTimeout", "true"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDerby1939</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setAutoCommit;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doLoad;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doQuery;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doLoad</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [st=createStatement()]</InnerVar>
+                <InnerVar>PreparedStatement [pSt=prepareStatement("insert into d1939_t1(i, vc) values (?, ?)")]</InnerVar>
+                <InnerVar>PreparedStatement [pSt2=prepareStatement("insert into d1939_t2 values (?, ?, ?)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;println;["Creating tables and index..."]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;execute;["create table d1939_t1 (i smallint, vc varchar(" + VC_SIZE + "))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;execute;["create table d1939_t2 (j smallint, val double, vc varchar(" + VC_SIZE + "))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;execute;["create index ix_d1939_t1 on d1939_t1 (i)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;println;["Doing inserts..."]</InnerMethodInvoke>
+                <InnerMethodInvoke>pSt2;setNull;[1, Types.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>pSt2;setDouble;[2, 48.0d]</InnerMethodInvoke>
+                <InnerMethodInvoke>pSt;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [pSt=prepareStatement("select * from d1939_t2 " + "  left outer join " + "    (select distinct d1939_t1.i, d1939_t2.j, d1939_t1.vc from d1939_t2 "+ "      left outer join d1939_t1 "+ "        on d1939_t2.j = d1939_t1.i "+ "        and d1939_t1.i = ? "+ "    ) x1 "+ "  on d1939_t2.j = x1.i")]</InnerVar>
+                <InnerVar>int [count=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;println;["Done preparing, about to execute..."]</InnerMethodInvoke>
+                <InnerMethodInvoke>pSt;setShort;[1, (short)8]</InnerMethodInvoke>
+                <InnerMethodInvoke>pSt;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;rollback;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder(VC_SIZE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

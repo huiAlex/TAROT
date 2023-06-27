@@ -1,0 +1,437 @@
+<Class>
+    <Id>962</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>SortResultSet</ClassName>
+    <SuperClass>NoPutResultSetImpl</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CursorResultSet</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SortResultSet  /** 
+ * Takes a source result set, sends it to the sorter, and returns the results.  If distinct is true, removes all but one copy of duplicate rows using DistinctAggregator, which really doesn't aggregate anything at all -- the sorter assumes that the presence of an aggregator means that it should return a single row for each set with identical ordering columns. &lt;p&gt; If aggregate is true, then it feeds any number of aggregates to the sorter.  Each aggregate is an instance of GenericAggregator which knows which Aggregator to call to perform the aggregation. &lt;p&gt; Brief background on the sorter and aggregates: the sorter has some rudimentary knowledge about aggregates.  If it is passed aggregates, it will eliminate duplicates on the ordering columns.  In the process it will call the aggregator on each row that is discarded. &lt;p&gt;  Note that a DISTINCT on the SELECT list and an aggregate cannot  be processed by the same SortResultSet(), if there are both aggregates (distinct or otherwise) and a DISTINCT on the select list, then 2 separate SortResultSets are required (the DISTINCT is a sort on the output of the sort with the aggregation).  &lt;p&gt; Currently, all rows are fed through the sorter.  This is true even if there is no sorting needed.  In this case we feed every row in and just pull every row out (this is an obvious area for a performance improvement).  We'll need to know if the rows are sorted before we can make any optimizations in this area. &lt;p&gt; &lt;B&gt;CLONING&lt;/B&gt;: Cloning and sorts are an important topic. Currently we do a lot of cloning.  We clone the following: &lt;UL&gt; &lt;LI&gt; every row that is inserted into the sorter.  We need to clone the rows because the source result set might be reusing rows, and we need to be able to accumulate the entire result set in the sorter. &lt;/LI&gt; &lt;p&gt; There are two cloning APIs: cloning by the sorter on rows that are not discarded as duplicates or cloning in the SortResultSet prior to inserting into the sorter. If we have any aggregates at all we always clone prior to inserting into the sorter.  We need to do this  because we have to set up the aggregators before passing them into the sorter.  When we don't have aggregates we let the sorter to the cloning to avoid unnecessary clones on duplicate rows that are going to be discarded anyway.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>rowsInput</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowsReturned</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distinct</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>source</FieldName>
+            <FieldType>NoPutResultSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>order</FieldName>
+            <FieldType>ColumnOrdering[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>savedOrder</FieldName>
+            <FieldType>ColumnOrdering[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>observer</FieldName>
+            <FieldType>SortObserver</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortTemplateRow</FieldName>
+            <FieldType>ExecRow</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isInSortedOrder</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>originalSource</FieldName>
+            <FieldType>NoPutResultSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxRowSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scanController</FieldName>
+            <FieldType>ScanController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortResultRow</FieldName>
+            <FieldType>ExecRow</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currSortedRow</FieldName>
+            <FieldType>ExecRow</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nextCalled</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numColumns</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>genericSortId</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dropGenericSort</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sorted</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortProperties</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SortResultSet</MethodName>
+            <MethodComment>/** 
+ * Constructor
+ * @param s			input result set
+ * @param distinct	if this is a DISTINCT select list.  Also set to true for a GROUP BY w/o aggretates
+ * @param isInSortedOrder	true if the source results are in sorted order
+ * @param orderingItem	indicates the number of theSavedObject off of the PreparedStatement that holds the ColumOrdering array used by this routine
+ * @param a				activation
+ * @param ra              saved object that generates an empty row
+ * @param maxRowSize		approx row size, passed to sorter
+ * @param resultSetNumber	The resultSetNumber for this result set
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>NoPutResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>distinct</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isInSortedOrder</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>orderingItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ra</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxRowSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ExecPreparedStatement [ps=a.getPreparedStatement()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;recordConstructorTime;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openCore</MethodName>
+            <MethodComment>/** 
+ * Open the scan.  Load the sorter and prepare to get rows from it.
+ * @exception StandardException thrown if cursor finished.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;openCore;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadSorter</MethodName>
+            <MethodComment>/** 
+ * Load up the sorter.  Feed it every row from the source scan.  When done, close the source scan and open the sort.  Return the sort scan controller.
+ * @exception StandardException thrown on failure.
+ * @return	the sort controller
+ */
+</MethodComment>
+            <ReturnType>ScanController</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SortController [sorter]</InnerVar>
+                <InnerVar>long [sortId]</InnerVar>
+                <InnerVar>ExecRow [sourceRow]</InnerVar>
+                <InnerVar>ExecRow [inputRow]</InnerVar>
+                <InnerVar>boolean [inOrder=(order.length == 0 || isInSortedOrder)]</InnerVar>
+                <InnerVar>int [inputRowCountEstimate=(int)optimizerEstimatedRowCount]</InnerVar>
+                <InnerVar>TransactionController [tc=getTransactionController()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>sorter;completedInserts;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRowCore</MethodName>
+            <MethodComment>/** 
+ * Return the next row.  
+ * @exception StandardException thrown on failure.
+ * @exception StandardException ResultSetNotOpen thrown if not yet open.
+ * @return the next row in the result
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterRow</MethodName>
+            <MethodComment>/** 
+ * Filter out the new row if it has the same contents as the current row.  (This allows us to process in-order distincts without a sorter.)
+ * @param currRow	The current row.
+ * @param newRow	The new row.
+ * @return	Whether or not to filter out the new row.
+ * @exception StandardException thrown on failure to get row location
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>currRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * If the result set has been opened, close the open scan.
+ * @exception StandardException thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finish</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;finish;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;finishAndRTS;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimeSpent</MethodName>
+            <MethodComment>/** 
+ * Return the total amount of time spent in this ResultSet
+ * @param type	CURRENT_RESULTSET_ONLY - time spent only in this ResultSetENTIRE_RESULTSET_TREE  - time spent in this ResultSet and below.
+ * @return long		The total amount of time spent (in milliseconds).
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [totTime=constructorTime + openTime + nextTime+ closeTime]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowLocation</MethodName>
+            <MethodComment>/** 
+ * This result set has its row location from the last fetch done. If the cursor is closed, a null is returned.
+ * @see CursorResultSet
+ * @return the row location of the current cursor row.
+ * @exception StandardException thrown on failure to get row location
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RowLocation [rl]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>scanController;fetchLocation;[rl]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentRow</MethodName>
+            <MethodComment>/** 
+ * This result set has its row from the last fetch done.  If the cursor is closed, a null is returned.
+ * @see CursorResultSet
+ * @return the last row returned;
+ * @exception StandardException thrown on failure.
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRowFromRS</MethodName>
+            <MethodComment>/** 
+ * Get the next output row for processing
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowFromResultSet</MethodName>
+            <MethodComment>/** 
+ * Get a row from the input result set.  
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [sourceRow]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowFromSorter</MethodName>
+            <MethodComment>/** 
+ * Get a row from the sorter.  Side effects: sets currentRow.
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [inputRow=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeSource</MethodName>
+            <MethodComment>/** 
+ * Close the source of whatever we have been scanning.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

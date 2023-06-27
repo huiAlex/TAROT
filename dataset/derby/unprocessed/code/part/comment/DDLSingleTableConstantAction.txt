@@ -1,0 +1,137 @@
+/**
+ * Abstract class that has actions that are across
+ * all DDL actions that are tied to a table.  An example
+ * of DDL that affects a table is CREATE INDEX or
+ * DROP VIEW.  An example of DDL that does not affect
+ * a table is CREATE STATEMENT or DROP SCHEMA.
+ *
+ */
+
+/**
+	 * constructor
+	 *
+	 * @param tableId the target table
+	 */
+
+/**
+	 * Drop the constraint corresponding to the received descriptor.
+	 * If in doing so we also drop a backing conglomerate that is
+	 * shared by other constraints/indexes, then we have to create
+	 * a new conglomerate to fill the gap.
+	 *
+	 * This method exists here as a "utility" method for the various
+	 * constant actions that may drop constraints in one way or
+	 * another (there are several that do).
+	 *
+	 * @param consDesc ConstraintDescriptor for the constraint to drop
+	 * @param activation Activation used when creating a new backing
+	 *  index (if a new backing index is needed)
+	 * @param lcc LanguageConnectionContext used for dropping
+	 * @param clearDeps Whether or not to clear dependencies when
+	 *   dropping the constraint
+	 */
+
+/**
+	 * See "dropConstraint(...") above.
+	 *
+	 * @param skipCreate Optional TableDescriptor.  If non-null
+	 *  then we will skip the "create new conglomerate" processing
+	 *  *IF* the constraint that we drop came from the table
+	 *  described by skipCreate.
+	 */
+
+/**
+	 * See "dropConstraint(...") above.
+	 *
+	 * @param newConglomActions Optional List.  If non-null then
+	 *  for each ConglomerateDescriptor for which we skip the
+	 *  "create new conglomerate" processing we will add a
+	 *  ConstantAction to this list.  The constant action can
+	 *  then be executed later (esp. by the caller) to create the
+	 *  new conglomerate, if needed.  If this argument is null and
+	 *  we skip creation of a new conglomerate, the new conglomerate
+	 *  is effectively ignored (which may be fine in some cases--
+	 *  ex. when dropping a table).
+	 */
+
+/**
+	 * Similar to dropConstraint(...) above, except this method
+	 * drops a conglomerate directly instead of going through
+	 * a ConstraintDescriptor.
+	 *
+	 * @param congDesc ConglomerateDescriptor for the conglom to drop
+	 * @param td TableDescriptor for the table on which congDesc exists
+	 * @param activation Activation used when creating a new backing
+	 *  index (if a new backing index is needed)
+	 * @param lcc LanguageConnectionContext used for dropping
+	 */
+
+/**
+	 * See "dropConglomerate(...)" above.
+	 *	
+	 * @param skipCreate If true then we will skip the "create
+	 *  new conglomerate" processing for the dropped conglom.
+	 * @param newConglomActions Optional List.  If non-null then
+	 *  for each ConglomerateDescriptor for which we skip the
+	 *  "create new conglomerate" processing we will add a
+	 *  ConstantAction to this list.  The constant action can
+	 *  then be executed later (esp. by the caller) to create the
+	 *  new conglomerate, if needed.  If this argument is null and
+	 *  we skip creation of a new conglomerate, the new conglomerate
+	 *  is effectively ignored (which may be fine in some cases--
+	 *  ex. when dropping a table).
+	 */
+
+/**
+     * Recreate backing index of unique constraint.
+     *
+     * It first drops the existing index and creates it again with 
+     * uniqueness set to false and uniqueWhenNotNull set to true. It reuses
+     * the uuid so there is no need to update ConstraintDescriptor.
+     *
+     * @param cd            ConglomerateDescritor to recreate
+     * @param td            TableDescriptor for table on which congDesc exists
+     * @param activation    Activation used when creating a new backing index 
+     *                      (if a new backing index is needed)
+     * @param lcc           LanguageConnectionContext used for dropping
+     *
+     *      */
+
+/**
+	 * Get any table properties that exist for the received
+	 * index descriptor.
+	 */
+
+/**
+	 * Create a ConstantAction which, when executed, will create a
+	 * new conglomerate whose attributes match those of the received
+	 * ConglomerateDescriptor.
+	 *
+	 * @param srcCD Descriptor describing what the replacement
+	 *   physical conglomerate should look like
+	 * @param td Table descriptor for the table to which srcCD belongs
+	 * @param properties Properties from the old (dropped) conglom
+	 *  that should be "forwarded" to the new (replacement) conglom.
+	 */
+
+/**
+	 * Execute the received ConstantAction, which will create a
+	 * new physical conglomerate (or find an existing physical
+	 * conglomerate that is "sharable") to replace some dropped
+	 * physical conglomerate.  Then find any conglomerate descriptors
+	 * which still reference the dropped physical conglomerate and
+	 * update them all to have a conglomerate number that points
+	 * to the conglomerate created by the ConstantAction.
+	 *
+	 * This method is called as part of DROP processing to handle
+	 * cases where a physical conglomerate that was shared by
+	 * multiple descriptors is dropped--in which case a new physical
+	 * conglomerate must be created to support the remaining
+	 * descriptors.
+	 *
+	 * @param replaceConglom Constant action which, when executed,
+	 *  will either create a new conglomerate or find an existing
+	 *  one that satisfies the ConstantAction's requirements.
+	 * @param activation Activation used when creating the conglom
+	 */
+

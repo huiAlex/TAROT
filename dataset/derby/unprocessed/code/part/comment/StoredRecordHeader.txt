@@ -1,0 +1,179 @@
+/**
+    A class StoredPage uses to cache record headers by passing instances
+    to BasePage, and to write stored versions of record headers.
+
+    Format
+
+    
+
+    1 byte          - status
+    compressed int  - record identifier
+
+    compressed long - overflow page } only if hasOverflow() is true
+    compressed int  - overflow id   }     "        "           "
+
+    compressed int  - first field   } only if hasFirstField set - otherwise 0
+
+    compressed int  - number of fields in this portion - only if hasOverflow()
+                                is false OR hasFirstField is true - otherwise 0
+    
+
+*/
+
+/**************************************************************************
+     * Constants of the class
+     **************************************************************************
+     */
+
+/**
+     * maximum length for row containing just an overflow pointer.
+     * 
+     * The maximum stored length of a row that just contains an overflow pointer
+     * is 17 bytes:
+     *   stored sizeof(status byte)       :  1 +
+     *   stored sizeof(record id)         :  4 +
+     *   max stored size overflow page ptr:  8 +
+     *   max stored size overflow record id: 4  
+     **/
+
+/**************************************************************************
+     * Fields of the class
+     **************************************************************************
+     */
+
+/**
+     * Actual identifier of the record
+     *
+     *  MT - Mutable
+     **/
+
+/**
+     * Status of the record.
+     *
+     * See above for description of fields:
+     *     RECORD_DELETED
+     *     RECORD_OVERFLOW
+     *     RECORD_HAS_FIRST_FIELD
+     *     RECORD_VALID_MASK
+     *
+     *  MT - Mutable - single thread required.
+     **/
+
+/**
+     * number of fields in the row.
+     **/
+
+/**
+     * A record handle that can represent the record, may be null.
+     **/
+
+/**
+     * Class which holds the fields {@code overflowId}, {@code overflowPage}
+     * and {@code firstField}, which are not needed when there is no
+     * overflow. These fields are factored out to save Java heap space (see
+     * DERBY-3130).
+     */
+
+/**************************************************************************
+     * Constructors for This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Public Accessor "Get" Methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * Get a record handle for the record.
+     * 
+     *
+     *  MT - single thread required
+     **/
+
+/**
+     * Get the record identifier
+     *
+     *  MT - thread safe
+     **/
+
+/**
+     * Get the deleted state of the record.
+     * 
+     *
+     *  MT - single thread required
+     **/
+
+/**
+     * return the size of the record header.
+     * 
+     * Calculates the size of the record header, mostly used to allow a
+     * reader to skip over the record header and position on the 1st field
+     * of the record.
+     * 
+     * This low level routine is performance critical to processing lots of
+     * rows, so calls to CompressNumber have been hand inlined.
+     *
+     * @return The length of the record header.
+     **/
+
+/**************************************************************************
+     * Public Accessor "Set" Methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * Set the deleted state of the record.
+     * 
+     * return   1, if delete status from not deleted to deleted
+     * return  -1, if delete status from deleted to not deleted
+     * return   0, if status unchanged.
+     *
+     *  MT - single thread required
+     **/
+
+/**************************************************************************
+     * Public Methods implmenting read/write of Storable Interface:
+     **************************************************************************
+     */
+
+/**
+     * Return length on disk of the record id portion of the record header
+     *
+     * Record id is part of the record header and is stored in an internal
+     * compressed format.  The length of this format depends on the value
+     * of the record id.
+     *
+     * @return length of encoded record id on disk.
+     **/
+
+/** Create an empty {@code OverflowInfo} object. */
+
+/** Create a copy of a {@code OverflowInfo} object. */
+
+/**
+         * If (hasOverflow()) then this is the id of the row on page
+         * overflowPage where the next portion of the row can be found. In this
+         * case there are no "real" fields on this page.  This situation comes
+         * about if a row has been updated such that the real first field no
+         * longer fits on the head page.
+         */
+
+/**
+         * If (hasOverflow()) then this is the page where where the next
+         * portion of the row can be found. In this case there are no "real"
+         * fields on this page.
+         */
+
+/**
+         * If (hasFirstField()) then this field is the number of the column in
+         * the orginal row which is now stored as the first field in this row.
+         * This row is 2nd through N'th portion of a long row.
+         *
+         * For example if a row has its first 3 fields on page 0 and its next 3
+         * fields on page 1, then the record header of the row portion on page
+         * 1 will have hasFirstField() set to true, and the value would be 4,
+         * indicating that the 4th field of the row is stored as the 1st field
+         * of the partial row portion stored on page 1.
+         */
+

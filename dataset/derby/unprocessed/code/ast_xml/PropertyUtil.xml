@@ -1,0 +1,957 @@
+<Class>
+    <Id>1984</Id>
+    <Package>org.apache.derby.iapi.services.property</Package>
+    <ClassName>PropertyUtil</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>PropertyUtil  /** 
+ * There are 5 property objects within a JBMS system. 1) JVM - JVM set - those in System.getProperties 2) APP - Application set - derby.properties file 3) SRV - Persistent Service set - Those stored in service.properties 4) TRAN - Persistent Transactional set - Those stored via the AccessManager interface 5) BOOT - Set by a boot method (rare) This class has a set of static methods to find a property using a consistent search order from the above set. &lt;BR&gt; getSystem*() methods use the search order. &lt;OL&gt; &lt;LI&gt; JVM &lt;LI&gt; APP &lt;/OL&gt; &lt;BR&gt; getService* methods use the search order &lt;OL&gt; &lt;LI&gt; JVM &lt;LI&gt; TRAN &lt;LI&gt; SRV &lt;LI&gt; APP &lt;/OL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>servicePropertyList</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SET_IN_JVM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SET_IN_DATABASE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SET_IN_APPLICATION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NOT_SET</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>whereSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Dictionary</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [dbOnly=isDBOnly(set)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDBOnly</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Dictionary</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=(String)set.get(Property.DATABASE_PROPERTIES_ONLY)]</InnerVar>
+                <InnerVar>boolean [dbOnly=Boolean.valueOf((value != null ? value.trim() : null)).booleanValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDBOnly</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=set.getProperty(Property.DATABASE_PROPERTIES_ONLY)]</InnerVar>
+                <InnerVar>boolean [dbOnly=Boolean.valueOf((value != null ? value.trim() : value)).booleanValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServicePropertyList</MethodName>
+            <MethodComment>/** 
+ * Get the list of properties which are normally stored in service.properties 
+ */
+</MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemProperty</MethodName>
+            <MethodComment>/** 
+ * Find a system wide property.
+ * @return the value of the property or null if it does not exist.
+ * @see #getSystemProperty(String,String)
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemProperty</MethodName>
+            <MethodComment>/** 
+ * Find a system wide property with a default. Search order is &lt;OL&gt; &lt;LI&gt; JVM property &lt;LI&gt; derby.properties &lt;/OL&gt; &lt;P&gt; This method can be used by a system that is not running Derby, just to maintain the same lookup logic and security manager concerns for finding derby.properties and reading system properties.
+ * @return the value of the property or defaultValue if it does not exist.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ModuleFactory [monitor=getMonitorLite()]</InnerVar>
+                <InnerVar>String [value=monitor.getJVMProperty(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPropertyFromSet</MethodName>
+            <MethodComment>/** 
+ * Get a property from the passed in set. The passed in set is either: &lt;UL&gt; &lt;LI&gt; The properties object passed into ModuleControl.boot() after the database has been booted. This set will be a DoubleProperties object with the per-database transaction set as the read set and the service.properties as the write set. &lt;LI&gt; The Dictionary set returned/passed in by a method of BasicService.Properties. &lt;/UL&gt; &lt;BR&gt; This method uses the same search order as the getService() calls.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [dbOnly=set != null ? isDBOnly(set) : false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPropertyFromSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Serializable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Dictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [dbOnly=set != null ? isDBOnly(set) : false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPropertyFromSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Serializable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Dictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPropertyFromSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDatabaseProperty</MethodName>
+            <MethodComment>/** 
+ * Get a property only looking in the Persistent Transactional (database) set.
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [obj=set.getProperty(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceProperty</MethodName>
+            <MethodComment>/** 
+ * Find a service wide property with a default. Search order is The service is the persistent service associated with the current context stack.
+ * @return the value of the property or defaultValue if it does not exist.
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=PropertyUtil.getDatabaseProperty(set,Property.DATABASE_PROPERTIES_ONLY)]</InnerVar>
+                <InnerVar>boolean [dbOnly=Boolean.valueOf((value != null ? value.trim() : value)).booleanValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceProperty</MethodName>
+            <MethodComment>/** 
+ * Find a service wide property.  The service is the persistent service associated with the current context stack.
+ * @return the value of the property or null if it does not exist.
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemBoolean</MethodName>
+            <MethodComment>/** 
+ * Get a system wide property as a boolean.
+ * @param key The name of the system property
+ * @return true of the property is set to 'true, TRUE', false otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemBoolean</MethodName>
+            <MethodComment>/** 
+ * Get a system wide property as a boolean.
+ * @param key The name of the system property
+ * @param defaultValue The value to use if the property has not been set
+ * @return return defaultValue if the property is not set, returns true ifthe property is set to 'true, TRUE', returns false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=PropertyUtil.getSystemProperty(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceBoolean</MethodName>
+            <MethodComment>/** 
+ * Get a service wide property as a boolean.
+ * @return true of the property is set to 'true, TRUE', false otherwise
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defValue</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=PropertyUtil.getServiceProperty(set,key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemInt</MethodName>
+            <MethodComment>/** 
+ * s Get a system wide property as a int.
+ * @return value of the property if set subject to min and max, defaultValue ifit is not set or set to a non-integer value.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>min</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceInt</MethodName>
+            <MethodComment>/** 
+ * Get a service wide property as a int.
+ * @return value of the property if set subject to min and max, defaultValue ifit is not set or set to a non-integer value.
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>min</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceInt</MethodName>
+            <MethodComment>/** 
+ * Get a service wide property as a int. The passed in Properties set overrides any system, applcation or per-database properties.
+ * @return value of the property if set subject to min and max, defaultValue ifit is not set or set to a non-integer value.
+ * @exception StandardException Standard Derby error handling. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>props</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>min</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemInt</MethodName>
+            <MethodComment>/** 
+ * Get a system wide property as a int.
+ * @return value of the property if, defaultValue ifit is not set or set to a non-integer value.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleInt</MethodName>
+            <MethodComment>/** 
+ * Parse an string as an int based property value.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>min</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>booleanProperty</MethodName>
+            <MethodComment>/** 
+ * Parse and validate and return a boolean property value. If the value is invalid raise an exception. &lt;P&gt; The following are valid property values. &lt;UL&gt; &lt;LI&gt; null - returns defaultValue &lt;LI&gt; "true" - returns true (in any case without the quotes) &lt;LI&gt; "false" - return true (in any case without the quotes) &lt;/UL&gt;
+ * @exception StandardException Oops
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Serializable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [vS=((String)v).trim()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>intPropertyValue</MethodName>
+            <MethodComment>/** 
+ * Parse, validate and return an integer property value. If the value is invalid raise an exception. If the value passed in is null return a default value.
+ * @exception StandardException Oops
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Serializable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [vs=((String)v).trim()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isServiceProperty</MethodName>
+            <MethodComment>/** 
+ * Return true iff the key is the name of a database property that is  stored in services.properties.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>existsBuiltinUser</MethodName>
+            <MethodComment>/** 
+ * Return  {@code true} if {@code username} is defined as a built-in useri.e. there exists a property  {@code derby.user.}&amp;lt;userid&amp;gt; in the database (or, possibly, in system properties if not forbidden by  {@code derby.database.propertiesOnly}). Note that &amp;lt;userid&amp;gt; found in a property will be normalized to case normal form before comparison is performed against username, which is presumed normalized already.
+ * @param set object which implements PersistentSet interface(TransactionController)
+ * @param username Normalized authorization identifier
+ * @return {@code true} if match found
+ * @exception StandardException
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>username</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [dbOnly=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nativeAuthenticationEnabled</MethodName>
+            <MethodComment>/** 
+ * Return true if NATIVE authentication has been enabled in the passed-in properties.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [authenticationProvider=getPropertyFromSet(properties,Property.AUTHENTICATION_PROVIDER_PARAMETER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nativeAuthenticationEnabled</MethodName>
+            <MethodComment>/** 
+ * Return true if NATIVE authentication is turned on for the passed-in value of Property.AUTHENTICATION_PROVIDER_PARAMETER.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>authenticationProvider</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>localNativeAuthenticationEnabled</MethodName>
+            <MethodComment>/** 
+ * Return true if the passed-in properties specify NATIVE authentication using LOCAL credentials.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [authenticationProvider=getPropertyFromSet(properties,Property.AUTHENTICATION_PROVIDER_PARAMETER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>systemPropertiesExistsBuiltinUser</MethodName>
+            <MethodComment>/** 
+ * Return true if username is defined as a system property i.e. there exists a property  {@code derby.user.}&amp;lt;userid&amp;gt; in the system properties. Note that &amp;lt;userid&amp;gt; will be normalized to case normal form before comparison is performed against username, which is presumed normalized already.
+ * @param username Normalized authorization identifier
+ * @return {@code true} if match found
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>username</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ModuleFactory [monitor=getMonitorLite()]</InnerVar>
+                <InnerVar>Properties [applicationProperties=monitor.getApplicationProperties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>propertiesContainsBuiltinUser</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>props</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>username</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitorLite</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

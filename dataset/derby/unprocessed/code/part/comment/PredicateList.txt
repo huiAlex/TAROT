@@ -1,0 +1,400 @@
+/**
+ * A PredicateList represents the list of top level predicates.
+ * Each top level predicate consists of an AndNode whose leftOperand is the
+ * top level predicate and whose rightOperand is true.  It extends 
+ * QueryTreeNodeVector.
+ *
+ */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Another version of removeOptPredicate that takes the Predicate to be
+	 * removed, rather than the position of the Predicate.  This is not part
+	 * any interface (yet).
+	 */
+
+/** @see OptimizablePredicateList#addOptPredicate */
+
+/**
+	 * Another flavor of addOptPredicate that inserts the given predicate
+	 * at a given position.  This is not yet part of any interface.
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** @see OptimizablePredicateList#markAllPredicatesQualifiers */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Add a Predicate to the list.
+	 *
+	 * @param predicate	A Predicate to add to the list
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Transfer the non-qualifiers from this predicate list to the specified 
+     * predicate list.
+	 * This is useful for arbitrary hash join, where we need to separate the 2 
+     * as the qualifiers get applied when probing the hash table and the 
+     * non-qualifiers get * applied afterwards.
+	 *
+	 * @param optTable	The optimizable that we want qualifiers for
+	 * @param otherPL	ParameterList for non-qualifiers
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Categorize the predicates in the list.  Initially, this means
+	 * building a bit map of the referenced tables for each predicate.
+	 *
+	 * @exception StandardException			Thrown on error
+	 */
+
+/**
+	 *  Eliminate predicates of the form:
+	 *							AndNode
+	 *							/	   \
+	 *	true BooleanConstantNode		true BooleanConstantNode
+	 *  This is useful when checking for a NOP PRN as the
+	 *  Like transformation on c1 like 'ASDF%' can leave
+	 *  one of these predicates in the list.
+	 */
+
+/**
+	 * Rebuild a constant expression tree from the remaining constant 
+     * predicates and delete those entries from the PredicateList.
+	 * The rightOperand of every top level AndNode is always a true 
+     * BooleanConstantNode, so we can blindly overwrite that pointer.
+	 * Optimizations:
+	 *
+	 * We take this opportunity to eliminate:
+	 *							AndNode
+	 *						 /		   \
+	 *	true BooleanConstantNode	true BooleanConstantNode
+	 *
+	 * We remove the AndNode if the predicate list is a single AndNode:
+	 *					AndNode
+	 *				   /	   \
+	 *		LeftOperand			RightOperand
+	 *
+	 * becomes:
+	 *					LeftOperand
+	 *
+	 * If the leftOperand of any AndNode is False, then the entire expression
+	 * will be False.  The expression simple becomes:
+	 *					false BooleanConstantNode
+	 *
+	 * @return ValueNode	The rebuilt expression tree.
+	 */
+
+/**
+	 * Rebuild an expression tree from the remaining predicates and delete those
+	 * entries from the PredicateList.
+	 * The rightOperand of every top level AndNode is always a true 
+     * BooleanConstantNode, so we can blindly overwrite that pointer.
+	 * Optimizations:
+	 *
+	 * We take this opportunity to eliminate:
+	 *						AndNode
+	 *					   /	   \
+	 *	true BooleanConstantNode	true BooleanConstantNode
+	 *
+	 * We remove the AndNode if the predicate list is a single AndNode:
+	 *					AndNode
+	 *				   /	   \
+	 *		LeftOperand			RightOperand
+	 *
+	 * becomes:
+	 *					LeftOperand
+	 *
+	 * If the leftOperand of any AndNode is False, then the entire expression
+	 * will be False.  The expression simple becomes:
+	 *					false BooleanConstantNode
+	 *
+	 * @return ValueNode	The rebuilt expression tree.
+	 */
+
+/**
+	 * Remap all ColumnReferences in this tree to be clones of the
+	 * underlying expression.
+	 *
+	 * @exception StandardException			Thrown on error
+	 */
+
+/**
+	 * Break apart the search clause into matching a PredicateList
+	 * where each top level predicate is a separate element in the list.
+	 * Build a bit map to represent the FromTables referenced within each
+	 * top level predicate.
+	 * NOTE: We want the rightOperand of every AndNode to be true, in order
+	 * to simplify the algorithm for putting the predicates back into the tree.
+	 * (As we put an AndNode back into the tree, we can ignore it's rightOperand.)
+	 *
+	 * @param numTables			Number of tables in the DML Statement
+	 * @param searchClause	The search clause to operate on.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** 
+	 * XOR fromMap with the referenced table map in every remaining
+	 * Predicate in the list.  This is useful when pushing down 
+	 * multi-table predicates.
+	 * 
+	 * @param fromMap	The JBitSet to XOR with.
+	 */
+
+/**
+     * Check if a node is representing a constant or a parameter.
+     *
+     * @param node the node to check
+     * @return {@code true} if the node is a constant or a parameter, {@code
+     * false} otherwise
+     */
+
+/**
+	 * Push all predicates, which can be pushed, into the underlying select.
+	 * A predicate can be pushed into an underlying select if the source of 
+     * every ColumnReference in the predicate is itself a ColumnReference.
+	 *
+	 * This is useful when attempting to push predicates into non-flattenable
+	 * views or derived tables or into unions.
+	 *
+	 * @param select			The underlying SelectNode.
+	 * @param copyPredicate		Whether to make a copy of the predicate
+	 *							before pushing
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Mark all of the RCs and the RCs in their RC/VCN chain
+	 * referenced in the predicate list as referenced.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Update the array of columns in = conditions with constants
+	 * or correlation or join columns.  This is useful when doing
+	 * subquery flattening on the basis of an equality condition.
+	 *
+	 * @param tableNumber	The tableNumber of the table from which
+	 *						the columns of interest come from.
+	 * @param eqOuterCols	Array of booleans for noting which columns
+	 *						are in = predicates with constants or
+	 *						correlation columns.
+	 * @param tableNumbers	Array of table numbers in this query block.
+	 * @param resultColTable tableNumber is the table the result columns are
+	 *						coming from
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** 
+	 * Check if all of the predicates in the list are pushable.
+	 *
+	 * @return Whether or not all of the predicates in the list are pushable.
+	 */
+
+/**
+      * Check if all the predicates reference a given {@code FromBaseTable}.
+      *
+      * @param fbt the {@code FromBaseTable} to check for
+      * @return {@code true} if the table is referenced by all predicates,
+      * {@code false} otherwise
+      */
+
+/**
+	 * Build a list of pushable predicates, if any,
+	 * that satisfy the referencedTableMap.
+	 *
+	 * @param referencedTableMap	The referenced table map
+	 *
+	 * @return A list of pushable predicates, if any,
+	 * that satisfy the referencedTableMap.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Decrement the level of any CRs from the subquery's
+	 * FROM list that are interesting to transitive closure.
+	 * 
+	 * @param fromList	The subquery's FROM list.
+	 * @param decrement	Decrement size.
+	 */
+
+/**
+	  * Remove redundant predicates.  A redundant predicate has an equivalence
+	  * class (!= -1) and there are other predicates in the same equivalence
+	  * class after it in the list.  (Actually, we remove all of the predicates
+	  * in the same equivalence class that appear after this one.)
+	  */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** @see OptimizablePredicateList#startOperator */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** @see OptimizablePredicateList#stopOperator */
+
+/**
+	 * If there is an IN-list probe predicate in this list then generate
+	 * the corresponding IN-list values as a DataValueDescriptor array,
+	 * to be used for probing at execution time.  Also generate a boolean
+	 * value indicating whether or not the values are already in sorted
+	 * order.
+	 *
+	 * Assumption is that by the time we get here there is at most one
+	 * IN-list probe predicate in this list.
+	 *
+	 * @param acb The ActivationClassBuilder for the class we're building
+	 * @param mb The MethodBuilder for the method we're building
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Generate the indexable row for a start key or stop key.
+	 *
+	 * @param acb	The ActivationClassBuilder for the class we're building
+	 * @param numberOfColumns	The number of columns in the key
+	 *
+	 * @return	The field that holds the indexable row
+	 */
+
+/**
+	 * Generate the code to set the value from a predicate in an index column.
+	 *
+	 * @param acb	The ActivationClassBuilder for the class we're building
+	 * @param exprFun	The MethodBuilder for the method we're building
+	 * @param columnNumber	The position number of the column we're setting
+	 *						the value in (zero-based)
+	 * @param pred	The Predicate with the value to put in the index column
+	 * @param optTable	The Optimizable table the column is in
+	 * @param rowField	The field that holds the indexable row
+	 * @param isStartKey Are we generating start or stop key?  This information
+	 *					 is useful for "in"'s dynamic start/stop key, bug 3858
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Finish generating a start or stop key
+	 *
+	 * @param acb	The ActivationClassBuilder for the class we're building
+	 * @param exprFun	The MethodBuilder for the method we're building
+	 * @param rowField	The name of the field that holds the indexable row
+	 */
+
+/**
+	 * 	 *
+	 * Currently this method only accounts for IN list multi-probing
+	 * predicates (DERBY-3279).
+	 */
+
+/** 
+	 * 	 */
+
+/** 
+	 * choose the statistic which has the maximum match with the predicates.
+	 * value is returned in ret.
+	 */
+
+/** 
+	 * Compute selectivity the old fashioned way.
+	 */
+
+/** 
+	 * Inner class which helps statistics routines do their work.
+	 * We need to keep track of the index position for each predicate for each
+	 * index while we're manipulating predicates and statistics. Each predicate
+	 * does have internal state for indexPosition, but this is a more permanent
+	 * sort of indexPosition, which keeps track of the position for the index
+	 * being considered in estimateCost. For us, each predicate can have
+	 * different index positions for different indices. 
+	 */
+
+/** Another inner class which is basically a List of Predicate Wrappers.
+	 */
+

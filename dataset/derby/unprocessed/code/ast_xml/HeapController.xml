@@ -1,0 +1,470 @@
+<Class>
+    <Id>1974</Id>
+    <Package>org.apache.derby.impl.store.access.heap</Package>
+    <ClassName>HeapController</ClassName>
+    <SuperClass>GenericConglomerateController</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ConglomerateController</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>HeapController  /** 
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>getRowPositionFromRowLocation</MethodName>
+            <MethodComment>/** 
+ * Protected concrete impl of abstract methods of  GenericConglomerateController class:
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>RowPosition</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>queueDeletePostCommitWork</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>RowPosition</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionManager [xact_mgr=open_conglom.getXactMgr()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>xact_mgr;addPostCommitWork;[new HeapPostCommit(xact_mgr.getAccessManager(),pos.current_page.getPageKey())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>purgeCommittedDeletes</MethodName>
+            <MethodComment>/** 
+ * Check and purge committed deleted rows on a page. &lt;p&gt;
+ * @return true, if no purging has been done on page, and thus latchcan be released before end transaction.  Otherwise the latch on the page can not be released before commit.
+ * @param page   A non-null, latched page must be passed in.  If allrows on page are purged, then page will be removed and latch released.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [purgingDone=false]</InnerVar>
+                <InnerVar>int [num_possible_commit_delete=page.recordCount() - page.nonDeletedRecordCount()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doInsert</MethodName>
+            <MethodComment>/** 
+ * Insert a new row into the heap. &lt;p&gt; Overflow policy: The current heap access method implements an algorithm that optimizes for fetch efficiency vs. space efficiency.  A row will not be over flowed unless it is bigger than a page.  If it is bigger than a page then it's initial part will be placed on a page and then subsequent parts will be overflowed to other pages. &lt;p&gt;
+ * @return The record handle of the inserted row.
+ * @param row           The row to insert.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>RecordHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=null]</InnerVar>
+                <InnerVar>byte [insert_mode]</InnerVar>
+                <InnerVar>RecordHandle [rh]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>page;unlatch;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>load</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heap</ParamName>
+                    <ParamType>Heap</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>createConglom</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowSource</ParamName>
+                    <ParamType>RowLocationRetRowSource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [num_rows_loaded=0]</InnerVar>
+                <InnerVar>int [mode=(ContainerHandle.MODE_FORUPDATE | ContainerHandle.MODE_UNLOGGED)]</InnerVar>
+                <InnerVar>OpenConglomerate [open_conglom=new OpenHeap()]</InnerVar>
+                <InnerVar>Page [page=open_conglom.getContainer().addPage()]</InnerVar>
+                <InnerVar>boolean [callbackWithRowLocation=rowSource.needsRowLocation()]</InnerVar>
+                <InnerVar>RecordHandle [rh]</InnerVar>
+                <InnerVar>HeapRowLocation [rowlocation]</InnerVar>
+                <InnerVar>FormatableBitSet [validColumns=rowSource.getValidColumns()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;init;[open_conglom]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRow</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rh</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_oper</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret_val]</InnerVar>
+                <InnerVar>boolean [forUpdate=((ConglomerateController.LOCK_UPD &amp; lock_oper) != 0)]</InnerVar>
+                <InnerVar>boolean [forUpdateLock=((ConglomerateController.LOCK_UPDATE_LOCKS &amp; lock_oper) != 0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUserPageNoWait</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUserPageWait</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRowAtSlotNoWaitExclusive</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rh</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>open_conglom.getContainer();removePage;[page]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insert</MethodName>
+            <MethodComment>/** 
+ * Public Methods of This class:
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doInsert;[row]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertAndFetchLocation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateRowLocation</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rh=doInsert(row)]</InnerVar>
+                <InnerVar>HeapRowLocation [hrl=(HeapRowLocation)templateRowLocation]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>hrl;setFrom;[rh]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRow</MethodName>
+            <MethodComment>/** 
+ * Lock the given row location. &lt;p&gt; Should only be called by access. &lt;p&gt; This call can be made on a ConglomerateController that was opened for locking only. &lt;p&gt; RESOLVE (mikem) - move this call to ConglomerateManager so it is obvious that non-access clients should not call this.
+ * @return true if lock was granted, only can be false if wait was false.
+ * @param loc       The "RowLocation" which describes the exact row to lock.
+ * @param wait      Should the lock call wait to be granted?
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rh=((HeapRowLocation)loc).getRecordHandle(open_conglom.getContainer())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockRowAfterRead</MethodName>
+            <MethodComment>/** 
+ * UnLock the given row location. &lt;p&gt; Should only be called by access. &lt;p&gt; This call can be made on a ConglomerateController that was opened for locking only. &lt;p&gt; RESOLVE (mikem) - move this call to ConglomerateManager so it is obvious that non-access clients should not call this.
+ * @param loc       The "RowLocation" which describes the row to unlock.
+ * @param forUpdate Row was previously Locked the record for read or update.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row_qualified</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rh=((HeapRowLocation)loc).getRecordHandle(open_conglom.getContainer())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>open_conglom.getContainer().getLockingPolicy();unlockRecordAfterRead;[open_conglom.getRawTran(), open_conglom.getContainer(), rh, open_conglom.isForUpdate(), row_qualified]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRow</MethodName>
+            <MethodComment>/** 
+ * Lock the given record id/page num pair. &lt;p&gt; Should only be called by access, to lock "special" locks formed from the Recordhandle.* reserved constants for page specific locks. &lt;p&gt; This call can be made on a ConglomerateController that was opened for locking only. &lt;p&gt; RESOLVE (mikem) - move this call to ConglomerateManager so it is obvious that non-access clients should not call this.
+ * @return true if lock was granted, only can be false if wait was false.
+ * @param page_num          Page number of row to lock.
+ * @param record_id         Record id of row on page_num to lock.
+ * @param lock_operation    Desc of what to lock for, ie. update, insert ...
+ * @param wait              Should the lock call wait to be granted?
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page_num</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret_val]</InnerVar>
+                <InnerVar>RecordHandle [rh=open_conglom.getContainer().makeRecordHandle(page_num,record_id)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newRowLocationTemplate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOpenConglomerate</MethodName>
+            <MethodComment>/** 
+ * Public Methods of XXXX class:
+ */
+</MethodComment>
+            <ReturnType>OpenConglomerate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

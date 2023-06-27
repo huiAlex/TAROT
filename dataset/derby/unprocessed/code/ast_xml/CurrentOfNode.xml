@@ -1,0 +1,513 @@
+<Class>
+    <Id>397</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>CurrentOfNode</ClassName>
+    <SuperClass>FromTable</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CurrentOfNode  /** 
+ * The CurrentOf operator is used by positioned DELETE  and UPDATE to get the current row and location for the target cursor.  The bind() operations for  positioned DELETE and UPDATE add a column to  the select list under the statement for the row location  accessible from this node. This node is placed in the from clause of the select generated for the delete or update operation. It acts much like a FromBaseTable, using the information about the target table of the cursor to provide information.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>cursorName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>preStmt</FieldName>
+            <FieldType>ExecPreparedStatement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exposedTableName</FieldName>
+            <FieldType>TableName</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseTableName</FieldName>
+            <FieldType>TableName</FieldType>
+        </Field>
+        <Field>
+            <FieldName>singleScanCostEstimate</FieldName>
+            <FieldType>CostEstimate</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dummyTargetTable</FieldName>
+            <FieldType>FromBaseTable</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CurrentOfNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>correlationName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cursor</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeForMerge</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Construct a dummy CurrentOfNode just for compiling the DELETE action of a MERGE statement. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>CurrentOfNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cursorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dummyTargetTable</ParamName>
+                    <ParamType>FromBaseTable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CurrentOfNode [node=new CurrentOfNode(null,cursorName,null,cm)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>estimateCost</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#estimateCost
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>singleScanCostEstimate;setCost;[0.0d, 1.0d, 1.0d]</InnerMethodInvoke>
+                <InnerMethodInvoke>getBestAccessPath();setCostEstimate;[singleScanCostEstimate]</InnerMethodInvoke>
+                <InnerMethodInvoke>getBestSortAvoidancePath();setCostEstimate;[singleScanCostEstimate]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindNonVTITables</MethodName>
+            <MethodComment>/** 
+ * Binding this FromTable means finding the prepared statement for the cursor and creating the result columns (the columns updatable on that cursor). We expect someone else to verify that the target table of the positioned update or delete is the table under this cursor.
+ * @param dataDictionary	The DataDictionary to use for binding
+ * @param fromListParam		FromList to use/append to.
+ * @return	ResultSetNode		Returns this.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ExecCursorTableReference [refTab=preStmt.getTargetTable()]</InnerVar>
+                <InnerVar>String [schemaName=refTab.getSchemaName()]</InnerVar>
+                <InnerVar>SchemaDescriptor [tableSchema=getSchemaDescriptor(refTab.getSchemaName())]</InnerVar>
+                <InnerVar>TableDescriptor [td=getTableDescriptor(refTab.getBaseName(),tableSchema)]</InnerVar>
+                <InnerVar>ColumnDescriptorList [cdl=td.getColumnDescriptorList()]</InnerVar>
+                <InnerVar>int [cdlSize=cdl.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>preStmt;rePrepare;[getLanguageConnectionContext()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[new ResultColumnList(getContextManager())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions in this ResultSetNode.  This means binding the sub-expressions, as well as figuring out what the return type is for each expression.
+ * @param fromListParam		FromList to use/append to.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMatchingColumn</MethodName>
+            <MethodComment>/** 
+ * Try to find a ResultColumn in the table represented by this CurrentOfNode that matches the name in the given ColumnReference.
+ * @param columnReference	The columnReference whose name we're lookingfor in the given table.
+ * @return	A ResultColumn whose expression is the ColumnNodethat matches the ColumnReference. Returns null if there is no match.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnReference</ParamName>
+                    <ParamType>ColumnReference</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [resultColumn=null]</InnerVar>
+                <InnerVar>TableName [columnsTableName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Preprocess a CurrentOfNode.  For a CurrentOfNode, this simply means allocating a referenced table map to avoid downstream NullPointerExceptions. NOTE: There are no bits set in the referenced table map.
+ * @param numTables			The number of tables in the DML Statement
+ * @param gbl				The group by list, if any
+ * @param fromList			The from list, if any
+ * @return ResultSetNode at top of preprocessed tree.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gbl</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setReferencedTableMap;[new JBitSet(numTables)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimize</MethodName>
+            <MethodComment>/** 
+ * Optimize this CurrentOfNode.  Nothing to do.
+ * @param dataDictionary	The DataDictionary to use for optimization
+ * @param predicateList		The PredicateList to optimize.  This shouldbe a single-table predicate with the table the same as the table in this FromTable.
+ * @param outerRows			The number of outer joining rows
+ * @return ResultSetNode	The top of the optimized subtree.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerRows</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bestCostEstimate;setCost;[0.0d, outerRows, outerRows]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * Generation on a CurrentOfNode creates a scan on the cursor, CurrentOfResultSet. &lt;p&gt; This routine will generate and return a call of the form: &lt;pre&gt;&lt;verbatim&gt; ResultSetFactory.getCurrentOfResultSet(cursorName) &lt;/verbatim&gt;&lt;/pre&gt;
+ * @param acb	The ActivationClassBuilder for the class being built
+ * @param mb	The execute() method to be built
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodBuilder [rmb=acb.startResetMethod()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assignResultSetNumber;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[cursorName]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushThisAsActivation;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getCurrentOfResultSet", ClassName.NoPutResultSet, 3]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;cast;[ClassName.CursorResultSet]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;putField;[(String)null, acb.getRowLocationScanResultSetName(), ClassName.CursorResultSet]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;cast;[ClassName.NoPutResultSet]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;push;[cursorName]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;push;[preStmt.getObjectName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;callMethod;[VMOpcode.INVOKEVIRTUAL, ClassName.BaseActivation, "checkPositionedStatement", "void", 2]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;methodReturn;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rmb;complete;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSubNodes</MethodName>
+            <MethodComment>/** 
+ * Prints the sub-nodes of this object.  See QueryTreeNode.java for how tree printing is supposed to work.
+ * @param depth		The depth of this node in the tree
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>depth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExposedName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateTargetLockMode</MethodName>
+            <MethodComment>/** 
+ * Get the lock mode for this table as the target of an update statement (a delete or update).  This is implemented only for base tables and CurrentOfNodes.
+ * @see TransactionController
+ * @return  The lock mode
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExposedTableName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBaseCursorTargetTableName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCursorName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCursorStatement</MethodName>
+            <MethodComment>/** 
+ * Return the CursorNode associated with a positioned update/delete.
+ * @return CursorNode	The associated CursorNode.
+ */
+</MethodComment>
+            <ReturnType>ExecPreparedStatement</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Activation [activation=getLanguageConnectionContext().lookupCursorActivation(cursorName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptChildren</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Visitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

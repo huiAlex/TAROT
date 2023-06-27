@@ -1,0 +1,1434 @@
+<Class>
+    <Id>511</Id>
+    <Package>org.apache.derbyTesting.unitTests.store</Package>
+    <ClassName>T_Recovery</ClassName>
+    <SuperClass>T_Generic</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>T_Recovery  /** 
+ * A protocol unit test for recovery. To run, create a derby.properties file in a new directory with the contents derby.module.test.recovery=org.apache.derbyTesting.unitTests.store.T_Recovery Execute java -DSetupRecovery=true org.apache.derbyTesting.unitTests.harness.UnitTestMain java -DTestRecovery=true org.apache.derbyTesting.unitTests.harness.UnitTestMain
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>testService</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_001</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_002</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_003</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_004</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_005</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_006</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_UNDO</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REC_NULL</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SP1</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SP2</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BS_COL_0</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>filein</FieldName>
+            <FieldType>RandomAccessFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fileout</FieldName>
+            <FieldType>RandomAccessFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>setupRecovery</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>testRecovery</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>infoPath</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SETUP_RECOVERY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_RECOVERY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RECOVERY_TESTPATH</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>factory</FieldName>
+            <FieldType>RawStoreFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lf</FieldName>
+            <FieldType>LockFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>contextService</FieldName>
+            <FieldType>ContextService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uuidfactory</FieldName>
+            <FieldType>UUIDFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>t_util</FieldName>
+            <FieldType>T_Util</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>T_Recovery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>BS_COL_0;set;[0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getModuleToTestProtocolName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConfig</MethodName>
+            <MethodComment>/** 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [param=PropertyUtil.getSystemProperty(SETUP_RECOVERY)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runTests</MethodName>
+            <MethodComment>/** 
+ * Tests in here come in pairs (Snnn Rnnn), one to set it up, one to test it after recovery.  Information that needs to be passed from the setup to the recovery should, ideally, be written out to a database.  For now, it is written out as a pair of (key,value) long in the file T_Recovery.info. To make sure you don't accidently tramples on someone else's key,  encode your test number (nnn) by shifting over 32 bits and then add your key.  Multiple invocations which needs paramaters saved should be encoded futher. 001 &amp;lt; nnn &amp;lt; 200 -  no recovery undo 200 &amp;lt; nnn &amp;lt; 400 -  recovery undo
+ * @exception T_Fail Unexpected behaviour from the API
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getConfig;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>find</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inkey</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>key</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>test</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>param</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [i=test]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>register</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S001</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>long [cid=t_util.t_addContainer(t,0)]</InnerVar>
+                <InnerVar>ContainerHandle [c=t_util.t_openContainer(t,0,cid,true)]</InnerVar>
+                <InnerVar>Page [page=t_util.t_getPage(c,ContainerHandle.FIRST_PAGE_NUMBER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t_util;t_commit;[t]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;REPORT;["setup S001: " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R001</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(1,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R001: containerId " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S002</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>long [cid=t_util.t_addContainer(t,0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t_util;t_commit;[t]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R002</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(2,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(2,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R002: containerId " + cid + " recordCount "+ recordCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S003</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R003</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(3,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(3,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R003: containerId " + cid + " recordCount "+ recordCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S004</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R004</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(4,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R004: containerId " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S005</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R005</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(5,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(5,2))]</InnerVar>
+                <InnerVar>int [numPurged=(int)find(key(5,3))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R005: containerId " + cid + " recordCount "+ recordCount+ " numPurges "+ numPurged]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S006</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R006</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(6,1))]</InnerVar>
+                <InnerVar>long [page1_Id=find(key(6,2))]</InnerVar>
+                <InnerVar>long [page2_Id=find(key(6,3))]</InnerVar>
+                <InnerVar>long [page3_Id=find(key(6,4))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R006: containerId " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S007</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R007</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(7,0))]</InnerVar>
+                <InnerVar>long [p1=find(key(7,1))]</InnerVar>
+                <InnerVar>long [p2=find(key(7,2))]</InnerVar>
+                <InnerVar>long [p3=find(key(7,3))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S008</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R008</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(8,0))]</InnerVar>
+                <InnerVar>long [p1=find(key(8,1))]</InnerVar>
+                <InnerVar>long [p2=find(key(8,2))]</InnerVar>
+                <InnerVar>long [p3=find(key(8,3))]</InnerVar>
+                <InnerVar>long [p4=find(key(8,4))]</InnerVar>
+                <InnerVar>long [p5=find(key(8,5))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S009</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R009</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(9,0))]</InnerVar>
+                <InnerVar>int [numpages=(int)find(key(9,1))]</InnerVar>
+                <InnerVar>int[] [newrid=new int[numpages]]</InnerVar>
+                <InnerVar>long[] [newpnum=new long[numpages]]</InnerVar>
+                <InnerVar>Page[] [newpage=new Page[numpages]]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S010</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R010</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(10,1))]</InnerVar>
+                <InnerVar>int [numpages=(int)find(key(10,2))]</InnerVar>
+                <InnerVar>long[] [pnum=new long[numpages]]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R010"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S011</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>int [iterations=10000]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R011</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(11,1))]</InnerVar>
+                <InnerVar>long [expectedLastPageNum=find(key(11,2))]</InnerVar>
+                <InnerVar>int [iterations=(int)find(key(11,3))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S012</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>long [cid=t_util.t_addContainer(t,0,4096)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t_util;t_commit;[t]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R012</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(12,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S020</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>T_RawStoreRow [row1=new T_RawStoreRow(REC_001)]</InnerVar>
+                <InnerVar>T_RawStoreRow [row2=new T_RawStoreRow(REC_002)]</InnerVar>
+                <InnerVar>T_RawStoreRow [row3=new T_RawStoreRow(REC_003)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R020</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid1=find(key(20,1))]</InnerVar>
+                <InnerVar>long [cid2=find(key(20,2))]</InnerVar>
+                <InnerVar>long [cid3=find(key(20,3))]</InnerVar>
+                <InnerVar>long [pageId=find(key(20,4))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R020 container1 " + cid1 + " container2 "+ cid2+ " container3 "+ cid3+ " page "+ pageId]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S022</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R022</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(22,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R022 : containerId " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S100</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [t1=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>T_TWC [t2=t_util.t_startTransactionWithContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R100</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long[] [cid=new long[4]]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S101</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R101</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(101,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(101,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R101: containerId " + cid + " recordCount "+ recordCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S200</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>Page [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R200</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(200,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(200,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S201</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [t1=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>T_TWC [t2=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Page [p10, p11, p20, p21]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R201</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long[] [cid=new long[4]]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R201 passed:  container1 " + cid[0] + " container2 "+ cid[1]+ " container3 "+ cid[2]+ " container4 "+ cid[3]]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S202</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>Page [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ctx;switchTransactionContext;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R202</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(202,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(202,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+                <InnerVar>Page [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R202: containerId " + cid + " recordCount "+ recordCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S203</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numtrans=5]</InnerVar>
+                <InnerVar>int [numpages=2]</InnerVar>
+                <InnerVar>int [i, j]</InnerVar>
+                <InnerVar>T_TWC[] [t=new T_TWC[numtrans]]</InnerVar>
+                <InnerVar>Page[][] [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R203</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numtrans=(int)find(key(203,1))]</InnerVar>
+                <InnerVar>int [numpages=(int)find(key(203,2))]</InnerVar>
+                <InnerVar>int [i, j]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R203: numtrans " + numtrans + " numpages "+ numpages]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S204</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ut1=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>T_TWC [ut2=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Page [p10, p11, p20, p21, p30]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R204</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid10=find(key(204,10))]</InnerVar>
+                <InnerVar>long [cid11=find(key(204,11))]</InnerVar>
+                <InnerVar>long [cid20=find(key(204,20))]</InnerVar>
+                <InnerVar>long [cid21=find(key(204,21))]</InnerVar>
+                <InnerVar>long [cid30=find(key(204,30))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R204 passed: cid10 " + cid10 + ", cid11 "+ cid11+ ", cid20 "+ cid20+ ", cid21 "+ cid21+ ", cid30 "+ cid30]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S300</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R300</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(300,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t_util;t_openContainer;[t, 0, cid, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>t_util;t_commit;[t]</InnerMethodInvoke>
+                <InnerMethodInvoke>t;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;PASS;["R300 : containerId " + cid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S301</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>Page [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ctx;switchTransactionContext;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R301</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid1=find(key(301,1))]</InnerVar>
+                <InnerVar>long [cid2=find(key(301,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R301 : cid1 " + cid1 + " cid2 "+ cid2]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S302</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R302</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(302,1))]</InnerVar>
+                <InnerVar>int [recordCount=(int)find(key(302,2))]</InnerVar>
+                <InnerVar>int [numPurged=(int)find(key(302,3))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R302: containerId " + cid + " recordCount "+ recordCount+ " numPurges "+ numPurged]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S303</MethodName>
+            <MethodComment>/** 
+ * Test space reclaimation - purging of a row with serveral long columns rollback and repurge them again.
+ * @exception T_Fail Unexpected behaviour from the API
+ * @exception StandardException Unexpected exception from the implementation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [segment=0]</InnerVar>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>long [cid=t_util.t_addContainer(t,segment,4096)]</InnerVar>
+                <InnerVar>ContainerHandle [c=t_util.t_openContainer(t,segment,cid,true)]</InnerVar>
+                <InnerVar>Page [page=t_util.t_getPage(c,ContainerHandle.FIRST_PAGE_NUMBER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;REPORT;["START S303"]</InnerMethodInvoke>
+                <InnerMethodInvoke>ctx;switchTransactionContext;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;PASS;["S303"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R303</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(303,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R303"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S304</MethodName>
+            <MethodComment>/** 
+ * Test space reclaimation - purging of a long rows with a rollback and purging again after recovery in R304
+ * @exception T_Fail Unexpected behaviour from the API
+ * @exception StandardException Unexpected exception from the implementation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [segment=0]</InnerVar>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>long [cid=t_util.t_addContainer(t,segment,4096)]</InnerVar>
+                <InnerVar>ContainerHandle [c=t_util.t_openContainer(t,segment,cid,true)]</InnerVar>
+                <InnerVar>Page [page=t_util.t_getPage(c,ContainerHandle.FIRST_PAGE_NUMBER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ctx;switchTransactionContext;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;PASS;["S304"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R304</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(304,1))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R304"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>S999</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>T_TWC [ctx=t_util.t_startTransactionWithContext()]</InnerVar>
+                <InnerVar>Transaction [t=ctx.tran]</InnerVar>
+                <InnerVar>Page [page=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ctx;switchTransactionContext;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>SanityManager;DEBUG_SET;["TEST_LOG_SWITCH_LOG"]</InnerMethodInvoke>
+                <InnerMethodInvoke>factory;checkpoint;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>T_Fail</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>R999</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [cid=find(key(999,1))]</InnerVar>
+                <InnerVar>long [pageid=find(key(999,2))]</InnerVar>
+                <InnerVar>Transaction [t=t_util.t_startTransaction()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;PASS;["R999: cid " + cid + " page "+ pageid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>T_Fail</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextService</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of the ContextService. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findService</MethodName>
+            <MethodComment>/** 
+ * Privileged service lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startPersistentService</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPersistentService</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

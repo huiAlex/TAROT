@@ -1,0 +1,539 @@
+/**
+	The corresponding raw store transaction.
+	**/
+
+/**
+	The access manager this transaction is under.
+	**/
+
+/**
+	The context this transaction is being managed by.
+	**/
+
+/**
+	The parent transaction if this is a nested user transaction.
+	**/
+
+/** List of sort identifiers (represented as Integer objects)
+     * which can be reused. Since sort identifiers are used as array indexes,
+     * we need to reuse them to avoid leaking memory (DERBY-912). */
+
+/**
+	Where to look for temporary conglomerates.
+	**/
+
+/**
+	Next id to use for a temporary conglomerate.
+	**/
+
+/**
+     * Set by alter table to indicate that the conglomerate cache needs to
+     * be invalidated if a transaction aborting error is encountered, cleared
+     * after cleanup.
+     */
+
+/**
+     * The lock level of the transaction.
+     * 
+     * Cannot lock a level lower than the getSystemLockLevel().  So if 
+     * getSystemLockLevel() is table level locking, setting the transaction
+     * locking level to record has no effect.
+     **/
+
+/**************************************************************************
+     * Constructors for This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Private/Protected methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * Determine correct locking policy for a conglomerate open.
+     * 
+     * Determine from the following table whether to table or record lock
+     * the conglomerate we are opening.
+     * 
+     *
+     *
+     *                                     System level override
+     *                                     -------------------------------
+     * user requests                       table locking    record locking
+     * -------------                       -------------    --------------
+     * TransactionController.MODE_TABLE     TABLE             TABLE
+     * TransactionController.MODE_RECORD    TABLE             RECORD
+     **/
+
+/**
+     * Invalidate the conglomerate cache, if necessary.  If an alter table
+     * call has been made then invalidate the cache.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Public Methods of TransactionController interface:
+     **************************************************************************
+     */
+
+/**
+    Add a column to a conglomerate.  The conglomerate must not be open in
+	the current transaction.  This also means that there must not be any
+    active scans on it.
+
+    The column can only be added at the spot just after the current set of
+    columns.
+
+    The template_column must be nullable.
+
+    After this call has been made, all fetches of this column from rows that
+    existed in the table prior to this call will return "null".
+
+	@param conglomId        The identifier of the conglomerate to drop.
+	@param column_id        The column number to add this column at.
+	@param template_column  An instance of the column to be added to table.
+	@param collation_id     collation id of the added column.
+
+	@exception StandardException Only some types of conglomerates can support
+        adding a column, for instance "heap" conglomerates support adding a
+        column while "btree" conglomerates do not.  If the column can not be
+        added an exception will be thrown.
+    **/
+
+/**
+     * Return static information about the conglomerate to be included in a
+     * a compiled plan.
+     * 
+     * The static info would be valid until any ddl was executed on the
+     * conglomid, and would be up to the caller to throw away when that
+     * happened.  This ties in with what language already does for other
+     * invalidation of static info.  The type of info in this would be
+     * containerid and array of format id's from which templates can be created.
+     * The info in this object is read only and can be shared among as many
+     * threads as necessary.
+     * 
+     *
+	 * @return The static compiled information.
+     *
+     * @param conglomId The identifier of the conglomerate to open.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Return dynamic information about the conglomerate to be dynamically
+     * reused in repeated execution of a statement.
+     * 
+     * The dynamic info is a set of variables to be used in a given
+     * ScanController or ConglomerateController.  It can only be used in one
+     * controller at a time.  It is up to the caller to insure the correct
+     * thread access to this info.  The type of info in this is a scratch
+     * template for btree traversal, other scratch variables for qualifier
+     * evaluation, ...
+     * 
+     *
+	 * @return The dynamic information.
+     *
+     * @param conglomId The identifier of the conglomerate to open.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create a new conglomerate.
+     * 
+     *      *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+		Create a conglomerate and populate it with rows from rowSource.
+
+				@exception StandardException Standard Derby Error Policy
+	*/
+
+/**
+		recreate a conglomerate and populate it with rows from rowSource.
+
+				@exception StandardException Standard Derby Error Policy
+	*/
+
+/**
+     * Return a string with debug information about opened congloms/scans/sorts.
+     * 
+     * Return a string with debugging information about current opened
+     * congloms/scans/sorts which have not been close()'d.
+     * Calls to this routine are only valid under code which is conditional
+     * on SanityManager.DEBUG.
+     * 
+     *
+	 * @return String with debugging information.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Reveals whether the transaction has ever read or written data.
+     *
+	 * @return true If the transaction has never read or written data.
+     *
+     **/
+
+/**
+     * Reveals whether the transaction is a global or local transaction.
+     *
+	 * @return true If the transaction was either started by 
+     *         AccessFactory.startXATransaction() or was morphed to a global
+     *         transaction by calling 
+     *         AccessFactory.createXATransactionFromLocalTransaction().
+     * 
+     *      *      *
+     **/
+
+/**
+     * Reveals whether the transaction is currently pristine.
+     *
+	 * @return true If the transaction is Pristine.
+     *
+	 *      **/
+
+/**
+		Bulk load into the conglomerate.  Rows being loaded into the
+		conglomerate are not logged.
+
+		@param conglomId The conglomerate Id.
+
+		@param createConglom If true, the conglomerate is being created in the
+		same operation as the loadConglomerate.  The enables further
+		optimization as recovery does not require page allocation to be
+		logged. 
+
+		@param rowSource Where the rows come from.
+
+	    @return true The number of rows loaded.
+
+		@exception StandardException Standard Derby Error Policy
+	 */
+
+/**
+		Use this for incremental load in the future.  
+
+		@param conglomId the conglomerate Id
+		@param rowSource where the rows to be loaded comes from 
+
+		@exception StandardException Standard Derby Error Policy
+	 */
+
+/**
+     * Log an operation and then action it in the context of this transaction.
+     * 
+     * This simply passes the operation to the RawStore which logs and does it.
+     * 
+     *
+     * @param operation the operation that is to be applied
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create a BackingStoreHashtable which contains all rows that qualify for
+     * the described scan.
+     **/
+
+/**
+     * Purge all committed deleted rows from the conglomerate.
+     * 
+     * This call will purge committed deleted rows from the conglomerate,
+     * that space will be available for future inserts into the conglomerate.
+     * 
+     *
+     * @param conglomId Id of the conglomerate to purge.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Return free space from the conglomerate back to the OS.
+     * 
+     * Returns free space from the conglomerate back to the OS.  Currently
+     * only the sequential free pages at the "end" of the conglomerate can
+     * be returned to the OS.
+     * 
+     *
+     * @param conglomId Id of the conglomerate to purge.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Return an open StoreCostController for the given conglomid.
+     * 
+     * Return an open StoreCostController which can be used to ask about 
+     * the estimated row counts and costs of ScanController and 
+     * ConglomerateController operations, on the given conglomerate.
+     * 
+     *
+	 * @return The open StoreCostController.
+     *
+     * @param conglomId The identifier of the conglomerate to open.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     *
+     *      **/
+
+/**
+		@exception StandardException Standard error policy.
+	**/
+
+/**
+	Drop a sort. 
+    
+    Drop a sort created by a call to createSort() within the current 
+    transaction (sorts are automatically "dropped" at the end of a 
+    transaction.  This call should only be made after all openSortScan()'s
+    and openSort()'s have been closed.
+    
+
+    @param sortid The identifier of the sort to drop, as returned from 
+                  createSort.
+ 	@exception StandardException From a lower-level exception.
+	**/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception  StandardException  Standard exception policy.
+    **/
+
+/**
+		@exception StandardException Standard error policy.
+	**/
+
+/**
+     * Return an open SortCostController.
+     * 
+     * Return an open SortCostController which can be used to ask about 
+     * the estimated costs of SortController() operations.
+     * 
+     *
+	 * @return The open StoreCostController.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     *
+     *      **/
+
+/**
+		@exception StandardException Standard error policy.
+	**/
+
+/**
+		@exception StandardException Standard error policy.
+	**/
+
+/**
+     * Get the context manager that the transaction was created with.
+     * 
+     *
+	 * @return The context manager that the transaction was created with.
+     *     **/
+
+/**************************************************************************
+     * Public Methods implementing the XATransactionController interface.
+     **************************************************************************
+     */
+
+/**
+     * This method is called to commit the current XA global transaction.
+     * 
+     * RESOLVE - how do we map to the "right" XAExceptions.
+     * 
+     *
+     * @param onePhase If true, the resource manager should use a one-phase
+     *                 commit protocol to commit the work done on behalf of 
+     *                 current xid.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * This method is called to ask the resource manager to prepare for
+     * a transaction commit of the transaction specified in xid.
+     * 
+     *
+     * @return         A value indicating the resource manager's vote on the
+     *                 the outcome of the transaction.  The possible values
+     *                 are:  XA_RDONLY or XA_OK.  If the resource manager wants
+     *                 to roll back the transaction, it should do so by 
+     *                 throwing an appropriate XAException in the prepare
+     *                 method.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * rollback the current global transaction.
+     * 
+     * The given transaction is roll'ed back and it's history is not
+     * maintained in the transaction table or long term log.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Public Methods of TransactionManager interface:
+     **************************************************************************
+     */
+
+/**
+     * Return existing Conglomerate after doing lookup by ContainerKey
+     * 
+     * Throws exception if it can't find a matching conglomerate for the 
+     * ContainerKey.
+     * 
+     * @return If successful returns 
+     *
+     * @param container_key  container key of target conglomerate.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Add to the list of post commit work.
+     * 
+     * Add to the list of post commit work that may be processed after this
+     * transaction commits.  If this transaction aborts, then the post commit
+     * work list will be thrown away.  No post commit work will be taken out
+     * on a rollback to save point.
+     * 
+     * This routine simply delegates the work to the Rawstore transaction.
+     *
+     * @param work  The post commit work to do.
+     *
+     **/
+
+/**
+     *  Check to see if a database has been upgraded to the required
+     *  level in order to use a store feature.
+     *
+     * @param requiredMajorVersion  required database Engine major version
+     * @param requiredMinorVersion  required database Engine minor version
+     * @param feature               Non-null to throw an exception, null to 
+     *                              return the state of the version match.
+     *
+     * @return  true  if the database has been upgraded to 
+     *         the required level,  false  otherwise.
+     *
+     * @exception  StandardException 
+     *             if the database is not at the require version 
+     *             when feature feature is 
+     *             not  null . 
+     */
+
+/**
+     * The ConglomerateController.close() method has been called on 
+     * "conglom_control".
+     * 
+     * Take whatever cleanup action is appropriate to a closed 
+     * conglomerateController.  It is likely this routine will remove
+     * references to the ConglomerateController object that it was maintaining
+     * for cleanup purposes.
+     *
+     **/
+
+/**
+     * The SortController.close() method has been called on "sort_control".
+     * 
+     * Take whatever cleanup action is appropriate to a closed 
+     * sortController.  It is likely this routine will remove
+     * references to the SortController object that it was maintaining
+     * for cleanup purposes.
+     **/
+
+/**
+     * The ScanManager.close() method has been called on "scan".
+     * 
+     * Take whatever cleanup action is appropriate to a closed scan.  It is
+     * likely this routine will remove references to the scan object that it
+     * was maintaining for cleanup purposes.
+     *
+     **/
+
+/**
+     * Get reference to access factory which started this transaction.
+     * 
+     *
+	 * @return The AccessFactory which started this transaction.
+     *
+     **/
+
+/**
+     * Get the Transaction from the Transaction manager.
+     * 
+     * Access methods often need direct access to the "Transaction" - ie. the
+     * raw store transaction, so give access to it.
+     *
+	 * @return The raw store transaction.
+     *
+     **/
+
+/**
+     * Return an object that when used as the compatibility space,
+     * and the object returned when calling
+     * getOwner() on that object is used as group for a lock
+     * request, guarantees that the lock will be removed on a commit or an
+     * abort.
+     */
+
+/**
+     * {@inheritDoc}
+     *
+     * 
+     *
+     * For now, this only works if the transaction has its own compatibility
+     * space. If it has inherited the compatibility space from its parent,
+     * the request will be ignored (or cause a failure in debug builds).
+     */
+
+/**
+     * Get string id of the transaction.
+     * 
+     * This transaction "name" will be the same id which is returned in
+     * the TransactionInfo information, used by the lock and transaction
+     * vti's to identify transactions.
+     * 
+     * Although implementation specific, the transaction id is usually a number
+     * which is bumped every time a commit or abort is issued.
+     * 
+     * For now return the toString() method, which does what we want.  Later
+     * if that is not good enough we can add public raw tran interfaces to
+     * get exactly what we want.
+     *
+	 * @return The a string which identifies the transaction.  
+     **/
+
+/**
+     * Get string id of the transaction that would be when the Transaction
+	 * is IN active state.
+     **/
+

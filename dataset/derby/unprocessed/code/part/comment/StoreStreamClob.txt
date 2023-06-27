@@ -1,0 +1,148 @@
+/**
+ * A read-only Clob representation operating on streams out of the Derby store
+ * module.
+ * 
+ * Note that the streams from the store are expected to have the following
+ * properties:
+ *  The first few bytes are used for length encoding. Currently the
+ *          number of bytes is either 2 or 5.
+ *      A Derby-specific end-of-stream marker at the end of the stream can
+ *          be present. The marker is expected to be 0xe0 0x00 0x00
+ * 
+ */
+
+/** Tells whether this Clob has been released or not. */
+
+/**
+     * The stream from store, used to read bytes from the database.
+     * 
+     * To be able to support the requirements, the stream must implement
+     * {@link Resetable}.
+     */
+
+/** The descriptor used to describe the underlying source stream. */
+
+/** The connection (child) this Clob belongs to. */
+
+/** Object used for synchronizing access to the store stream. */
+
+/**
+     * Shared internal reader, closed when the Clob is released.
+     * This is a performance optimization, and the stream is shared between
+     * "one time" operations, for instance {@code getSubString} calls. Often a
+     * subset, or the whole, of the Clob is read subsequently and then this
+     * optimization avoids repositioning costs (the store does not support
+     * random access for LOBs).
+     * NOTE: Do not publish this reader to the end-user.
+     */
+
+/** The internal reader wrapped so that it cannot be closed. */
+
+/**
+     * Creates a new Clob based on a stream from store.
+     * 
+     * The stream used as a source for this Clob has to implement the interface
+     * {@code Resetable}, as the stream interface from store only allows for
+     * movement forwards. If the stream has been advanced too far with regards
+     * to the user request, the stream must be reset and we start from the
+     * beginning.
+     *
+     * @param csd descriptor for the source stream, including a reference to it
+     * @param conChild the connection (child) this Clob belongs to
+     */
+
+/**
+     * Releases resources associated with this Clob.
+     */
+
+/**
+     * Returns the number of characters in the Clob.
+     *
+     * @return Number of characters in the Clob.
+     *      *      to I/O or something else
+     */
+
+/**
+     * Returns the cached character count for the Clob, if any.
+     *
+     * @return The number of characters in the Clob, or {@code -1} if unknown.
+     */
+
+/**
+     * Returns a stream serving the raw bytes of this Clob.
+     * 
+     * Note that the stream returned is an internal stream, and it should not be
+     * pulished to end users.
+     *
+     * @return A stream serving the bytes of this Clob, initialized at byte 0 of
+     *      the data. The buffer must be assumed to be unbuffered, but no such
+     *      guarantee is made.
+     *      *      */
+
+/**
+     * Returns a reader for the Clob, initialized at the specified character
+     * position.
+     *
+     * @param pos character position. The first character is at position 1.
+     * @return A reader initialized at the specified position.
+     *      *      *      */
+
+/**
+     * Returns an internal reader for the Clob, initialized at the specified
+     * character position.
+     *
+     * @param characterPosition 1-based character position.
+     * @return A reader initialized at the specified position.
+     *      *      *      */
+
+/**
+     * Returns the update count of this Clob.
+     * 
+     * Always returns zero, as this Clob cannot be updated.
+     *
+     * @return Zero (read-only Clob).
+     */
+
+/**
+     * Not supported.
+     *
+     *      */
+
+/**
+     * Not supported.
+     *
+     *      */
+
+/**
+     * Tells if this Clob has been released.
+     *
+     * @return {@code true} if released, {@code false} if not.
+     */
+
+/**
+     * Tells if this Clob can be modified.
+     *
+     * @return false, this Clob is read-only.
+     */
+
+/**
+     * Not supported.
+     *
+     *      */
+
+/**
+     * Wrap real exception in a {@link SQLException} to avoid changing the state
+     * of the connection child by cleaning it up.
+     *
+     * @param t real cause of error that we want to "ignore" with respect to
+     *      transaction context cleanup
+     * @return A {@link SQLException} wrapped around the real cause of the error
+     */
+
+/**
+     * Makes sure the Clob has not been released.
+     * 
+     * All operations are invalid on a released Clob.
+     *
+     *      */
+

@@ -1,0 +1,278 @@
+<Class>
+    <Id>2184</Id>
+    <Package>org.apache.derby.impl.services.locks</Package>
+    <ClassName>Deadlock</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Deadlock  /** 
+ * &lt;p&gt; Code to support deadlock detection. &lt;/p&gt; &lt;p&gt; This class implements deadlock detection by searching for cycles in the wait graph. If a cycle is found, it means that (at least) two transactions are blocked by each other, and one of them must be aborted to allow the other one to continue. &lt;/p&gt; &lt;p&gt; The wait graph is obtained by asking the  {@code LockSet} instance toprovide a map representing all wait relations, see  {@link #getWaiters}. The map consists of two distinct sets of (key, value) pairs: &lt;/p&gt; &lt;ol&gt; &lt;li&gt;(space, lock) pairs, where  {@code space} is the compatibility spaceof a waiting transaction and  {@code lock} is the {@code ActiveLock}instance on which the transaction is waiting&lt;/li&gt; &lt;li&gt;(lock, prevLock) pairs, where  {@code lock} is an {@code ActiveLock} and{@code prevLock} is the {@code ActiveLock} or {@code LockControl} for thefirst waiter in the queue behind  {@code lock}&lt;/li&gt; &lt;/ol&gt; &lt;p&gt; The search is performed as a depth-first search starting from the lock request of a waiter that has been awoken for deadlock detection (either because  {@code derby.locks.deadlockTimeout} has expired or because someother waiter had picked it as a victim in order to break a deadlock). From this lock request, the wait graph is traversed by checking which transactions have already been granted a lock on the object, and who they are waiting for. &lt;/p&gt; &lt;p&gt; The state of the search is maintained by pushing compatibility spaces (representing waiting transactions) and granted locks onto a stack. When a dead end is found (that is, a transaction that holds locks without waiting for any other transaction), the stack is popped and the search continues down a different path. This continues until a cycle is found or the stack is empty. Detection of cycles happens when pushing a new compatibility space onto the stack. If the same space already exists on the stack, it means the graph has a cycle and we have a deadlock. &lt;/p&gt; &lt;p&gt; When a deadlock is found, one of the waiters in the deadlock cycle is awoken and it will terminate itself, unless it finds that the deadlock has been broken in the meantime, for example because one of the involved waiters has timed out. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>Deadlock</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>look</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Look for a deadlock. &lt;/p&gt; &lt;p&gt; Walk through the graph of all locks and search for cycles among the waiting lock requests which would indicate a deadlock. A simple deadlock cycle is where the granted locks of waiting compatibility space A is blocking compatibility space B and space B holds locks causing space A to wait. &lt;/p&gt; &lt;p&gt;  MT - if the &lt;code&gt;LockTable&lt;/code&gt; is a &lt;code&gt;LockSet&lt;/code&gt; object, the callers must be synchronized on the &lt;code&gt;LockSet&lt;/code&gt; object in order to satisfy the synchronization requirements of &lt;code&gt;LockSet.addWaiters()&lt;/code&gt;. If it is a &lt;code&gt;ConcurrentLockSet&lt;/code&gt; object, the callers must not hold any of the &lt;code&gt;ReentrantLock&lt;/code&gt;s guarding the entries in the lock table, and the callers must make sure that only a single thread calls &lt;code&gt;look()&lt;/code&gt; at a time. &lt;/p&gt;
+ * @param factory The locking system factory
+ * @param set The complete lock table. A lock table is a hashtable keyed by a Lockable and with a LockControl as the data element.
+ * @param control A LockControl contains a reference to the item beinglocked and doubly linked lists for the granted locks and the waiting locks. The passed in value is the lock that the caller was waiting on when woken up to do the deadlock check.
+ * @param startingLock represents the specific waiting lock request thatthe caller has been waiting on, before just being woken up to do this search.
+ * @param deadlockWake Either Constants.WAITING_LOCK_IN_WAIT, orConstants.WAITING_LOCK_DEADLOCK. 
+ * @return The identifier to be used to open the conglomerate later.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>Object[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>AbstractPool</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>LockTable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>control</ParamName>
+                    <ParamType>LockControl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startingLock</ParamName>
+                    <ParamType>ActiveLock</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deadlockWake</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Dictionary [waiters=Deadlock.getWaiters(set)]</InnerVar>
+                <InnerVar>Stack&lt;Object&gt; [chain=new Stack&lt;Object&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>chain;push;[startingLock.getCompatabilitySpace()]</InnerMethodInvoke>
+                <InnerMethodInvoke>chain;push;[control.getGrants()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rollback</MethodName>
+            <MethodComment>/** 
+ * Backtrack in the depth-first search through the wait graph. Expect the top of the stack to hold the compatibility space we've just investigated. Pop the stack until the most recently examined granted lock has been removed.
+ * @param chain the stack representing the state of the search
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>chain</ParamName>
+                    <ParamType>Stack</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List [grants=(List)chain.peek()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>grants;remove;[grants.size() - 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWaiters</MethodName>
+            <MethodComment>/** 
+ * Get all the waiters in a  {@code LockTable}. The waiters are returned as pairs (space, lock) mapping waiting compatibility spaces to the lock request in which they are blocked, and (lock, prevLock) linking a lock request with the lock request that's behind it in the queue of waiters.
+ * @param set the lock table
+ * @return all waiters in the lock table
+ * @see LockControl#addWaiters(java.util.Map)
+ */
+</MethodComment>
+            <ReturnType>Hashtable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>LockTable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Hashtable&lt;Object,Object&gt; [waiters=new Hashtable&lt;Object,Object&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>set;addWaiters;[waiters]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handle</MethodName>
+            <MethodComment>/** 
+ * Handle a deadlock when it has been detected. Find out if the waiter that started looking for the deadlock is involved in it. If it isn't, pick a victim among the waiters that are involved.
+ * @return {@code null} if the waiter that started looking for the deadlockisn't involved in the deadlock (in which case another victim will have been picked and awoken), or an array describing the deadlock otherwise
+ */
+</MethodComment>
+            <ReturnType>Object[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>AbstractPool</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>chain</ParamName>
+                    <ParamType>Stack</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waiters</ParamName>
+                    <ParamType>Dictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deadlockWake</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [checker=chain.elementAt(0)]</InnerVar>
+                <InnerVar>int [minLockCount=Integer.MAX_VALUE]</InnerVar>
+                <InnerVar>Object [victim=null]</InnerVar>
+                <InnerVar>ActiveLock [victimLock=(ActiveLock)waiters.get(victim)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>victimLock;wakeUp;[Constants.WAITING_LOCK_DEADLOCK]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildException</MethodName>
+            <MethodComment>/** 
+ * Build an exception that describes a deadlock.
+ * @param factory the lock factory requesting the exception
+ * @param data an array with information about who's involved ina deadlock (as returned by  {@link #handle})
+ * @return a deadlock exception
+ */
+</MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>AbstractPool</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Stack [chain=(Stack)data[0]]</InnerVar>
+                <InnerVar>Dictionary [waiters=(Dictionary)data[1]]</InnerVar>
+                <InnerVar>LanguageConnectionContext [lcc=(LanguageConnectionContext)getContext(LanguageConnectionContext.CONTEXT_ID)]</InnerVar>
+                <InnerVar>TableNameInfo [tabInfo=null]</InnerVar>
+                <InnerVar>TransactionInfo[] [tt=null]</InnerVar>
+                <InnerVar>TransactionController [tc=null]</InnerVar>
+                <InnerVar>StringBuffer [sb=new StringBuffer(200)]</InnerVar>
+                <InnerVar>Hashtable&lt;String,Object&gt; [attributes=new Hashtable&lt;String,Object&gt;(17)]</InnerVar>
+                <InnerVar>String [victimXID=null]</InnerVar>
+                <InnerVar>StandardException [se=StandardException.newException(SQLState.DEADLOCK,sb.toString(),victimXID)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>se;setReport;[factory.deadlockMonitor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sb</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[desc]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[data]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContext</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of a Context. Must be package protected so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

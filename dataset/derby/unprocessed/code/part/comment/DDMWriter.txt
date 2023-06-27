@@ -1,0 +1,510 @@
+/**
+    The DDMWriter is used to write DRDA protocol.   The DRDA Protocol is
+    described in the DDMReader class.
+    For more details, see DRDA Volume 3 (Distributed Data Management(DDM)
+        Architecture (DDS definition)
+*/
+
+/**
+     * The maximum length in bytes for strings sent by {@code writeLDString()},
+     * which is the maximum unsigned integer value that fits in two bytes.
+     */
+
+/**
+     * Output buffer.
+     */
+
+/** Encoder which encodes strings with the server's default encoding. */
+
+/**
+     * reset values for sending next message
+     *
+     */
+
+/**
+     * Get the current position in the output buffer.
+     * @return current position
+     */
+
+/**
+     * Change the current position in the output buffer.
+     * @param position new position
+     */
+
+/**
+     * Get a copy of a subsequence of the output buffer, starting at the
+     * specified position and ending at the current buffer position.
+     *
+     * @param startPos the position of the first byte to copy
+     * @return all bytes from {@code startPos} up to the current position
+     */
+
+/**
+     * set protocol to CMD protocol
+     */
+
+/**
+     * Create DSS reply object
+     */
+
+/**
+     * Create DSS request object
+     * NOTE: This is _ONLY_ used for testing the protocol
+    * (via the ProtocolTestAdapter.java file in this package)!
+     * We should never create a DSS request in normal
+     * DRDA processing (we should only create DSS replies
+     * and DSS objects).
+     */
+
+/**
+     * Create DSS data object
+     */
+
+/**
+     * Mark the DSS that we're currently writing as
+     * a continued DSS, which is done by setting
+     * the high-order bit to "1", per DDM spec.
+     * This means:
+     *
+     *  1. One or more continuation DSSes will immediately
+     *      follow the current (continued) DSS.
+     *  2. All continuation DSSes will have a 2-byte
+     *      continuation header, followed by data; in
+     *      other words, chaining state, correlation
+     *      id, dss format info, and code point will
+     *      NOT be included.  All of that info is
+     *      present ONLY in the FIRST DSS in the
+     *      list of continued DSSes.
+     *
+     *  NOTE: A DSS can be a "continuation" DSS _and_
+     *  a "continued" DSS at the same time.  However,
+     *  the FIRST DSS to be continued canNOT be
+     *  a continuation DSS.
+     */
+
+/**
+     * End DSS header by writing the length in the length location
+     * and setting the chain bit.  Unlike the other two endDss
+     * methods, this one overrides the default chaining byte
+     * (which is set in beginDss) with the chaining byte that
+     * is passed in.  NOTE: This method is only used in
+     * association with createDssRequest, and thus is for
+    * TESTING purposes only (via ProtocolTestAdpater.java).  No calls
+     * should be made to this method in normal DRDA processing
+     * (because for normal processing, chaining must be
+     * determined automatically based on DSS requests).
+     */
+
+/**
+     * Override the default chaining byte with the chaining byte that is passed
+     * in.
+     *
+     * @param pos the position on which the chaining byte is located
+     * @param chainByte the chaining byte that overrides the default
+     */
+
+/**
+     * End DSS header by writing the length in the length location
+     * and setting the chain bit.
+     */
+
+/**
+     * End DSS header by writing the length in the length location
+     * and setting the chain bit.
+     */
+
+/**
+     * End final DDM and DSS header by writing the length in the length location
+     *
+     */
+
+/**
+     * Mark the location of the length bytes for the collection so they
+     * can be updated later
+     *
+     */
+
+/**
+     * Erase all writes for the current ddm and reset the
+     * top
+     */
+
+/**
+     * Clear the entire send buffer
+     *
+     */
+
+/**
+     * End the current DDM
+     *
+     */
+
+/**
+     * Get the length of the current DSS block we're working on. This is
+     * used by the LMTBLKPRC protocol, which does its own conversational
+     * blocking protocol above the layer of the DRDA blocking. The LMTBLKPRC
+     * implementation (in DRDAConnThread) needs to be able to truncate a
+     * DSS block when splitting a QRYDTA response.
+     *
+     * @return current DSS block length
+    */
+
+/**
+     * Truncate the current DSS. Before making this call, you should ensure
+     * that you have copied the data to be truncated somewhere else, by
+     * calling copyDSSDataToEnd
+     *
+     * @param value DSS length
+    */
+
+/**
+     * Write byte
+     *
+     * @param   value   byte to be written
+     */
+
+/**
+     * Write network short
+     *
+     * @param   value   value to be written
+     */
+
+/**
+     * Write network int
+     *
+     * @param   value   value to be written
+     */
+
+/**
+     * Write byte array
+     *
+     * @param   buf byte array to be written
+     * @param   length  - length to write
+     */
+
+/**
+     * Write byte array
+     *
+     * @param   buf byte array to be written
+     * @param   start  - starting position
+     * @param   length  - length to write
+     */
+
+/**
+     * Write byte array
+     *
+     * @param   buf byte array to be written
+     **/
+
+/**
+     * Write code point and 4 bytes
+     *
+     * @param   codePoint - code point to write
+     * @param   value  - value to write after code point
+     */
+
+/**
+     * Write scalar 1 byte object includes length, codepoint and value
+     *
+     * @param   codePoint - code point to write
+     * @param   value  - value to write after code point
+     */
+
+/**
+     * Write scalar 2 byte object includes length, codepoint and value
+     *
+     * @param   codePoint - code point to write
+     * @param   value  - value to write after code point
+     */
+
+/**
+     * Begins a DSS stream (for writing LOB data).
+     */
+
+/**
+     * prepScalarStream does the following prep for writing stream data:
+     * 1.  Flushes an existing DSS segment, if necessary
+     * 2.  Determines if extended length bytes are needed
+     * 3.  Creates a new DSS/DDM header and a null byte indicator, if applicable
+     *
+     * If value of length was less than 0, this method processes streaming as Layer B Streaming.
+     * cf. page 315 of specification of DRDA, Version 3, Volume 3 
+     *
+     */
+
+/**
+     * Write scalar object header includes length and codepoint
+     *
+     * @param   codePoint - code point to write
+     * @param   dataLength - length of object data
+     */
+
+/**
+     * Write scalar string object includes length, codepoint and value
+     * the string is converted into the appropriate codeset (EBCDIC)
+     *
+     * @param   codePoint - code point to write
+     * @param   string - string to be written
+     */
+
+/**
+     * Write padded scalar string object includes length, codepoint and value
+     * the string is converted into the appropriate codeset (EBCDIC)
+     *
+     * @param   codePoint - code point to write
+     * @param   string - string to be written
+     * @param   paddedLength - length to pad string to
+     */
+
+/**
+     * Write padded scalar DRDAString object value. The
+     * string is converted into the appropriate codeset.
+     *
+     * @param drdaString string to be written
+     * @param paddedLength length to pad string to
+     */
+
+/**
+     * Write padded scalar byte array object includes length, codepoint and value
+     *
+     * @param   codePoint - code point to write
+     * @param   buf - byte array to be written
+     * @param   paddedLength - length to pad string to
+     * @param   padByte - byte to be used for padding
+     */
+
+/**
+     * Write padded scalar byte array object  value
+     *
+     * @param   buf - byte array to be written
+     * @param   paddedLength - length to pad string to
+     * @param   padByte - byte to be used for padding
+     */
+
+/**
+     * Write scalar byte array object includes length, codepoint and value
+     *
+     * @param   codePoint - code point to write
+     * @param   buf - byte array to be written
+     */
+
+/**
+     * Write platform short
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write boolean as short
+     * @param b boolean value true = 1 false = 0
+     *
+     */
+
+/**
+     * Write platform int
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write platform long
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write platform float
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write platform double
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write platform boolean
+     *
+     * @param   v   value to be written
+     */
+
+/**
+     * Write length delimited string
+     *
+     * @param s value to be written with integer
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write a value of a user defined type.
+     *
+     * @param val object to be written
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Find the maximum number of bytes needed to represent the string in the
+     * default encoding.
+     *
+     * @param s the string to encode
+     * @return an upper limit for the number of bytes needed to encode the
+     * string
+     */
+
+/**
+     * Write length delimited string
+     *
+     * @param s              value to be written with integer
+     * @param index          column index to put in warning
+     * @param stmt           the executing statement (null if not invoked as
+     *                       part of statement execution)
+     * @param isParameter    true if the value written is for an output
+     *                       parameter in a procedure call
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Check if a byte value represents a continuation byte in a UTF-8 byte
+     * sequence. Continuation bytes in UTF-8 always match the bit pattern
+     * {@code 10xxxxxx}.
+     *
+     * @param b the byte to check
+     * @return {@code true} if {@code b} is a continuation byte, or
+     * {@code false} if it is the first byte in a UTF-8 sequence
+     */
+
+/**
+     * Write string with default encoding
+     *
+     * @param s value to be written
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write pad bytes using spaceChar
+     *
+     * @param   val value to be written
+     * @param   length      length to be written
+     */
+
+/**
+     * Flush buffer to outputstream
+     *
+     *
+     * @exception IOException
+     */
+
+/**
+     * Flush buffer to specified stream
+     *
+     * @param socketOutputStream
+     *
+     * @exception IOException
+     */
+
+/**
+     * Write DSS header
+     * DSS Header format is
+     *  2 bytes - length
+     *  1 byte  - 'D0'  - indicates DDM data
+     *  1 byte  - DSS format
+     *      |---|---------|----------|
+     *      | 0 |   flags | type     |
+     *      |---|---------|----------|
+     *      | 0 | 1 2   3 | 4 5 6 7  |
+     *      |---|---------|----------|
+     *      bit 0 - '0'
+     *      bit 1 - '0' - unchained, '1' - chained
+     *      bit 2 - '0' - do not continue on error, '1' - continue on error
+     *      bit 3 - '0' - next DSS has different correlator, '1' - next DSS has
+     *                      same correlator
+     *      type - 1 - Request DSS
+     *           - 2 - Reply DSS
+     *           - 3 - Object DSS
+     *           - 4 - Communications DSS
+     *           - 5 - Request DSS where no reply is expected
+     */
+
+/**
+     * Finish a DSS Layer A object.
+     * The length of dss object will be calculated based on the difference between the
+     * start of the dss, saved on the beginDss call, and the current
+     * offset into the buffer which marks the end of the data.  In the event
+     * the length requires the use of continuation Dss headers, one for each 32k
+     * chunk of data, the data will be shifted and the continuation headers
+     * will be inserted with the correct values as needed.
+     */
+
+/**
+     * Calculate extended length byte count which follows the DSS header
+     * for extended DDM.
+     *
+     * @param ddmSize - size of DDM command
+     * @return minimum number of extended length bytes needed. 0 indicates no
+     *  extended length needed.
+     */
+
+/**
+     * Ensure that there is space in the buffer
+     *
+     * @param length space required
+     */
+
+/**
+     * Write a Java java.math.BigDecimal to packed decimal bytes.
+     *
+     * @param b BigDecimal to write
+     * @param precision Precision of decimal or numeric type
+     * @param scale declared scale
+     *
+     * @exception SQLException Thrown if # digits &gt; 31
+     */
+
+/**
+     * Reset any chaining state that needs to be reset
+     * at time of the send
+     */
+
+/**
+     * Looks at chaining info for previous DSS written, and use
+     * that to figure out what the correlation id for the current
+     * DSS should be.  Return that correlation id.
+     */
+
+/**
+     * Finalize the current DSS chain and send it if
+     * needed.
+     *
+     * Updates the chaining state of the most recently-written-
+     * to-buffer DSS to correspond to the most recently-read-
+     * from-client request.  If that chaining state indicates
+     * we've reached the end of a chain, then we go ahead
+     * and send the buffer across the wire.
+     * @param socketOutputStream Output stream to which we're flushing.
+     */
+
+/**
+     * Takes note of the location of the most recently completed
+     * DSS in the buffer, and then returns the current offset.
+     * This method is used in conjunction with "clearDSSesBackToMark"
+     * to allow for DRDAConnThread to "back-out" DSSes in the
+     * event of errors.
+     */
+
+/**
+     * Does a logical "clear" of everything written to the buffer after
+     * the received mark.  It's assumed that this method will be used
+     * in error cases when we've started writing one or more DSSes,
+     * but then hit an error and need to back out.  After backing out,
+     * we'll always need to write _something_ back to the client to
+     * indicate an error (typically, we just write an SQLCARD) but what
+     * exactly gets written is handled in DRDAConnThread.  Here, we
+     * just do the necessary prep so that whatever comes next will
+     * succeed.
+     */
+

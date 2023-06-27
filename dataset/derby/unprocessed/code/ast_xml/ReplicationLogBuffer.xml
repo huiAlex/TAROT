@@ -1,0 +1,277 @@
+<Class>
+    <Id>1929</Id>
+    <Package>org.apache.derby.impl.store.replication.buffer</Package>
+    <ClassName>ReplicationLogBuffer</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ReplicationLogBuffer  /** 
+ * Used for the replication master role only. When a Derby instance has the replication master role for a database 'x', all log records that are written to the local log file are also appended to this log buffer. The replication master service will consume chunks of log from this buffer and send it to the Derby instance with the slave role for 'x'. ReplicationLogBuffer consists of a number of LogBufferElements. Elements that are not in use are in the freeBuffers list, while elements that contains dirty log are in dirtyBuffers. Chunks of log records are appended to the buffer element in currentDirtyBuffer. Hence, the life cycle of buffer elements is: freeBuffers -&amp;gt; currentDirtyBuffer -&amp;gt; dirtyBuffers -&amp;gt; freeBuffers To append chunks of log records to the buffer, use appendLog(...) To consume chunks of log records, use next() followed by getData(), getLastInstant() and getSize(). These get-methods throw NoSuchElementException if next() returned false, meaning that there were no dirty log at the time next() was called. Threads: ReplicationLogBuffer is threadsafe. It can be used by a logger (LogToFile) and a log consumer (LogShipping service) concurrently without further synchronization. Important: If methods in this class calls methods outside this package (e.g. MasterFactory#workToDo), make sure that deadlocks are not  introduced. If possible, a call to any method in another package should be  done without holding latches in this class.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_NUMBER_LOG_BUFFERS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dirtyBuffers</FieldName>
+            <FieldType>LinkedList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dirtyBuffers</FieldName>
+            <FieldType>LogBufferElement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>freeBuffers</FieldName>
+            <FieldType>LinkedList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>freeBuffers</FieldName>
+            <FieldType>LogBufferElement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentDirtyBuffer</FieldName>
+            <FieldType>LogBufferElement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>validOutBuffer</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outBufferData</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outBufferStored</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outBufferLastInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>listLatch</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outputLatch</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>defaultBufferSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mf</FieldName>
+            <FieldType>MasterFactory</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ReplicationLogBuffer</MethodName>
+            <MethodComment>/** 
+ * Class constructor specifies the number of buffer elements and the master controller that creates this replication log buffer.
+ * @param bufferSize the default number of buffer elements
+ * @param mf         Used to notify the master controller that a log bufferelement is full and work needs to be done.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bufferSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mf</ParamName>
+                    <ParamType>MasterFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendLog</MethodName>
+            <MethodComment>/** 
+ * Append a chunk of log records to the log buffer.
+ * @param greatestInstant   the instant of the log record that wasadded last to this chunk of log
+ * @param log               the chunk of log records
+ * @param logOffset         offset in log to start copy from
+ * @param logLength         number of bytes to copy, startingfrom logOffset
+ * @throws LogBufferFullException - thrown if there is not enoughfree space in the buffer to store the chunk of log.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>greatestInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [switchedBuffer=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>LogBufferFullException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>next</MethodName>
+            <MethodComment>/** 
+ * Sets the output data to that of the next (oldest) buffer element in dirtyBuffers so that getData(), getLastInstant() and getSize() return values from the next oldest chunk of log. Used by the log consumer (the LogShipping service) to move to the next chunk of log in the buffer.
+ * @return true if there is log in the buffer, resulting in validdata for the get-methods
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getData</MethodName>
+            <MethodComment>/** 
+ * Returns a byte[] containing a chunk of serialized log records. Always returns the log that was oldest at the time next() was called last time. Use next() to move to the next chunk of log records.
+ * @return A copy of the current byte[], which is a chunk of log
+ * @throws NoSuchElementException if there was no log in thebuffer the last time next() was called.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>NoSuchElementException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validData</MethodName>
+            <MethodComment>/** 
+ * Method to determine whether or not the buffer had any log records the last time next() was called.
+ * @return true if the buffer contained log records the last timenext() was called. False if not, or if next() has not been called yet.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSize</MethodName>
+            <MethodComment>/** 
+ * @return The number of bytes returned by getData
+ * @throws NoSuchElementException if there was no log in thebuffer the last time next() was called.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>NoSuchElementException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLastInstant</MethodName>
+            <MethodComment>/** 
+ * Can be used so that only the necessary log records are sent when a flush(LogInstant flush_to_this) is called in the log factory. Returns the highest log instant in the chunk of log that can  be read with getData().
+ * @return The highest log instant in the chunk of log returned bygetData().
+ * @throws NoSuchElementException if there was no log in thebuffer the last time next() was called.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>NoSuchElementException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>switchDirtyBuffer</MethodName>
+            <MethodComment>/** 
+ * Appends the currentDirtyBuffer to dirtyBuffers, and makes a fresh buffer element from freeBuffers the currentDirtyBuffer. Note: this method is not synchronized since all uses of it is inside synchronized(listLatch) code blocks.
+ * @throws LogBufferFullException if the freeBuffers list is empty
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>LogBufferFullException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFillInformation</MethodName>
+            <MethodComment>/** 
+ * Used to calculate the Fill Information. The fill information is a indicator of how full the buffer is at any point of time fill information = (full buffers/Total Buffers)*100. The Fill information ranges between 0-100 (both 0 and 100 inclusive).
+ * @return an integer value between 0-100 representing the fillinformation.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

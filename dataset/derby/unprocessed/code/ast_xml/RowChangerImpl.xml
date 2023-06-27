@@ -1,0 +1,531 @@
+<Class>
+    <Id>12</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>RowChangerImpl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>RowChanger</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RowChangerImpl  /** 
+ * Perform row at a time DML operations of tables and maintain indexes.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>isOpen</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fixOnUpdate</FieldName>
+            <FieldType>boolean[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>heapConglom</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>heapDCOCI</FieldName>
+            <FieldType>DynamicCompiledOpenConglomInfo</FieldType>
+        </Field>
+        <Field>
+            <FieldName>heapSCOCI</FieldName>
+            <FieldType>StaticCompiledOpenConglomInfo</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexCIDS</FieldName>
+            <FieldType>long[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexDCOCIs</FieldName>
+            <FieldType>DynamicCompiledOpenConglomInfo[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexSCOCIs</FieldName>
+            <FieldType>StaticCompiledOpenConglomInfo[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>irgs</FieldName>
+            <FieldType>IndexRowGenerator[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>activation</FieldName>
+            <FieldType>Activation</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tc</FieldName>
+            <FieldType>TransactionController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>changedColumnBitSet</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseRowReadList</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseRowReadMap</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>changedColumnIds</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowHolder</FieldName>
+            <FieldType>TemporaryRowHolderImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexNames</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseCC</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseRowLocation</FieldName>
+            <FieldType>RowLocation</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isc</FieldName>
+            <FieldType>IndexSetChanger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparseRowArray</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>partialChangedColumnIds</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RowChangerImpl</MethodName>
+            <MethodComment>/** 
+ * Create a new RowChanger for performing update and delete operations based on partial before and after rows.
+ * @param heapConglom Conglomerate # for the heap
+ * @param heapSCOCI	SCOCI for heap.
+ * @param heapDCOCI	DCOCI for heap
+ * @param irgs the IndexRowGenerators for the table's indexes. We usepositions in this array as local id's for indexes. To support updates, only indexes that change need be included.
+ * @param indexCIDS the conglomerateids for the table's idexes. indexCIDS[ix] corresponds to the same index as irgs[ix].
+ * @param indexSCOCIs the SCOCIs for the table's idexes. indexSCOCIs[ix] corresponds to the same index as irgs[ix].
+ * @param indexDCOCIs the DCOCIs for the table's idexes. indexDCOCIs[ix] corresponds to the same index as irgs[ix].
+ * @param numberOfColumns	Number of columns in partial write row.
+ * @param changedColumnIdsInput array of 1 based ints indicating the columnsto be updated.  Only used for updates
+ * @param tc the transaction controller
+ * @param baseRowReadList bit set of columns read from base row. 1 based.
+ * @param baseRowReadMap BaseRowReadMap[heapColId]-&amp;gt;ReadRowColumnId. (0 based)
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>heapConglom</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heapSCOCI</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heapDCOCI</ParamName>
+                    <ParamType>DynamicCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>irgs</ParamName>
+                    <ParamType>IndexRowGenerator[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexCIDS</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexSCOCIs</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexDCOCIs</ParamName>
+                    <ParamType>DynamicCompiledOpenConglomInfo[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numberOfColumns</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>changedColumnIdsInput</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseRowReadList</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseRowReadMap</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRowHolder</MethodName>
+            <MethodComment>/** 
+ * Set the row holder for this changer to use. If the row holder is set, it wont bother  saving copies of rows needed for deferred processing.  Also, it will never close the passed in rowHolder.
+ * @param rowHolder	the TemporaryRowHolder
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowHolder</ParamName>
+                    <ParamType>TemporaryRowHolder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndexNames</MethodName>
+            <MethodComment>/** 
+ * @see RowChanger#setIndexNames
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>open</MethodName>
+            <MethodComment>/** 
+ * Open this RowChanger. &lt;P&gt;Note to avoid the cost of fixing indexes that do not change during update operations use openForUpdate().
+ * @param lockMode	The lock mode to use(row or table, see TransactionController)
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lockMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;open;[lockMode, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>open</MethodName>
+            <MethodComment>/** 
+ * @inheritDoc
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lockMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;openForUpdate;[fixOnUpdate, lockMode, wait]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openForUpdate</MethodName>
+            <MethodComment>/** 
+ * Open this RowChanger to avoid fixing indexes that do not change during update operations. 
+ * @param fixOnUpdate fixOnUpdat[ix] == true ==&amp;gt; fix index 'ix' onan update operation.
+ * @param lockMode	The lock mode to use(row or table, see TransactionController)
+ * @param wait		If true, then the caller wants to wait for locks. False will bewhen we using a nested user xaction - we want to timeout right away if the parent holds the lock.  (bug 4821)
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fixOnUpdate</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=null]</InnerVar>
+                <InnerVar>int [isolationLevel]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertRow</MethodName>
+            <MethodComment>/** 
+ * Insert a row into the table and perform associated index maintenance.
+ * @param baseRow the row.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>baseRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>getRL</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deleteRow</MethodName>
+            <MethodComment>/** 
+ * Delete a row from the table and perform associated index maintenance.
+ * @param baseRow the row.
+ * @param baseRowLocation the row's base conglomeratelocation
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>baseRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseRowLocation</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseCC;delete;[baseRowLocation]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateRow</MethodName>
+            <MethodComment>/** 
+ * Update a row in the table and perform associated index maintenance.
+ * @param oldBaseRow the old image of the row.
+ * @param newBaseRow the new image of the row.
+ * @param baseRowLocation the row's base conglomeratelocation
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldBaseRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newBaseRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseRowLocation</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseCC;replace;[baseRowLocation, sparseRowArray, changedColumnBitSet]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finish</MethodName>
+            <MethodComment>/** 
+ * Finish processing the changes.  This means applying the deferred inserts for updates to unique indexes.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close this RowChanger.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHeapConglomerateController</MethodName>
+            <MethodComment>/** 
+ * @see RowChanger#getHeapConglomerateController 
+ */
+</MethodComment>
+            <ReturnType>ConglomerateController</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sortArray</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [output=new int[input.length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[input, 0, output, 0, input.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>java.util.Arrays;sort;[output]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findSelectedCol</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>selectedCol</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [changeColArray=(partialChangedColumnIds == null) ? changedColumnIds : partialChangedColumnIds]</InnerVar>
+                <InnerVar>int [nextColumnToUpdate=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

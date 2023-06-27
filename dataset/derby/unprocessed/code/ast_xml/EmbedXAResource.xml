@@ -1,0 +1,731 @@
+<Class>
+    <Id>722</Id>
+    <Package>org.apache.derby.jdbc</Package>
+    <ClassName>EmbedXAResource</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>XAResource</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EmbedXAResource  /** 
+ * Implements XAResource
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>con</FieldName>
+            <FieldType>EmbedPooledConnection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ra</FieldName>
+            <FieldType>ResourceAdapter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentXid</FieldName>
+            <FieldType>XAXactId</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeoutSeconds</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lcc</FieldName>
+            <FieldType>LanguageConnectionContext</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>EmbedXAResource</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>con</ParamName>
+                    <ParamType>EmbedPooledConnection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ra</ParamName>
+                    <ParamType>ResourceAdapter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commit</MethodName>
+            <MethodComment>/** 
+ * Commit the global transaction specified by xid.
+ * @param xid A global transaction identifier
+ * @param onePhase If true, the resource manager should use a one-phasecommit protocol to commit the work done on behalf of xid.
+ * @exception XAException An error has occurred. Possible XAExceptions areXA_HEURHAZ, XA_HEURCOM, XA_HEURRB, XA_HEURMIX, XAER_RMERR, XAER_RMFAIL, XAER_NOTA, XAER_INVAL, or XAER_PROTO.   &lt;P&gt;If the resource manager did not commit the transaction and the paramether onePhase is set to true, the resource manager  may throw one of the XA_RB* exceptions. Upon return, the resource manager has rolled back the branch's work and has  released all held resources.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>onePhase</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>end</MethodName>
+            <MethodComment>/** 
+ * Ends the work performed on behalf of a transaction branch. The resource manager disassociates the XA resource from the transaction branch specified and let the transaction be completed. &lt;p&gt; If TMSUSPEND is specified in flags, the transaction branch is temporarily suspended in incomplete state. The transaction context is in suspened state and must be resumed via start with TMRESUME specified. &lt;p&gt; If TMFAIL is specified, the portion of work has failed. The resource manager may mark the transaction as rollback-only &lt;p&gt; If TMSUCCESS is specified, the portion of work has completed successfully.
+ * @param xid A global transaction identifier that is the same as what wasused previously in the start method.
+ * @param flags One of TMSUCCESS, TMFAIL, or TMSUSPEND
+ * @exception XAException An error has occurred.Possible XAException values are XAER_RMERR, XAER_RMFAILED, XAER_NOTA, XAER_INVAL, XAER_PROTO, or XA_RB*.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flags</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>boolean [endingCurrentXid=false]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+                <InnerVar>boolean [rollbackOnly=tranState.end(this,flags,endingCurrentXid)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepare</MethodName>
+            <MethodComment>/** 
+ * Ask the resource manager to prepare for a transaction commit of the transaction specified in xid.
+ * @param xid A global transaction identifier
+ * @return A value indicating the resource manager's vote on the outcomeof the transaction. The possible values are: XA_RDONLY or XA_OK. If the resource manager wants to roll back the transaction, it should do so by raising an appropriate XAException in the prepare method.
+ * @exception XAException An error has occurred. Possible exception valuesare: XA_RB*, XAER_RMERR, XAER_RMFAIL, XAER_NOTA, XAER_INVAL, or XAER_PROTO.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionTimeout</MethodName>
+            <MethodComment>/** 
+ * Obtain the current transaction timeout value set for this XAResource instance. If XAResource.setTransactionTimeout was not use prior to invoking this method, the return value is 0; otherwise, the value used in the previous setTransactionTimeout call is returned.
+ * @return the transaction timeout value in seconds. If the returned valueis equal to Integer.MAX_VALUE it means no timeout.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSameRM</MethodName>
+            <MethodComment>/** 
+ * This method is called to determine if the resource manager instance represented by the target object is the same as the resouce manager instance represented by the parameter xares.
+ * @param xares An XAResource object whose resource manager instance is tobe compared with the resource manager instance of the target object.
+ * @return true if it's the same RM instance; otherwise false.
+ * @exception XAException An error has occurred. Possible exception valuesare XAER_RMERR, XAER_RMFAIL.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xares</ParamName>
+                    <ParamType>XAResource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recover</MethodName>
+            <MethodComment>/** 
+ * Obtain a list of prepared transaction branches from a resource manager. The transaction manager calls this method during recovery to obtain the list of transaction branches that are currently in prepared or heuristically completed states.
+ * @param flag One of TMSTARTRSCAN, TMENDRSCAN, TMNOFLAGS. TMNOFLAGS mustbe used when no other flags are set in flags.
+ * @return The resource manager returns zero or more XIDs for thetransaction branches that are currently in a prepared or heuristically completed state. If an error occurs during the operation, the resource manager should throw the appropriate XAException.
+ * @exception XAException An error has occurred. Possible values areXAER_RMERR, XAER_RMFAIL, XAER_INVAL, and XAER_PROTO.
+ */
+</MethodComment>
+            <ReturnType>Xid[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forget</MethodName>
+            <MethodComment>/** 
+ * Tell the resource manager to forget about a heuristically completed transaction branch.
+ * @param xid A global transaction identifier
+ * @exception XAException An error has occurred. Possible exception valuesare XAER_RMERR, XAER_RMFAIL, XAER_NOTA, XAER_INVAL, or XAER_PROTO.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rollback</MethodName>
+            <MethodComment>/** 
+ * Inform the resource manager to roll back work done on behalf of a transaction branch
+ * @param xid A global transaction identifier
+ * @exception XAException - An error has occurred
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTransactionTimeout</MethodName>
+            <MethodComment>/** 
+ * Set the current transaction timeout value for this XAResource instance. Once set, this timeout value is effective until setTransactionTimeout is invoked again with a different value. To reset the timeout value to the default value used by the resource manager, set the value to zero. If the timeout operation is performed successfully, the method returns true; otherwise false. If a resource manager does not support transaction timeout value to be set explicitly, this method returns false.
+ * @param seconds the transaction timeout value in seconds.Value of 0 means the reasource manager's default value. Value of Integer.MAX_VALUE means no timeout.
+ * @return true if transaction timeout value is set successfully;otherwise false.
+ * @exception XAException - An error has occurred. Possible exceptionvalues are XAER_RMERR, XAER_RMFAIL, or XAER_INVAL.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>seconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDefaultXATransactionTimeout</MethodName>
+            <MethodComment>/** 
+ * Returns the default value for the transaction timeout in milliseconds setted up by the system properties.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start</MethodName>
+            <MethodComment>/** 
+ * Start work on behalf of a transaction branch specified in xid If TMJOIN is specified, the start is for joining a transaction previously seen by the resource manager. If TMRESUME is specified, the start is to resume a suspended transaction specified in the parameter xid. If neither TMJOIN nor TMRESUME is specified and the transaction specified by xid has previously been seen by the resource manager, the resource manager throws the XAException exception with XAER_DUPID error code.
+ * @param xid A global transaction identifier to be associated with theresource
+ * @param flags One of TMNOFLAGS, TMJOIN, or TMRESUME
+ * @exception XAException An error has occurred. Possible exceptions areXA_RB*, XAER_RMERR, XAER_RMFAIL, XAER_DUPID, XAER_OUTSIDE, XAER_NOTA, XAER_INVAL, or XAER_PROTO.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid</ParamName>
+                    <ParamType>Xid</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flags</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XAXactId [xid_im=new XAXactId(xid)]</InnerVar>
+                <InnerVar>XATransactionState [tranState=getTransactionState(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkXAActive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentXid</MethodName>
+            <MethodComment>/** 
+ * Resturns currently active xid
+ * @return Xid
+ */
+</MethodComment>
+            <ReturnType>Xid</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionState</MethodName>
+            <MethodComment>/** 
+ * Returns the XATransactionState of the the transaction
+ * @param xid_im 
+ * @return XATransactionState
+ */
+</MethodComment>
+            <ReturnType>XATransactionState</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid_im</ParamName>
+                    <ParamType>XAXactId</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkUserCredentials</MethodName>
+            <MethodComment>/** 
+ * Compares the user name and password of the XAResource with user name and password of this and throws XAException if there is  a mismatch
+ * @param original EmbedXAResource
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>original</ParamName>
+                    <ParamType>EmbedXAResource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkXAActive</MethodName>
+            <MethodComment>/** 
+ * Checks if currently associated connection is active throws exception if not
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XAException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapInXAException</MethodName>
+            <MethodComment>/** 
+ * Map a SQL exception to appropriate XAException. Return the mapped XAException.
+ */
+</MethodComment>
+            <ReturnType>XAException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>SQLException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [sqlstate=se.getSQLState()]</InnerVar>
+                <InnerVar>String [message=se.getMessage()]</InnerVar>
+                <InnerVar>int [seErrorCode=se.getErrorCode()]</InnerVar>
+                <InnerVar>int [xaErrorCode]</InnerVar>
+                <InnerVar>XAException [xae]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>xae;initCause;[se]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapInXAException</MethodName>
+            <MethodComment>/** 
+ * Map a Standard exception to appropriate XAException. Return the mapped XAException.
+ */
+</MethodComment>
+            <ReturnType>XAException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>returnConnectionToResource</MethodName>
+            <MethodComment>/** 
+ * Return an underlying connection object back to its XAResource if possible. If not close the connection.
+ * @param tranState 
+ * @param xid_im 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tranState</ParamName>
+                    <ParamType>XATransactionState</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>xid_im</ParamName>
+                    <ParamType>XAXactId</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;removeXATransaction;[xid_im]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;closeUnusedConnection;[tranState.conn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeUnusedConnection</MethodName>
+            <MethodComment>/** 
+ * Close  an underlying connection object when there is no active XAResource to hand it to.
+ * @param conn 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeXATransaction</MethodName>
+            <MethodComment>/** 
+ * Removes the xid from currently active transactions
+ * @param xid_im 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xid_im</ParamName>
+                    <ParamType>XAXactId</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>XATransactionState [tranState=(XATransactionState)ra.removeConnection(xid_im)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCurrentXid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>aCurrentXid</ParamName>
+                    <ParamType>XAXactId</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextService</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of the ContextService. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextManager</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of the ContextManager. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ContextManager</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ContextManager</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLanguageConnectionContext</MethodName>
+            <MethodComment>/** 
+ * Gets the LanguageConnectionContext for this connection.
+ */
+</MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLanguageConnectionContext</MethodName>
+            <MethodComment>/** 
+ * Privileged LCC lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>EmbedPooledConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

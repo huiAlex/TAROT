@@ -1,0 +1,235 @@
+<Class>
+    <Id>1482</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.memorydb</Package>
+    <ClassName>ClusMogSQL</ClassName>
+    <SuperClass>ClusMog</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClusMogSQL  /** 
+ * Simple utility to compute/recover the parameters of a mixture-of-Gaussian distribution from independent samples, using SQL.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>conn</FieldName>
+            <FieldType>Connection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uniq</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ClusMogSQL</MethodName>
+            <MethodComment>/** 
+ * constructor 
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUnique</MethodName>
+            <MethodComment>/** 
+ * Set unique ID for this object. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uniq</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clusterSQL</MethodName>
+            <MethodComment>/** 
+ * Compute/recover the parameters of a mixture-of-Gaussian distribution from given independent samples, using SQL.
+ * @param n number of clusters (Gaussian components) to output
+ * @param center initial cluster centers for iterative refinement
+ * @param ns number of input samples
+ * @param sample input samples; will be sorted in ascending order during use
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>n</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>center</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ns</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sample</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [thresh=1.0e-6]</InnerVar>
+                <InnerVar>double [oldmsr=Double.MAX_VALUE]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCenters;[n, center]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setSamples;[ns, sample]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;init;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;download;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanup;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printMog;["SQL-COMPUTED", n, weight, mean, var]</InnerMethodInvoke>
+                <InnerMethodInvoke>BaseTestCase;println;["msr = (" + oldmsr + ")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>init</MethodName>
+            <MethodComment>/** 
+ * Initialize the EM (expectation-maximization) iterations. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [clusterN="cluster" + uniq]</InnerVar>
+                <InnerVar>String [sampleN="sample" + uniq]</InnerVar>
+                <InnerVar>PreparedStatement [pstmt=null]</InnerVar>
+                <InnerVar>Statement [stmt=conn.createStatement()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;sort;[sample, 0, ns]</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;sort;[mean, 0, n]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;maximize;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expect</MethodName>
+            <MethodComment>/** 
+ * (Re-)compute cluster centers while holding sample-to-cluster assignment fixed.
+ * @return mean square error of resulting clustering configuration
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [clusterN="cluster" + uniq]</InnerVar>
+                <InnerVar>String [sampleN="sample" + uniq]</InnerVar>
+                <InnerVar>String [mm="mm" + uniq]</InnerVar>
+                <InnerVar>String [vv="vv" + uniq]</InnerVar>
+                <InnerVar>String [ee="ee" + uniq]</InnerVar>
+                <InnerVar>double [msr=Double.MAX_VALUE]</InnerVar>
+                <InnerVar>Statement [stmt=null]</InnerVar>
+                <InnerVar>ResultSet [rset=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>maximize</MethodName>
+            <MethodComment>/** 
+ * (Re-)compute sample-to-cluster assignment while holding cluster centers fixed.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [clusterN="cluster" + uniq]</InnerVar>
+                <InnerVar>String [sampleN="sample" + uniq]</InnerVar>
+                <InnerVar>String [gg="gg" + uniq]</InnerVar>
+                <InnerVar>String [jj="jj" + uniq]</InnerVar>
+                <InnerVar>Statement [stmt=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>download</MethodName>
+            <MethodComment>/** 
+ * Download the computed cluster configuration.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [clusterN="cluster" + uniq]</InnerVar>
+                <InnerVar>String [sampleN="sample" + uniq]</InnerVar>
+                <InnerVar>String [ww="ww" + uniq]</InnerVar>
+                <InnerVar>String [cc="cc" + uniq]</InnerVar>
+                <InnerVar>Statement [stmt=null]</InnerVar>
+                <InnerVar>ResultSet [rset=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanup</MethodName>
+            <MethodComment>/** 
+ * Clean up working tables after use.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [clusterN="cluster" + uniq]</InnerVar>
+                <InnerVar>String [sampleN="sample" + uniq]</InnerVar>
+                <InnerVar>Statement [stmt=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

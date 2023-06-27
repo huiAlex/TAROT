@@ -1,0 +1,332 @@
+<Class>
+    <Id>967</Id>
+    <Package>org.apache.derby.impl.store.replication.master</Package>
+    <ClassName>AsynchronousLogShipper</ClassName>
+    <SuperClass>Thread</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>LogShipper</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AsynchronousLogShipper  /** 
+ * &lt;p&gt; Does asynchronous shipping of log records from the master to the slave being replicated to. The implementation does not ship log records as soon as they become available in the log buffer (synchronously), instead it does log shipping in the following two-fold scenarios 1) Periodically (i.e.) at regular intervals of time. 2) when a request is sent from the master controller (force flushing of the log buffer). 3) when a notification is received from the log shipper about a log buffer element becoming full and the load on the log buffer so warrants a ship. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>logBuffer</FieldName>
+            <FieldType>ReplicationLogBuffer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>transmitter</FieldName>
+            <FieldType>ReplicationMessageTransmit</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shippingInterval</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>minShippingInterval</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxShippingInterval</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastShippingTime</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stopShipping</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>masterController</FieldName>
+            <FieldType>MasterController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>objLSTSync</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forceFlushSemaphore</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_FORCEFLUSH_TIMEOUT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failedChunk</FieldName>
+            <FieldType>ReplicationMessage</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failedChunkHighestInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>highestShippedInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FI_LOW</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FI_HIGH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MIN</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>repLogger</FieldName>
+            <FieldType>ReplicationLogger</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>AsynchronousLogShipper</MethodName>
+            <MethodComment>/** 
+ * Constructor initializes the log buffer, the replication message transmitter, the shipping interval and the master controller.
+ * @param logBuffer the replication log buffer that contains the log recordchunks to be transmitted to the slave.
+ * @param transmitter the replication message transmitter that is used fornetwork transmission of retrieved log records.
+ * @param masterController The master controller that initialized this logshipper.
+ * @param repLogger The replication logger that will write messages tothe log file (typically derby.log)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logBuffer</ParamName>
+                    <ParamType>ReplicationLogBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transmitter</ParamName>
+                    <ParamType>ReplicationMessageTransmit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>masterController</ParamName>
+                    <ParamType>MasterController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>repLogger</ParamName>
+                    <ParamType>ReplicationLogger</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getLogShipperProperties;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment>/** 
+ * Ships log records from the log buffer to the slave being replicated to. The log shipping happens between shipping intervals of time, the  shipping interval being derived from the fill information (an indicator of load in the log buffer) obtained from the log buffer. The shipping can also be triggered in the following situations, 1) Based on notifications from the log buffer, where the fill  information is again used as the basis to decide whether a shipping should happen or not 2) On a forceFlush triggered by the log buffer becoming full and the LogBufferFullException being thrown. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shipALogChunk</MethodName>
+            <MethodComment>/** 
+ * Retrieves a chunk of log records, if available, from the log buffer and transmits them to the slave. Used for both periodic and forced shipping.
+ * @throws IOException If an exception occurs while trying to ship thereplication message (containing the log records) across the network.
+ * @throws StandardException If an exception occurs while trying to readlog records from the log buffer.
+ * @return true if a chunk of log records was shipped.false if no log records were shipped because log buffer is empty.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>byte[] [logRecords=null]</InnerVar>
+                <InnerVar>ReplicationMessage [mesg=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushBuffer</MethodName>
+            <MethodComment>/** 
+ * Transmits all the log records in the log buffer to the slave.
+ * @throws IOException If an exception occurs while trying to ship thereplication message (containing the log records) across the network.
+ * @throws StandardException If an exception occurs while trying to readlog records from the log buffer.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forceFlush</MethodName>
+            <MethodComment>/** 
+ * Transmits a chunk of log record from the log buffer to the slave, used by the master controller when the log buffer is full and some space needs to be freed for further log records.
+ * @throws IOException If an exception occurs while trying to ship thereplication message (containing the log records) across the network.
+ * @throws StandardException If an exception occurs while trying to readlog records from the log buffer.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHighestShippedInstant</MethodName>
+            <MethodComment>/** 
+ * Get the highest log instant shipped so far
+ * @return the highest log instant shipped so far
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushedInstance</MethodName>
+            <MethodComment>/** 
+ * updates the information about the latest instance of the log record that has been flushed to the disk. Calling this method has no effect in this asynchronous implementation of the log shipper.
+ * @param latestInstanceFlushedToDisk a long that contains the latestinstance of the log record that has been flushed to the disk.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>latestInstanceFlushedToDisk</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopLogShipment</MethodName>
+            <MethodComment>/** 
+ * Stop shipping log records. If a ship is currently in progress it will not be interrupted, shipping will stop only after the current shipment is done.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>workToDo</MethodName>
+            <MethodComment>/** 
+ * Used to notify the log shipper that a log buffer element is full. This method would basically use the following steps to decide on the  action to be taken when a notification from the log shipper is received, a) Get FI from log buffer b) If FI &amp;gt;= FI_HIGH b.1) notify the log shipper thread. c) Else If the time elapsed since last ship is greater than minShippingInterval c.1) notify the log shipper thread.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [fi]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>calculateSIfromFI</MethodName>
+            <MethodComment>/** 
+ * Will be used to calculate the shipping interval based on the fill information obtained from the log buffer. This method uses the following steps to arrive at the shipping interval, a) FI &amp;gt;= FI_HIGH return -1 (signifies that the waiting time should be 0) b) FI &amp;gt;  FI_LOW and FI &amp;lt; FI_HIGH return minShippingInterval c) FI &amp;lt;= FI_LOW return maxShippingInterval.
+ * @return the shipping interval based on the fill information.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [fi]</InnerVar>
+                <InnerVar>long [si]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogShipperProperties</MethodName>
+            <MethodComment>/** 
+ * Load relevant system properties: max and min log shipping interval
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [buffers=ReplicationLogBuffer.DEFAULT_NUMBER_LOG_BUFFERS]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

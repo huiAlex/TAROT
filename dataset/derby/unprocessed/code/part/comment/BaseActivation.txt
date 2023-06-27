@@ -1,0 +1,518 @@
+/**
+ * BaseActivation
+ * provides the fundamental support we expect all activations to have.
+ * Doesn't actually implement any of the activation interface,
+ * expects the subclasses to do that.
+ */
+
+/**
+	 * By setting isValid to false, we can force a new activation to be used
+	 * even if the prepared statement is still valid. This is used when
+	 * modifying the current role for a session, which may (if the statement
+	 * relies on privileges obtained via the current role) require rechecking
+	 * of privileges. The checking normally only happens the first time the
+	 * prepared statement is used in a session, when the activation is
+	 * constructed. Forcing creation of a new activation achieves the purpose
+	 * of getting the check performed over again and is cheaper than
+	 * invalidating the prepared statement itself. Also, the latter would
+	 * impact other sessions, forcing them to recreate their activations.
+	 */
+
+/**
+	 * For dependency tracking
+	 */
+
+/**
+	 * For dependency tracking
+	 */
+
+/**
+	 * The 'parentActivation' of an activation of a statement executing in
+	 * the root connection is null.
+	 *
+	 * A non-null 'parentActivation' represents the activation of the calling
+	 * statement (if we are in a nested connection of a stored routine), or the
+     * activation of the parent statement (if we are executing a sub-statement)
+	 *
+	 * 'parentActivation' is set when this activation is created (     * PreparedStatement#getActivation) based on the top of the
+	 * dynamic call stack of execution, which is tracked by
+	 * StatementContext. The nested SQL session context is initialized
+	 * by code generated for the call, after parameters are evaluated
+     * or just sub-statement execution starts.
+     *      * 	 *
+	 */
+
+/**
+	 * The SQL session context to be used inside a nested connection in a
+	 * stored routine or in a substatement. In the latter case, it is an alias
+	 * to the superstatement's session context.
+	 */
+
+/**
+     * Stack of ConstantActions.
+     */
+
+/**
+     * Create the ResultSet tree for this statement, and possibly perform
+     * extra checks or initialization required by specific sub-classes.
+     * @return the root of the ResultSet tree for this statement
+     */
+
+/**
+     * Create the ResultSet tree for this statement.
+     * @return the root of the ResultSet tree for this statement
+     *      */
+
+/**
+     * Reinitialize data structures added by the sub-classes before each
+     * execution of the statement. The default implementation does nothing.
+     * Sub-classes should override this method if they need to perform
+     * operations before each execution.
+     *      */
+
+/**
+     * Link this activation with its PreparedStatement.
+     * It can be called with null to break the link with the
+     * PreparedStatement.
+     * @param ps prepared statement
+     * @param scrollable activation for a scrollable result set
+     *      */
+
+/**
+		Get the saved RowLocation.
+
+		@param itemNumber	The saved item number.
+
+		@return	A RowLocation template for the conglomerate
+	 */
+
+/**
+		This is a partial implementation of reset.
+		Subclasses will want to reset information
+		they are aware of, such as parameters.
+		
+		All subclasses must call super.reset() and
+		then do their cleanup.
+		
+		The execute call must set the resultSet field
+		to be the resultSet that it has returned.
+
+		@exception StandardException on error
+	 */
+
+/**
+		Closing an activation marks it as unusable. Any other
+		requests made on it will fail.  An activation should be
+		marked closed when it is expected to not be used any longer,
+		i.e. when the connection for it is closed, or it has suffered some
+		sort of severe error.
+
+		This should also remove it from the language connection context.
+
+		@exception StandardException on error
+	 */
+
+/**
+     * A generated class can create its own closeActivationAction
+     * method to invoke special logic when the activation is closed.
+     *      */
+
+/**
+		Find out if the activation closed or not.
+		@return true if the prepared statement has been closed.
+	 */
+
+/**
+		Set this Activation for a single execution.
+
+			*/
+
+/**
+		Returns true if this Activation is only going to be used for
+		one execution.
+
+			*/
+
+/**
+		Get the number of subqueries in the entire query.
+		@return int	 The number of subqueries in the entire query.
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Temporary tables can be declared with ON COMMIT DELETE ROWS. But if the table has a held curosr open at
+	 * commit time, data should not be deleted from the table. This method, (gets called at commit time) checks if this
+	 * activation held cursor and if so, does that cursor reference the passed temp table name.
+	 *
+	 * @return	true if this activation has held cursor and if it references the passed temp table name
+	 */
+
+/**
+	   remember the cursor name
+	 */
+
+/**
+	  get the cursor name.  For something that isn't
+	  a cursor, this is used as a string name of the
+	  result set for messages from things like the
+	  dependency manager.
+	  
+	  Activations that do support cursors will override
+	  this.	
+	*/
+
+/** @see Activation#setAutoGeneratedKeysResultsetInfo */
+
+/** @see Activation#getAutoGeneratedKeysResultsetMode */
+
+/** @see Activation#getAutoGeneratedKeysColumnIndexes */
+
+/** @see Activation#getAutoGeneratedKeysColumnNames */
+
+/**
+		Used in the execute method of activations for
+		generating the result sets that they concatenate together.
+	 */
+
+/**
+		Used in activations for generating rows.
+	 */
+
+/**
+		Used in CurrentOfResultSet to get to the target result set
+		for a cursor. Overridden by activations generated for
+		updatable cursors.  Those activations capture the target
+		result set in a field in their execute() method, and then
+		return the value of that field in their version of this method.
+
+		@return null.
+	 */
+
+/**
+	 * Called by generated code to compute the next autoincrement value.
+	 * 
+	 * @return The next autoincrement value which should be inserted.
+	 * returns the correct number datatype.
+	 */
+
+/**
+	 * Called by generated code to get the next number in an ANSI/ISO sequence
+     * and advance the sequence. Raises an exception if the sequence was declared
+     * NO CYCLE and its range is exhausted.
+	 *
+     * @param sequenceUUIDstring The string value of the sequence's UUID
+     * @param typeFormatID The format id of the data type to be returned. E.g., StoredFormatIds.SQL_INTEGER_ID.
+     *
+	 * @return The next number in the sequence
+	 */
+
+/**
+		Used in CurrentOfResultSet to get to the cursor result set
+		for a cursor.  Overridden by activations generated for
+		updatable cursors.  Those activations capture the cursor
+		result set in a field in their execute() method, and then
+		return the value of that field in their version of this method.
+
+		@return null
+	 */
+
+/**
+		Various activation methods need to disallow their
+		invocation if the activation is closed. This lets them
+		check and throw without generating alot of code.
+		
+		The code to write to generate the call to this is approximately:
+		
+			// jf is a JavaFactory
+			CallableExpression ce = jf.newMethodCall(
+				jf.thisExpression(),
+				BaseActivation.CLASS_NAME,
+				"throwIfClosed",
+				"void",
+				acb.exprArray(jf.newStringLiteral(...some literal here...)));
+
+			//mb is a MethodBuilder
+			mb.addStatement(jf.newStatement(ce));
+		
+		The java code to write to call this is:
+		
+			this.throwIfClosed(...some literal here...);
+		
+		In both cases, "...some literal here..." gets replaced with
+		an expression of type String that evaluates to the name
+		of the operation that is being checked, like "execute" or
+		"reset".
+
+		@exception StandardException thrown if closed
+	 */
+
+/**
+	 * Set a column position in an array of column positions.
+	 *
+	 * @param columnPositions	The array of column positions
+	 * @param positionToSet		The place to put the column position
+	 * @param column			The column position
+	 */
+
+/**
+	 * Allocate an array of qualifiers and initialize in Qualifier[][]
+	 *
+	 * @param qualifiers	The array of Qualifier arrays.
+	 * @param position		The position in the array to set
+	 * @param length		The array length of the qualifier array to allocate.
+	 */
+
+/**
+	 * Set a Qualifier in a 2 dimensional array of Qualifiers.
+     *
+     * Set a single Qualifier into one slot of a 2 dimensional array of 
+     * Qualifiers.       * the 2-d array.
+	 *
+	 * @param qualifiers	The array of Qualifiers
+	 * @param qualifier		The Qualifier
+	 * @param position_1    The Nth array index into qualifiers[N][M]
+	 * @param position_2    The Nth array index into qualifiers[N][M]
+	 */
+
+/**
+	 * Reinitialize all Qualifiers in an array of Qualifiers.
+	 *
+	 * @param qualifiers	The array of Qualifiers
+	 */
+
+/**
+	 * Mark the activation as unused.  
+	 */
+
+/**
+	 * Is the activation in use?
+	 *
+	 * @return true/false
+	 */
+
+/**
+	  	  */
+
+/**
+	  	  */
+
+/**
+	  	  */
+
+/**
+	 * @exception StandardException on error
+	 */
+
+/**
+				@exception StandardException	Thrown on error
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+     * Find out if it's time to check the row counts of the tables involved
+     * in this query.
+     * @return true if the row counts should be checked, false otherwise
+     */
+
+/**
+	 * This method can help reduce the amount of generated code by changing
+	 * instances of this.pvs.getParameter(position) to this.getParameter(position) 
+	 * @param position
+	 * 	 */
+
+/**
+	 return the parameters.
+	 */
+
+/**
+	 	Throw an exception if any parameters are uninitialized.
+
+		@exception StandardException	Thrown if any parameters
+												are unitialized
+	 */
+
+/**
+	 * Remember the row for the specified ResultSet.
+	 */
+
+/**
+	 * Clear the current row for the specified ResultSet.
+	 */
+
+/**
+	 * Get the current row at the given index.
+	 */
+
+/**
+	 * Return the current SQL session context for all immediately
+	 * nested connections stemming from the call or function
+	 * invocation of the statement corresponding to this activation.
+     * 
+     * Substatements (e.g. used in rs.updateRow), inherit the SQL session
+     * context via its parent activation.
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * This activation is created in a dynamic call context or a substatement
+	 * execution context, make note of its parent statements activation (a).
+	 *
+	 * @param a The caller's or superstatement's activation
+	 */
+
+/**
+	 * Get the activation of the calling statement or parent statement.
+	 *
+	 * @return The parent's activation
+	 */
+
+/**
+     * Check that a positioned statement is executing against a cursor
+     * from the same PreparedStatement (plan) that the positioned
+     * statement was original compiled against.
+     * 
+     * Only called from generated code for positioned UPDATE and DELETE
+     * statements. See CurrentOfNode.
+     * 
+     * @param cursorName Name of the cursor
+     * @param psName Object name of the PreparedStatement.
+     *      */
+
+/**
+	 * get the reference to parent table ResultSets, that will be needed by the 
+	 * referential action dependent table scans.
+	 */
+
+/**
+	 ** prepared statement use the same activation for
+	 ** multiple execution. For each excution we create new
+	 ** set of temporary resultsets, we should clear this hash table.
+	 ** otherwise we will refer to the released resources.
+	 */
+
+/**
+	 * beetle 3865: updateable cursor using index.  A way of communication
+	 * between cursor activation and update activation.
+	 */
+
+/**
+		Return a calendar for use by this activation.
+		Calendar objects are not thread safe, the one returned
+		is purely for use by this activation and it is assumed
+		that is it single threded through the single active
+		thread in a connection model.
+	*/
+
+/**
+	    Get the language connection factory associated with this connection
+	  */
+
+/**
+	 * Get the Current ContextManager.
+	 *
+	 * @return Current ContextManager
+	 */
+
+/**
+		Used by activations to generate data values.  Most DML statements
+		will use this method.  Possibly some DDL statements will, as well.
+	 */
+
+/**
+	 * Used to get a proxy for the current connection.
+	 *
+	 * @exception SQLException		Thrown on failure to get connection
+	 */
+
+/**
+		Real implementations of this method are provided by a generated class.
+	*/
+
+/**
+		Real implementations of this method are provided by a generated class.
+	*/
+
+/**
+     * Compute the DB2 compatible length of a value.
+     *
+     * @param value
+     * @param constantLength The length, if it is a constant modulo null/not null. -1 if the length is not constant
+     * @param reUse If non-null then re-use this as a container for the length
+     *
+     * @return the DB2 compatible length, set to null if value is null.
+     */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+     * Privileged Monitor lookup. Must be package private so that user code
+     * can't call this entry point.
+     */
+

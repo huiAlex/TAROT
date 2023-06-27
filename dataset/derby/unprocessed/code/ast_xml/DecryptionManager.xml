@@ -1,0 +1,269 @@
+<Class>
+    <Id>1572</Id>
+    <Package>org.apache.derby.impl.drda</Package>
+    <ClassName>DecryptionManager</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DecryptionManager  /** 
+ * This class is used to decrypt password and/or userid. It uses Diffie_Hellman algorithm to get the publick key and secret key, and then DES encryption is done using certain token (based on security mechanism) and  this side's own public key. Basically, this class is called when using a security mechanism that encrypts user ID and password (eusridpwd). This class uses IBM JCE to do Diffie_Hellman algorithm and DES encryption.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>modulusBytes__</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>modulus__</FieldName>
+            <FieldType>BigInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseBytes__</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>base__</FieldName>
+            <FieldType>BigInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exponential_length__</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyPairGenerator_</FieldName>
+            <FieldType>KeyPairGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyPair_</FieldName>
+            <FieldType>KeyPair</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyAgreement_</FieldName>
+            <FieldType>KeyAgreement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>paramSpec_</FieldName>
+            <FieldType>DHParameterSpec</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SHA_1_PRNG_ALGORITHM</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SECMEC_USRSSBPWD_SEED_LEN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hex_table</FieldName>
+            <FieldType>char[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DecryptionManager</MethodName>
+            <MethodComment>/** 
+ * EncryptionManager constructor. In this constructor,DHParameterSpec, KeyPairGenerator, KeyPair, and KeyAgreement  are initialized.
+ * @throws SQLException that wraps any error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>obtainPublicKey</MethodName>
+            <MethodComment>/** 
+ * This method generates the public key and returns it. This shared public key is the application server's connection key and will be exchanged with the application requester's connection key. This connection key will be put in the sectkn in ACCSECRD command and send to the application requester.
+ * @return  a byte array that is the application server's public key
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>byte[] [publicEnc=keyPair_.getPublic().getEncoded()]</InnerVar>
+                <InnerVar>BigInteger [aPub=((DHPublicKey)keyPair_.getPublic()).getY()]</InnerVar>
+                <InnerVar>byte[] [aPubKey=aPub.toByteArray()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>calculateDecryptionToken</MethodName>
+            <MethodComment>/** 
+ * This method is used to calculate the decryption token. DES encrypts the data using a token and the generated shared private key. The token used depends on the type of security mechanism being used: USRENCPWD - The userid is used as the token. The USRID is zero-padded to 8 bytes if less than 8 bytes or truncated to 8 bytes if greater than 8 bytes. EUSRIDPWD - The middle 8 bytes of the server's connection key is used as the token.  Decryption needs to use exactly the same token as encryption.
+ * @param securityMechanism security mechanism
+ * @param initVector  userid or server(this side)'s connection key
+ * @return byte[]  the decryption token
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>securityMechanism</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initVector</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [token=new byte[8]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decryptData</MethodName>
+            <MethodComment>/** 
+ * This method generates a secret key using the application requester's public key, and decrypts the usreid/password with the middle 8 bytes of the generated secret key and a decryption token. Then it returns the decrypted data in a byte array.
+ * @param cipherText        The byte array form userid/password to decrypt.
+ * @param securityMechanism security mechanism
+ * @param initVector        The byte array which is used to calculate thedecryption token for initializing the cipher
+ * @param sourcePublicKey   application requester (encrypter)'s public key.
+ * @return the decrypted data (plain text) in a byte array.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cipherText</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>securityMechanism</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initVector</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourcePublicKey</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [plainText=null]</InnerVar>
+                <InnerVar>byte[] [token=calculateDecryptionToken(securityMechanism,initVector)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateSeed</MethodName>
+            <MethodComment>/** 
+ * This method generates an 8-Byte random seed. Required for the SECMEC_USRSSBPWD security mechanism
+ * @return a random 8-Byte seed.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>java.security.SecureRandom [secureRandom=null]</InnerVar>
+                <InnerVar>byte [randomSeedBytes[]=new byte[SECMEC_USRSSBPWD_SEED_LEN]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>secureRandom;setSeed;[secureRandom.generateSeed(SECMEC_USRSSBPWD_SEED_LEN)]</InnerMethodInvoke>
+                <InnerMethodInvoke>secureRandom;nextBytes;[randomSeedBytes]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toHexString</MethodName>
+            <MethodComment>/** 
+ * Convert a byte array to a String with a hexidecimal format. The String may be converted back to a byte array using fromHexString. &lt;BR&gt; For each byte (b) two characaters are generated, the first character represents the high nibble (4 bits) in hexidecimal (&lt;code&gt;b &amp;amp; 0xf0&lt;/code&gt;), the second character represents the low nibble (&lt;code&gt;b &amp;amp; 0x0f&lt;/code&gt;). &lt;BR&gt; The byte at &lt;code&gt;data[offset]&lt;/code&gt; is represented by the first two characters in the returned String.
+ * @param data    byte array
+ * @param offset  starting byte (zero based) to convert.
+ * @param length  number of bytes to convert.
+ * @return the String (with hexidecimal format) form of the byte array
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [s=new StringBuffer(length * 2)]</InnerVar>
+                <InnerVar>int [end=offset + length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toHexByte</MethodName>
+            <MethodComment>/** 
+ * Convert a string into a byte array in hex format. &lt;BR&gt; For each character (b) two bytes are generated, the first byte  represents the high nibble (4 bits) in hexidecimal (&lt;code&gt;b &amp;amp; 0xf0&lt;/code&gt;), the second byte  represents the low nibble (&lt;code&gt;b &amp;amp; 0x0f&lt;/code&gt;). &lt;BR&gt; The character at &lt;code&gt;str.charAt(0)&lt;/code&gt; is represented by the first two bytes  in the returned String.
+ * @param str string
+ * @param offset  starting character (zero based) to convert.
+ * @param length  number of characters to convert.
+ * @return the byte[]  (with hexidecimal format) form of the string (str) 
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [data=new byte[(length - offset) * 2]]</InnerVar>
+                <InnerVar>int [end=offset + length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

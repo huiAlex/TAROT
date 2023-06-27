@@ -1,0 +1,236 @@
+<Class>
+    <Id>2104</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.upgradeTests</Package>
+    <ClassName>PhaseChanger</ClassName>
+    <SuperClass>BaseTestSetup</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>PhaseChanger  /** 
+ * Decorator that sets the phase of the upgrade process for a suite of upgrade tests.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>phase</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>version</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loader</FieldName>
+            <FieldType>ClassLoader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>previousLoader</FieldName>
+            <FieldType>ClassLoader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>trace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>upgradeAttributes</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>PhaseChanger</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>test</ParamName>
+                    <ParamType>Test</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>phase</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <ParamType>ClassLoader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useCreateOnUpgrade</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment>/** 
+ * Set the phase and boot the database, creating it or upgrading it as required. The thread context class loader is changed to point to the old jar files if required for the phase.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TestConfiguration [config=TestConfiguration.getCurrent()]</InnerVar>
+                <InnerVar>DataSource [ds=JDBCDataSource.getDataSource()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>UpgradeChange.phase;set;[phase]</InnerMethodInvoke>
+                <InnerMethodInvoke>UpgradeChange.oldVersion;set;[version]</InnerMethodInvoke>
+                <InnerMethodInvoke>ds.getConnection();close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment>/** 
+ * Shutdown the database engine and reset the class loader.
+ * @throws SQLException if the engine couldn't be stopped
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Object [contextService=getDerby23ContextService()]</InnerVar>
+                <InnerVar>DataSource [ds=JDBCDataSource.getDataSource()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>JDBCDataSource;shutEngine;[ds]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;clearDerby23ThreadLocals;[contextService]</InnerMethodInvoke>
+                <InnerMethodInvoke>UpgradeChange.phase;set;[null]</InnerMethodInvoke>
+                <InnerMethodInvoke>UpgradeChange.oldVersion;set;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deregisterDriver</MethodName>
+            <MethodComment>/** 
+ * Make sure the JDBC driver in the class loader associated with this version is deregistered. This is a workaround for DERBY-2905, which affected Derby 10.2 - 10.7, and it is needed to make the old engine classes eligible for garbage collection.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [isAffectedVersion=UpgradeRun.lessThan(new int[]{10,2,0,0},version) &amp;&amp; UpgradeRun.lessThan(version,new int[]{10,8,0,0})]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearDerby4895ThreadLocal</MethodName>
+            <MethodComment>/** 
+ * Clear a static ThreadLocal field in TableDescriptor so that the engine classes can be garbage collected when they are no longer used. This is a workaround for DERBY-4895, which affects Derby 10.5 and 10.6.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [isAffectedVersion=(UpgradeRun.lessThan(new int[]{10,5,0,0},version) &amp;&amp; UpgradeRun.lessThan(version,new int[]{10,5,3,2})) || (UpgradeRun.lessThan(new int[]{10,6,0,0},version) &amp;&amp; UpgradeRun.lessThan(version,new int[]{10,6,2,3}))]</InnerVar>
+                <InnerVar>Class [td=Class.forName("org.apache.derby.iapi.sql.dictionary.TableDescriptor",true,loader)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;clearField;[td, "referencedColumnMap", null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearField</MethodName>
+            <MethodComment>/** 
+ * Clear a field that is possibly private or final.
+ * @param cls the class in which the field lives
+ * @param name the name of the field to clear
+ * @param instance the instance whose field should be cleared,or null if the field is static
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cls</ParamName>
+                    <ParamType>Class</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>instance</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [f=cls.getDeclaredField(name)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>f;setAccessible;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>f;set;[instance, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDerby23ContextService</MethodName>
+            <MethodComment>/** 
+ * Get a handle to the ContextService in the old engine if the version is affected by DERBY-23.
+ * @return the ContextService, if this version is affected by DERBY-23,or null otherwise
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearDerby23ThreadLocals</MethodName>
+            <MethodComment>/** 
+ * Clear some fields in ContextService to allow the engine to be garbage collected. This is a workaround for DERBY-23.
+ * @param contextService the context service for an engine that has beenshut down, or null if this version of the engine doesn't suffer from DERBY-23
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextService</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

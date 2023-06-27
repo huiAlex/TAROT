@@ -1,0 +1,367 @@
+<Class>
+    <Id>2133</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>IndexRowToBaseRowResultSet</ClassName>
+    <SuperClass>NoPutResultSetImpl</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CursorResultSet</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>IndexRowToBaseRowResultSet  /** 
+ * Takes a result set with a RowLocation as the last column, and uses the RowLocation to get and return a row from the given base conglomerate. Normally, the input result set will be a TableScanResultSet scanning an index conglomerate.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>source</FieldName>
+            <FieldType>NoPutResultSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>restriction</FieldName>
+            <FieldType>GeneratedMethod</FieldType>
+        </Field>
+        <Field>
+            <FieldName>accessedHeapCols</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>accessedAllCols</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexCols</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dcoci</FieldName>
+            <FieldType>DynamicCompiledOpenConglomInfo</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scoci</FieldName>
+            <FieldType>StaticCompiledOpenConglomInfo</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseCC</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>closeBaseCCHere</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forUpdate</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowArray</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseRowLocation</FieldName>
+            <FieldType>RowLocation</FieldType>
+        </Field>
+        <Field>
+            <FieldName>copiedFromSource</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>restrictionTime</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_baseColumnCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_includeRowLocation</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_heapColsWithoutRowLocation</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>IndexRowToBaseRowResultSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conglomId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scociItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>NoPutResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultRowAllocator</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heapColRefItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>allColRefItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heapOnlyColRefItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexColMapItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>restriction</ParamName>
+                    <ParamType>GeneratedMethod</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseColumnCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GenericPreparedStatement [gp=(GenericPreparedStatement)a.getPreparedStatement()]</InnerVar>
+                <InnerVar>TransactionController [tc=activation.getTransactionController()]</InnerVar>
+                <InnerVar>ExecRow [resultRow=((ExecRowBuilder)gp.getSavedObject(resultRowAllocator)).build(a.getExecutionFactory())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getCompactRow;[resultRow, accessedAllCols, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;recordConstructorTime;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openCore</MethodName>
+            <MethodComment>/** 
+ * open this ResultSet.
+ * @exception StandardException thrown if cursor finished.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [lockingRequired=false]</InnerVar>
+                <InnerVar>TransactionController [tc]</InnerVar>
+                <InnerVar>int [openMode]</InnerVar>
+                <InnerVar>int [isolationLevel]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;openCore;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reopenCore</MethodName>
+            <MethodComment>/** 
+ * reopen this ResultSet.
+ * @exception StandardException thrown if cursor finished.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;reopenCore;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRowCore</MethodName>
+            <MethodComment>/** 
+ * Return the requested values computed from the next row (if any) for which the restriction evaluates to true. &lt;p&gt; restriction and projection parameters are evaluated for each row.
+ * @exception StandardException thrown on failure.
+ * @exception StandardException ResultSetNotOpen thrown if not yet open.
+ * @return the next row in the result
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [sourceRow=null]</InnerVar>
+                <InnerVar>ExecRow [retval=null]</InnerVar>
+                <InnerVar>boolean [restrict=false]</InnerVar>
+                <InnerVar>DataValueDescriptor [restrictBoolean]</InnerVar>
+                <InnerVar>long [beginRT=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * If the result set has been opened, close the open scan.
+ * @exception StandardException thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimeSpent</MethodName>
+            <MethodComment>/** 
+ * Return the total amount of time spent in this ResultSet
+ * @param type	CURRENT_RESULTSET_ONLY - time spent only in this ResultSetENTIRE_RESULTSET_TREE  - time spent in this ResultSet and below.
+ * @return long		The total amount of time spent (in milliseconds).
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [totTime=constructorTime + openTime + nextTime+ closeTime]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowLocation</MethodName>
+            <MethodComment>/** 
+ * Return the RowLocation of the base row.
+ * @see CursorResultSet
+ * @return the row location of the current cursor row.
+ * @exception StandardException thrown on failure.
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>positionScanAtRowLocation</MethodName>
+            <MethodComment>/** 
+ * @see NoPutResultSet#positionScanAtRowLocation Also remembers row location so that subsequent invocations of getCurrentRow will not read the index row to look up the row location base row, but reuse the saved row location.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rl</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;positionScanAtRowLocation;[rl]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentRow</MethodName>
+            <MethodComment>/** 
+ * * Gets last row returned.
+ * @see CursorResultSet
+ * @return the last row returned.
+ * @exception StandardException thrown on failure.
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [sourceRow=null]</InnerVar>
+                <InnerVar>boolean [row_exists=baseCC.fetch(baseRowLocation,rowArray,(FormatableBitSet)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sourceRow;setRowArray;[rowArray]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isForUpdate</MethodName>
+            <MethodComment>/** 
+ * Is this ResultSet or it's source result set for update. beetle 3865: updateable cursor using index scan.  We didn't need this function before because we couldn't use index for update cursor.
+ * @return Whether or not the result set is for update.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

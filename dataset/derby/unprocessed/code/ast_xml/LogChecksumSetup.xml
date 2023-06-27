@@ -1,0 +1,262 @@
+<Class>
+    <Id>1311</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.store</Package>
+    <ClassName>LogChecksumSetup</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>cbio</FieldName>
+            <FieldType>CorruptibleIo</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LogChecksumSetup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertAndCorrupt</MethodName>
+            <MethodComment>/** 
+ * Insert some rows into the table and corrupt the log for the last row, so when we recover , there should be one row less even though we committed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("INSERT INTO " + "T1" + " VALUES(?,?,?)")]</InnerVar>
+                <InnerVar>java.util.Random [r=new java.util.Random()]</InnerVar>
+                <InnerVar>CRC32 [checksum=new CRC32()]</InnerVar>
+                <InnerVar>boolean [corrupt=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateAndCorrupt</MethodName>
+            <MethodComment>/** 
+ * update some rows in the table and corrupt the log for the last row, so when we recover , All checsum should be correct because corrupted  log transaction should been rolled back.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("update " + "T1" + " SET "+ "DATA=?, DATACHECKSUM=? where ID=?")]</InnerVar>
+                <InnerVar>java.util.Random [r=new java.util.Random()]</InnerVar>
+                <InnerVar>CRC32 [checksum=new CRC32()]</InnerVar>
+                <InnerVar>int [updateCount=0]</InnerVar>
+                <InnerVar>boolean [corrupt=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedRowCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [s=conn.createStatement()]</InnerVar>
+                <InnerVar>CRC32 [checksum=new CRC32()]</InnerVar>
+                <InnerVar>ResultSet [rs=s.executeQuery("SELECT DATA , DATACHECKSUM, ID FROM " + "T1")]</InnerVar>
+                <InnerVar>int [count=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createTable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [s=conn.createStatement()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s;executeUpdate;["CREATE TABLE " + "T1" + "(ID INT,"+ "DATA BLOB(300000),"+ "DATACHECKSUM BIGINT)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupLogCorruption</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cbio;setLogCorruption;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>cbio;setOffset;[off]</InnerMethodInvoke>
+                <InnerMethodInvoke>cbio;setLength;[len]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateBinaryData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>java.util.Random</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factor</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [baos=new ByteArrayOutputStream(64)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runTest</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;logMessage;["Begin LogCheckum Setup Test"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createTable;[conn]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;insertAndCorrupt;[conn, 11]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;logMessage;["End LogChecksum Setup Test"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logMessage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;[str]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>argv</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogChecksumSetup [lctest=new LogChecksumSetup()]</InnerVar>
+                <InnerVar>Connection [conn=ij.startJBMS()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ij;getPropertyArg;[argv]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;setAutoCommit;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Throwable</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

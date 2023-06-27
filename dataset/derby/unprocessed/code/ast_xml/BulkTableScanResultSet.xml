@@ -1,0 +1,379 @@
+<Class>
+    <Id>536</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>BulkTableScanResultSet</ClassName>
+    <SuperClass>TableScanResultSet</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CursorResultSet</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BulkTableScanResultSet  /** 
+ * Read a base table or index in bulk.  Most of the work for this method is inherited from TableScanResultSet. This class overrides getNextRowCore (and extends  re/openCore) to use a row array and fetch rows from the Store in bulk  (using fetchNextGroup). &lt;p&gt; Since it retrieves rows in bulk, locking is not as is usual -- locks may have already been released on rows as they are returned to the user.  Hence, this ResultSet is not suitable for a query running Isolation Level 1, cursor stability. &lt;p&gt; Note that this code is only accessable from an optimizer override.  If it makes sense to have the optimizer select bulk reads, then this should probably be rolled into TableScanResultSet.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>rowArray</FieldName>
+            <FieldType>DataValueDescriptor[][]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowLocations</FieldName>
+            <FieldType>RowLocation[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>curRowPosition</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numRowsInArray</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseColumnCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>resultColumnCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OUT_OF_ROWS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>BulkTableScanResultSet</MethodName>
+            <MethodComment>/** 
+ * Constructor.  Just save off the rowsPerRead argument and pass everything else down to TableScanResultSet
+ * @see org.apache.derby.iapi.sql.execute.ResultSetFactory#getBulkTableScanResultSet
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conglomId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scoci</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultRowTemplate</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startKeyGetter</ParamName>
+                    <ParamType>GeneratedMethod</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startSearchOperator</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopKeyGetter</ParamName>
+                    <ParamType>GeneratedMethod</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopSearchOperator</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sameStartStopPosition</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>qualifiers</ParamName>
+                    <ParamType>Qualifier[][]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userSuppliedOptimizerOverrides</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isConstraint</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colRefItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexColItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableLocked</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isolationLevel</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowsPerRead</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>disableForHoldable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oneRowScan</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setRowLocationsState;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustBulkFetchSize</MethodName>
+            <MethodComment>/** 
+ * Adjust the bulk fetch size according to the parameters. Bulk fetch may be disabled by returning 1 from this method. Disabling of bulk fetch may happen if the cursor is holdable and it contains LOB columns (DERBY-1511) because
+ * @param activation the activation for the executing statement
+ * @param rowsPerRead how many rows to read in each chunk if a bulk fetchis OK to use
+ * @param disableForHoldable whether or not bulk fetch should be disabledfor holdable cursors
+ * @return the bulk fetch size to use
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowsPerRead</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>disableForHoldable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openScanController</MethodName>
+            <MethodComment>/** 
+ * Open the scan controller
+ * @param tc transaction controller will open one if null
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [startPositionRow=startPosition == null ? null : startPosition.getRowArray()]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [stopPositionRow=stopPosition == null ? null : stopPosition.getRowArray()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>activation;informOfRowCount;[this, scanController.getEstimatedRowCount()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openCore</MethodName>
+            <MethodComment>/** 
+ * Open up the result set.  Delegate most work to TableScanResultSet.openCore(). Create a new array with &lt;rowsPerRead&gt; rows for use in fetchNextGroup().
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lopOffRowLocation</MethodName>
+            <MethodComment>/** 
+ * Get a blank row by cloning the candidate row and lopping off the trailing RowLocation column for scans done on behalf of MERGE statements.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [temp=candidate.getRowArrayClone()]</InnerVar>
+                <InnerVar>int [count=temp.length - 1]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [result=new DataValueDescriptor[count]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reopenCore</MethodName>
+            <MethodComment>/** 
+ * Reopen the result set.  Delegate most work to TableScanResultSet.reopenCore(). Reuse the array of rows.
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRowCore</MethodName>
+            <MethodComment>/** 
+ * Return the next row (if any) from the scan (if open). Reload the rowArray as necessary.
+ * @exception StandardException thrown on failure to get next row
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [result=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCancellationFlag;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCurrentRow;[result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reloadArray</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * If the result set has been opened, close the open scan.  Delegate most of the work to TableScanResultSet.
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canGetInstantaneousLocks</MethodName>
+            <MethodComment>/** 
+ * Can we get instantaneous locks when getting share row locks at READ COMMITTED.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>requiresRelocking</MethodName>
+            <MethodComment>/** 
+ * @see NoPutResultSet#requiresRelocking
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

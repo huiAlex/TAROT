@@ -1,0 +1,545 @@
+<Class>
+    <Id>965</Id>
+    <Package>org.apache.derby.impl.store.access.btree.index</Package>
+    <ClassName>B2IRowLocking3</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>BTreeLockingPolicy</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>B2IRowLocking3  /** 
+ * Implements the jdbc serializable isolation level using row locks. &lt;p&gt; Holds read and write locks until end of transaction. Obtains previous key locks to protect from phantom reads.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>base_cc</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>open_btree</FieldName>
+            <FieldType>OpenBTree</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rawtran</FieldName>
+            <FieldType>Transaction</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>B2IRowLocking3</MethodName>
+            <MethodComment>/** 
+ * Constructors for This class:
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>locking_policy</ParamName>
+                    <ParamType>LockingPolicy</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>base_cc</ParamName>
+                    <ParamType>ConglomerateController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockPreviousToFirstKey</MethodName>
+            <MethodComment>/** 
+ * Lock key previous to first key in btree. &lt;p&gt; In the previous key locking protocol repeatable read and phantom  protection is guaranteed by locking a range of keys in the btree. The range is defined by the key previous to the first key you look at and all subsequent keys you look at.  The first key in the index is a special case, as there are no keys previous to it.  In that case a special key is declared the "previous key" to the first key in the btree and is locked instead. &lt;p&gt; In this implementation that first key is defined to be in the base container, page ContainerHandle.FIRST_PAGE_NUMBER, record id  PREVIOUS_KEY_HANDLE. &lt;p&gt; Note that the previous key is the same for all indexes on a given conglomerate.  It seemed better for all locks on a base table to have the same containerid, rather than having some locks generated from  a btree have a containerid from base table and some having a containerid from the btree.  If this turns out to be a problem we could either have 2 different containerid's, be more creative with the record id, or even add more to the lock key.
+ * @param aux_leaf          If non-null, this leaf is unlatched if the routine has to wait on the lock.
+ * @param lock_operation    Whether to lock exclusive or share.
+ * @param lock_duration     For what duration should the lock be held,if INSTANT_DURATION, then the routine will guarantee that lock was acquired while holding the latch, but then immediately release the lock.  If COMMIT_DURATION or MANUAL_DURATION then the lock be held when routine returns successfully.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aux_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret_status=base_cc.lockRow(BTree.ROOTPAGEID,RecordHandle.PREVIOUS_KEY_HANDLE,lock_operation,false,lock_duration)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRowOnPage</MethodName>
+            <MethodComment>/** 
+ * Lock a btree row (row is at given slot in page). &lt;p&gt; Lock the row at the given slot in the page.  Meant to be used if caller  only has the slot on the page to be locked, and has not read the row yet.  This routine fetches the row location field from the page, and then locks that rowlocation in the base container. &lt;p&gt; Lock a btree row, enforcing the standard lock/latch protocol.   On return the row is locked.  Return status indicates if the lock was waited for, which will mean a latch was dropped while waiting. In general a false status means that the caller will either have  to research the tree unless some protocol has been implemented that insures that the row will not have moved while the latch was dropped. &lt;p&gt; This routine request a row lock NOWAIT on the in-memory row  "current_row.".  If the lock is granted the routine will return true. If the lock cannot be granted NOWAIT, then the routine will release the latch on "current_leaf" and "aux_leaf" (if aux_leaf is non-null), and then it will request a WAIT lock on the row.   &lt;p&gt;
+ * @param current_leaf      Latched current leaf where "current" key is.
+ * @param aux_leaf          If non-null, this leaf is unlatched if the routine has to wait on the lock.
+ * @param current_slot      Slot of row to lock.
+ * @param lock_fetch_desc   Descriptor for fetching just the RowLocation,used for locking.
+ * @param position          The position to lock if the lock is requestedwhile performing a scan, null otherwise.
+ * @param lock_operation    Whether lock is for key prev to insert or not.
+ * @param lock_duration     For what duration should the lock be held,if INSTANT_DURATION, then the routine will guarantee that lock was acquired while holding the latch, but then immediately release the lock.  If COMMIT_DURATION or MANUAL_DURATION then the lock be held when routine returns successfully.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aux_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current_slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>position</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rec_handle=current_leaf.getPage().fetchFromSlot((RecordHandle)null,current_slot,lock_template,lock_fetch_desc,true)]</InnerVar>
+                <InnerVar>boolean [ret_status=base_cc.lockRow(lock_row_loc,lock_operation,false,lock_duration)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchLeftAndLockPreviousKey</MethodName>
+            <MethodComment>/** 
+ * move left in btree and lock previous key. &lt;p&gt; Enter routine with "current_leaf" latched.  This routine implements the left travel ladder locking protocol to search the leaf pages from right to left for the previous key to 1st key on current_leaf. There are 2 cases: 1) the previous page has keys, in which case the last key on that page is locked, other wise search continues on the next page to the left. 2) there are no keys on the current page and there is no page to the left.  In this case the special "leftmost key" lock is gotten by calling lockPreviousToFirstKey(). Left laddar locking is used if all latches can be obtained immediately with NOWAIT.  This means that current latch is held while asking for left latch NOWAIT, and if left latch is granted then subsequently  current latch can be released.  If this protocol is followed and  all latches are granted then caller is guaranteed that the correct previous key has been locked and current_page latch remains.  The NOWAIT protocol is used to avoid latch/latch deadlocks.  The overall protocol is that one never holds a latch while waiting on another unless the direction of travel is down and to the right. &lt;p&gt; If along the search a latch has to be waited on then latches are released and a wait is performed, and "false" status is returned to caller.  In this case the routine can no longer be sure of it's current position and may have to retry the whole operation.
+ * @return true if previous key found without ever waiting on a latch, false if latch released in order to wait for other latch.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [latches_released=false]</InnerVar>
+                <InnerVar>LeafControlRow [prev_leaf]</InnerVar>
+                <InnerVar>LeafControlRow [prev_prev_leaf]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>_lockScanRow</MethodName>
+            <MethodComment>/** 
+ * Lock a row as part of doing the scan. &lt;p&gt; Lock the row at the given slot (or the previous row if slot is 0). &lt;p&gt; If this routine returns true all locks were acquired while maintaining the latch on leaf.  If this routine returns false, locks may or may not have been acquired, and the routine should be called again after the client has researched the tree to reget the latch on the  appropriate page.
+ * @return Whether locks were acquired without releasing latch on leaf.
+ * @param open_btree        The open_btree to associate latches with - used if routine has to scan backward.
+ * @param pos               The position of the row to lock.
+ * @param request_row_lock  Whether to request the row lock, shouldonly be requested once per page in the scan.
+ * @param lock_fetch_desc   The fetch descriptor to use to fetch therow location for the lock request.
+ * @param lock_template     A scratch area to use to read in rows.
+ * @param previous_key_lock Is this a previous key lock call?
+ * @param forUpdate         Is the scan for update or for read only.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>request_row_lock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>previous_key_lock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [latch_released=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockScanCommittedDeletedRow</MethodName>
+            <MethodComment>/** 
+ * Lock a btree row to determine if it is a committed deleted row. &lt;p&gt;
+ * @see BTreeLockingPolicy#lockScanCommittedDeletedRow
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slot_no</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RowLocation [row_loc=(RowLocation)template[((B2I)open_btree.getConglomerate()).rowLocationColumn]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leaf.getPage();fetchFromSlot;[(RecordHandle)null, slot_no, template, lock_fetch_desc, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockScanRow</MethodName>
+            <MethodComment>/** 
+ * Lock a row as part of doing the scan. &lt;p&gt; Lock the row at the given slot (or the previous row if slot is 0). &lt;p&gt; If this routine returns true all locks were acquired while maintaining the latch on leaf.  If this routine returns false, locks may or may not have been acquired, and the routine should be called again after the client has researched the tree to reget the latch on the  appropriate page.
+ * @return Whether locks were acquired without releasing latch on leaf.
+ * @param open_btree        The open_btree to associate latches with - used if routine has to scan backward.
+ * @param pos               The position of the row to lock.
+ * @param lock_template     A scratch area to use to read in rows.
+ * @param previous_key_lock Is this a previous key lock call?
+ * @param forUpdate         Is the scan for update or for read only.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>previous_key_lock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockScanRecordAfterRead</MethodName>
+            <MethodComment>/** 
+ * Release read lock on a row. For serializable, there is no work to do.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockNonScanPreviousRow</MethodName>
+            <MethodComment>/** 
+ * Lock the row previous to the input row. &lt;p&gt; See BTreeLockingPolicy.lockNonScanPreviousRow
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current_slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret_status]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockNonScanRow</MethodName>
+            <MethodComment>/** 
+ * Lock the in memory row. &lt;p&gt; See BTree.lockRow() for more info.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>BTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aux_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current_row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>B2I [b2i=(B2I)btree]</InnerVar>
+                <InnerVar>boolean [ret_status=base_cc.lockRow((RowLocation)current_row[b2i.rowLocationColumn],lock_operation,false,TransactionManager.LOCK_COMMIT_DURATION)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockNonScanRowOnPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>current_leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current_slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_fetch_desc</ParamName>
+                    <ParamType>FetchDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_row_loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

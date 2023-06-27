@@ -1,0 +1,433 @@
+<Class>
+    <Id>2091</Id>
+    <Package>org.apache.derbyTesting.system.oe.load</Package>
+    <ClassName>SimpleInsert</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Load</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SimpleInsert  /** 
+ * Implement the initial database population according to the TPC-C database population requirements in Clause 4.3 using simple Insert sql statements
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>conn</FieldName>
+            <FieldType>Connection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scale</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+        <Field>
+            <FieldName>seed</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>random</FieldName>
+            <FieldType>OERandom</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setupLoad</MethodName>
+            <MethodComment>/** 
+ * Perform the necessary setup before database population.
+ * @param conn -database connection
+ * @param scale -scale of the database. The WAREHOUSE table is used as the base unit of scaling.
+ * @throws Exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [s=conn.createStatement()]</InnerVar>
+                <InnerVar>int [loadRandomFactor=random.randomInt(0,255)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setupConnection;[conn, scale]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;execute;["CREATE TABLE C(CLOAD INT)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;execute;["INSERT INTO C VALUES(" + loadRandomFactor + ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setRandomGenerator;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupConnection</MethodName>
+            <MethodComment>/** 
+ * Set the connection up to the intended state. Intended for use by sub-classes.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>conn;setAutoCommit;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;setTransactionIsolation;[Connection.TRANSACTION_SERIALIZABLE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRandomGenerator</MethodName>
+            <MethodComment>/** 
+ * Setup the random number generator to be used for the load.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [s=conn.createStatement()]</InnerVar>
+                <InnerVar>ResultSet [rs=s.executeQuery("SELECT CLOAD FROM C")]</InnerVar>
+                <InnerVar>int [loadRandomFactor=rs.getInt(1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rs;next;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populateAllTables</MethodName>
+            <MethodComment>/** 
+ * Follow the initial database population requirements in Section 4.3.3 and populate all the required tables.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;itemTable;[1, Load.ITEM_COUNT]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populateForOneWarehouse</MethodName>
+            <MethodComment>/** 
+ * Populate all the tables needed for a specific warehouse. for each row in warehouse table, load the stock, district table. For each row in district table, load the customer table. for each row in customer table, load the customer table. for each row in customer table, load
+ * @param w Warehouse to be populated.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;warehouseTable;[w]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;stockTable;[1, Load.STOCK_COUNT_W, w]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>itemTable</MethodName>
+            <MethodComment>/** 
+ * Populate the ITEM table. See population requirements in section 4.3.3.1 &lt;BR&gt;
+ * @param itemStart insert item information starting from this Item id (ITEM.I_ID)
+ * @param itemEnd last Item id (ITEM.I_ID) for inserting information for
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>itemStart</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>itemEnd</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("INSERT INTO ITEM(I_ID,I_IM_ID,I_NAME,I_PRICE,I_DATA)" + " VALUES (?, ?, ?, ?, ?)")]</InnerVar>
+                <InnerVar>String [price]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>warehouseTable</MethodName>
+            <MethodComment>/** 
+ * Populate the WAREHOUSE table for a given warehouse. See population requirements in section 4.3.3.1
+ * @param w WAREHOUSE ID (W_ID) to insert data for.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("INSERT INTO WAREHOUSE " + "VALUES (?, ?, ?, ?, ?, ?, ?, ?, 300000.00)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setShort;[1, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[2, random.randomAString(6,10)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[3, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[4, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[5, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[6, random.randomState()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[7, random.randomZIP()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[8, random.randomDecimalString(0,2000,4)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;executeUpdate;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stockTable</MethodName>
+            <MethodComment>/** 
+ * Populate the STOCK table for a given warehouse. See population requirements in section 4.3.3.1 &lt;BR&gt;
+ * @param itemStart insert stocks of items from this Item id (ITEM.I_ID)
+ * @param itemEnd last Item id (ITEM.I_ID) to insert stocks of times for.
+ * @param w WAREHOUSE id (W_ID) for which the stock is populated.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>itemStart</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>itemEnd</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("INSERT INTO STOCK " + "(S_I_ID, S_W_ID, S_QUANTITY,S_DIST_01, S_DIST_02," + " S_DIST_03,S_DIST_04,S_DIST_05,"+ "S_DIST_06,S_DIST_07,S_DIST_08,S_DIST_09,S_DIST_10,"+ "S_ORDER_CNT, S_REMOTE_CNT, S_YTD, S_DATA ) VALUES "+ "(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, 0, 0, ?)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setShort;[2, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>districtTable</MethodName>
+            <MethodComment>/** 
+ * Populate the DISTRICT table for a given warehouse. See population requirements in section 4.3.3.1 &lt;BR&gt;
+ * @param w -WAREHOUSE id (W_ID)
+ * @param d -DISTRICT id (D_ID)
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>d</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("INSERT INTO DISTRICT" + " (D_ID, D_W_ID, D_NAME, D_STREET_1, D_STREET_2," + " D_CITY, D_STATE, D_ZIP, D_TAX, D_YTD, D_NEXT_O_ID) "+ " VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, 30000.00, 3001)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setShort;[1, d]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setShort;[2, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[3, random.randomAString(6,10)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[4, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[5, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[6, random.randomAString10_20()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[7, random.randomState()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[8, random.randomZIP()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[9, random.randomDecimalString(0,2000,4)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;executeUpdate;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>customerTable</MethodName>
+            <MethodComment>/** 
+ * Populate the CUSTOMER table for a given district for a specific warehouse. See population requirements in section 4.3.3.1 &lt;BR&gt;
+ * @param w -WAREHOUSE id (W_ID)
+ * @param d -DISTRICT id (D_ID)
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>d</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [psC=conn.prepareStatement("INSERT INTO CUSTOMER" + " (C_ID, C_D_ID, C_W_ID, C_FIRST, C_MIDDLE, C_LAST," + " C_STREET_1, C_STREET_2,  C_CITY, C_STATE, C_ZIP, "+ "C_PHONE, C_SINCE, C_CREDIT, C_CREDIT_LIM,"+ " C_DISCOUNT, C_BALANCE, C_YTD_PAYMENT, "+ "C_PAYMENT_CNT, C_DELIVERY_CNT, C_DATA)  "+ "VALUES (?, ?, ?, ?, 'OE', ?, ?, ?, ?, ?, ?, ?, "+ " CURRENT TIMESTAMP ,?, 50000.00, ?, -10.0, 10.0,"+ " 1, 0, ?)")]</InnerVar>
+                <InnerVar>PreparedStatement [psH=conn.prepareStatement("INSERT INTO HISTORY (H_C_ID, H_C_D_ID, H_C_W_ID, H_D_ID, H_W_ID, H_DATE, H_AMOUNT, H_DATA) VALUES (?, ?, ?, ?, ?, CURRENT TIMESTAMP, 10.00, ?)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>psC;setShort;[2, d]</InnerMethodInvoke>
+                <InnerMethodInvoke>psC;setShort;[3, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>psH;setShort;[2, d]</InnerMethodInvoke>
+                <InnerMethodInvoke>psH;setShort;[3, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>psH;setShort;[4, d]</InnerMethodInvoke>
+                <InnerMethodInvoke>psH;setShort;[5, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>psC;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>psH;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>orderTable</MethodName>
+            <MethodComment>/** 
+ * Populate the ORDER table See population requirements in section 4.3.3.1
+ * @param w -WAREHOUSE id (W_ID)
+ * @param d -DISTRICT id (D_ID)
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>d</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [psO=conn.prepareStatement("INSERT INTO ORDERS (O_ID, O_D_ID, O_W_ID, O_C_ID, O_ENTRY_D, O_CARRIER_ID, O_OL_CNT, O_ALL_LOCAL) VALUES (?, ?, ?, ?, ?, ?, ?, 1)")]</InnerVar>
+                <InnerVar>PreparedStatement [psOL=conn.prepareStatement("INSERT INTO ORDERLINE (OL_O_ID, OL_D_ID, OL_W_ID, OL_NUMBER, OL_I_ID, OL_SUPPLY_W_ID, OL_DELIVERY_D, OL_QUANTITY, OL_AMOUNT, OL_DIST_INFO)  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)")]</InnerVar>
+                <InnerVar>PreparedStatement [psNO=conn.prepareStatement("INSERT INTO NEWORDERS (NO_O_ID, NO_D_ID, NO_W_ID) VALUES (?, ?, ?)")]</InnerVar>
+                <InnerVar>int[] [cid=random.randomIntPerm(Load.CUSTOMER_COUNT_W / Load.DISTRICT_COUNT_W)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>psO;setShort;[2, d]</InnerMethodInvoke>
+                <InnerMethodInvoke>psO;setShort;[3, w]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>psOL;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>psO;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>psNO;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSeed</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>seed</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setThreadCount</MethodName>
+            <MethodComment>/** 
+ * Ignore, this is a single threaded load.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>threadCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

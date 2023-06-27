@@ -1,0 +1,417 @@
+<Class>
+    <Id>1355</Id>
+    <Package>org.apache.derby.iapi.store.access</Package>
+    <ClassName>DiskHashtable</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DiskHashtable  /** 
+ * This class is used by BackingStoreHashtable when the BackingStoreHashtable  must spill to disk.  It implements the methods of a hash table: put, get,  remove, elements, however it is not implemented as a hash table. In order to minimize the amount of unique code it is implemented using a Btree and a  heap conglomerate. The Btree indexes the hash code of the row key. The  actual key may be too long for our Btree implementation. Created: Fri Jan 28 13:58:03 2005
+ * @version 1.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>rowConglomerateId</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowConglomerate</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>btreeConglomerateId</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>btreeConglomerate</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>btreeRow</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>key_column_numbers</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>remove_duplicates</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tc</FieldName>
+            <FieldType>TransactionController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>row</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scanKey</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>size</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keepStatistics</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keepAfterCommit</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scan</FieldName>
+            <FieldType>ScanController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasMore</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowloc</FieldName>
+            <FieldType>RowLocation</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DiskHashtable</MethodName>
+            <MethodComment>/** 
+ * Creates a new &lt;code&gt;DiskHashtable&lt;/code&gt; instance.
+ * @param tc
+ * @param template              An array of DataValueDescriptors that serves as a template for the rows.
+ * @param key_column_numbers    The indexes of the key columns (0 based)
+ * @param remove_duplicates     If true then rows with duplicate keys are removed.
+ * @param keepAfterCommit       If true then the hash table is kept after a commit
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>collation_ids</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key_column_numbers</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>remove_duplicates</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keepAfterCommit</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=(LanguageConnectionContext)getContextOrNull(LanguageConnectionContext.CONTEXT_ID)]</InnerVar>
+                <InnerVar>int [tempFlags=keepAfterCommit ? (TransactionController.IS_TEMPORARY | TransactionController.IS_KEPT) : TransactionController.IS_TEMPORARY]</InnerVar>
+                <InnerVar>Properties [btreeProps=new Properties()]</InnerVar>
+                <InnerVar>int[] [index_collation_ids={StringDataValue.COLLATION_TYPE_UCS_BASIC,StringDataValue.COLLATION_TYPE_UCS_BASIC}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>btreeProps;put;["baseConglomerateId", String.valueOf(rowConglomerateId)]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeProps;put;["rowLocationColumn", "1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeProps;put;["allowDuplicates", "false"]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeProps;put;["nKeyFields", "2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeProps;put;["nUniqueColumns", "2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeProps;put;["maintainParentLinks", "false"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>btreeConglomerate;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rowConglomerate;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>tc;dropConglomerate;[btreeConglomerateId]</InnerMethodInvoke>
+                <InnerMethodInvoke>tc;dropConglomerate;[rowConglomerateId]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>put</MethodName>
+            <MethodComment>/** 
+ * Put a new row in the overflow structure.
+ * @param row The row to be inserted.
+ * @return true  if the row was added,false if it was not added (because it was a duplicate and we  are eliminating duplicates).
+ * @exception StandardException standard error policy
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isDuplicate=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rowConglomerate;insertAndFetchLocation;[(DataValueDescriptor[])row, (RowLocation)btreeRow[1]]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeRow[0];setValue;[key.hashCode()]</InnerMethodInvoke>
+                <InnerMethodInvoke>btreeConglomerate;insert;[btreeRow]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * Get a row from the overflow structure.
+ * @param key If the rows only have one key column then the key value. If there is more than one key column then a KeyHasher
+ * @return null if there is no corresponding row,the row (DataValueDescriptor[]) if there is exactly one row  with the key, or a Vector of all the rows with the key if there is more than one.
+ * @exception StandardException
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRemove</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>remove</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>existenceOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [hashCode=key.hashCode()]</InnerVar>
+                <InnerVar>int [rowCount=0]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [firstRow=null]</InnerVar>
+                <InnerVar>List&lt;DataValueDescriptor[]&gt; [allRows=null]</InnerVar>
+                <InnerVar>ScanController [scan=tc.openScan(btreeConglomerateId,false,remove ? TransactionController.OPENMODE_FORUPDATE : 0,TransactionController.MODE_TABLE,TransactionController.ISOLATION_READ_UNCOMMITTED,null,scanKey,ScanController.GE,(Qualifier[][])null,scanKey,ScanController.GT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>scanKey[0];setValue;[hashCode]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rowMatches</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>KeyHasher [kh=(KeyHasher)key]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * remove all rows with a given key from the hash table.
+ * @param key          The key of the rows to remove.
+ * @return The removed row(s).
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>size</MethodName>
+            <MethodComment>/** 
+ * @return The number of rows in the hash table
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>elements</MethodName>
+            <MethodComment>/** 
+ * Return an Enumeration that can be used to scan entire table. &lt;p&gt; RESOLVE - is it worth it to support this routine?
+ * @return The Enumeration.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextOrNull</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of a Context. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ElementEnum</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasMoreElements</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextElement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

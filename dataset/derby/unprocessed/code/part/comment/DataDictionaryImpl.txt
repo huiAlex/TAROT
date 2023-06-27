@@ -1,0 +1,2604 @@
+/**
+ * Standard database implementation of the data dictionary
+ * that stores the information in the system catalogs.
+ */
+
+/**
+     * Index into SYSFUN_FUNCTIONS of the DETERMINISTIC indicator.
+     * Used to determine whether the system function is DETERMINISTIC
+     */
+
+/**
+     * Index into SYSFUN_FUNCTIONS of the VARARGS indicator.
+     * Used to determine whether the system function has VARARGS
+     */
+
+/**
+     * The index of the first parameter in entries in the SYSFUN_FUNCTIONS
+     * table. Used to determine the parameter count (zero to many).
+     */
+
+/**
+	 * Runtime definition of the functions from SYSFUN_FUNCTIONS.
+	 * Populated dynamically as functions are called.
+	 */
+
+/**
+     * List of all "system" schemas
+     * 
+     * This list should contain all schema's used by the system and are
+     * created when the database is created.  Users should not be able to
+     * create or drop these schema's and should not be able to create or
+     * drop objects in these schema's.  This list is used by code that
+     * needs to check if a particular schema is a "system" schema.
+     **/
+
+/** Dictionary version of the on-disk database */
+
+/** Dictionary version of the currently running engine */
+
+/** Daemon creating and refreshing index cardinality statistics. */
+
+/**
+		True if the database is read only and requires
+		some form of upgrade, that makes the stored prepared
+		statements invalid.
+		With this case the engine is running at a different
+		version to the underlying stored database. This
+		can happen in 5.1 if the database is read only
+		and a different point release (later than 5.1.25?)
+		to the one that created it, has been booted. (Beetle 5170).
+
+		
+		In 5.2 and newer this will be the case if the engine
+		booting the database is newer than the engine
+		that created it.
+
+	*/
+
+/**
+     * Tells if the automatic index statistics refresher has been disabled.
+     * 
+     * The refresher can be disabled explicitly by the user by setting a
+     * property (system wide or database property), or if the daemon encounters
+     * an exception it doesn't know how to recover from.
+     */
+
+/**
+	 * List of procedures in SYSCS_UTIL schema with PUBLIC access
+	 */
+
+/**
+	 * List of functions in SYSCS_UTIL schema with PUBLIC access
+	 */
+
+/**
+	 * Collation Type for SYSTEM schemas. In Derby 10.3, this will always 
+	 * be UCS_BASIC 
+	 */
+
+/**
+	 * Collation Type for user schemas. In Derby 10.3, this is either 
+	 * UCS_BASIC or TERRITORY_BASED. The exact value is decided by what has 
+	 * user asked for through JDBC url optional attribute COLLATION. If that
+	 * atrribute is set to UCS_BASIC, the collation type for user schemas
+	 * will be UCS_BASIC. If that attribute is set to TERRITORY_BASED, the 
+	 * collation type for user schemas will be TERRITORY_BASED. If the user
+	 * has not provide COLLATION attribute value in the JDBC url at database
+	 * create time, then collation type of user schemas will default to 
+	 * UCS_BASIC. Pre-10.3 databases after upgrade to Derby 10.3 will also
+	 * use UCS_BASIC for collation type of user schemas.
+	 */
+
+/**
+     * This is the data dictionary implementation for
+     * the standard database engine.
+
+	  @return true if this service requested is for a database engine.
+	  */
+
+/**
+	 * Start-up method for this instance of the data dictionary.
+	 *
+	 * @param startParams	The start-up parameters
+	 *
+	 *	@exception StandardException	Thrown if the module fails to start
+	 */
+
+/**
+     * Find the default message digest algorithm to use for BUILTIN
+     * authentication on this database.
+     *
+     * @return the name of the algorithm to use as the default
+     */
+
+/** 
+	 * sets the dependencymanager associated with this dd. subclasses can
+	 * override this to install their own funky dependency manager.
+	 */
+
+/**
+	 * returns the dependencymanager associated with this datadictionary.
+	 * 	 */
+
+/**
+	 * Stop this module.  In this case, nothing needs to be done.
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get a DataDescriptorGenerator, through which we can create
+	 * objects to be stored in the DataDictionary.
+	 *
+	 * @return	A DataDescriptorGenerator
+	 */
+
+/**
+	 * Get authorizationID of Database Owner
+	 *
+	 * @return	authorizationID
+	 */
+
+/**
+	 * 	 */
+
+/** @see DataDictionary#getCollationTypeOfSystemSchemas() */
+
+/** @see DataDictionary#getCollationTypeOfUserSchemas() */
+
+/**
+	 * Get a DataValueFactory, through which we can create
+	 * data value objects.
+	 *
+	 * @return	A DataValueFactory
+	 */
+
+/**
+	 * Get ExecutionFactory associated with this database.
+	 *
+	 * @return	The ExecutionFactory
+	 */
+
+/**
+     * Set up the builtin schema descriptors for system schemas.
+     */
+
+/**
+     * Generate an array of random bytes to use as salt when hashing
+     * credentials.
+     *
+     * @param props database properties that possibly specify the desired
+     *   length of the salt
+     * @return random bytes
+     */
+
+/**
+     * Get the value of an integer property.
+     *
+     * @param props database properties
+     * @param key the key of the property
+     * @param defaultValue which value to return if the property is not set,
+     *   or if the property value is not in the valid range
+     * @param minValue lowest property value to accept
+     * @param maxValue highest property value to accept
+     * @return the value of the property
+     */
+
+/**
+	 * Get the descriptor for the system schema. Schema descriptors include 
+     * authorization ids and schema ids.
+     *
+	 * SQL92 allows a schema to specify a default character set - we will
+	 * not support this.
+	 *
+	 * @return	The descriptor for the schema.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get the descriptor for the SYSCS_UTIL system schema. 
+     * Schema descriptors include authorization ids and schema ids.
+     *
+	 * SQL92 allows a schema to specify a default character set - we will
+	 * not support this.
+	 *
+	 * @return	The descriptor for the schema.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get the descriptor for the SYSIBM schema. Schema descriptors include 
+     * authorization ids and schema ids.
+     *
+	 * SQL92 allows a schema to specify a default character set - we will
+	 * not support this.
+	 *
+	 * @return	The descriptor for the schema.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get the descriptor for the declared global temporary table schema which 
+     * is always named "SESSION".
+	 *
+	 * @return	The descriptor for the schema.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+     * Determine whether a string is the name of the system schema.
+     *
+     * @param name
+     * @return	true or false
+	 *
+	 * @exception StandardException		Thrown on failure
+     */
+
+/**
+	 * Get the descriptor for the named schema.
+	 * Schema descriptors include authorization ids and schema ids.
+	 * SQL92 allows a schema to specify a default character set - we will
+	 * not support this.  Will check default schema for a match
+	 * before scanning a system table.
+	 * 
+	 * @param schemaName	The name of the schema we're interested in. Must not be null.
+	 * @param tc			TransactionController
+	 *
+	 * @param raiseError    whether an exception should be thrown if the schema does not exist.
+	 *
+	 * @return	The descriptor for the schema. Can be null (not found) if raiseError is false.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the target schema by searching for a matching row
+	 * in SYSSCHEMAS by schemaId.  Read only scan.
+	 * 
+	 * @param schemaId		The id of the schema we're interested in.
+	 *						If non-null, overrides schemaName
+	 * 
+	 * @param tc			TransactionController.  If null, one
+	 *						is gotten off of the language connection context.
+	 *
+	 * @return	The row for the schema
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the target schema by searching for a matching row
+	 * in SYSSCHEMAS by schemaId.  Read only scan.
+	 *
+	 * @param schemaId		The id of the schema we're interested in.
+	 *						If non-null, overrides schemaName
+	 * @param isolationLevel Use this explicit isolation level. Only
+	 *                      ISOLATION_REPEATABLE_READ (normal usage) or
+	 *                      ISOLATION_READ_UNCOMMITTED (corner cases)
+	 *                      supported for now.
+	 * @param tc			TransactionController.  If null, one
+	 *						is gotten off of the language connection context.
+	 *
+	 * @return	The row for the schema
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the target schema by searching for a matching row
+	 * in SYSSCHEMAS by schema name.  Read only scan.
+	 * 
+	 * @param schemaName	The name of the schema we're interested in.
+	 *						If schemaId is null, used to qual.
+	 *
+	 * @param tc			TransactionController.  If null, one
+	 *						is gotten off of the language connection context.
+	 *
+	 * @return	The row for the schema
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * Get the SchemaDescriptor for the given schema identifier. 
+     *
+     * @param schemaId  The id of the schema we're interested in.
+     *
+     * @param tc        The transaction controller to us when scanning
+     *                  SYSSCHEMAS
+     *
+     * @return  The descriptor for the schema, null if no such schema exists.
+     *
+     * @exception StandardException     Thrown on failure
+     */
+
+/**
+	 * Get the SchemaDescriptor for the given schema identifier.
+	 *
+	 * @param schemaId the uuid of the schema we want a descriptor for
+	 * @param isolationLevel use this explicit isolation level. Only
+	 *                       ISOLATION_REPEATABLE_READ (normal usage) or
+	 *                       ISOLATION_READ_UNCOMMITTED (corner cases)
+	 *                       supported for now.
+	 * @param tc transaction controller
+	 * 	 */
+
+/**
+	 * Return true of there exists a schema whose authorizationId equals
+	 * authid, i.e.  SYS.SYSSCHEMAS contains a row whose column
+	 * (AUTHORIZATIONID) equals authid.
+	 *
+	 * @param authid authorizationId
+	 * @param tc TransactionController
+	 * @return true iff there is a matching schema
+	 * @exception StandardException
+	 */
+
+/** 
+	 * 	 */
+
+/** array version of addDescriptor.
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Drop the descriptor for a schema, given the schema's name
+	 *
+	 * @param schemaName	The name of the schema to drop
+	 * @param tc			TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the descriptor for the named table within the given schema.
+	 * If the schema parameter is NULL, it looks for the table in the
+	 * current (default) schema. Table descriptors include object ids,
+	 * object types (table, view, etc.)
+	 *
+	 * @param tableName	The name of the table to get the descriptor for
+	 * @param schema	The descriptor for the schema the table lives in.
+	 *			If null, use the system schema.
+	 * @return	The descriptor for the table, null if table does not
+	 *		exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Scan systables_index1 (tablename, schemaid) for a match.
+	 *
+	 * @return TableDescriptor	The matching descriptor, if any.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * This method can get called from the DataDictionary cache.
+	 *
+	 * @param tableKey	The TableKey of the table
+	 *
+	 * @return	The descriptor for the table, null if the table does
+	 *		not exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get the descriptor for the table with the given UUID.
+	 *
+	 * NOTE: I'm assuming that the object store will define an UUID for
+	 * persistent objects. I'm also assuming that UUIDs are unique across
+	 * schemas, and that the object store will be able to do efficient
+	 * lookups across schemas (i.e. that no schema descriptor parameter
+	 * is needed).
+	 *
+	 * @param tableID	The UUID of the table to get the descriptor for
+	 *
+	 * @return	The descriptor for the table, null if the table does
+	 *		not exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * This method can get called from the DataDictionary cache.
+	 *
+	 * @param tableID	The UUID of the table to get the descriptor for
+	 *
+	 * @return	The descriptor for the table, null if the table does
+	 *		not exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Scan systables_index2 (tableid) for a match.
+	 *
+	 * @return TableDescriptor	The matching descriptor, if any.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Finish filling in the TableDescriptor.
+	 * (Build the various lists that hang off the TD.)
+	 *
+	 * @param td	The TableDescriptor.
+	 *
+	 * @return The completed TableDescriptor.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Indicate whether there is anything in the 
+	 * particular schema.  Checks for tables in the
+	 * the schema, on the assumption that there cannot
+	 * be any other objects in a schema w/o a table.
+	 *
+	 * @param sd descriptor
+	 *
+	 * @return true/false
+	 *
+	 * @exception StandardException on error
+	 */
+
+/**
+ 	 * Is the schema id referenced by the system table in question?
+	 * Currently assumes that the schema id is in an index.
+	 * NOTE: could be generalized a bit, and possibly used
+	 * elsewhere...
+	 *
+	 * @param tc	transaction controller
+	 * @param ti	table info for the system table
+	 * @param indexId	index id
+	 * @param indexCol	1 based index column
+	 * @param schemaIdOrderable	the schemaid in a char orderable
+ 	 *
+	 * @return true if there is a reference to this schema
+	 *
+	 * @exception StandardException on error
+	 */
+
+/**
+	 * Drop the table descriptor.
+	 *
+	 * @param td	The table descriptor to drop
+	 * @param schema		A descriptor for the schema the table
+	 *						is a part of.  If this parameter is
+	 *						NULL, then the table is part of the
+	 *						current (default) schema
+	 * @param tc			TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Update the lockGranularity for the specified table.
+	 *
+	 * @param td				The TableDescriptor for the table
+	 * @param schema			The SchemaDescriptor for the table
+	 * @param lockGranularity	The new lockGranularity
+	 * @param tc				The TransactionController to use.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * 10.6 upgrade logic to update the return type of SYSIBM.CLOBGETSUBSTRING. The length of the
+     * return type was changed in 10.5 but old versions of the metadata were not
+     * upgraded at that time. See DERBY-4214.
+     */
+
+/**
+     * 10.6 upgrade logic to update the permissions granted to SYSCS_UTIL.SYSCS_INPLACE_COMPRESS_TABLE.
+     * If a 10.0 database was upgraded to 10.2, 10.3, or 10.4, then there will
+     * be an extra permissions tuple in SYSROUTINEPERMS--that tuple will have a
+     * null grantor field. We must delete this tuple. See DERBY-4215.
+     */
+
+/**
+	 * Drop all table descriptors for a schema.
+	 *
+	 * @param schema	A descriptor for the schema to drop the tables
+	 *			from.
+	 *
+	 * @return  Nothing.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a ColumnDescriptor given its Default ID.
+	 *
+	 * @param uuid	The UUID of the default
+	 *
+	 * @return The ColumnDescriptor for the column.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Populate the ColumnDescriptorList for the specified TableDescriptor.
+	 *
+	 * MT synchronization: it is assumed that the caller has synchronized
+	 * on the CDL in the given TD.
+	 *
+	 * @param td				The TableDescriptor.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Populate the ColumnDescriptorList for the specified TableDescriptor.
+	 *
+	 * MT synchronization: it is assumed that the caller has synchronized
+	 * on the CDL in the given TD.
+	 *
+	 * @param uuid				The referencing UUID
+	 * @param cdl			The column descriptor list
+	 * @param td				The parent tuple descriptor
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Given a column name and a table ID, drops the column descriptor
+	 * from the table.
+	 *
+	 * @param tableID	The UUID of the table to drop the column from
+	 * @param columnName	The name of the column to drop
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Drops all column descriptors from the given table.  Useful for
+	 * DROP TABLE.
+	 *
+	 * @param tableID	The UUID of the table from which to drop
+	 *			all the column descriptors
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Drops all table and column permission descriptors for the given table.
+	 *
+	 * @param tableID	The UUID of the table from which to drop
+	 *			all the permission descriptors
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Need to update SYSCOLPERMS for a given table because a new column has 
+	 * been added to that table. SYSCOLPERMS has a column called "COLUMNS"
+	 * which is a bit map for all the columns in a given user table. Since
+	 * ALTER TABLE .. ADD COLUMN .. has added one more column, we need to
+	 * expand "COLUMNS" for that new column
+	 *
+	 * Currently, this code gets called during execution phase of
+	 * ALTER TABLE .. ADD COLUMN .. 
+	 *
+	 * @param tableID	The UUID of the table to which a column has been added
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Update SYSCOLPERMS due to dropping a column from a table.
+	 *
+	 * Since ALTER TABLE .. DROP COLUMN .. has removed a column from the
+	 * table, we need to shrink COLUMNS by removing the corresponding bit
+	 * position, and shifting all the subsequent bits "left" one position.
+	 *
+	 * @param tableID	The UUID of the table from which a col has been dropped
+	 * @param tc		TransactionController for the transaction
+	 * @param columnDescriptor   Information about the dropped column
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Workhorse for ALTER TABLE-driven mods to SYSCOLPERMS
+	 *
+	 * This method finds all the SYSCOLPERMS rows for this table. Then it
+	 * iterates through each row, either adding a new column to the end of
+	 * the table, or dropping a column from the table, as appropriate. It
+	 * updates each SYSCOLPERMS row to store the new COLUMNS value.
+	 *
+	 * @param tableID	The UUID of the table being altered
+	 * @param tc		TransactionController for the transaction
+	 * @param columnDescriptor   Dropped column info, or null if adding
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Remove PermissionsDescriptor from permissions cache if present
+	 */
+
+/**
+	 * Drops all routine permission descriptors for the given routine.
+	 *
+	 * @param routineID	The UUID of the routine from which to drop
+	 *			all the permission descriptors
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Return true if there exists a role grant to authorization
+	 * identifier.
+	 *
+	 * @param grantee authorization identifier
+	 * @param tc      Transaction Controller
+	 *
+	 * @return true if there exists such a grant
+	 * @exception StandardException Thrown on failure
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Scan the {roleid, grantee, grantor} index on SYSROLES,
+	 * locate rows containing authId in column columnNo.
+	 *
+	 * The action argument can be either EXISTS or
+	 * DROP (to check for existence, or to drop that row).
+	 *
+	 * If the scan proves too slow, we should add more indexes.  only.
+	 *
+	 * @param ti TabInfoImpl for SYSROLES.
+	 * @param rf row factory for SYSROLES
+	 * @param columnNo the column number to match authId against
+	 * @param tc transaction controller
+	 * @param action drop matching rows (DROP), or return
+	 *        true if there is a matching row
+	 *        (EXISTS)
+	 *
+	 * @return action=EXISTS: return {@code true} if there is a matching row
+ 	 *      else return {@code false}.
+	 * @exception StandardException
+	 */
+
+/**
+	 * Return an in-memory representation of the role grant graph (sans
+	 * grant of roles to users, only role-role relation.
+	 *
+	 * @param tc        Transaction Controller
+	 * @param inverse   make graph on inverse grant relation
+	 * @return          hash map representing role grant graph.
+	 *                  Key: rolename,
+	 *                      Value: List representing a
+	 *                      grant of that rolename to another role (not user).
+	 *                      
+	 *                  
+	 *
+	 * FIXME: Need to cache graph and invalidate when role graph is modified.
+	 * Currently, we always read from SYSROLES.
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Drop all permission descriptors corresponding to a grant to
+	 * the named authentication identifier
+	 *
+	 * @param authId  The authentication identifier
+	 * @param tc      Transaction Controller
+	 *
+	 * @exception StandardException Thrown on failure
+	 */
+
+/**
+	 * Presently only used when dropping roles - user dropping is not under
+	 * Derby control (well, built-in users are if properties are stored in
+	 * database), any permissions granted to users remain in place even if the
+	 * user is no more.
+	 */
+
+/**
+	 * Return true if there exists a permission grant descriptor to this
+	 * authorization id.
+	 */
+
+/**
+	 * Possible action for visitPermsByGrantee and visitRoleGrants.
+	 */
+
+/**
+	 * Possible action for visitPermsByGrantee and visitRoleGrants.
+	 */
+
+/**
+	 * Delete the appropriate rows from syscolumns when
+	 * dropping 1 or more columns.
+	 * 
+	 * @param tc			The TransactionController
+	 * @param keyRow		Start/stop position.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Delete the appropriate rows from systableperms when
+	 * dropping a table
+	 * 
+	 * @param tc			The TransactionController
+	 * @param keyRow		Start/stop position.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Delete the appropriate rows from syscolperms when
+	 * dropping a table
+	 * 
+	 * @param tc			The TransactionController
+	 * @param keyRow		Start/stop position.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update the column descriptor in question.  Updates
+	 * every row in the base conglomerate.  
+	 *
+	 * @param cd					The ColumnDescriptor
+	 * @param formerUUID			The UUID for this column in SYSCOLUMNS,
+	 *								may differ from what is in cd if this
+	 *								is the column that is being set.
+	 * @param formerName			The name for this column in SYSCOLUMNS
+	 *								may differ from what is in cd if this
+	 *								is the column that is being set.
+	 * @param colsToSet 			Array of ints of columns to be modified,
+	 *								1 based.  May be null (all cols).
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Gets the viewDescriptor for the view with the given UUID.
+	 *
+	 * @param uuid	The UUID for the view
+	 *
+	 * @return  A descriptor for the view
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Gets the viewDescriptor for the view given the TableDescriptor.
+	 *
+	 * @param td	The TableDescriptor for the view.
+	 *
+	 * @return	A descriptor for the view
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the information for the view from sys.sysviews.
+	 *
+	 * @param tdi					The TableDescriptor for the view.
+	 *
+	 * @return ViewDescriptor	The ViewDescriptor for the view.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Drops the view descriptor from the data dictionary.
+	 *
+	 * @param vd		A descriptor for the view to be dropped
+	 * @param tc		TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Scan sysfiles_index2 (id) for a match.
+	 * @return TableDescriptor	The matching descriptor, or null.
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Scan sysfiles_index1 (schemaid,name) for a match.
+	 * @return The matching descriptor or null.
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get a SPSDescriptor given its UUID.
+	 *
+	 * @param uuid	The UUID
+	 *
+	 * @return The SPSDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+		Add an entry to the hashtables for lookup from the cache.
+	 */
+
+/**
+	 * This method can get called from the DataDictionary cache.
+	 *
+	 * @param stmtKey	The TableKey of the sps
+	 *
+	 * @return	The descriptor for the sps, null if the sps does
+	 *		not exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * This method can get called from the DataDictionary cache.
+	 *
+	 * @param stmtId	The UUID of the stmt to get the descriptor for
+	 *
+	 * @return	The descriptor for the stmt, null if the table does
+	 *		not exist.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Scan sysstatements_index2 (stmtid) for a match.
+	 * Note that we do not do a lookup of parameter info.
+	 *
+	 * @return SPSDescriptor	The matching descriptor, if any.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a SPSDescriptor given its name.
+	 * Currently no cacheing.  With caching
+	 * we need to be very careful about invalidation.
+	 * No caching means invalidations block on
+	 * existing SPSD instances (since they were read in
+	 *
+	 * @param stmtName	the statement name
+	 * @param sd	The SchemaDescriptor
+	 *
+	 * @return The SPSDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Scan sysschemas_index1 (stmtname, schemaid) for a match.
+	 *
+	 * @return SPSDescriptor	The matching descriptor, if any.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Adds the given SPSDescriptor to the data dictionary,
+	 * associated with the given table and constraint type.
+	 *
+	 * @param descriptor	The descriptor to add
+	 * @param tc			The transaction controller
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Add a column in SYS.SYSCOLUMNS for each parameter in the
+	 * parameter list.
+	 */
+
+/**
+	 * Get all the parameter descriptors for an SPS.
+	 * Look up the params in SYSCOLUMNS and turn them
+	 * into parameter descriptors.  
+	 *
+	 * @param spsd	sps descriptor
+     * @param defaults list for storing column defaults
+	 *
+	 * @return array of data type descriptors
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Updates SYS.SYSSTATEMENTS with the info from the
+	 * SPSD. 
+	 *
+	 * @param spsd	The descriptor to add
+	 * @param tc			The transaction controller
+     * @param recompile Whether to recompile or invalidate
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Mark all SPS plans in the data dictionary invalid. This does
+	 * not invalidate cached plans. This function is for use by
+	 * the boot-up code.
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Drops the given SPSDescriptor.
+	 *
+	 * @param descriptor	The descriptor to drop
+	 * @param tc	The TransactionController.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drops the given SPSDescriptor. 
+	 *
+	 * @param uuid	the statement uuid
+	 * @param tc	The TransactionController.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get every statement in this database.
+	 * Return the SPSDescriptors in an list.
+     * The returned descriptors don't contain the compiled statement, so it
+     * it safe to call this method during upgrade when it isn't known if the
+     * saved statement can still be deserialized with the new version.
+	 *
+	 * @return the list of descriptors
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get every constraint in this database.
+	 * Note that this list of ConstraintDescriptors is
+	 * not going to be the same objects that are typically
+	 * cached off of the table descriptors, so this will
+	 * most likely instantiate some duplicate objects.
+	 *
+	 * @return the list of descriptors
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+     * Get all columns that reference transition variables in triggers.
+     * The columns should be returned in the same order as in the SQL text.
+     *
+     * @param node the node in which to look for transition variables
+     * @param oldReferencingName the name of the old transition variable
+     * @param newReferencingName the name of the new transition variable
+     * @return all references to transition variables
+     */
+
+/**
+     * Check if a table name is actually a transition variable.
+     *
+     * @param tableName the table name to check
+     * @param oldReferencingName the name of the old transition variable
+     * @param newReferencingName the name of the new transition variable
+     * @return {@code true} if the table name is a transition variable,
+     *   {@code false} otherwise
+     */
+
+/**
+	 * Get a TriggerDescriptor given its UUID.
+	 *
+	 * @param uuid	The UUID
+	 *
+	 * @return The TriggerDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Get the stored prepared statement descriptor given 
+	 * a sps name.
+	 *
+	 * @param name	The sps name.
+	 * @param sd	The schema descriptor.
+	 *
+	 * @return The TriggerDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Load up the trigger descriptor list for this table
+	 * descriptor and return it.  If the descriptor list
+	 * is already loaded up, it is retuned without further
+	 * ado.
+	 *
+	 * @param td			The table descriptor.
+	 *
+	 * @return The ConstraintDescriptorList for the table
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+     * Populate the TriggerDescriptorList for the specified TableDescriptor.
+	 *
+	 * MT synchronization: it is assumed that the caller has synchronized
+	 * on the CDL in the given TD.
+	 *
+	 * @param td				The TableDescriptor.
+	 * @param forUpdate			Whether or not to open scan for update
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drops the given TriggerDescriptor.  WARNING: does
+	 * not drop its SPSes!!!
+	 *
+	 * @param descriptor	The descriptor to drop
+	 * @param tc	The TransactionController.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update the trigger descriptor in question.  Updates
+	 * every row in the base conglomerate that matches the uuid.
+	 *
+	 * @param triggerd				The Trigger descriptor
+	 * @param formerUUID			The UUID for this column in SYSTRIGGERS,
+	 *								may differ from what is in triggerd if this
+	 *								is the column that is being set.
+	 * @param colsToSet 			Array of ints of columns to be modified,
+	 *								1 based.  May be null (all cols).
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a ConstraintDescriptor given its UUID.  Please
+	 * use getConstraintDescriptorById() is you have the
+	 * constraints table descriptor, it is much faster.
+	 *
+	 * @param uuid	The UUID
+	 *
+	 *
+	 * @return The ConstraintDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a ConstraintDescriptor given its name and schema ID.
+	 * Please use getConstraintDescriptorByName() if you have the
+	 * constraint's table descriptor, it is much faster.
+	 *
+	 * @param constraintName	Constraint name.
+	 * @param schemaID			The schema UUID
+	 *
+	 * @return The ConstraintDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+     * Returns all the statistics descriptors for the given table.
+     * 
+     * NOTE: As opposed to most other data dictionary lookups, this operation is
+     * performed with isolation level READ_UNCOMMITTED. The reason is to avoid
+     * deadlocks with inserts into the statistics system table.
+     *
+     * @param td {@code TableDescriptor} for which I need statistics
+     * @return A list of tuple descriptors, possibly empty.
+     */
+
+/**
+	 * Load up the constraint descriptor list for this table
+	 * descriptor and return it.  If the descriptor list
+	 * is already loaded up, it is retuned without further
+	 * ado.  If no table descriptor is passed in, then all
+	 * constraint descriptors are retrieved.  Note that in 
+	 * this case, the constraint descriptor objects may be
+	 * duplicates of constraint descriptors that are hung
+	 * off of the table descriptor cache.
+	 *
+	 * @param td			The table descriptor.  If null,
+	 *						all constraint descriptors are returned.
+	 *
+	 *
+	 * @return The ConstraintDescriptorList for the table
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Convert a constraint descriptor list into a list
+	 * of active constraints, that is, constraints which
+	 * must be enforced. For the Core product, these
+	 * are just the constraints on the original list.
+	 * However, during REFRESH we may have deferred some
+	 * constraints until statement end. This method returns
+	 * the corresponding list of constraints which AREN'T
+	 * deferred.
+	 *
+	 * @param cdl	The constraint descriptor list to wrap with
+	 *				an Active constraint descriptor list.
+	 *
+	 * @return The corresponding Active ConstraintDescriptorList
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Reports whether an individual constraint must be
+	 * enforced. For the Core product, this routine always
+	 * returns true.
+	 *
+	 * However, during REFRESH we may have deferred some
+	 * constraints until statement end. This method returns
+	 * false if the constraint deferred
+	 *
+	 * @param constraint	the constraint to check
+	 *
+	 *
+	 * @return The corresponding Active ConstraintDescriptorList
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Get the constraint descriptor given a table and the UUID String
+	 * of the backing index.
+	 *
+	 * @param td			The table descriptor.
+	 * @param uuid			the UUID for the backing index.
+	 *
+	 * @return The ConstraintDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get the constraint descriptor given a table and the UUID String
+	 * of the constraint
+	 *
+	 * @param td			The table descriptor.
+	 * @param uuid			The UUID for the constraint
+	 *
+	 * @return The ConstraintDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Get the constraint descriptor given a TableDescriptor and the constraint name.
+	 *
+	 * @param td				The table descriptor.
+	 * @param sd				The schema descriptor for the constraint
+	 * @param constraintName	The constraint name.
+	 * @param forUpdate			Whether or not access is for update
+	 *
+	 * @return The ConstraintDescriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Populate the ConstraintDescriptorList for the specified TableDescriptor.
+	 *
+	 * MT synchronization: it is assumed that the caller has synchronized
+	 * on the CDL in the given TD.
+	 *
+	 * @param td				The TableDescriptor.
+	 * @param forUpdate			Whether or not to open scan for update
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Return a (single or list of) ConstraintDescriptor(s) from
+	 * SYSCONSTRAINTS where the access is from the index to the heap.
+	 *
+	 * @param indexId	The id of the index (0 to # of indexes on table) to use
+	 * @param keyRow	The supplied ExecIndexRow for search
+	 * @param ti		The TabInfoImpl to use
+	 * @param td		The TableDescriptor, if supplied.
+	 * @param dList		The list to build, if supplied.  If null, then caller expects
+	 *					a single descriptor
+	 * @param forUpdate			Whether or not to open scan for update
+	 *
+	 * @return	The last matching descriptor
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return a (single or list of) catalog row descriptor(s) from
+	 * SYSCONSTRAINTS through a heap scan 
+	 *
+	 * @param scanQualifiers			qualifiers
+	 * @param ti						The TabInfoImpl to use
+	 * @param parentTupleDescriptor		The parentDescriptor, if applicable.
+	 * @param list						The list to build, if supplied.  
+	 *									If null, then caller expects a single descriptor
+	 *
+	 * @return	The last matching descriptor
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return a table descriptor corresponding to the TABLEID
+	 * field in SYSCONSTRAINTS where CONSTRAINTID matches
+	 * the constraintId passsed in.
+	 *
+	 * @param constraintId	The id of the constraint
+	 *
+	 * @return	the corresponding table descriptor
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return a list of foreign keys constraints referencing
+     * this constraint.  Returns both enforced and not enforced
+	 * foreign keys.  
+	 *
+	 * @param constraintId	The id of the referenced constraint
+	 *
+	 * @return	list of constraints, empty of there are none
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return an List which of the relevant column matching
+	 * the indexed criteria.  If nothing matches, returns an
+	 * empty List (never returns null).
+	 *
+	 * @param uuid	The id of the constraint
+	 * @param indexId		The index id in SYS.SYSCONSTRAINTS
+	 * @param columnNum		The column to retrieve
+	 *
+	 * @return a list of UUIDs in an List.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Adds the given ConstraintDescriptor to the data dictionary,
+	 * associated with the given table and constraint type.
+	 *
+	 * @param descriptor	The descriptor to add
+	 * @param tc			The transaction controller
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Update the constraint descriptor in question.  Updates
+	 * every row in the base conglomerate.  
+	 *
+     * @param cd                    The Constraint descriptor
+	 * @param formerUUID			The UUID for this column in SYSCONSTRAINTS,
+     *                              may differ from what is in {@code cd} if this
+	 *								is the column that is being set.
+     * @param colsToSet             Array of integers of columns to be modified,
+     *                              1 based.  May be null (all columns).
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drops the given ConstraintDescriptor from the data dictionary.
+	 *
+	 * @param descriptor	The descriptor to drop
+	 * @param tc			The TransactionController
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Drops all ConstraintDescriptors from the data dictionary
+	 * that are associated with the given table,
+	 *
+	 * @param table	The table from which to drop all
+	 *			constraint descriptors
+	 * @param tc	The TransactionController
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get a SubKeyConstraintDescriptor from syskeys or sysforeignkeys for
+	 * the specified constraint id.  For primary foreign and and unique
+	 * key constraints.
+	 *
+	 * @param constraintId	The UUID for the constraint.
+	 * @param type	The type of the constraint 
+	 *		(e.g. DataDictionary.FOREIGNKEY_CONSTRAINT)
+	 *
+	 * @return SubKeyConstraintDescriptor	The Sub descriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Add the matching row to syskeys when adding a unique or primary key constraint
+	 *
+	 * @param descriptor	The KeyConstraintDescriptor for the constraint.
+	 * @param tc			The TransactionController
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drop the matching row from syskeys when dropping a primary key
+	 * or unique constraint.
+	 *
+	 * @param constraint	the constraint
+	 * @param tc			The TransactionController
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a SubCheckConstraintDescriptor from syschecks for
+	 * the specified constraint id.  (Useful for check constraints.)
+	 *
+	 * @param constraintId	The UUID for the constraint.
+	 *
+	 * @return SubCheckConstraintDescriptor	The Sub descriptor for the constraint.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drop the matching row from syschecks when dropping a check constraint.
+	 *
+	 * @param constraintId	The constraint id.
+	 * @param tc			The TransactionController
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get all of the ConglomerateDescriptors in the database and
+	 * hash them by conglomerate number.
+	 * This is useful as a performance optimization for the locking VTIs.
+	 * NOTE:  This method will scan SYS.SYSCONGLOMERATES at READ UNCOMMITTED.
+	 *
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @return	A Hashtable with all of the ConglomerateDescriptors
+	 *		in the database hashed by conglomerate number.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get all of the TableDescriptors in the database and hash them
+	 * by TableId This is useful as a performance optimization for the
+	 * locking VTIs.  NOTE: This method will scan SYS.SYSTABLES and
+	 * SYS.SYSSCHEMAS at READ UNCOMMITTED.
+	 *
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @return	A Hashtable with all of the Table descriptors in the database
+	 *			hashed by TableId
+	 *
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a ConglomerateDescriptor given its UUID.  If it is an index
+	 * conglomerate shared by at least another duplicate index, this returns
+	 * one of the ConglomerateDescriptors for those indexes. 
+	 *
+	 * @param uuid	The UUID
+	 *
+	 *
+	 * @return A ConglomerateDescriptor for the conglomerate.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get an array of ConglomerateDescriptors given the UUID.  If it is a
+	 * heap conglomerate or an index conglomerate not shared by a duplicate
+	 * index, the size of the return array is 1. If the uuid argument is null, then
+     * this method retrieves descriptors for all of the conglomerates in the database.
+	 *
+	 * @param uuid	The UUID
+	 *
+	 *
+	 * @return An array of ConglomerateDescriptors for the conglomerate.
+	 *				returns size 0 array if no such conglomerate.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a ConglomerateDescriptor given its conglomerate number.  If it is an
+	 * index conglomerate shared by at least another duplicate index, this
+	 * returns one of the ConglomerateDescriptors for those indexes. 
+	 *
+	 * @param conglomerateNumber	The conglomerate number.
+	 *
+	 *
+	 * @return A ConglomerateDescriptor for the conglomerate.  Returns NULL if
+	 *				no such conglomerate.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get an array of conglomerate descriptors for the given conglomerate
+	 * number.  If it is a heap conglomerate or an index conglomerate not
+	 * shared by a duplicate index, the size of the return array is 1.
+	 *
+	 * @param conglomerateNumber	The number for the conglomerate
+	 *				we're interested in
+	 *
+	 * @return	An array of ConglomerateDescriptors that share the requested
+	 *		conglomerate. Returns size 0 array if no such conglomerate.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Populate the ConglomerateDescriptorList for the
+	 * specified TableDescriptor by scanning sysconglomerates.
+	 *
+	 * MT synchronization: it is assumed that the caller has synchronized
+	 * on the CDL in the given TD.
+	 *
+	 * @param td			The TableDescriptor.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Gets a conglomerate descriptor for the named index in the given schema,
+	 * getting an exclusive row lock on the matching row in 
+	 * sys.sysconglomerates (for DDL concurrency) if requested.
+	 *
+	 * @param indexName	The name of the index we're looking for
+	 * @param sd		The schema descriptor
+	 * @param forUpdate	Whether or not to get an exclusive row 
+	 *					lock on the row in sys.sysconglomerates.
+	 *
+	 * @return	A ConglomerateDescriptor describing the requested
+	 *		conglomerate. Returns NULL if no such conglomerate.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drops a conglomerate descriptor
+	 *
+	 * @param conglomerate	The ConglomerateDescriptor for the conglomerate
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Drops all conglomerates associated with a table.
+	 *
+	 * @param td		The TableDescriptor of the table 
+	 * @param tc		TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update the conglomerateNumber for a ConglomerateDescriptor.
+	 * This is useful, in 1.3, when doing a bulkInsert into an 
+	 * empty table where we insert into a new conglomerate.
+	 * (This will go away in 1.4.)
+	 *
+	 * @param cd					The ConglomerateDescriptor
+	 * @param conglomerateNumber	The new conglomerate number
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update all system schemas to have new authorizationId. This is needed
+	 * while upgrading pre-10.2 databases to 10.2 or later versions. From 10.2,
+	 * all system schemas would be owned by database owner's authorizationId.
+	 *
+	 * @param aid							AuthorizationID of Database Owner
+	 * @param tc							TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update authorizationId of specified schemaName
+	 *
+	 * @param schemaName			Schema Name of system schema
+	 * @param authorizationId		authorizationId of new schema owner
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Update the conglomerateNumber for an array of ConglomerateDescriptors.
+	 * In case of more than one ConglomerateDescriptor, each descriptor 
+	 * should be updated separately, conglomerate id is not same for all 
+	 * the descriptors. Even when indexes are sharing the same 
+	 * conglomerate(conglomerate number), conglomerate ids are unique.
+	 *
+	 * This is useful, in 1.3, when doing a bulkInsert into an 
+	 * empty table where we insert into a new conglomerate.
+	 * (This will go away in 1.4.)
+	 *
+	 * @param cds					The array of ConglomerateDescriptors
+	 * @param conglomerateNumber	The new conglomerate number
+	 * @param tc					The TransactionController to use
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Gets a list of the dependency descriptors for the given dependent's id.
+	 *
+	 * @param dependentID		The ID of the dependent we're interested in
+	 *
+	 * @return	List			Returns a list of DependencyDescriptors. 
+	 *							Returns an empty List if no stored dependencies for the
+	 *							dependent's ID.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Gets a list of the dependency descriptors for the given provider's id.
+	 *
+	 * @param providerID		The ID of the provider we're interested in
+	 *
+	 * @return	List			Returns a list of DependencyDescriptors. 
+	 *							Returns an empty List if no stored dependencies for the
+	 *							provider's ID.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Build and return an List with DependencyDescriptors for
+	 * all of the stored dependencies.  
+	 * This is useful for consistency checking.
+	 *
+	 * @return List		List of all DependencyDescriptors.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Drop a single dependency from the data dictionary.
+	 * 
+	 * @param dd	The DependencyDescriptor.
+	 * @param tc	TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * Remove all of the stored dependencies for a given dependent's ID 
+	 * from the data dictionary.
+	 * 
+	 * @param dependentsUUID	Dependent's uuid
+	 * @param tc				TransactionController for the transaction
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/** 
+	 * @inheritDoc
+	 */
+
+/**
+	 * Get the UUID Factory.  (No need to make the UUIDFactory a module.)
+	 *
+	 * @return UUIDFactory	The UUID Factory for this DataDictionary.
+	 */
+
+/**
+     * Get the alias descriptor for an ANSI UDT.
+     *
+     * @param tc The transaction to use: if null, use the compilation transaction
+     * @param dtd The UDT's type descriptor
+     *
+     * @return The UDT's alias descriptor if it is an ANSI UDT; null otherwise.
+     */
+
+/**
+	 * Get a AliasDescriptor given its UUID.
+	 *
+	 * @param uuid	The UUID
+	 *
+	 *
+	 * @return The AliasDescriptor for the alias.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Get a AliasDescriptor by alias name and name space.
+	 * NOTE: caller responsible for handling no match.
+	 *
+	   @param schemaId		schema identifier
+	 * @param aliasName		The alias name.
+	 * @param nameSpace		The alias type.
+	 *
+	 * @return AliasDescriptor	AliasDescriptor for the alias name and name space
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+		Get the list of routines matching the schema and routine name.
+		While we only support a single alias for a given name,namespace just
+		return a list of zero or one item.
+		If the schema is SYSFUN then do not use the system catalogs,
+        but instead look up the routines from the in-memory table driven
+		by the contents of SYSFUN_FUNCTIONS.
+	 */
+
+/** 
+	 * Drop a AliasDescriptor from the DataDictionary
+	 *
+	 * @param ad	The AliasDescriptor to drop
+	 * @param tc	The TransactionController
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 *	Initialize system catalogs. This is where we perform upgrade. It is our
+	 *	pious hope that we won't ever have to upgrade the core catalogs, other than
+	 *	to add fields inside Formatable columns in these catalogs.
+	 *
+	 *	If we do have to upgrade the core catalogs, then we may need to move the
+	 *	loadCatalog calls into the upgrade machinery. It's do-able, just not pretty.
+	 *
+	 *
+	 *	@param	tc		TransactionController
+	 *
+	 * 	@exception StandardException		Thrown on error
+	 */
+
+/**
+	 *	Reset the database owner according to what is stored in the catalogs.
+     * This can change at upgrade time so we have factored this logic into
+     * a separately callable method.
+	 *
+	 *
+	 *	@param	tc		TransactionController
+     *
+	 *  @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Initialize indices for an array of catalogs
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+		Create all the required dictionary tables. Any classes that extend this class
+		and need to create new tables should override this method, and then
+		call this method as the first action in the new method, e.g.
+		
+		protected Configuration createDictionaryTables(Configuration cfg, TransactionController tc,
+				DataDescriptorGenerator ddg)
+				throws StandardException
+		{
+			super.createDictionaryTables(params, tc, ddg);
+
+			...
+		}
+		
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+     * Add a system schema to the database.
+     * 
+     *
+     * @param schema_name   name of the schema to add.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/** called by the upgrade code (dd_xena etc) to add a new system catalog.
+	 * 
+	 * @param 	tc 				TransactionController to use.
+	 * @param 	catalogNumber	catalogNumber
+	 */
+
+/**
+     * Called by the upgrade code to upgrade the way we store jar files in the
+     * database.
+     * We now use UUID as part of the file name to avoid problems with path
+     * delimiters. Also, we henceforth use no schema subdirectories since there
+     * is no chance of name collision with the UUID.
+     *
+     * @param tc TransactionController to use.
+     */
+
+/**
+	 *	The dirty work of creating a catalog.
+	 *
+	 *	@param	ti			TabInfoImpl describing catalog to create.
+	 *	@param	sd			Schema to create catalogs in.
+	 *	@param	tc			Transaction context.
+	 *
+	 *	@exception StandardException Standard Derby error policy
+	 */
+
+/**
+	  *	Upgrade an existing system catalog column's definition
+      * by setting it to the value it would have in a newly
+      * created database. This is only used to for a couple
+      * of columns that had incorrectly nullability. Other
+      * uses (e.g. changing column type) might require more work.
+	  *
+	  *	@param	columnNumber			The column to change
+	  *	@param	tc						Transaction controller
+	  *
+	  *	@exception StandardException Standard Derby error policy
+	  */
+
+/**
+	  *	Upgrade an existing catalog by adding columns.
+	  *
+	  *	@param	rowFactory				Associated with this catalog.
+	  *	@param	newColumnIDs			Array of 1-based column ids.
+	  *	@param	tc						Transaction controller
+	  *
+	  *	@exception StandardException Standard Derby error policy
+	  */
+
+/**
+	 *	Add autoinccycle columns to an SYSCOLUMNS system catalog
+	 *
+	 *	@param	tc				Transaction controller.
+	 *
+	 *	@exception StandardException Standard Derby error policy
+	 */
+
+/**
+	  *	Add invisible columns to an existing system catalog
+	  *
+	  *	@param	rowFactory				Associated with this catalog.
+	  *	@param	newColumnIDs			Array of 1-based column ids.
+	  *	@param	tc						Transaction controller
+	  *
+	  *	@exception StandardException Standard Derby error policy
+	  */
+
+/**
+	  *	Adds columns to the conglomerate underlying a system table.
+	  *
+	  *	@param	templateRow				Ultimate shape of base row of table
+	  *	@param	newColumnIDs			Array of 1-based column ids
+	  *	@param	conglomID				heap id
+	  *	@param	tc						Transaction controller
+	  *
+	  *	@exception StandardException Standard Derby error policy
+	  */
+
+/**
+	 * Get the UUID for the specified system table.  Prior
+	 * to Plato, system tables did not have canonical UUIDs, so
+	 * we need to scan systables to get the UUID when we
+	 * are updating the core tables.
+	 *
+	 * @param tableName		Name of the table
+	 * @param schemaUUID	UUID of schema
+	 * @param tc			TransactionController to user
+	 *
+	 * @return UUID	The UUID of the core table.
+	 *
+	 * @exception StandardException		Thrown on failure
+	 */
+
+/**
+	 * Initialize noncore columns to fixed values
+	 *
+	 * @param tc					The TransactionController for the transaction to do the
+	 *								upgrade in.
+	 * @param isCoreTable			true if it is a core table
+	 * @param tableNum				the noncore table number
+	 * @param columnsToUpdateSet	a bit set of columns to update.  ZERO BASED	
+	 * @param replaceRow			an object array of Orderables for the new values
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 *	Infrastructure work for indexes on catalogs.
+	 *
+	   @exception StandardException Standard Derby error policy
+
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 *	Populate SYSDUMMY1 table with a single row.
+	 *
+	 * @exception StandardException Standard Derby error policy
+	 */
+
+/**
+	 * Clear all of the DataDictionary caches.
+	 *
+	 * @exception StandardException Standard Derby error policy
+	 */
+
+/**
+	 * Clear the DataDictionary caches, including the sequence caches if requested..
+	 *
+	 * @exception StandardException Standard Derby error policy
+	 */
+
+/**
+       Flush sequence caches to disk so that we don't leak unused, pre-allocated numbers.
+    */
+
+/**
+		Add the required entries to the data dictionary for a System table.
+	*/
+
+/**
+	  *	Converts a SystemColumn to a ColumnDescriptor.
+	  *
+	  *	@param	column	a SystemColumn
+      * @param  columnPosition Position of the column in the table, one based.
+	  *	@param	td		descriptor for table that column lives in
+	  *
+	  *	@return	a ColumnDes*criptor
+	  *
+	  *	@exception StandardException Standard Derby error policy
+	  */
+
+/**
+	 *	Create a conglomerate for a system table
+	 *
+	 *	@param name 		Name of new catalog.
+	 *	@param tc			Transaction context.
+	 *	@param rowTemplate	Template for rows for the new table
+	 *  @param properties	Properties for createConglomerate
+	 *
+	 *	@return	Conglomerate id.
+
+		@exception StandardException Standard Derby error policy.
+	 */
+
+/**
+	  *	Converts a UUID to an DataValueDescriptor.
+	  *
+	  *	@return	the UUID converted to an DataValueDescriptor
+	 *
+	 */
+
+/**
+	  *	Initialize catalog information. This method is overridden by children.
+	  * @exception StandardException		Thrown on error
+	  */
+
+/**
+	 * Initialized the core info array.
+	 */
+
+/**
+	 * Initialized the noncore info array.
+	 */
+
+/**
+	 * Get the TransactionController to use, when not
+	 * passed in as a parameter.  (This hides logic about
+	 * whether or not we're at boot time in a single
+	 * place.  NOTE:  There's no LCC at boot time.)
+	 * NOTE: All  methods in the DD should call this method.
+	 *
+	 * @return TransactionController	The TC to use.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the TransactionController to use, when not
+	 * passed in as a parameter.  (This hides logic about
+	 * whether or not we're at boot time in a single
+	 * place.  NOTE:  There's no LCC at boot time.)
+	 * NOTE: All  methods in the DD should call this method.
+	 *
+	 * @return TransactionController	The TC to use.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return a (single or list of) catalog row descriptor(s) from a
+	 * system table where the access is from the index to the heap.
+	 *
+	 * @param indexId	The id of the index (0 to # of indexes on table) to use
+	 * @param keyRow	The supplied ExecIndexRow for search
+	 * @param ti		The TabInfoImpl to use
+	 * @param parentTupleDescriptor		The parentDescriptor, if applicable.
+	 * @param list      The list to build, if supplied.  If null, then
+	 *                  caller expects a single descriptor
+     * @param returnType The type of descriptor to return
+	 * @param forUpdate	Whether or not to open the index for update.
+	 *
+	 * @return	The last matching descriptor
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return a (single or list of) catalog row descriptor(s) from a
+	 * system table where the access a heap scan
+	 *
+     * @param columns                   which columns to fetch from the system
+     *                                  table, or null to fetch all columns
+	 * @param scanQualifiers			qualifiers
+	 * @param ti						The TabInfoImpl to use
+	 * @param parentTupleDescriptor		The parentDescriptor, if applicable.
+	 * @param list						The list to build, if supplied.  
+	 *									If null, then caller expects a single descriptor
+     * @param returnType                The type of descriptor to look for
+	 *
+	 * @return	The last matching descriptor
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get a TabInfoImpl for a non-core table.
+	 * (We fault in information about non-core tables as needed.)
+	 *
+	 * @param catalogNumber	The index into noncoreTable[].
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** returns the tabinfo for a non core system catalog. Input is a
+	 * catalogNumber (defined in DataDictionary). 
+	 */
+
+/**
+	  *	Finishes building a TabInfoImpl if it hasn't already been faulted in.
+	  *	NOP if TabInfoImpl has already been faulted in.
+	  *
+	  *	@param	ti	TabInfoImpl to fault in.
+	  *
+	  * @exception StandardException		Thrown on error
+	  */
+
+/**
+	 * Get an index row based on a row from the heap.
+	 *
+	 * @param irg		IndexRowGenerator to use
+	 * @param rl		RowLocation for heap
+	 * @param heapRow	Row from the heap
+	 *
+	 * @return ExecIndexRow	Index row.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get the heap conglomerate number for SYS.SYSCOLUMNS.
+	 * (Useful for adding new index to the table.)
+	 *
+	 * @return The heap conglomerate number for SYS.SYSCOLUMNS.
+	 */
+
+/**
+	*/
+
+/**
+	 * sets a new value in SYSCOLUMNS for a particular
+	 * autoincrement column.
+	 * 
+	 * @param tc		 Transaction Controller to use.
+	 * @param columnName Name of the column.
+	 * @param aiValue	 Value to write to SYSCOLUMNS.
+	 * @param incrementNeeded whether to increment the value passed in by the
+	 * user (aiValue) or not before writing it to SYSCOLUMNS.
+	 */
+
+/**
+	 * Computes the RowLocation in SYSCOLUMNS for a particular 
+	 * autoincrement column.
+	 * 
+	 * @param tc			Transaction Controller to use.
+	 * @param td			Table Descriptor.
+	 * @param columnName	Name of column which has autoincrement column.
+	 * 
+	 * @exception StandardException thrown on failure.
+	 */
+
+/**
+	 * Computes the RowLocation in SYSSEQUENCES for a particular sequence. Also
+     * constructs the sequence descriptor.
+	 * 
+	 * @param tc			Transaction Controller to use.
+	 * @param sequenceIDstring UUID of the sequence as a string
+	 * @param rowLocation OUTPUT param for returing the row location
+	 * @param sequenceDescriptor OUTPUT param for return the sequence descriptor
+     *
+	 * @exception StandardException thrown on failure.
+	 */
+
+/**
+	 * Set the current value of an ANSI/ISO sequence. This method does not perform
+     * any sanity checking but assumes that the caller knows what they are doing. If the
+     * old value on disk is not what we expect it to be, then we are in a race with another
+     * session. They won and we don't update the value on disk. However, if the old value
+     * is null, that is a signal to us that we should update the value on disk anyway.
+	 * 
+	 * @param tc			Transaction Controller to use.
+	 * @param rowLocation Row in SYSSEQUENCES to update.
+     * @param wait True if we should wait for locks
+     * @param oldValue What we expect to find in the CURRENTVALUE column.
+     * @param newValue What to stuff into the CURRENTVALUE column.
+	 * 
+	 * @return Returns true if the value was successfully updated, false if we lost a race with another session.
+     *
+	 * @exception StandardException thrown on failure.
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 
+	 * Add a table descriptor to the "other" cache. The other cache is
+	 * determined by the type of the object c.
+	 *
+	 * @param td	TableDescriptor to add to the other cache.
+	 * @param c		Cacheable Object which lets us figure out the other cache.
+	 *
+	 * @exception	StandardException
+	 */
+
+/** @see DataDictionary#dropStatisticsDescriptors */
+
+/**
+		Check to see if a database has been upgraded to the required
+		level in order to use a language feature. 
+
+		@param requiredMajorVersion Data Dictionary major version
+		@param feature Non-null to throw an error, null to return the state of the version match.
+
+		@return True if the database has been upgraded to the required level, false otherwise.
+	*/
+
+/**
+     * Mark this database as a read only database whose stored prepared
+     * statements are invalid because some kind of upgrade is needed.
+     */
+
+/**
+	** Create system built-in metadata stored prepared statements.
+	*/
+
+/**
+		Create a set of stored prepared statements from a properties file.
+		Key is the statement name, value is the SQL statement.
+	*/
+
+/**
+     * Create system procedures
+     * 
+     * Used to add the system procedures to the database when
+     * it is created.  System procedures are currently added to
+     * either SYSCS_UTIL or SQLJ schemas.
+     * 
+     *
+     * @param tc     transaction controller to use.  Counts on caller to
+     *               commit.
+     * @param newlyCreatedRoutines evolving set of routines which may need to be given permissions later on
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create system procedures in SYSIBM
+     * 
+     * Used to add the system procedures to the database when
+     * it is created.  Full upgrade from version 5.1 or earlier also
+	 * calls this method.
+     * 
+     *
+     * @param newlyCreatedRoutines evolving set of routines which we're adding (some may need permissions later on)
+     * @param tc     transaction controller to use.  Counts on caller to
+     *               commit.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Grant PUBLIC access to specific system routines. Currently, this is 
+     * done for some routines in SYSCS_UTIL schema. We grant access to routines
+     * which we have just added. Doing it this way lets us declare these
+     * routines in one place and re-use this logic during database creation and
+     * during upgrade.
+     * 
+     * @param tc	TransactionController to use
+     * @param authorizationID	authorization ID of the permission grantor
+     *      */
+
+/**
+     * Grant PUBLIC access to a system routine. This method should be used only 
+     * for granting access to a system routine (other than routines in SYSFUN 
+     * schema). It expects the routine to be present in SYSALIASES catalog. 
+     * 
+     * @param schemaID	Schema ID
+     * @param routineName	Routine Name
+     * @param nameSpace	Indicates whether the routine is a function/procedure.
+     * @param tc	TransactionController to use
+     * @param authorizationID	authorization ID of the permission grantor
+     *      */
+
+/**
+	 * Create RoutinePermDescriptor to grant access to PUBLIC for
+	 * this system routine using the grantor specified in authorizationID.
+	 * 
+	 * @param routineUUID	uuid of the routine
+	 * @param tc	TransactionController to use
+	 * @param authorizationID	authorization ID of the permission grantor
+	 * 	 */
+
+/**
+     * Create system procedures added in version 10.1.
+     * 
+     * Create 10.1 system procedures, called by either code creating new
+     * database, or code doing hard upgrade from previous version.
+     * 
+     *
+     * @param tc                 booting transaction
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     * @param sysUtilUUID   uuid of the SYSUTIL schema.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create system procedures added in version 10.2.
+     * 
+     * Create 10.2 system procedures, called by either code creating new
+     * database, or code doing hard upgrade from previous version.
+     * 
+     *
+     * @param tc booting transaction
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     * @param sysUtilUUID   uuid of the SYSUTIL schema.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create system procedures added in version 10.3.
+     * Create 10.3 system procedures related to the LOB Methods ,
+     * called by either code creating new
+     * database, or code doing hard upgrade from previous version.
+     *
+     * @param tc            an instance of the TransactionController class.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     *
+     *      **/
+
+/**
+     * Create the System procedures that are added to 10.5.
+     * 
+     * @param tc an instance of the TransactionController.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     *      */
+
+/**
+     * Create the System procedures that are added to 10.6.
+     * 
+     * @param tc an instance of the TransactionController.
+     *      */
+
+/**
+     * Create the System procedures that are added in 10.3.
+     *
+     * @param tc an instance of the TransactionController.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     *      */
+
+/**
+     * Create system procedures that are part of the
+     * SYSCS_UTIL schema added in version 10.3.
+     * 
+     * Create 10.3 system procedures, called by either code creating new
+     * database, or code doing hard upgrade from previous version.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * 
+     * Create system procedures that are part of the
+     * SYSCS_UTIL schema added in version 10.9. These include the procedures for managing NATIVE credentials.
+     * See DERBY-866.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     **/
+
+/**
+     * 
+     * Create system procedures that are part of the SYSCS_UTIL schema, added in version 10.10.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     **/
+
+/**
+     * 
+     * Create system procedures that are part of the SYSCS_UTIL schema, added in version 10.11.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     **/
+
+/**
+     * 
+     * Create system procedures that are part of the SYSCS_UTIL schema, added in version 10.12.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     **/
+
+/**
+     * 
+     * Create system procedures that are part of the SYSCS_UTIL schema, added in version 10.13.
+     * 
+     *
+     * @param tc an instance of the Transaction Controller.
+     * @param newlyCreatedRoutines set of routines we are creating (used to add permissions later on)
+     **/
+
+/**
+     * Get one user's privileges on a table
+     *
+     * @param tableUUID
+     * @param authorizationId The user name
+     *
+     * @return a TablePermsDescriptor or null if the user has no permissions on the table.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get one user's column privileges for a table.
+     *
+     * @param tableUUID
+     * @param privType (as int) Authorizer.SELECT_PRIV, Authorizer.UPDATE_PRIV, or Authorizer.REFERENCES_PRIV
+     * @param forGrant
+     * @param authorizationId The user name
+     *
+     * @return a ColPermsDescriptor or null if the user has no separate column
+     *         permissions of the specified type on the table. Note that the user may have been granted
+     *         permission on all the columns of the table (no column list), in which case this routine
+     *         will return null. You must also call getTablePermissions to see if the user has permission
+     *         on a set of columns.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get one user's column privileges for a table. This routine gets called 
+     * during revoke privilege processing
+     *
+     * @param tableUUID
+     * @param privTypeStr (as String) Authorizer.SELECT_PRIV, Authorizer.UPDATE_PRIV, or Authorizer.REFERENCES_PRIV
+     * @param forGrant
+     * @param authorizationId The user name
+     *
+     * @return a ColPermsDescriptor or null if the user has no separate column
+     *         permissions of the specified type on the table. Note that the user may have been granted
+     *         permission on all the columns of the table (no column list), in which case this routine
+     *         will return null. You must also call getTablePermissions to see if the user has permission
+     *         on a set of columns.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get one user's permissions for a routine (function or procedure).
+     *
+     * @param routineUUID
+     * @param authorizationId The user's name
+     *
+     * @return The descriptor of the users permissions for the routine.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Add or remove a permission to/from the permission database.
+     *
+     * @param add if true then the permission is added, if false the permission is removed
+     * @param perm
+     * @param grantee
+     * @param tc
+     *
+     * @return True means revoke has removed a privilege from system
+     * table and hence the caller of this method should send invalidation 
+     * actions to PermssionDescriptor's dependents.
+     */
+
+/**
+     * Get a table permissions descriptor from the system tables, without going through the cache.
+     * This method is called to fill the permissions cache.
+     *
+     * @return a TablePermsDescriptor that describes the table permissions granted to the grantee, null
+     *          if no table-level permissions have been granted to him on the table.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get a column permissions descriptor from the system tables, without going through the cache.
+     * This method is called to fill the permissions cache.
+     *
+     *
+     * @return a ColPermsDescriptor that describes the column permissions granted to the grantee, null
+     *          if no column permissions have been granted to him on the table.
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get a routine permissions descriptor from the system tables, without going through the cache.
+     * This method is called to fill the permissions cache.
+     *
+     * @return a RoutinePermsDescriptor that describes the table permissions granted to the grantee, null
+     *          if no table-level permissions have been granted to him on the table.
+     *
+     * @exception StandardException
+     */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 */
+
+/**
+	 * Get the target role definition by searching for a matching row
+	 * in SYSROLES by rolename where isDef==true.  Read only scan.
+	 * Uses index on (rolename, isDef) columns.
+	 *
+	 * @param roleName The name of the role we're interested in.
+	 *
+	 * @return The descriptor (row) for the role
+	 * @exception StandardException Thrown on error
+	 *
+	 * 	 */
+
+/**
+	 * Get the target role by searching for a matching row
+	 * in SYSROLES by rolename, grantee and grantor.  Read only scan.
+	 * Uses index on roleid, grantee and grantor columns.
+	 *
+	 * @param roleName	    The name of the role we're interested in.
+	 * @param grantee       The grantee
+	 * @param grantor       The grantor
+	 *
+	 * @return	            The descriptor for the role grant
+	 *
+	 * @exception StandardException  Thrown on error
+	 *
+	 * 	 */
+
+/**
+	 * Check all dictionary tables and return true if there is any GRANT
+	 * descriptor containing authId as its grantee.
+	 *
+	 * @param authId grantee for which a grant exists or not
+	 * @param tc TransactionController for the transaction
+	 * @return boolean true if such a grant exists
+	 */
+
+/**
+	 * Remove metadata stored prepared statements.
+	 * @param tc the xact
+	 * 
+	 *
+	 */
+
+/**
+	 * Drop and recreate metadata stored prepared statements.
+	 * 
+	 * @param tc the xact
+	 * 	 */
+
+/**
+     * Drops a sequence descriptor
+     *
+     * @param descriptor The descriptor to drop
+     * @param tc         The TransactionController.
+     *      */
+
+/**
+     * Get the sequence descriptor given a sequence name and a schema Id.
+     *
+     * @param sequenceName The sequence name, guaranteed to be unique only within its schema.
+     * @param sd           The schema descriptor.
+     * @return The SequenceDescriptor for the constraints.
+     *      */
+
+/** Map ( schemaName, sequenceName ) to sequenceID */
+
+/** Drop a sequenceID from the ( schemaName, sequenceName ) map */
+
+/**
+     * 
+     * Get the uuid string of a sequence given its schema and sequence name.
+     * 
+     */
+
+/**
+     * Get an object's permission descriptor from the system tables, without going through the cache.
+     * This method is called to fill the permissions cache.
+     *
+     * @return a PermDescriptor that describes the table permissions granted to the grantee on an objcet
+     * , null if no table-level permissions have been granted to him on the table.
+     *      */
+
+/**
+     * Get permissions granted to one user for an object using the object's Id
+     * and the user's authorization Id.
+     *
+     * @param objectUUID The id of the protected object
+     * @param objectType Type of the object (e.g., SEQUENCE)
+     * @param privilege The kind of privilege needed (e.g., PermDescriptor.USAGE_PRIV)
+     * @param granteeAuthId The user or role who wants to have permission on this object
+     *
+     * @return The descriptor of the permissions for the object
+     *
+     * @exception StandardException
+     */
+
+/**
+     * Get one user's privileges for an object using the permUUID.
+     *
+     * @param permUUID
+     * @return The descriptor of the user's permissions for the object.
+     *      */
+
+/**
+     * Drops all permission descriptors for the object whose Id is given.
+     *
+     * @param objectID The UUID of the object from which to drop
+     *                 all the permission descriptors
+     * @param tc       TransactionController for the transaction
+     *      */
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/**
+     * Create sequence generators for all identity columns on upgrade to 10.11.
+     */
+
+/**
+     * Create a sequence generator for an identity column on upgrade to 10.11.
+     */
+
+/**
+     * Privileged lookup of the ContextService. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged lookup of a Context. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged lookup of a Context. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged Monitor lookup. Must be package private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+

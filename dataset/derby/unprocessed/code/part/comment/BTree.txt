@@ -1,0 +1,307 @@
+/**
+
+  A b-tree object corresponds to an instance of a b-tree conglomerate.  It 
+  contains the static information about a conglomerate which is built at 
+  create conglomerate time.
+  
+  This generic implementation is expected to be extended by the concreate
+  implementations.
+  
+  The fields are set when the conglomerate is created and never changed 
+  thereafter.  When alter table is supported then it will change under the
+  control of a table level lock.
+  
+  They have package scope because they're read by the scans and controllers.
+  
+  A table of all conglomerates in the system is maintained by the accessmanager.
+  A cache of conglomerates is maintained in the accessmanager, and references
+  to the read only objects are handed out.  A copy of the Conglomerate
+  object is kept in the control row of the root page, so that during logical
+  undo this information can be read without needing to access the possibly
+  corrupt table maintained by the access manager.
+**/
+
+/**************************************************************************
+     * Public Constants of BTree class:
+     **************************************************************************
+     */
+
+/**
+     * The page number of the root page is always at the fixed page number:
+     * ROOTPAGEID.  This means that given an open container, during logical
+     * undo one can always find the root page and look up the conglomerate
+     * information.
+     **/
+
+/** 
+    Property name for the maximum number of rows to place in a btree page (leaf
+    or branch).  Equal to 'derby.access.btreeMaxRowPerPage'.  Used by tests
+    and debugging to exactly control split points, and to make it easier to test
+    tall trees without needing lots of data.
+	*/
+
+/**************************************************************************
+     * Protected Fields of BTree class:
+     **************************************************************************
+     */
+
+/**
+	The id of the container in which this b-tree is stored. 
+	**/
+
+/**
+	The number of key fields.
+	**/
+
+/**
+	The number of uniqueness columns.  These are the columns that
+	are considered for the purpose of detecting duplicate keys and rows.
+	**/
+
+/**
+	Whether the index allows duplicates or not.
+	**/
+
+/**
+	Whether the parent should maintain links from child pages to their parent.
+	These links are only used for consistency checking purposes.  They improve
+	consistency checking at the cost of run-time efficiency.
+	**/
+
+/**
+	Attribute to indicate the index allows duplicate only in
+	case of keys with no part null.  This attribute has no effect if unique
+    is true. If unique is false and isUniqueWithDuplicateNulls is set 
+    to true the index will allow duplicates of any key with at least one
+    column null, but for non null keys will act like a unique index.
+	**/
+
+/**
+    Maximum rows per page to place on a btree leaf or nonleaf page.  Used
+    by testing to finely control split points.  Only changed for debugging
+    purposes.
+
+    RESOLVE (mikem) - this should not be static.  Need to design a way in
+    debugging mode to get btree created with a persistent "maxRowsPerPage".
+    This hack makes all btrees get created with the "last" maxRowsPerPage 
+    value set.
+    **/
+
+/**
+    Format id of the conglomerate.
+	**/
+
+/**
+    The array of format id's, one for each column in the template.
+    **/
+
+/**
+    The array of collation id's for each column in the template.
+    **/
+
+/**
+     * Tells if there is at least one column in the conglomerate whose collation
+     * isn't StringDataValue.COLLATION_TYPE_UCS_BASIC.
+     */
+
+/**************************************************************************
+     * Abstract Protected locking methods of BTree:
+     *     getBtreeLockingPolicy
+     *     lockScan
+     *     unlockScan
+     *     lockPreviousRow
+     *     lockRowOnPage
+     *     lockRow
+     *     lockTable
+     **************************************************************************
+     */
+
+/**
+     * Create a new btree locking policy from scratch.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Lock the base table.
+     * 
+     * Assumes that segment of the base container is the same as the segment
+     * of the btree segment.
+     * 
+     * RESOLVE - we really want to get the lock without opening the container.
+     * raw store will be providing this.
+     *
+     * @param xact_manager Transaction to associate the lock with.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Private/Protected methods of BTree:
+     **************************************************************************
+     */
+
+/**
+     * Create a branch row template for this conglomerate.
+     * 
+     * Reads the format id's of each of the columns and manufactures object of
+     * the given type for each.  It then uses these "empty" objects to create
+     * a template row.  The object passed in is then added to the last column
+     * of the row.
+     *
+	 * @return The new template.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Public methods of BTree:
+     **************************************************************************
+     */
+
+/**
+     * Create a template for this conglomerate.
+     * 
+     * Reads the format id's of each of the columns and manufactures object of
+     * the given type for each.  It then uses these "empty" objects to create
+     * a template row.
+     * 
+     * This method is public so that B2IUndo() can call it.
+     *
+	 * @return The new template.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is this a "unique" index?
+     **/
+
+/**
+     * Set if the index is unique only for non null keys
+     * 
+     * @param uniqueWithDuplicateNulls true if the index will be unique only for
+     *                                 non null keys
+     */
+
+/**
+     * Returns if the index type is uniqueWithDuplicateNulls.
+     * @return is index type is uniqueWithDuplicateNulls
+     */
+
+/**************************************************************************
+     * Public Methods of Conglomerate Interface:
+     **************************************************************************
+     */
+
+/**
+     * Add a column to the conglomerate.
+     * 
+     * Currently B2I does not support this operation.
+     * input template column.  
+     * 
+     * @param xact_manager      Transaction to associate the lock with.
+     * @param column_id        The column number to add this column at.
+     * @param template_column  An instance of the column to be added to table.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Get the id of the container of the conglomerate.
+     * 
+     * Will have to change when a conglomerate could have more than one 
+     * container.  The ContainerKey is a combination of the container id
+     * and segment id.
+     *
+	 * @return The ContainerKey.
+     **/
+
+/**
+	Drop this btree.
+	This must be done by a concrete implementation.
+	
+    @exception StandardException Standard exception policy.
+	**/
+
+/**
+	Load a b-tree.  This must be done by a concrete implementation.
+	
+    @exception StandardException Standard exception policy.
+	**/
+
+/**
+     * Return dynamic information about the conglomerate to be dynamically 
+     * reused in repeated execution of a statement.
+     * 
+     * The dynamic info is a set of variables to be used in a given 
+     * ScanController or ConglomerateController.  It can only be used in one 
+     * controller at a time.  It is up to the caller to insure the correct 
+     * thread access to this info.  The type of info in this is a scratch 
+     * template for btree traversal, other scratch variables for qualifier 
+     * evaluation, ...
+     * 
+     *
+	 * @return The dynamic information.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is this conglomerate temporary?
+     * 
+     *
+	 * @return whether conglomerate is temporary or not.
+     **/
+
+/**
+	Open a b-tree controller.
+	This must be done by a concrete implementation.
+	
+    @exception StandardException Standard exception policy.
+	**/
+
+/**************************************************************************
+     * Public Methods of Storable Interface (via Conglomerate):
+     *     This class is responsible for re/storing its own state.
+     **************************************************************************
+     */
+
+/**
+	Return whether the value is null or not.
+	The containerid being zero is what determines nullness;  subclasses
+	are not expected to override this method.
+		**/
+
+/**
+	Restore the in-memory representation to the null value.
+	The containerid being zero is what determines nullness;  subclasses
+	are not expected to override this method.
+
+		**/
+
+/**
+	Restore the in-memory representation from the stream.
+
+	@exception ClassNotFoundException Thrown if the stored representation is
+	serialized and a class named in the stream could not be found.
+
+    @exception IOException thrown by readObject()
+
+	
+		*/
+
+/**
+	Store the stored representation of the column value in the stream.
+	It might be easier to simply store the properties - which would certainly
+	make upgrading easier.
+
+    @exception IOException thrown by writeObject()
+
+	*/
+
+/**************************************************************************
+     * Public toString() Method:
+     **************************************************************************
+     */
+

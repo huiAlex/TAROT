@@ -1,0 +1,2605 @@
+<Class>
+    <Id>449</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>FromBaseTable</ClassName>
+    <SuperClass>FromTable</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FromBaseTable  /** 
+ * A FromBaseTable represents a table in the FROM list of a DML statement, as distinguished from a FromSubquery, which represents a subquery in the FROM list. A FromBaseTable may actually represent a view.  During parsing, we can't distinguish views from base tables. During binding, when we find FromBaseTables that represent views, we replace them with FromSubqueries. By the time we get to code generation, all FromSubqueries have been eliminated, and all FromBaseTables will represent only true base tables. &lt;p&gt; &lt;B&gt;Positioned Update&lt;/B&gt;: Currently, all columns of an updatable cursor are selected to deal with a positioned update.  This is because we don't know what columns will ultimately be needed from the UpdateNode above us.  For example, consider:&lt;pre&gt;&lt;i&gt; get c as 'select cint from t for update of ctinyint' update t set ctinyint = csmallint &lt;/pre&gt;&lt;/i&gt; Ideally, the cursor only selects cint.  Then, something akin to an IndexRowToBaseRow is generated to take the CursorResultSet and get the appropriate columns out of the base table from the RowLocation returned by the cursor.  Then the update node can generate the appropriate NormalizeResultSet (or whatever else it might need) to get things into the correct format for the UpdateResultSet. See CurrentOfNode for more information.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>UNSET</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasCheckedIndexStats</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableName</FieldName>
+            <FieldType>TableName</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableDescriptor</FieldName>
+            <FieldType>TableDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseConglomerateDescriptor</FieldName>
+            <FieldType>ConglomerateDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conglomDescs</FieldName>
+            <FieldType>ConglomerateDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>updateOrDelete</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bulkFetch</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>targetTableUUIDString</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>validatingCheckConstraint</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bulkFetchTurnedOff</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>multiProbing</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>singleScanRowCount</FieldName>
+            <FieldType>double</FieldType>
+        </Field>
+        <Field>
+            <FieldName>referencedCols</FieldName>
+            <FieldType>FormatableBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>templateColumns</FieldName>
+            <FieldType>ResultColumnList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>columnNames</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>specialMaxScan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distinctScan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>raDependentScan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>raParentResultSetId</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fkIndexConglomId</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fkColArray</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>baseTableRestrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nonBaseTableRestrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>restrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>storeRestrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nonStoreRestrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>requalificationRestrictionList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>UPDATE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DELETE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>existsBaseTable</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isNotExists</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dependencyMap</FieldName>
+            <FieldType>JBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>getUpdateLocks</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>authorizeSYSUSERS</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowLocationColumnName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>gotRowCount</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowCount</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>FromBaseTable</MethodName>
+            <MethodComment>/** 
+ * Constructor for a table in a FROM list. Parameters are as follows:
+ * @param tableName         The name of the table
+ * @param correlationName   The correlation name
+ * @param derivedRCL        The derived column list
+ * @param tableProperties   The Properties list associated with the table.
+ * @param cm                The context manager
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>correlationName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derivedRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[derivedRCL]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setOrigTableName;[this.tableName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>FromBaseTable</MethodName>
+            <MethodComment>/** 
+ * Initializer for a table in a FROM list. Parameters are as follows:
+ * @param tableName     The name of the table
+ * @param correlationName   The correlation name
+ * @param updateOrDelete    Table is being updated/deleted from.
+ * @param derivedRCL        The derived column list
+ * @param cm               The context manager
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>correlationName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>updateOrDelete</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derivedRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[derivedRCL]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setOrigTableName;[this.tableName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRowLocationColumnName</MethodName>
+            <MethodComment>/** 
+ * Set the name of the row location column 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowLocationColumnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LOJ_reorderable</MethodName>
+            <MethodComment>/** 
+ * no LOJ reordering for base table.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LOJgetReferencedTables</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>JBitSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JBitSet [map=new JBitSet(numTables)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;fillInReferencedTableMap;[map]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextAccessPath</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#nextAccessPath
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [userSpecifiedIndexName=getUserSpecifiedIndexName()]</InnerVar>
+                <InnerVar>AccessPath [ap=getCurrentAccessPath()]</InnerVar>
+                <InnerVar>ConglomerateDescriptor [currentConglomerateDescriptor=ap.getConglomerateDescriptor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rowOrdering;removeOptimizable;[getTableNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ap;setConglomerateDescriptor;[currentConglomerateDescriptor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canBeOrdered</MethodName>
+            <MethodComment>/** 
+ * Tell super-class that this Optimizable can be ordered 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimizeIt</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#optimizeIt
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizer;costOptimizable;[this, tableDescriptor, getCurrentAccessPath().getConglomerateDescriptor(), predList, outerCost]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTableDescriptor</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#getTableDescriptor 
+ */
+</MethodComment>
+            <ReturnType>TableDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isMaterializable</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#isMaterializable 
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOptPredicate</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#pushOptPredicate
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicate</ParamName>
+                    <ParamType>OptimizablePredicate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>restrictionList;addPredicate;[(Predicate)optimizablePredicate]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pullOptPredicates</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#pullOptPredicates
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicates</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCoveringIndex</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#isCoveringIndex
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [coveringIndex=true]</InnerVar>
+                <InnerVar>IndexRowGenerator [irg]</InnerVar>
+                <InnerVar>int[] [baseCols]</InnerVar>
+                <InnerVar>int [colPos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyProperties</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#verifyProperties 
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [indexSpecified=false]</InnerVar>
+                <InnerVar>boolean [constraintSpecified=false]</InnerVar>
+                <InnerVar>ConstraintDescriptor [consDesc=null]</InnerVar>
+                <InnerVar>Enumeration&lt;?&gt; [e=tableProperties.keys()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>StringUtil;SQLEqualsIgnoreCase;[tableDescriptor.getSchemaName(), "SYS"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isValidatingCheckConstraint</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBaseTableName</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#getBaseTableName 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startOptimizing</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#startOptimizing 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AccessPath [ap=getCurrentAccessPath()]</InnerVar>
+                <InnerVar>AccessPath [bestAp=getBestAccessPath()]</InnerVar>
+                <InnerVar>AccessPath [bestSortAp=getBestSortAvoidancePath()]</InnerVar>
+                <InnerVar>CostEstimate [costEst=getCostEstimate(optimizer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ap;setConglomerateDescriptor;[(ConglomerateDescriptor)null]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestAp;setConglomerateDescriptor;[(ConglomerateDescriptor)null]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestSortAp;setConglomerateDescriptor;[(ConglomerateDescriptor)null]</InnerMethodInvoke>
+                <InnerMethodInvoke>ap;setCoveringIndexScan;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestAp;setCoveringIndexScan;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestSortAp;setCoveringIndexScan;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>ap;setLockMode;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestAp;setLockMode;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>bestSortAp;setLockMode;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>ap;setCostEstimate;[costEst]</InnerMethodInvoke>
+                <InnerMethodInvoke>costEst;setCost;[Double.MAX_VALUE, Double.MAX_VALUE, Double.MAX_VALUE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>convertAbsoluteToRelativeColumnPosition</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#convertAbsoluteToRelativeColumnPosition 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>absolutePosition</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>estimateCost</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Estimate the cost of scanning this  {@code FromBaseTable} using thegiven predicate list with the given conglomerate. &lt;/p&gt; &lt;p&gt; If the table contains little data, the cost estimate might be adjusted to make it more likely that an index scan will be preferred to a table scan, and a unique index will be preferred to a non-unique index. Even though such a plan may be slightly suboptimal when seen in isolation, using indexes, unique indexes in particular, needs fewer locks and allows more concurrency. &lt;/p&gt;
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#estimateCost
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [cost]</InnerVar>
+                <InnerVar>boolean [statisticsForTable=false]</InnerVar>
+                <InnerVar>boolean [statisticsForConglomerate=false]</InnerVar>
+                <InnerVar>PredicateList [unknownPredicateList=null]</InnerVar>
+                <InnerVar>AccessPath [currAccessPath=getCurrentAccessPath()]</InnerVar>
+                <InnerVar>JoinStrategy [currentJoinStrategy=currAccessPath.getJoinStrategy()]</InnerVar>
+                <InnerVar>double [tableUniquenessFactor=optimizer.uniqueJoinWithOuterTable(predList)]</InnerVar>
+                <InnerVar>boolean [oneRowResultSetForSomeConglom=isOneRowResultSet(predList)]</InnerVar>
+                <InnerVar>StoreCostController [scc=getStoreCostController(cd)]</InnerVar>
+                <InnerVar>CostEstimate [costEst=getScratchCostEstimate(optimizer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseTableRestrictionList;removeAllElements;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>currentJoinStrategy;getBasePredicates;[predList, baseTableRestrictionList, this]</InnerMethodInvoke>
+                <InnerMethodInvoke>currentJoinStrategy;putBasePredicates;[predList, baseTableRestrictionList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scanCostAfterSelectivity</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>originalScanCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initialPositionCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectivity</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>anotherIndexUnique</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [afterInitialCost=(originalScanCost - initialPositionCost) * selectivity]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLockingBasedOnThreshold</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowsTouched</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getCurrentAccessPath();setLockMode;[TransactionController.MODE_RECORD]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isBaseTable</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#isBaseTable 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forUpdate</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#forUpdate 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialCapacity</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#initialCapacity 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadFactor</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#loadFactor 
+ */
+</MethodComment>
+            <ReturnType>float</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>memoryUsageOK</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#memoryUsageOK
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxMemoryPerTable</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isTargetTable</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#isTargetTable
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>uniqueJoin</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#uniqueJoin
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [retval=-1.0]</InnerVar>
+                <InnerVar>PredicateList [pl=(PredicateList)predList]</InnerVar>
+                <InnerVar>int [numColumns=getTableDescriptor().getNumberOfColumns()]</InnerVar>
+                <InnerVar>int [tableNo=getTableNumber()]</InnerVar>
+                <InnerVar>int[] [tableNumbers=new int[0]]</InnerVar>
+                <InnerVar>JBitSet[] [tableColMap=new JBitSet[1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;checkTopPredicatesForEqualsConditions;[tableNo, null, tableNumbers, tableColMap, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOneRowScan</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#isOneRowScan
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>legalJoinOrder</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#legalJoinOrder
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>assignedTableMap</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExistsBaseTable</MethodName>
+            <MethodComment>/** 
+ * Does this FBT represent an EXISTS FBT.
+ * @return Whether or not this FBT representsan EXISTS FBT.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setExistsBaseTable</MethodName>
+            <MethodComment>/** 
+ * Set whether or not this FBT represents an EXISTS FBT.
+ * @param existsBaseTable Whether or not an EXISTS FBT.
+ * @param dependencyMap	  The dependency map for the EXISTS FBT.
+ * @param isNotExists     Whether or not for NOT EXISTS, more specifically.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>existsBaseTable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dependencyMap</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isNotExists</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearDependency</MethodName>
+            <MethodComment>/** 
+ * Clear the bits from the dependency map when join nodes are flattened
+ * @param locations	list of bit numbers to be cleared
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>locations</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTableProperties</MethodName>
+            <MethodComment>/** 
+ * Set the table properties for this table.
+ * @param tableProperties	The new table properties.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindNonVTITables</MethodName>
+            <MethodComment>/** 
+ * Bind the table in this FromBaseTable. This is where view resolution occurs
+ * @param dataDictionary	The DataDictionary to use for binding
+ * @param fromListParam		FromList to use/append to.
+ * @return	ResultSetNode	The FromTable for the table or resolved view.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TableDescriptor [tabDescr=bindTableDescriptor()]</InnerVar>
+                <InnerVar>ResultColumnList [derivedRCL=getResultColumns()]</InnerVar>
+                <InnerVar>CompilerContext [compilerContext=getCompilerContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tableName;bind;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[genResultColList()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapTableAsVTI</MethodName>
+            <MethodComment>/** 
+ * Return a node that represents invocation of the virtual table for the given table descriptor. The mapping of the table descriptor to a specific VTI class name will occur as part of the "init" phase for the NewInvocationNode that we create here. Currently only handles no argument VTIs corresponding to a subset of the diagnostic tables. (e.g. lock_table). The node returned is a FROM_VTI node with a passed in NEW_INVOCATION_NODE representing the class, with no arguments. Other attributes of the original FROM_TABLE node (such as resultColumns) are passed into the FROM_VTI node.
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>correlationName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;ValueNode&gt; [emptyList=Collections.emptyList()]</InnerVar>
+                <InnerVar>MethodCallNode [newNode=new NewInvocationNode(null,td,emptyList,false,cm)]</InnerVar>
+                <InnerVar>QueryTreeNode [vtiNode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFromTableByName</MethodName>
+            <MethodComment>/** 
+ * Determine whether or not the specified name is an exposed name in the current query block.
+ * @param name	The specified name to search for as an exposed name.
+ * @param schemaName	Schema name, if non-null.
+ * @param exactMatch	Whether or not we need an exact match on specified schema and tablenames or match on table id.
+ * @return The FromTable, if any, with the exposed name.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>FromTable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exactMatch</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [ourSchemaName=getOrigTableName().getSchemaName()]</InnerVar>
+                <InnerVar>String [fullName=(schemaName != null) ? (schemaName + '.' + name) : name]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindTableDescriptor</MethodName>
+            <MethodComment>/** 
+ * Bind the table descriptor for this table. If the tableName is a synonym, it will be resolved here. The original table name is retained in origTableName.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>TableDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [schemaName=tableName.getSchemaName()]</InnerVar>
+                <InnerVar>SchemaDescriptor [sd=getSchemaDescriptor(schemaName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions in this FromBaseTable.  This means binding the sub-expressions, as well as figuring out what the return type is for each expression.
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns of this ResultSetNode when there is no base table to bind them to.  This is useful for SELECT statements, where the result columns get their types from the expressions that live under them.
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMatchingColumn</MethodName>
+            <MethodComment>/** 
+ * Try to find a ResultColumn in the table represented by this FromBaseTable that matches the name in the given ColumnReference.
+ * @param columnReference	The columnReference whose name we're lookingfor in the given table.
+ * @return	A ResultColumn whose expression is the ColumnNodethat matches the ColumnReference. Returns null if there is no match.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnReference</ParamName>
+                    <ParamType>ColumnReference</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [resultColumn=null]</InnerVar>
+                <InnerVar>TableName [columnsTableName]</InnerVar>
+                <InnerVar>TableName [exposedTableName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Preprocess a ResultSetNode - this currently means: o  Generating a referenced table map for each ResultSetNode. o  Putting the WHERE and HAVING clauses in conjunctive normal form (CNF). o  Converting the WHERE and HAVING clauses into PredicateLists and classifying them. o  Ensuring that a ProjectRestrictNode is generated on top of every  FromBaseTable and generated in place of every FromSubquery.   o  Pushing single table predicates down to the new ProjectRestrictNodes.
+ * @param numTables			The number of tables in the DML Statement
+ * @param gbl				The group by list, if any
+ * @param fromList			The from list, if any
+ * @return ResultSetNode at top of preprocessed tree.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gbl</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setReferencedTableMap;[new JBitSet(numTables)]</InnerMethodInvoke>
+                <InnerMethodInvoke>getReferencedTableMap();set;[tableNumber]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genProjectRestrict</MethodName>
+            <MethodComment>/** 
+ * Put a ProjectRestrictNode on top of each FromTable in the FromList. ColumnReferences must continue to point to the same ResultColumn, so that ResultColumn must percolate up to the new PRN.  However, that ResultColumn will point to a new expression, a VirtualColumnNode,  which points to the FromTable and the ResultColumn that is the source for the ColumnReference.   (The new PRN will have the original of the ResultColumnList and the ResultColumns from that list.  The FromTable will get shallow copies of the ResultColumnList and its ResultColumns.  ResultColumn.expression will remain at the FromTable, with the PRN getting a new  VirtualColumnNode for each ResultColumn.expression.) We then project out the non-referenced columns.  If there are no referenced columns, then the PRN's ResultColumnList will consist of a single ResultColumn whose expression is 1.
+ * @param numTables			Number of tables in the DML Statement
+ * @return The generated ProjectRestrictNode atop the original FromTable.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [prRCList=getResultColumns()]</InnerVar>
+                <InnerVar>ProjectRestrictNode [result=new ProjectRestrictNode(this,prRCList,null,null,null,null,null,getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[getResultColumns().copyListAndObjects()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();setIndexRow;[baseConglomerateDescriptor.getConglomerateNumber(), forUpdate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>prRCList;genVirtualColumnNodes;[this, getResultColumns(), false]</InnerMethodInvoke>
+                <InnerMethodInvoke>prRCList;doProjection;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeAccessPath</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#changeAccessPath
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [retval]</InnerVar>
+                <InnerVar>AccessPath [ap=getTrulyTheBestAccessPath()]</InnerVar>
+                <InnerVar>ConglomerateDescriptor [trulyTheBestConglomerateDescriptor=ap.getConglomerateDescriptor()]</InnerVar>
+                <InnerVar>JoinStrategy [trulyTheBestJoinStrategy=ap.getJoinStrategy()]</InnerVar>
+                <InnerVar>Optimizer [opt=ap.getOptimizer()]</InnerVar>
+                <InnerVar>ResultColumnList [newResultColumns=newResultColumns(getResultColumns(),trulyTheBestConglomerateDescriptor,baseConglomerateDescriptor,true)]</InnerVar>
+                <InnerVar>FormatableBitSet [indexReferencedCols=null]</InnerVar>
+                <InnerVar>FormatableBitSet [heapReferencedCols]</InnerVar>
+                <InnerVar>ResultColumnList [heapRCL=getResultColumns().compactColumns(isCursorTargetTable(),false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>restrictionList;removeRedundantPredicates;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>trulyTheBestJoinStrategy;divideUpPredicateLists;[this, restrictionList, storeRestrictionList, nonStoreRestrictionList, requalificationRestrictionList, getDataDictionary()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCompilerContext();createDependency;[trulyTheBestConglomerateDescriptor]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCompilerContext();createDependency;[baseConglomerateDescriptor]</InnerMethodInvoke>
+                <InnerMethodInvoke>heapRCL;setIndexRow;[baseConglomerateDescriptor.getConglomerateNumber(), forUpdate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[newResultColumns]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();addRCForRID;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>templateColumns;addRCForRID;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[getResultColumns().compactColumns(isCursorTargetTable(),false)]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();setIndexRow;[baseConglomerateDescriptor.getConglomerateNumber(), forUpdate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCursorTargetTable;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newResultColumns</MethodName>
+            <MethodComment>/** 
+ * Create a new ResultColumnList to reflect the columns in the index described by the given ConglomerateDescriptor.  The columns in the new ResultColumnList are based on the columns in the given ResultColumnList, which reflects the columns in the base table.
+ * @param oldColumns	The original list of columns, which reflectsthe columns in the base table.
+ * @param idxCD			The ConglomerateDescriptor, which describesthe index that the new ResultColumnList will reflect.
+ * @param heapCD		The ConglomerateDescriptor for the base heap
+ * @param cloneRCs		Whether or not to clone the RCs
+ * @return	A new ResultColumnList that reflects the columns in the index.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>idxCD</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>heapCD</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cloneRCs</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>IndexRowGenerator [irg=idxCD.getIndexDescriptor()]</InnerVar>
+                <InnerVar>int[] [baseCols=irg.baseColumnPositions()]</InnerVar>
+                <InnerVar>ResultColumnList [newCols=new ResultColumnList((getContextManager()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newCols;setIndexRow;[heapCD.getConglomerateNumber(), forUpdate()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * Generation on a FromBaseTable creates a scan on the optimizer-selected conglomerate.
+ * @param acb	The ActivationClassBuilder for the class being built
+ * @param mb	the execute() method to be built
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateResultSet;[acb, mb]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateResultSet</MethodName>
+            <MethodComment>/** 
+ * Generation on a FromBaseTable for a SELECT. This logic was separated out so that it could be shared with PREPARE SELECT FILTER.
+ * @param acb	The ExpressionClassBuilder for the class being built
+ * @param mb	The execute() method to be built
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JoinStrategy [trulyTheBestJoinStrategy=getTrulyTheBestAccessPath().getJoinStrategy()]</InnerVar>
+                <InnerVar>int [nargs=getScanArguments(acb,mb)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assignResultSetNumber;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, trulyTheBestJoinStrategy.resultSetMethodName((bulkFetch != UNSET),multiProbing,validatingCheckConstraint), ClassName.NoPutResultSet, nargs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFinalCostEstimate</MethodName>
+            <MethodComment>/** 
+ * Get the final CostEstimate for this ResultSetNode.
+ * @return	The final CostEstimate for this ResultSetNode.
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushIndexName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateMaxSpecialResultSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor [cd=getTrulyTheBestAccessPath().getConglomerateDescriptor()]</InnerVar>
+                <InnerVar>CostEstimate [costEst=getFinalCostEstimate()]</InnerVar>
+                <InnerVar>int [colRefItem=(referencedCols == null) ? -1 : acb.addItem(referencedCols)]</InnerVar>
+                <InnerVar>boolean [tableLockGranularity=tableDescriptor.getLockGranularity() == TableDescriptor.TABLE_LOCK_GRANULARITY]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushThisAsActivation;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(getResultColumns().buildRowTemplate(referencedCols,false))]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[cd.getConglomerateNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[tableDescriptor.getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;pushIndexName;[cd, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[colRefItem]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getTrulyTheBestAccessPath().getLockMode()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[tableLockGranularity]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCompilerContext().getScanIsolationLevel()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEst.singleScanRowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEst.getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getLastIndexKeyResultSet", ClassName.NoPutResultSet, 13]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateDistinctScan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor [cd=getTrulyTheBestAccessPath().getConglomerateDescriptor()]</InnerVar>
+                <InnerVar>CostEstimate [costEst=getFinalCostEstimate()]</InnerVar>
+                <InnerVar>int [colRefItem=(referencedCols == null) ? -1 : acb.addItem(referencedCols)]</InnerVar>
+                <InnerVar>boolean [tableLockGranularity=tableDescriptor.getLockGranularity() == TableDescriptor.TABLE_LOCK_GRANULARITY]</InnerVar>
+                <InnerVar>int[] [hashKeyCols]</InnerVar>
+                <InnerVar>FormatableIntHolder[] [fihArray=FormatableIntHolder.getFormatableIntHolders(hashKeyCols)]</InnerVar>
+                <InnerVar>FormatableArrayHolder [hashKeyHolder=new FormatableArrayHolder(fihArray)]</InnerVar>
+                <InnerVar>int [hashKeyItem=acb.addItem(hashKeyHolder)]</InnerVar>
+                <InnerVar>long [conglomNumber=cd.getConglomerateNumber()]</InnerVar>
+                <InnerVar>StaticCompiledOpenConglomInfo [scoci=getLanguageConnectionContext().getTransactionCompile().getStaticCompiledConglomInfo(conglomNumber)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushThisAsActivation;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[conglomNumber]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(scoci)]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(getResultColumns().buildRowTemplate(referencedCols,false))]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[hashKeyItem]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[tableDescriptor.getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;pushIndexName;[cd, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[cd.isConstraint()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[colRefItem]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getTrulyTheBestAccessPath().getLockMode()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[tableLockGranularity]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCompilerContext().getScanIsolationLevel()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEst.singleScanRowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEst.getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getDistinctScanResultSet", ClassName.NoPutResultSet, 16]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateRefActionDependentTableScan</MethodName>
+            <MethodComment>/** 
+ * Generation on a FromBaseTable for a referential action dependent table.
+ * @param acb	The ExpressionClassBuilder for the class being built
+ * @param mb	The execute() method to be built
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [nargs=getScanArguments(acb,mb)]</InnerVar>
+                <InnerVar>int [argCount=nargs + 4]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[raParentResultSetId]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[fkIndexConglomId]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(fkColArray)]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(getDataDictionary().getRowLocationTemplate(getLanguageConnectionContext(),tableDescriptor))]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getRaDependentTableScanResultSet", ClassName.NoPutResultSet, argCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScanArguments</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [resultRowTemplate=acb.addItem(getResultColumns().buildRowTemplate(referencedCols,false))]</InnerVar>
+                <InnerVar>int [colRefItem=-1]</InnerVar>
+                <InnerVar>int [indexColItem=-1]</InnerVar>
+                <InnerVar>AccessPath [ap=getTrulyTheBestAccessPath()]</InnerVar>
+                <InnerVar>JoinStrategy [trulyTheBestJoinStrategy=ap.getJoinStrategy()]</InnerVar>
+                <InnerVar>int [nargs=trulyTheBestJoinStrategy.getScanArgs(getLanguageConnectionContext().getTransactionCompile(),mb,this,storeRestrictionList,nonStoreRestrictionList,acb,bulkFetch,resultRowTemplate,colRefItem,indexColItem,getTrulyTheBestAccessPath().getLockMode(),(tableDescriptor.getLockGranularity() == TableDescriptor.TABLE_LOCK_GRANULARITY),getCompilerContext().getScanIsolationLevel(),ap.getOptimizer().getMaxMemoryPerTable(),multiProbing)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapAbsoluteToRelativeColumnPosition</MethodName>
+            <MethodComment>/** 
+ * Convert an absolute to a relative 0-based column position.
+ * @param absolutePosition	The absolute 0-based column position.
+ * @return The relative 0-based column position.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>absolutePosition</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [setBitCtr=0]</InnerVar>
+                <InnerVar>int [bitCtr=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExposedName</MethodName>
+            <MethodComment>/** 
+ * Get the exposed name for this table, which is the name that can be used to refer to it in the rest of the query.
+ * @return	The exposed name of this table.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExposedTableName</MethodName>
+            <MethodComment>/** 
+ * Get the exposed table name for this table, which is the name that can be used to refer to it in the rest of the query.
+ * @return	TableName The exposed name of this table.
+ * @exception StandardException  Thrown on error
+ */
+</MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTableNameField</MethodName>
+            <MethodComment>/** 
+ * Return the table name for this table.
+ * @return	The table name for this table.
+ */
+</MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllResultColumns</MethodName>
+            <MethodComment>/** 
+ * Return a ResultColumnList with all of the columns in this table. (Used in expanding '*'s.) NOTE: Since this method is for expanding a "*" in the SELECT list, ResultColumn.expression will be a ColumnReference.
+ * @param allTableName		The qualifier on the "*"
+ * @return ResultColumnList	List of result columns from this table.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>allTableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genResultColList</MethodName>
+            <MethodComment>/** 
+ * Build a ResultColumnList based on all of the columns in this FromBaseTable. NOTE - Since the ResultColumnList generated is for the FromBaseTable, ResultColumn.expression will be a BaseColumnNode.
+ * @return ResultColumnList representing all referenced columns
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumn [resultColumn]</InnerVar>
+                <InnerVar>ValueNode [valueNode]</InnerVar>
+                <InnerVar>TableName [exposedName=getExposedTableName()]</InnerVar>
+                <InnerVar>ResultColumnList [rcList=new ResultColumnList((getContextManager()))]</InnerVar>
+                <InnerVar>ColumnDescriptorList [cdl=tableDescriptor.getColumnDescriptorList()]</InnerVar>
+                <InnerVar>int [cdlSize=cdl.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addColsToList</MethodName>
+            <MethodComment>/** 
+ * Augment the RCL to include the columns in the FormatableBitSet. If the column is already there, don't add it twice. Column is added as a ResultColumn pointing to a  ColumnReference.
+ * @param inputRcl			The original list
+ * @param colsWeWant		bit set of cols we want
+ * @return ResultColumnList the rcl
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputRcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colsWeWant</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [resultColumn]</InnerVar>
+                <InnerVar>TableName [exposedName]</InnerVar>
+                <InnerVar>ResultColumnList [newRcl=new ResultColumnList((getContextManager()))]</InnerVar>
+                <InnerVar>ColumnDescriptorList [cdl=tableDescriptor.getColumnDescriptorList()]</InnerVar>
+                <InnerVar>int [cdlSize=cdl.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTableName</MethodName>
+            <MethodComment>/** 
+ * Return a TableName node representing this FromTable.
+ * @return a TableName node representing this FromTable.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TableName [tn=super.getTableName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markAsCursorTargetTable</MethodName>
+            <MethodComment>/** 
+ * Mark this ResultSetNode as the target table of an updatable cursor.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCursorTargetTable;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cursorTargetTable</MethodName>
+            <MethodComment>/** 
+ * Is this a table that has a FOR UPDATE clause? 
+ * @return true/false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUpdated</MethodName>
+            <MethodComment>/** 
+ * Mark as updatable all the columns in the result column list of this FromBaseTable that match the columns in the given update column list.
+ * @param updateColumns		A ResultColumnList representing the columnsto be updated.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getResultColumns();markUpdated;[updateColumns]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>referencesTarget</MethodName>
+            <MethodComment>/** 
+ * Search to see if a query references the specifed table name.
+ * @param name		Table name (String) to search for.
+ * @param baseTable	Whether or not name is for a base table
+ * @return	true if found, else false
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseTable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>referencesSessionSchema</MethodName>
+            <MethodComment>/** 
+ * Return true if the node references SESSION schema tables (temporary or permanent)
+ * @return	true if references SESSION schema tables, else false
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOneRowResultSet</MethodName>
+            <MethodComment>/** 
+ * Return whether or not the underlying ResultSet tree will return a single row, at most.  This method is intended to be used during generation, after the "truly" best conglomerate has been chosen. This is important for join nodes where we can save the extra next on the right side if we know that it will return at most 1 row.
+ * @return Whether or not the underlying ResultSet tree will return a single row.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>AccessPath [ap=getTrulyTheBestAccessPath()]</InnerVar>
+                <InnerVar>JoinStrategy [trulyTheBestJoinStrategy=ap.getJoinStrategy()]</InnerVar>
+                <InnerVar>PredicateList [pl]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNotExists</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this is actually a EBT for NOT EXISTS.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOneRowResultSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor[] [cds=tableDescriptor.getConglomerateDescriptors()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supersetOfUniqueIndex</MethodName>
+            <MethodComment>/** 
+ * Determine whether or not the columns marked as true in the passed in array are a superset of any unique index on this table.   This is useful for subquery flattening and distinct elimination based on a uniqueness condition.
+ * @param eqCols	The columns to consider
+ * @return Whether or not the columns marked as true are a superset
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>eqCols</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor[] [cds=tableDescriptor.getConglomerateDescriptors()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supersetOfUniqueIndex</MethodName>
+            <MethodComment>/** 
+ * Determine whether or not the columns marked as true in the passed in join table matrix are a superset of any single column unique index on this table.   This is useful for distinct elimination based on a uniqueness condition.
+ * @param tableColMap	The columns to consider
+ * @return Whether or not the columns marked as true for one at leastone table are a superset
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableColMap</ParamName>
+                    <ParamType>JBitSet[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor[] [cds=tableDescriptor.getConglomerateDescriptors()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateTargetLockMode</MethodName>
+            <MethodComment>/** 
+ * Get the lock mode for the target table heap of an update or delete statement.  It is not always MODE_RECORD.  We want the lock on the heap to be consistent with optimizer and eventually system's decision. This is to avoid deadlock (beetle 4318).  During update/delete's execution, it will first use this lock mode we return to lock heap to open a RowChanger, then use the lock mode that is the optimizer and system's combined decision to open the actual source conglomerate. We've got to make sure they are consistent.  This is the lock chart (for detail reason, see comments below): BEST ACCESS PATH			LOCK MODE ON HEAP ----------------------		----------------------------------------- index					  row lock heap					  row lock if READ_COMMITTED,  REPEATBLE_READ, or READ_UNCOMMITTED and not specified table lock otherwise,  use optimizer decided best acess  path's lock mode
+ * @return	The lock mode
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [isolationLevel=getLanguageConnectionContext().getCurrentIsolationLevel()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOrderedOn</MethodName>
+            <MethodComment>/** 
+ * Return whether or not the underlying ResultSet tree is ordered on the specified columns. RESOLVE - This method currently only considers the outermost table  of the query block. RESOLVE - We do not currently push method calls down, so we don't worry about whether the equals comparisons can be against a variant method.
+ * @param crs					The specified ColumnReference[]
+ * @param permuteOrdering		Whether or not the order of the CRs in the array can be permuted
+ * @param fbtHolder           List that is to be filled with the FromBaseTable
+ * @return	Whether the underlying ResultSet treeis ordered on the specified column.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>crs</ParamName>
+                    <ParamType>ColumnReference[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>permuteOrdering</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fbtHolder</ParamName>
+                    <ParamType>FromBaseTable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConglomerateDescriptor [cd=getTrulyTheBestAccessPath().getConglomerateDescriptor()]</InnerVar>
+                <InnerVar>boolean [isOrdered]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>disableBulkFetch</MethodName>
+            <MethodComment>/** 
+ * Turn off bulk fetch
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doSpecialMaxScan</MethodName>
+            <MethodComment>/** 
+ * Do a special scan for max.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isPossibleDistinctScan</MethodName>
+            <MethodComment>/** 
+ * Is it possible to do a distinct scan on this ResultSet tree. (See SelectNode for the criteria.)
+ * @param distinctColumns the set of distinct columns
+ * @return Whether or not it is possible to do a distinct scan on this ResultSet tree.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>distinctColumns</ParamName>
+                    <ParamType>BaseColumnNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HashSet&lt;ValueNode&gt; [columns=new HashSet&lt;ValueNode&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markForDistinctScan</MethodName>
+            <MethodComment>/** 
+ * Mark the underlying scan as a distinct scan.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustForSortElimination</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#adjustForSortElimination
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustForSortElimination</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#adjustForSortElimination
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RequiredRowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOrdered</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this index is ordered on a permutation of the specified columns.
+ * @param crs		The specified ColumnReference[]
+ * @param cd		The ConglomerateDescriptor for the chosen index.
+ * @return	Whether or not this index is ordered exactly on the specified columns.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>crs</ParamName>
+                    <ParamType>ColumnReference[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean[] [matchedCRs=new boolean[crs.length]]</InnerVar>
+                <InnerVar>int [nextKeyColumn=0]</InnerVar>
+                <InnerVar>int[] [keyColumns=cd.getIndexDescriptor().baseColumnPositions()]</InnerVar>
+                <InnerVar>int [numCRsMatched=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStrictlyOrdered</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this index is ordered on a permutation of the specified columns.
+ * @param crs		The specified ColumnReference[]
+ * @param cd		The ConglomerateDescriptor for the chosen index.
+ * @return	Whether or not this index is ordered exactly on the specified columns.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>crs</ParamName>
+                    <ParamType>ColumnReference[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [nextCR=0]</InnerVar>
+                <InnerVar>int [nextKeyColumn=0]</InnerVar>
+                <InnerVar>int[] [keyColumns=cd.getIndexDescriptor().baseColumnPositions()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOneRowResultSet</MethodName>
+            <MethodComment>/** 
+ * Is this a one-row result set with the given conglomerate descriptor?
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PredicateList [restrictList=(PredicateList)predList]</InnerVar>
+                <InnerVar>IndexRowGenerator [irg=cd.getIndexDescriptor()]</InnerVar>
+                <InnerVar>int[] [baseColumnPositions=irg.baseColumnPositions()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDefaultBulkFetch</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [valInt]</InnerVar>
+                <InnerVar>String [valStr=PropertyUtil.getServiceProperty(getLanguageConnectionContext().getTransactionCompile(),LanguageProperties.BULK_FETCH_PROP,LanguageProperties.BULK_FETCH_DEFAULT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUserSpecifiedIndexName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [retval=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStoreCostController</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StoreCostController</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBaseCostController</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StoreCostController</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>baseRowCount</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowTemplate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scc</ParamName>
+                    <ParamType>StoreCostController</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ExecRow [emptyIndexRow=templateColumns.buildEmptyIndexRow(tableDescriptor,cd,scc,getDataDictionary())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstConglom</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ConglomerateDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getConglomDescs;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextConglom</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ConglomerateDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>currCD</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConglomDescs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRefActionInfo</MethodName>
+            <MethodComment>/** 
+ * set the Information gathered from the parent table that is  required to perform a referential action on dependent table.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fkIndexConglomId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fkColArray</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parentResultSetId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dependentScan</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptChildren</MethodName>
+            <MethodComment>/** 
+ * Accept the visitor for all visitable children of this node.
+ * @param v the visitor
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Visitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>qualifiesForStatisticsUpdateCheck</MethodName>
+            <MethodComment>/** 
+ * Tells if the given table qualifies for a statistics update check in the current configuration.
+ * @param td the table to check
+ * @return {@code true} if qualified, {@code false} if not
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [qualifiedIndexes=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

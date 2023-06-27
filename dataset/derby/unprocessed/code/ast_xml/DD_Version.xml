@@ -1,0 +1,513 @@
+<Class>
+    <Id>339</Id>
+    <Package>org.apache.derby.impl.sql.catalog</Package>
+    <ClassName>DD_Version</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Formatable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DD_Version  /** 
+ * Generic code for upgrading data dictionaries. Currently has all minor version upgrade logic. &lt;p&gt; A word about minor vs. major upgraded.  Minor upgrades must be backwards/forwards compatible. So they cannot version classes or introduce new classes.  Major releases are only backwards compatible; they will run against an old database, but not the other way around.  So they can introduce new classes, etc.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>bootingDictionary</FieldName>
+            <FieldType>DataDictionaryImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>majorVersionNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>minorVersionNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DD_Version</MethodName>
+            <MethodComment>/** 
+ * Public niladic constructor needed for Formatable interface.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DD_Version</MethodName>
+            <MethodComment>/** 
+ * Construct a Version for the currently booting data dictionary. The minor version is set by the subclass.
+ * @param bootingDictionary	The booting dictionary that needs to be upgraded.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bootingDictionary</ParamName>
+                    <ParamType>DataDictionaryImpl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>majorVersionNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Stringify this Version.
+ * @return	String representation of this Version.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>majorToString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>majorVersionNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>upgradeIfNeeded</MethodName>
+            <MethodComment>/** 
+ * Upgrade the data dictionary catalogs to the version represented by this DD_Version.
+ * @param dictionaryVersion the version of the data dictionary tables.
+ * @exception StandardException Ooops
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dictionaryVersion</ParamName>
+                    <ParamType>DD_Version</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [minorOnly=false]</InnerVar>
+                <InnerVar>boolean [performMajorUpgrade=false]</InnerVar>
+                <InnerVar>boolean [softUpgradeRun=false]</InnerVar>
+                <InnerVar>boolean [isReadOnly=bootingDictionary.af.isReadOnly()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tc;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;handleMinorRevisionChange;[tc, dictionaryVersion, softUpgradeRun]</InnerMethodInvoke>
+                <InnerMethodInvoke>tc;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>applySafeChanges</MethodName>
+            <MethodComment>/** 
+ * Apply changes that can safely be made in soft upgrade. Any changes must not prevent the database from being re-booted by the a Derby engine at the older version fromMajorVersionNumber. &lt;BR&gt; Examples are fixes to catalog meta data, e.g. fix nullability of a system column. &lt;BR&gt; &lt;B&gt;Upgrade items for 10.1&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; None. &lt;/UL&gt;
+ * @param tc	transaction controller
+ * @param fromMajorVersionNumber	version of the on-disk database
+ * @param lastSoftUpgradeVersion last engine to perform a soft upgrade that made changes.
+ * @exception StandardException  Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromMajorVersionNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastSoftUpgradeVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tc;setProperty;[DataDictionary.SOFT_DATA_DICTIONARY_VERSION, this, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doFullUpgrade</MethodName>
+            <MethodComment>/** 
+ * Do full upgrade.  Apply changes that can NOT be safely made in soft upgrade. &lt;BR&gt; &lt;B&gt;Upgrade items for every new release&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; Drop and recreate the stored versions of the JDBC database metadata queries &lt;/UL&gt; &lt;BR&gt; &lt;B&gt;Upgrade items for 10.1&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; None. &lt;/UL&gt;
+ * @param tc	transaction controller
+ * @param fromMajorVersionNumber	version of the on-disk database
+ * @param aid	 AuthorizationID of current user to be made Database Owner
+ * @exception StandardException  Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromMajorVersionNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aid</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HashSet&lt;String&gt; [newlyCreatedRoutines=new HashSet&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bootingDictionary;updateMetadataSPSes;[tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>bootingDictionary;grantPublicAccessToSystemRoutines;[newlyCreatedRoutines, tc, aid]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleMinorRevisionChange</MethodName>
+            <MethodComment>/** 
+ * Do any work needed for a minor revision change. For the data dictionary this is always invalidating stored prepared statements.  When we are done  with the upgrade, we always recompile all SPSes so the customer doesn't have to (and isn't going to get deadlocks because of the recomp).
+ * @param tc the xact
+ * @exception StandardException  Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromVersion</ParamName>
+                    <ParamType>DD_Version</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>softUpgradeRun</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isReadOnly=bootingDictionary.af.isReadOnly()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bootingDictionary;clearCaches;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropSystemCatalogDescription</MethodName>
+            <MethodComment>/** 
+ * Remove the description of a System table from the data dictionary. This does not delete the conglomerates that hold the catalog or its indexes.
+ * @param tc TransactionController
+ * @param td Table descriptor for the catalog to drop. 
+ * @exception StandardException  Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bootingDictionary;dropAllColumnDescriptors;[td.getUUID(), tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>bootingDictionary;dropAllConglomerateDescriptors;[td, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>bootingDictionary;dropTableDescriptor;[td, td.getSchemaDescriptor(), tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>bootingDictionary;clearCaches;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropSystemCatalog</MethodName>
+            <MethodComment>/** 
+ * Drop a System catalog.
+ * @param tc	TransactionController
+ * @param crf CatalogRowFactory for the catalog to drop.
+ * @exception StandardException  Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>crf</ParamName>
+                    <ParamType>CatalogRowFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SchemaDescriptor [sd=bootingDictionary.getSystemSchemaDescriptor()]</InnerVar>
+                <InnerVar>TableDescriptor [td=bootingDictionary.getTableDescriptor(crf.getCatalogName(),sd,tc)]</InnerVar>
+                <InnerVar>ConglomerateDescriptor[] [cds=td.getConglomerateDescriptors()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;dropSystemCatalogDescription;[tc, td]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Get the formatID which corresponds to this class. Map to the 5.0 version identifier so that 5.0 will understand this object when we write it out in soft upgrade mode. CS 5.0 will de-serialize it correctly. When we are writing out a 5.1 version number we write out the 5.1 version just to ensure no problems.
+ * @return	the formatID of this class
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment>/** 
+ * Read this object from a stream of stored objects. Set the minor version.  Ignore the major version.  
+ * @param in read this.
+ * @exception IOException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment>/** 
+ * Write this object to a stream of stored objects. Write out the minor version which is bumped across minor release. Just to be safe, write out the major version too.  This will allow us to do versioning of a specific Version impl in the future.
+ * @param out write bytes here.
+ * @exception IOException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;writeInt;[majorVersionNumber]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeInt;[minorVersionNumber]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getJBMSMinorVersionNumber</MethodName>
+            <MethodComment>/** 
+ * Get the minor version from the JBMS product minor version/maint version. Bumps it up by 1 if production, or 0 if beta to ensure minor upgrade across beta.  Starts at 2 because of an old convention. We use this starting at 2 to allow soft upgrade to write a version of 1 with the old major number to ensure a minor upgrade when reverting to an old version afer a soft upgrade. E.g run with 5.0.2, then 5.2.1.1, then 5.0.2. Want to ensure 5.0.2 does the minor upgrade.
+ * @return the minor versionFor 5.0 and 5.1 the minor number was calculated as jbmsVersion.getMinorVersion()*100 +jbmsVersion.getMaintVersion() + (jbmsVersion.isBeta() ? 0 : 1) + 2 5.0.22 =&amp;gt; (0*100) + 22 + 2 =  24 - (5.0 has a unique major number) 5.1.2  =&amp;gt; (1*100) + 2 + 2  = 104 - (5.1 has a unique major number)  With the switch to the four part scheme in 5.2, the maint number now is in increments of one million, thus the above scheme could lead to duplicate numbers. Note that the major number may not change when the minor external release changes, e.g. 5.2 and 5.3 could share a DD_Version major number. 5.2.1.100 =&amp;gt; (2*100) + 1000100 + 2 = 1000302 5.3.1.0   =&amp;gt; (3*100) + 1000000 + 2 = 1000302
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ProductVersionHolder [jbmsVersion=DataDictionaryImpl.getMonitor().getEngineVersion()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifySysTableNullability</MethodName>
+            <MethodComment>/** 
+ * Modifies the nullability of the system table corresponding to the received catalog number.
+ * @param tc			TransactionController.
+ * @param catalogNum	The catalog number correspondingto the table for which we will modify the nullability. OLD Cloudscape 5.1 upgrade code If this corresponds to SYSALIASES, then the nullability of the SYSALIASES.ALIASINFO column will be changed to true (Beetle 4430).  If this corresponds to SYSSTATEMENTS, the nullability of the SYSSTATEMENTS.LASTCOMPILED column will be changed to true. Derby upgrade code If this corresponds to SYSSTATEMENTS, then the nullability of the SYSSTATEMENTS.COMPILATION_SCHEMAID column will  be changed to true.  If this corresponds to SYSVIEWS, the nullability of the SYSVIEWS.COMPILATION_SCHEMAID column will be changed to true.
+ * @exception StandardException   Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>catalogNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TabInfoImpl [ti=bootingDictionary.getNonCoreTIByNumber(catalogNum)]</InnerVar>
+                <InnerVar>CatalogRowFactory [rowFactory=ti.getCatalogRowFactory()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkVersion</MethodName>
+            <MethodComment>/** 
+ * Check to see if a database has been upgraded to the required level in order to use a language feature.
+ * @param requiredMajorVersion Data Dictionary major version
+ * @param feature Non-null to throw an error, null to return the state of the version match.
+ * @return True if the database has been upgraded to the required level, false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requiredMajorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>feature</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isFullUpgrade</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldVersionInfo</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

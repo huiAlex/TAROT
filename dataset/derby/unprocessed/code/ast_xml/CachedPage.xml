@@ -1,0 +1,554 @@
+<Class>
+    <Id>472</Id>
+    <Package>org.apache.derby.impl.store.raw.data</Package>
+    <ClassName>CachedPage</ClassName>
+    <SuperClass>BasePage</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Cacheable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CachedPage  /** 
+ * A base page that is cached. Since there are multiple page formats, use this abstract class to implement cacheable interface.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>alreadyReadPage</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pageData</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isDirty</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>preDirty</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initialRowCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>containerRowCount</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pageCache</FieldName>
+            <FieldType>CacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>containerCache</FieldName>
+            <FieldType>CacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dataFactory</FieldName>
+            <FieldType>BaseDataFileFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_FORMAT_ID_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WRITE_SYNC</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WRITE_NO_SYNC</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CachedPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setFactory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>BaseDataFileFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment>/** 
+ * Initialize a CachedPage. &lt;p&gt; Initialize the object, ie. perform work normally perfomed in  constructor.  Called by setIdentity() and createIdentity().
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIdentity</MethodName>
+            <MethodComment>/** 
+ * Find the container and then read the page from that container. &lt;p&gt; This is the way new pages enter the page cache. &lt;p&gt;
+ * @return always true, higher levels have already checked the page number is valid for an open.
+ * @exception StandardException Standard Derby policy.
+ * @see Cacheable#setIdentity
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PageKey [newIdentity=(PageKey)key]</InnerVar>
+                <InnerVar>FileContainer [myContainer=(FileContainer)containerCache.find(newIdentity.getContainerId())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initialize;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setContainerRowCount;[myContainer.getEstimatedRowCount(0)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;fillInIdentity;[newIdentity]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createIdentity</MethodName>
+            <MethodComment>/** 
+ * Find the container and then create the page in that container. &lt;p&gt; This is the process of creating a new page in a container, in that case no need to read the page from disk - just need to initialize it in the cache. &lt;p&gt;
+ * @return new page, higher levels have already checked the page number is valid for an open.
+ * @param key               Which page is this?
+ * @param createParameter   details needed to create page like size, format id, ...
+ * @exception StandardException  Standard exception policy.
+ * @see Cacheable#createIdentity
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>createParameter</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PageKey [newIdentity=(PageKey)key]</InnerVar>
+                <InnerVar>PageCreationArgs [createArgs=(PageCreationArgs)createParameter]</InnerVar>
+                <InnerVar>int [formatId=createArgs.formatId]</InnerVar>
+                <InnerVar>int [syncFlag=createArgs.syncFlag]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initialize;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;initializeHeaders;[5]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createPage;[newIdentity, createArgs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;fillInIdentity;[newIdentity]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeInstanceTo</MethodName>
+            <MethodComment>/** 
+ * Convert this page to requested type, as defined by input format id. &lt;p&gt; The current cache entry is a different format id than the requested type, change it.  This object is instantiated to the wrong subtype of  cachedPage, this routine will create an object with the correct subtype, and transfer all pertinent information from this to the new correct  object. &lt;p&gt;
+ * @return The new object created with the input fid and transfered info.
+ * @param fid          The format id of the new page.
+ * @param newIdentity  The key of the new page.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>CachedPage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fid</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newIdentity</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CachedPage [realPage]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>realPage;setFactory;[dataFactory]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDirty</MethodName>
+            <MethodComment>/** 
+ * Is the page dirty? &lt;p&gt; The isDirty flag indicates if the pageData or pageHeader has been modified.  The preDirty flag indicates that the pageData or the pageHeader is about to be modified.  The reason for these 2 flags instead of just one is to accomodate checkpoint.  After a clean (latched) page sends a log record to the log stream but before that page is dirtied by the log operation, a checkpoint could be taken.  If so, then the redoLWM will be after the log record but, without preDirty, the cache cleaning will not have waited for the change.  So the preDirty bit is to stop the cache cleaning from skipping over this (latched) page even though it has not really been modified yet.  
+ * @return true if the page is dirty.
+ * @see Cacheable#isDirty
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isActuallyDirty</MethodName>
+            <MethodComment>/** 
+ * Has the page or its header been modified. &lt;p&gt; See comment on class header on meaning of isDirty and preDirty bits. &lt;p&gt;
+ * @return true if changes have actually been made to the page in memory.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preDirty</MethodName>
+            <MethodComment>/** 
+ * Set state to indicate the page or its header is about to be modified. &lt;p&gt; See comment on class header on meaning of isDirty and preDirty bits.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDirty</MethodName>
+            <MethodComment>/** 
+ * Set state to indicate the page or its header has been modified. &lt;p&gt; See comment on class header on meaning of isDirty and preDirty bits. &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>releaseExclusive</MethodName>
+            <MethodComment>/** 
+ * exclusive latch on page is being released. &lt;p&gt; The only work done in CachedPage is to update the row count on the container if it is too out of sync.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clean</MethodName>
+            <MethodComment>/** 
+ * Write the page to disk. &lt;p&gt; MP - In a simple world we would just not allow clean until it held the latch on the page.  But in order to fit into the cache system, we  don't have enough state around to just make clean() latch the page  while doing the I/O - but we still need someway to insure that no changes happen to the page while the I/O is taking place.   Also someday it would be fine to allow reads of this page while the I/O was taking place.  
+ * @exception StandardException  Error writing the page.
+ * @see Cacheable#clean
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>remove</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearIdentity</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readPage</MethodName>
+            <MethodComment>/** 
+ * read the page from disk into this CachedPage object. &lt;p&gt; A page is read in from disk into the pageData array of this object, and then put in the cache. &lt;p&gt;
+ * @param myContainer the container to read the page from.
+ * @param newIdentity indentity (ie. page number) of the page to read
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>myContainer</ParamName>
+                    <ParamType>FileContainer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newIdentity</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [pagesize=myContainer.getPageSize()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setPageArray;[pagesize]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writePage</MethodName>
+            <MethodComment>/** 
+ * write the page from this CachedPage object to disk. &lt;p&gt;
+ * @param identity indentity (ie. page number) of the page to read
+ * @param syncMe      does the write of this single page have to be sync'd?
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>identity</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>syncMe</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogInstant [flushLogTo=getLastLogInstant()]</InnerVar>
+                <InnerVar>FileContainer [myContainer=(FileContainer)containerCache.find(identity.getContainerId())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;writeFormatId;[identity]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writePage;[identity]</InnerMethodInvoke>
+                <InnerMethodInvoke>dataFactory;flush;[flushLogTo]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setContainerRowCount</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowCount</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setPageArray</MethodName>
+            <MethodComment>/** 
+ * if the page size is different from the page buffer, then make a new page buffer and make subclass use the new page buffer
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;usePageBuffer;[pageData]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageArray</MethodName>
+            <MethodComment>/** 
+ * Returns the page data array used to write on disk version. &lt;p&gt; returns the page data array, that is actually written to the disk, when the page is cleaned from the page cache.  Takes care of flushing in-memory information to the array (like page header and format id info). &lt;p&gt;
+ * @return The array of bytes that is the on disk version of page.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;writeFormatId;[identity]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writePage;[identity]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>usePageBuffer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initFromData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>FileContainer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>PageCreationArgs</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writePage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeFormatId</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>identity</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

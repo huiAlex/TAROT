@@ -1,0 +1,506 @@
+<Class>
+    <Id>1701</Id>
+    <Package>org.apache.derby.impl.store.replication.slave</Package>
+    <ClassName>SlaveController</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>SlaveFactory</SuperInterface>
+        <SuperInterface>ModuleControl</SuperInterface>
+        <SuperInterface>ModuleSupportable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SlaveController  /** 
+ * &lt;p&gt;  This is an implementation of the replication slave controller service. The service is booted when this instance of Derby will have the replication slave role for this database. &lt;/p&gt;  &lt;p&gt; Note: The current version of the class is far from complete. Code to control the replication slave behavior will be added as more parts of the replication functionality is added to Derby.  &lt;/p&gt;
+ * @see SlaveFactory
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_SOCKET_TIMEOUT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rawStoreFactory</FieldName>
+            <FieldType>RawStoreFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logToFile</FieldName>
+            <FieldType>LogToFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>receiver</FieldName>
+            <FieldType>ReplicationMessageReceive</FieldType>
+        </Field>
+        <Field>
+            <FieldName>repLogger</FieldName>
+            <FieldType>ReplicationLogger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>slaveAddr</FieldName>
+            <FieldType>SlaveAddress</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dbname</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>highestLogInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inReplicationSlaveMode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>startupSuccessful</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logScan</FieldName>
+            <FieldType>ReplicationLogScan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logReceiverThread</FieldName>
+            <FieldType>SlaveLogReceiverThread</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SlaveController</MethodName>
+            <MethodComment>/** 
+ * Empty constructor required by Monitor.bootServiceModule
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>boot</MethodName>
+            <MethodComment>/** 
+ * Used by Monitor.bootServiceModule to start the service. It will set up basic variables 
+ * @param create Currently ignored
+ * @param properties Properties used to start the service in thecorrect mode
+ * @exception StandardException Standard Derby exception policy,thrown on error.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [port=properties.getProperty(Attribute.REPLICATION_SLAVE_PORT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment>/** 
+ * Will tear down the replication slave service. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canSupport</MethodName>
+            <MethodComment>/** 
+ * Used by Monitor.bootServiceModule to check if this class is usable for replication. To be usable, we require that slave replication mode is specified in startParams by checking that a property with key SlaveFactory.REPLICATION_MODE has the value SlaveFactory.SLAVE_MODE.
+ * @param startParams The properties used to start replication
+ * @return true if slave repliation is specified, meaning thatthis MasterController is a suitable implementation for the SlaveFactory service. False otherwise.
+ * @see ModuleSupportable#canSupport 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [modeParam=startParams.getProperty(SlaveFactory.REPLICATION_MODE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startSlave</MethodName>
+            <MethodComment>/** 
+ * Start slave replication. This method establishes a network connection with the associated replication master and starts a thread that applies operations received from the master (in the form of log records) to the local slave database.
+ * @param rawStore The RawStoreFactory for the database
+ * @param logFac The LogFactory ensuring recoverability for thisdatabase
+ * @exception StandardException Thrown if the slave could not bestarted.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawStore</ParamName>
+                    <ParamType>RawStoreFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logFac</ParamName>
+                    <ParamType>LogFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logToFile;initializeReplicationSlaveRole;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;startLogReceiverThread;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logTextMessage;[MessageId.REPLICATION_SLAVE_STARTED, dbname]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopSlave</MethodName>
+            <MethodComment>/** 
+ * Will perform all work that is needed to stop replication
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;teardownNetwork;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>logToFile;stopReplicationSlaveRole;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logTextMessage;[MessageId.REPLICATION_SLAVE_STOPPED, dbname]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopSlave</MethodName>
+            <MethodComment>/** 
+ * @see SlaveFactory#stopSlave
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forcedStop</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;stopSlave;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>failover</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doFailover;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;teardownNetwork;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doFailover</MethodName>
+            <MethodComment>/** 
+ * Performs failover on this database. May be called because a failover command has been received from the master, or because a client has requested a failover after the network connection with the master has been lost.
+ * @see SlaveFactory#failover
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logToFile;failoverSlave;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logTextMessage;[MessageId.REPLICATION_FAILOVER_SUCCESSFUL, dbname]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStarted</MethodName>
+            <MethodComment>/** 
+ * @see SlaveFactory#isStarted
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupConnection</MethodName>
+            <MethodComment>/** 
+ * Establish a connection with the replication master. Listens for a connection on the slavehost/port for DEFAULT_SOCKET_TIMEOUT milliseconds. 
+ * @return true if a connection has been set up with the master,false if the connection attempt timed out.
+ * @exception StandardException if an unexpected exception occuredthat prevented a connection with the master.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleDisconnect</MethodName>
+            <MethodComment>/** 
+ * Write the reason for the lost connection to the log (derby.log) and reconnect with the master. Once the network is up and running, a new LogReceiverThread is started. The method returns without doing anything if inReplicationSlaveMode=false, which means that stopSlave() has been called by another thread.
+ * @param e The reason the connection to the master was lost
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>Exception</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>repLogger;logError;[MessageId.REPLICATION_SLAVE_LOST_CONN, e]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isConnectedToMaster</MethodName>
+            <MethodComment>/** 
+ * Check if the repliation network connection to the master is working
+ * @return true if the network connection is working, false otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startLogReceiverThread</MethodName>
+            <MethodComment>/** 
+ * Starts the LogReceiverThread that will listen for chunks of log records from the master and apply the log records to the local log file.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logReceiverThread;setDaemon;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>logReceiverThread;start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleFatalException</MethodName>
+            <MethodComment>/** 
+ * Handles fatal errors for slave replication functionality. These are errors that requires us to stop replication. Calling this method has the following effects: 1) Debug messages are written to the log file (usually derby.log) if ReplicationLogger#LOG_REPLICATION_MESSAGES is true. 2) If the network connection is up, the master is notified of the problem. 3) All slave replication functionality is stopped, and the database is then shut down without being booted. The method will return without doing anything if inReplicationSlaveMode=false, meaning that stopSlave has been called.
+ * @param e The fatal exception that is the reason for callingthis method
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>Exception</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>repLogger;logError;[MessageId.REPLICATION_FATAL_ERROR, e]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>teardownNetwork</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHostName</MethodName>
+            <MethodComment>/** 
+ * Used to return the host name of the slave.
+ * @return a String containing the host name of the slave.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPortNumber</MethodName>
+            <MethodComment>/** 
+ * Used to return the port number of the slave.
+ * @return an Integer that represents the port number of the slave.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SlaveLogReceiverThread</MethodName>
+            <MethodComment>/** 
+ * Creates a new instance of &lt;tt&gt;SlaveLogReceiverThread&lt;/tt&gt; with a debugging-friendly thread name.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleLogChunk</MethodName>
+            <MethodComment>/** 
+ * Parses a chunk of log received from the master, and applies the individual log records to the local log file.
+ * @param logChunk A chunk of log records received from themaster
+ * @exception StandardException If the chunk of log recordscould not be parsed or the local log file is out of synch with the master log file.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logChunk</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logScan;init;[logChunk]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

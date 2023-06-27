@@ -1,0 +1,321 @@
+/**
+ * SQLDecimal satisfies the DataValueDescriptor
+ * interfaces (i.e., OrderableDataType). It implements a numeric/decimal column, 
+ * e.g. for * storing a column value; it can be specified
+ * when constructed to not allow nulls. Nullability cannot be changed
+ * after construction, as it affects the storage size and mechanism.
+ * 
+ * Because OrderableDataType is a subtype of DataType,
+ * SQLDecimal can play a role in either a DataType/Row
+ * or a OrderableDataType/Row, interchangeably.
+ * 
+ * We assume the store has a flag for nullness of the value,
+ * and simply return a 0-length array for the stored form
+ * when the value is null.
+ *
+ */
+
+/**
+	 * object state.  Note that scale and precision are 
+	 * always determined dynamically from value when
+	 * it is not null.
+
+       The field value can be null without the data value being null.
+	   In this case the value is stored in rawData and rawScale. This
+	   is to allow the minimal amount of work to read a SQLDecimal from disk.
+	   Creating the BigDecimal is expensive as it requires allocating
+	   three objects, the last two are a waste in the case the row does
+	   not qualify or the row will be written out by the sorter before being
+	   returned to the application.
+		
+		This means that this field must be accessed for read indirectly through
+		the getBigDecimal() method, and when setting it the rawData field must
+		be set to null.
+
+	 */
+
+/**
+		See comments for value
+	*/
+
+/**
+		See comments for value
+	*/
+
+/** no-arg constructor, required by Formattable */
+
+/**
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * 
+	 * If we have a value that is greater than the maximum double,
+	 * exception is thrown.  Otherwise, ok.  If the value is less
+	 * than can be represented by a double, ti will get set to
+	 * the smallest double value.
+	 *
+	 * @exception StandardException thrown on failure to convert
+	 */
+
+/**
+	 * DECIMAL implementation. Convert to a BigDecimal using getObject
+	 * which will return a BigDecimal
+	 */
+
+/**
+	 * Set the value from a correctly typed BigDecimal object.
+	 * 	 */
+
+/**
+		Return my format identifier.
+
+			*/
+
+/** @see Storable#isNull */
+
+/** 
+	 * Distill the BigDecimal to a byte array and
+	 * write out: 
+	 *	 scale (zero or positive) as a byte 
+	 *	 length of byte array as a byte
+	 *	 the byte array  
+	 *
+	 */
+
+/** 
+	 * Note the use of rawData: we reuse the array if the
+	 * incoming array is the same length or smaller than
+	 * the array length.  
+	 * 
+	 * 	 */
+
+/**
+	 * 	 *
+	 */
+
+/** @exception StandardException		Thrown on error */
+
+/**
+     *      */
+
+/**
+	 * 	 */
+
+/** 
+	 * 	 *
+	 * @exception SQLException		Thrown on error
+	 */
+
+/**
+		Set the value into a PreparedStatement.
+
+		@exception SQLException Error setting value in PreparedStatement
+	*/
+
+/**
+	 *
+	 *  WARNING  there is no checking to make sure
+	 * that theValue doesn't exceed the precision/scale of
+	 * the current SQLDecimal.  It is just assumed that the
+	 * SQLDecimal is supposed to take the precision/scale of
+	 * the BigDecimalized String.
+	 *
+	 * @exception StandardException throws NumberFormatException
+	 *		when the String format is not recognized.
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 */
+
+/**
+	 * 	 *
+	 */
+
+/**
+	 * 	 *
+	 */
+
+/**
+		Only to be called when the application sets a value using BigDecimal
+		through setBigDecimal calls.
+	*/
+
+/**
+		Called when setting a DECIMAL value internally or from
+		through a procedure or function.
+		Handles long in addition to BigDecimal to handle
+		identity being stored as a long but returned as a DECIMAL.
+	*/
+
+/**
+	 * 	 *
+	 */
+
+/** @see DataValueDescriptor#typePrecedence */
+
+/**
+	 * Normalization method - this method may be called when putting
+	 * a value into a SQLDecimal, for example, when inserting into a SQLDecimal
+	 * column.  See NormalizeResultSet in execution.
+	 * 
+	 * Note that truncation is allowed on the decimal portion
+	 * of a numeric only.	
+	 *
+	 * @param desiredType	The type to normalize the source column to
+	 * @param source		The value to normalize
+	 *
+	 * 	 *											non-nullable column, and for
+	 *											truncation error
+	 */
+
+/**
+	 * This method implements the + operator for DECIMAL.
+	 *
+	 * @param addend1	One of the addends
+	 * @param addend2	The other addend
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 *
+	 * @return	A SQLDecimal containing the result of the addition
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method implements the - operator for "decimal - decimal".
+	 *
+	 * @param left	The value to be subtracted from
+	 * @param right	The value to be subtracted
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 *
+	 * @return	A SQLDecimal containing the result of the subtraction
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method implements the * operator for "double * double".
+	 *
+	 * @param left	The first value to be multiplied
+	 * @param right	The second value to be multiplied
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 *
+	 * @return	A SQLDecimal containing the result of the multiplication
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method implements the / operator for BigDecimal/BigDecimal
+	 *
+	 * @param dividend	The numerator
+	 * @param divisor	The denominator
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 *
+	 * @return	A SQLDecimal containing the result of the division
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method implements the / operator for BigDecimal/BigDecimal
+	 *
+	 * @param dividend	The numerator
+	 * @param divisor	The denominator
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 * @param scale		The result scale, if &lt; 0, calculate the scale according
+	 *					to the actual values' sizes
+	 *
+	 * @return	A SQLDecimal containing the result of the division
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method implements the unary minus operator for double.
+	 *
+	 * @param result	The result of a previous call to this method, null
+	 *					if not called yet
+	 *
+	 * @return	A SQLDecimal containing the result of the division
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * This method implements the isNegative method.
+     * 
+     * @return  A boolean.  If this.value is negative, return true.
+     *          For positive values or null, return false.
+     */
+
+/**
+	 * Set the precision/scale of the to the desired values. 
+	 * Used when CASTing.  Ideally we'd recycle normalize(), but
+	 * the use is different.  
+	 *
+	 * @param desiredPrecision	the desired precision -- IGNORE_PREICISION
+	 *					if it is to be ignored.
+	 * @param desiredScale	the desired scale 
+	 * @param errorOnTrunc	throw error on truncation (ignored -- 
+	 *		always thrown if we truncate the non-decimal part of
+	 *		the value)
+	 *
+	 * @exception StandardException		Thrown on non-zero truncation
+	 *		if errorOnTrunc is true	
+	 */
+
+/**
+	 * Return the SQL scale of this value, number of digits after the
+	 * decimal point, or zero for a whole number. This does not match the
+	 * return from BigDecimal.scale() since in J2SE 5.0 onwards that can return
+	 * negative scales.
+	 */
+
+/**
+	 * Return the SQL scale of this value, number of digits after the
+	 * decimal point, or zero for a whole number. This does not match the
+	 * return from BigDecimal.scale() since in J2SE 5.0 onwards that can return
+	 * negative scales.
+	 */
+
+/**
+	 * Get a BigDecimal representing the value of a DataValueDescriptor
+	 * @param value Non-null value to be converted
+	 * @return BigDecimal value
+	 * 	 */
+
+/**
+	 * Calculate the number of digits to the left of the decimal point
+	 * of the passed in value.
+	 * @param decimalValue Value to get whole digits from, never null.
+	 * @return number of whole digits.
+	 */
+

@@ -1,0 +1,607 @@
+<Class>
+    <Id>1361</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>StaticMethodCallNode</ClassName>
+    <SuperClass>MethodCallNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>StaticMethodCallNode  /** 
+ * A StaticMethodCallNode represents a static method call from a Class (as opposed to from an Object). For a procedure the call requires that the arguments be ? parameters. The parameter is *logically* passed into the method call a number of different ways. &lt;P&gt; For a application call like CALL MYPROC(?) the logically Java method call is (in psuedo Java/SQL code) (examples with CHAR(10) parameter) &lt;BR&gt; Fixed length IN parameters - com.acme.MyProcedureMethod(?) &lt;BR&gt; Variable length IN parameters - com.acme.MyProcedureMethod(CAST (? AS CHAR(10)) &lt;BR&gt; Fixed length INOUT parameter - String[] holder = new String[] {?}; com.acme.MyProcedureMethod(holder); ? = holder[0] &lt;BR&gt; Variable length INOUT parameter - String[] holder = new String[] {CAST (? AS CHAR(10)}; com.acme.MyProcedureMethod(holder); ? = CAST (holder[0] AS CHAR(10)) &lt;BR&gt; Fixed length OUT parameter - String[] holder = new String[1]; com.acme.MyProcedureMethod(holder); ? = holder[0] &lt;BR&gt; Variable length INOUT parameter - String[] holder = new String[1]; com.acme.MyProcedureMethod(holder); ? = CAST (holder[0] AS CHAR(10)) &lt;P&gt; For static method calls there is no pre-definition of an IN or INOUT parameter, so a call to CallableStatement.registerOutParameter() makes the parameter an INOUT parameter, provided: - the parameter is passed directly to the method call (no casts or expressions). - the method's parameter type is a Java array type. Since this is a dynamic decision we compile in code to take both paths, based upon a boolean is INOUT which is derived from the ParameterValueSet. Code is logically (only single parameter String[] shown here). Note, no casts can exist here. boolean isINOUT = getParameterValueSet().getParameterMode(0) == PARAMETER_IN_OUT; if (isINOUT) { String[] holder = new String[] {?}; com.acme.MyProcedureMethod(holder); ? = holder[0] } else { com.acme.MyProcedureMethod(?) }
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>procedureName</FieldName>
+            <FieldType>TableName</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outParamArrays</FieldName>
+            <FieldType>LocalField[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>applicationParameterNumbers</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isSystemCode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isInsideBind</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>returnsNullOnNullState</FieldName>
+            <FieldType>LocalField</FieldType>
+        </Field>
+        <Field>
+            <FieldName>routineDefiner</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ad</FieldName>
+            <FieldType>AliasDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>resolvedAggregate</FieldName>
+            <FieldType>AggregateNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>appearsInGroupBy</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>StaticMethodCallNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a NonStaticMethodCallNode
+ * @param methodName		The name of the method to call
+ * @param javaClassName     The name of the java class that the staticmethod belongs to.
+ * @param cm                The context manager
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>javaClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>StaticMethodCallNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a StaticMethodCallNode
+ * @param methodName        The name of the method to call
+ * @param javaClassName     The name of the java class that the staticmethod belongs to.
+ * @param cm                The context manager
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>javaClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResolvedAggregate</MethodName>
+            <MethodComment>/** 
+ * Get the aggregate, if any, which this method call resolves to.
+ */
+</MethodComment>
+            <ReturnType>AggregateNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAppearsInGroupBy</MethodName>
+            <MethodComment>/** 
+ * Flag that this function invocation appears in a GROUP BY clause 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFullName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TableName</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpression</MethodName>
+            <MethodComment>/** 
+ * Bind this expression.  This means binding the sub-expressions, as well as figuring out what the return type is for this expression.
+ * @param fromList		The FROM list for the query thisexpression is in, for binding columns.
+ * @param subqueryList  The subquery list being built as we find SubqueryNodes
+ * @param aggregates    The aggregate list being built as we find AggregateNodes
+ * @return	this or an AggregateNode
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>JavaValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressionMinion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>JavaValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;bindParameters;[fromList, subqueryList, aggregates]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;verifyClassExist;[javaClassName]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;resolveMethodCall;[javaClassName, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>permitsSQL</MethodName>
+            <MethodComment>/** 
+ * Returns true if the routine permits SQL.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rai</ParamName>
+                    <ParamType>RoutineAliasInfo</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>short [sqlAllowed=rai.getSQLAllowed()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimizeDomainValueConversion</MethodName>
+            <MethodComment>/** 
+ * If this SQL function has parameters which are SQLToJavaValueNode over JavaToSQLValueNode and the java value node underneath is a SQL function defined with CALLED ON NULL INPUT, then we can get rid of the wrapper nodes over the java value node for such parameters. This is because SQL functions defined with CALLED ON NULL INPUT need access to only java domain values. This can't be done for parameters which are wrappers over SQL function defined with RETURN NULL ON NULL INPUT because such functions need access to both sql domain value and java domain value. - Derby479 This optimization is not available if the outer function is RETURN NULL ON NULL INPUT. That is because the SQLToJavaNode is responsible for compiling the byte code which skips the method call if the parameter is null--if we remove the SQLToJavaNode, then we don't compile that check and we get bug DERBY-1030.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [count=methodParms.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resolveRoutine</MethodName>
+            <MethodComment>/** 
+ * Resolve a routine. Obtain a list of routines from the data dictionary of the correct type (functions or procedures) and name. Pick the best routine from the list. Currently only a single routine with a given type and name is allowed, thus if changes are made to support overloaded routines, careful code inspection and testing will be required.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sd</ParamName>
+                    <ParamType>SchemaDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>noSchema</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>coerceMethodParameter</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Coerce an actual method parameter to the declared type of the corresponding routine argument. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rai</ParamName>
+                    <ParamType>RoutineAliasInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>paramdtd</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterTypeId</ParamName>
+                    <ParamType>TypeId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ValueNode [sqlParamNode=null]</InnerVar>
+                <InnerVar>boolean [isParameterMarker=true]</InnerVar>
+                <InnerVar>boolean [needCast=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeCast</MethodName>
+            <MethodComment>/** 
+ * Wrap a parameter in a CAST node.
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parameterNode</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetType</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ValueNode [castNode=new CastNode(parameterNode,targetType,cm)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>((CastNode)castNode);setAssignmentSemantics;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generatePushNestedSessionContext</MethodName>
+            <MethodComment>/** 
+ * Add code to set up the SQL session context for a stored procedure or function which needs a nested SQL session context (only needed for those which can contain SQL). The generated code calls pushNestedSessionContext.
+ * @see LanguageConnectionContext#pushNestedSessionContext
+ * @param acb activation class builder
+ * @param mb  method builder
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hadDefinersRights</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>definer</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushThisAsActivation;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, null, "getLanguageConnectionContext", ClassName.LanguageConnectionContext, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushThisAsActivation;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[hadDefinersRights]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[definer]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, null, "pushNestedSessionContext", "void", 3]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateOneParameter</MethodName>
+            <MethodComment>/** 
+ * Push extra code to generate the casts within the arrays for the parameters passed as arrays.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [parameterMode]</InnerVar>
+                <InnerVar>SQLToJavaValueNode [sql2j=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>categorize</MethodName>
+            <MethodComment>/** 
+ * Categorize this predicate.  Initially, this means building a bit map of the referenced tables for each predicate. If the source of this ColumnReference (at the next underlying level)  is not a ColumnReference or a VirtualColumnNode then this predicate will not be pushed down. For example, in: select * from (select 1 from s) a (x) where x = 1 we will not push down x = 1. NOTE: It would be easy to handle the case of a constant, but if the inner SELECT returns an arbitrary expression, then we would have to copy that tree into the pushed predicate, and that tree could contain subqueries and method calls. RESOLVE - revisit this issue once we have views.
+ * @param referencedTabs	JBitSet with bit map of referenced FromTables
+ * @param simplePredsOnly	Whether or not to consider methodcalls, field references and conditional nodes when building bit map
+ * @return boolean		Whether or not source.expression is a ColumnReferenceor a VirtualColumnNode.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>referencedTabs</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>simplePredsOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [pushable=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateExpression</MethodName>
+            <MethodComment>/** 
+ * Do code generation for this method call
+ * @param acb	The ExpressionClassBuilder for the class we're generating
+ * @param mb	The method the expression will go into
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [nargs=generateParameters(acb,mb)]</InnerVar>
+                <InnerVar>LocalField [functionEntrySQLAllowed=null]</InnerVar>
+                <InnerVar>String [javaReturnType=getJavaTypeName()]</InnerVar>
+                <InnerVar>MethodBuilder [mbnc=null]</InnerVar>
+                <InnerVar>MethodBuilder [mbcm=mb]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mbcm;callMethod;[VMOpcode.INVOKESTATIC, method.getDeclaringClass().getName(), methodName, actualMethodReturnType, nargs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPrivType</MethodName>
+            <MethodComment>/** 
+ * Set default privilege of EXECUTE for this node. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptChildren</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Visitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

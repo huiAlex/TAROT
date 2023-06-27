@@ -1,0 +1,134 @@
+<Class>
+    <Id>1428</Id>
+    <Package>org.apache.derby.iapi.store.access</Package>
+    <ClassName>SortObserver</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SortObserver  /** 
+ * A SortObserver is an object that is used as a callback by the sorter.  It allows the sort client to do whatever they want from the context of a sort.  It contains 2 callback methods: &lt;I&gt;insertDuplicateKey()&lt;/I&gt; and &lt;I&gt;insertNonDuplicateKey()&lt;/I&gt;.   On each &lt;I&gt;SortController.insert()&lt;/I&gt;, one or the other of these  methods will be called, depending on whether the given row has a key that has been seen before or not. &lt;p&gt; Some sample uses include: &lt;UL&gt;&lt;LI&gt; &lt;I&gt;Sorts from Language&lt;/I&gt;: Language typically recycles data type wrappers.  So the language layer uses SortObservers to clone rows that are kept by the sorter.   &lt;/LI&gt; &lt;LI&gt; &lt;I&gt;Distinct sorts&lt;/I&gt;: The sorter will call the sort observer each time it identifies a duplicate row.  Based on what the sort observer returns to the sorter, the sorter will either retain (insert) the duplicate row, or discard the duplicate row.  All you have to do to implement a distinct sort is to tell the sorter to discard the row (return null from &lt;I&gt; insertDuplicateKey()&lt;/I&gt;).  Also, if you want to throw an  exception on a duplicate (e.g. create a unique index), you  can just throw an exception from your SortObserver. &lt;/LI&gt; &lt;LI&gt; &lt;I&gt;Aggregates&lt;/I&gt;: Vector (grouped) aggregates typically require a sort.  Language can use a SortObserver to perform aggregations as duplicate elements are encountered.  Scalar aggregates can also be computed using a SortObserver. &lt;/LI&gt; &lt;/UL&gt; These are possible uses only.  You, kind reader, may do whatever  you wish with this forgiving interface.
+ * @see SortController
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>insertNonDuplicateKey</MethodName>
+            <MethodComment>/** 
+ * Called prior to inserting a distinct sort key; in other words, the first time that a key is inserted into the sorter, this method is called.  Subsequent inserts with the same key generate a call to insertDuplicateKey() instead. &lt;p&gt; This method will most commonly be used to clone the row that is retained by the sorter, or possibly to do some initialization of that row.
+ * @param insertRow the current row that the sorteris on the verge of retaining
+ * @return the row to be inserted by the sorter.  If null,then nothing is inserted by the sorter.
+ * @exception StandardException either on unexpected exception,or on expected user error that is to percolate back to the driver of the sort.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>insertRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertDuplicateKey</MethodName>
+            <MethodComment>/** 
+ * Called prior to inserting a duplicate sort key.   This method will typically be used to perform some aggregation on a row that is going to be discarded by the sorter.
+ * @param insertRow the current row that the sorteris on the verge of retaining.  It is a duplicate of existingRow.
+ * @param existingRow the row that is already in thethe sorter which is a duplicate of insertRow
+ * @return the row to be inserted by the sorter.  If null,then nothing is inserted by the sorter.  Distinct sorts will want to return null.
+ * @exception StandardException either on unexpected exception,or on expected user error that is to percolate back to the driver of the sort.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>insertRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>existingRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addToFreeList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>objectArray</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxFreeListSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getArrayClone</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deferrable</MethodName>
+            <MethodComment>/** 
+ * Overridden by subclasses that observe sorters with uniqueness checking.
+ * @return true if the index's constraint is deferrable. Any SortObserverimplementations that implement uniqueness checking need to keep track of this information.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deferred</MethodName>
+            <MethodComment>/** 
+ * Overridden by subclasses that observe sorters with uniqueness checking.
+ * @return true if constraint mode of the index's constraint is effectivelydeferred. Any SortObserver implementations that implement uniqueness checking need to keep track of this information.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rememberDuplicate</MethodName>
+            <MethodComment>/** 
+ * Overridden by subclasses that observe sorters with uniqueness checking. Will be called by sorters iff deferrable() and deferred() and uniqueness violation, so implementations that sometimes return true to these must implement this method to save duplicate information till commit time.
+ * @param row data of offending key
+ * @throws StandardException standard error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,37 @@
+<Class>
+    <Id>1297</Id>
+    <Package>org.apache.derby.vti</Package>
+    <ClassName>RestrictedVTI</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RestrictedVTI  /** 
+ * &lt;p&gt; Interface for Table Functions which can be told which columns need to be fetched plus simple bounds on those columns. &lt;/p&gt; &lt;p&gt; This interface can be implemented by the ResultSet returned by the public static method which is bound to the Table Function. If that ResultSet implements this interface, then the initScan() method of this interface will be called before the scan of the ResultSet starts, that is, before calling any ResultSet method. &lt;/p&gt; &lt;p&gt; ResultSets which implement this interface can perform more efficiently because they don't have to fetch all columns and rows. This can mean performance boosts for queries which only need a subset of the Table Function's columns and for queries which compare those columns to constant expressions using the &amp;lt;, &amp;lt;=, =, &amp;gt;, &amp;gt;=, and != operators. This can also mean performance boosts for LIKE and BETWEEN operations on Table Function columns. For more information, see the commentary on &lt;a href="https://issues.apache.org/jira/browse/DERBY-4357"&gt;DERBY-4357&lt;/a&gt;. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>initScan</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Initialize a scan of a ResultSet. This method is called once before the scan begins. It is called before any ResultSet method is called. This method performs two tasks: &lt;/p&gt; &lt;li&gt;&lt;b&gt;Column names&lt;/b&gt; - Tells the ResultSet which columns need to be fetched.&lt;/li&gt; &lt;li&gt;&lt;b&gt;Limits&lt;/b&gt; - Gives the ResultSet simple bounds to apply in order to limit which rows are returned. Note that the ResultSet does not have to enforce all of these bounds. Derby will redundantly enforce these limits on all rows returned by the ResultSet. That is, filtering not performed inside the ResultSet will still happen outside the ResultSet.&lt;/li&gt; &lt;p&gt; The &lt;i&gt;columnNames&lt;/i&gt; argument is an array of columns which need to be fetched.  This is an array of the column names declared in the Table Function's CREATE FUNCTION statement. Column names which were double-quoted in the CREATE FUNCTION statement appear case-sensitive in this array. Column names which were not double-quoted appear upper-cased. Derby asks the Table Function to fetch all columns mentioned in the query. This includes columns mentioned in the SELECT list as well as columns mentioned in the WHERE clause. Note that a column could be mentioned in the WHERE clause in a complex expression which could not be passed to the Table Function via the &lt;i&gt;restriction&lt;/i&gt; argument. &lt;/p&gt; &lt;p&gt; The array has one slot for each column declared in the CREATE FUNCTION statement. Slot 0 corresponds to the first column declared in the CREATE FUNCTION statement and so on. If a column does not need to be fetched, then the corresponding slot is null. If a column needs to be fetched, then the corresponding slot holds the column's name. &lt;/p&gt; &lt;p&gt; Note that even though the array may have gaps, it is expected that columns in the ResultSet will occur at the positions declared in the CREATE FUNCTION statement. Consider the following declaration: &lt;/p&gt; &lt;blockquote&gt;&lt;pre&gt; create function foreignEmployeeTable() returns table ( id        int, birthDay  date, firstName varchar( 100 ), lastName  varchar( 100 ) ) ... &lt;/pre&gt;&lt;/blockquote&gt; &lt;p&gt; and the following query: &lt;/p&gt; &lt;blockquote&gt;&lt;pre&gt; select lastName from table( foreignEmployeeTable() ) s &lt;/pre&gt;&lt;/blockquote&gt; &lt;p&gt; In this example, the array passed to this method will have 4 slots. Slots 0, 1, and 2 will be null and slot 3 will hold the String "LASTNAME". Last names will be retrieved from the ResultSet by calls to getString( 4 )--remember that JDBC column ids are 1-based. &lt;/p&gt; &lt;p&gt; The &lt;i&gt;restriction&lt;/i&gt; argument is a simple expression which should be evaluated inside the Table Function in order to eliminate rows. The expression is a binary tree built out of ANDs, ORs, and column qualifiers. The column qualifiers are simple comparisons between constant values and columns in the Table Function. The Table Function only returns rows which satisfy the expression. The &lt;i&gt;restriction&lt;/i&gt; is redundantly enforced by Derby on the rows returned by the ResultSet--this means that &lt;i&gt;restriction&lt;/i&gt; gives the Table Function a hint about how to optimize its performance but the Table Function is not required to enforce the entire &lt;i&gt;restriction&lt;/i&gt;. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>restriction</ParamName>
+                    <ParamType>Restriction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

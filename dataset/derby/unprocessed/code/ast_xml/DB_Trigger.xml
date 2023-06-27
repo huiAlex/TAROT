@@ -1,0 +1,146 @@
+<Class>
+    <Id>688</Id>
+    <Package>org.apache.derby.impl.tools.dblook</Package>
+    <ClassName>DB_Trigger</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>TRIGGERNAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SCHEMAID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EVENT</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FIRINGTIME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TYPE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TABLEID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REFERENCEDCOLUMNS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TRIGGERDEFINITION</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REFERENCINGOLD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REFERENCINGNEW</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OLDREFERENCINGNAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NEWREFERENCINGNAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WHENCLAUSETEXT</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>doTriggers</MethodName>
+            <MethodComment>/** 
+ * * Generate the DDL for all triggers in a given database.
+ * @param conn Connection to the source database.
+ * @param supportsWhenClause Tells whether the database supports thetrigger WHEN clause.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>supportsWhenClause</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [stmt=conn.createStatement()]</InnerVar>
+                <InnerVar>ResultSet [rs=stmt.executeQuery("SELECT * FROM SYS.SYSTRIGGERS WHERE STATE != 'D' " + "ORDER BY CREATIONTIMESTAMP")]</InnerVar>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createTrigger</MethodName>
+            <MethodComment>/** 
+ * * Generate DDL for a specific trigger.
+ * @param trigName Name of the trigger.
+ * @param tableName Name of the table on which the triggerfires.
+ * @param whenClause The WHEN clause text (possibly {@code null}).
+ * @param aTrig Information about the trigger.
+ * @return The DDL for the current trigger is returnedas a String.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>trigName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>whenClause</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aTrig</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder("CREATE TRIGGER ")]</InnerVar>
+                <InnerVar>String [event=aTrig.getString(EVENT)]</InnerVar>
+                <InnerVar>char [trigType=aTrig.getString(TYPE).charAt(0)]</InnerVar>
+                <InnerVar>String [oldReferencing=aTrig.getString(OLDREFERENCINGNAME)]</InnerVar>
+                <InnerVar>String [newReferencing=aTrig.getString(NEWREFERENCINGNAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[trigName]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" ON "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[tableName]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" FOR EACH "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[dblook.removeNewlines(aTrig.getString(TRIGGERDEFINITION))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

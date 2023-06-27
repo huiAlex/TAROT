@@ -1,0 +1,318 @@
+<Class>
+    <Id>986</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>ModifyColumnNode</ClassName>
+    <SuperClass>ColumnDefinitionNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ModifyColumnNode  /** 
+ * A ModifyColumnNode represents a modify column in an ALTER TABLE statement.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>columnPosition</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>oldDefaultUUID</FieldName>
+            <FieldType>UUID</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_TYPE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_CONSTRAINT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_CONSTRAINT_NOT_NULL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_DROP_COLUMN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_GENERATED_ALWAYS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>K_MODIFY_COLUMN_GENERATED_BY_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>kind</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ModifyColumnNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>kind</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultNode</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dataTypeServices</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>autoIncrementInfo</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOldDefaultUUID</MethodName>
+            <MethodComment>/** 
+ * Get the UUID of the old column default.
+ * @return The UUID of the old column default.
+ */
+</MethodComment>
+            <ReturnType>UUID</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getColumnPosition</MethodName>
+            <MethodComment>/** 
+ * Get the column position for the column.
+ * @return The column position for the column.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkUserType</MethodName>
+            <MethodComment>/** 
+ * Check the validity of a user type.  Checks that 1. the column type is either varchar, .... 2. is the same type after the alter. 3. length is greater than the old length.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnDescriptor [cd=td.getColumnDescriptor(name)]</InnerVar>
+                <InnerVar>DataTypeDescriptor [oldType=cd.getType()]</InnerVar>
+                <InnerVar>String [typeName=getType().getTypeName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setNullability;[oldType.isNullable()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkExistingConstraints</MethodName>
+            <MethodComment>/** 
+ * Check if the the column can be modified, and throw error if not. If the type of a column is being changed (for instance if the length  of the column is being increased) then make sure that this does not  violate any key constraints;  the column being altered is  1. part of foreign key constraint  ==&amp;gt; ERROR. This references a Primary Key constraint and the type and lengths of the pkey/fkey must match exactly. 2. part of a unique/primary key constraint ==&amp;gt; OK if no fkey references this constraint. ==&amp;gt; ERROR if any fkey in the system references this constraint.
+ * @param td		The Table Descriptor on which the ALTER is being done.
+ * @exception StandardException		Thrown on Error.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataDictionary [dd=getDataDictionary()]</InnerVar>
+                <InnerVar>ConstraintDescriptorList [cdl=dd.getConstraintDescriptors(td)]</InnerVar>
+                <InnerVar>int [intArray[]=new int[1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>useExistingCollation</MethodName>
+            <MethodComment>/** 
+ * If the column being modified is of character string type, then it should get its collation from the corresponding column in the TableDescriptor. This will ensure that at alter table time, the existing character string type columns do not loose their collation type. If the alter table is  doing a drop column, then we do not need to worry about collation info.
+ * @param td Table Descriptor that holds the column which is being altered
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAction</MethodName>
+            <MethodComment>/** 
+ * Get the action associated with this node.
+ * @return The action associated with this node.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindAndValidateDefault</MethodName>
+            <MethodComment>/** 
+ * Check the validity of the default, if any, for this node.
+ * @param dd		The DataDictionary.
+ * @param td		The TableDescriptor.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dd</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+                <InnerVar>DefaultDescriptor [defaultDescriptor=cd.getDefaultDescriptor(dd)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateDefault;[dd, td]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocalColumnDescriptor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ColumnDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateAutoincrement</MethodName>
+            <MethodComment>/** 
+ * check the validity of autoincrement values in the case that we are  modifying an existing column (includes checking if autoincrement is set when making a column nullable)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dd</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

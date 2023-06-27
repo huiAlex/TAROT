@@ -1,0 +1,207 @@
+<Class>
+    <Id>466</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>DropTableConstantAction</ClassName>
+    <SuperClass>DDLSingleTableConstantAction</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DropTableConstantAction  /** 
+ * This class  describes actions that are ALWAYS performed for a DROP TABLE Statement at Execution time.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>conglomerateNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fullTableName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sd</FieldName>
+            <FieldType>SchemaDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cascade</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DropTableConstantAction</MethodName>
+            <MethodComment>/** 
+ * Make the ConstantAction for a DROP TABLE statement.
+ * @param fullTableName		Fully qualified table name
+ * @param tableName			Table name.
+ * @param sd					Schema that table lives in.
+ * @param conglomerateNumber	Conglomerate number for heap
+ * @param tableId				UUID for table
+ * @param behavior			drop behavior: RESTRICT, CASCADE or default
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fullTableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sd</ParamName>
+                    <ParamType>SchemaDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conglomerateNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>behavior</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>executeConstantAction</MethodName>
+            <MethodComment>/** 
+ * This is the guts of the Execution-time logic for DROP TABLE.
+ * @see ConstantAction#executeConstantAction
+ * @exception StandardException		Thrown on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TableDescriptor [td]</InnerVar>
+                <InnerVar>UUID [tableID]</InnerVar>
+                <InnerVar>ConglomerateDescriptor[] [cds]</InnerVar>
+                <InnerVar>LanguageConnectionContext [lcc=activation.getLanguageConnectionContext()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>DependencyManager [dm=dd.getDependencyManager()]</InnerVar>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>long [heapId=td.getHeapConglomerateId()]</InnerVar>
+                <InnerVar>ColumnDescriptorList [cdl=td.getColumnDescriptorList()]</InnerVar>
+                <InnerVar>long[] [dropped=new long[cds.length - 1]]</InnerVar>
+                <InnerVar>int [numDropped=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dd;startWriting;[lcc]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;lockTableForDDL;[tc, heapId, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;dropAllColumnDescriptors;[tableId, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;dropAllTableAndColPermDescriptors;[tableId, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropAllConstraintDescriptors;[td, activation]</InnerMethodInvoke>
+                <InnerMethodInvoke>dm;invalidateFor;[td, DependencyManager.DROP_TABLE, lcc]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;adjustUDTDependencies;[lcc, dd, td, null, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;dropTableDescriptor;[td, sd, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;dropAllConglomerateDescriptors;[td, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>tc;dropConglomerate;[heapId]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropIdentitySequence</MethodName>
+            <MethodComment>/** 
+ * Drop the sequence generator backing an identity column 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DropSequenceConstantAction [dsca=new DropSequenceConstantAction(dataDictionary.getSystemSchemaDescriptor(),TableDescriptor.makeSequenceName(tableDescriptor.getUUID()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dsca;executeConstantAction;[activation]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropAllConstraintDescriptors</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConstraintDescriptor [cd]</InnerVar>
+                <InnerVar>ConstraintDescriptorList [cdl]</InnerVar>
+                <InnerVar>ConstraintDescriptor [fkcd]</InnerVar>
+                <InnerVar>ConstraintDescriptorList [fkcdl]</InnerVar>
+                <InnerVar>LanguageConnectionContext [lcc=activation.getLanguageConnectionContext()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>DependencyManager [dm=dd.getDependencyManager()]</InnerVar>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

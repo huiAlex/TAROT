@@ -1,0 +1,574 @@
+/**
+
+  A transaction has five states
+  
+   CLOSED - cannot be used
+   IDLE - no reads have been performed by the transaction.
+   ACTIVE - at least one read has been attempted by the transaction
+   UPDATE - at least one update has been attempted by the transaction
+   PREPARED - the transaction is ready to commit (FUTURE).
+  
+  Transaction identifiers are re-used for transactions that do not enter the
+  UPDATE state during their lifetime.
+
+	
+*/
+
+/**
+	  private static - 
+
+	  make sure these bits don't overwrite bits in Transaction.commit commitflag
+	*/
+
+/**
+     * Tells if lock requests should time out immediately if they cannot be
+     * granted without waiting.
+     */
+
+/**
+	*/
+
+/**
+	 * JIRA-606. As a part of this fix, it was required that
+	 * LogFactory.checkVersion method to be exposed for any possible Version 
+	 * checks in the Transaction processing module.  
+	 */
+
+/**
+		Return true if any transaction is currently blocked, even if not by
+		this transaction.
+
+	 */
+
+/** Log and apply a compensation operation.
+		Only need to write out the compensation op itself, the optional data has already
+		been written by the rollforward operation this is attempting to undo.
+
+				
+		@exception StandardException  Standard Derby exception policy
+	*/
+
+/** 
+		Add this to the xactFactory list of update transaction.
+	*/
+
+/** Remove this from the xactFactory list of update transaction. */
+
+/** Remove this from the xactFactory list of update transaction. */
+
+/**
+		Set the log instant for the first log record written by this transaction.
+	*/
+
+/**
+		Get the log instant for the first log record written by this transaction.
+	*/
+
+/**
+		Set the log instant for the last log record written by this transaction. 
+	*/
+
+/**
+		Get the log instant for the last log record written by this transaction. 
+	*/
+
+/**
+		Set my transaction identifier.
+	*/
+
+/**
+		The default value for LOCKS_ESCALATION_THRESHOLD
+		@exception StandardException  Standard Derby exception policy
+	 */
+
+/**
+		get the Global (external to raw store) transaction id that is unique
+		across all raw stores
+	*/
+
+/**
+     * Get the compatibility space of the transaction.
+     * 
+     * Returns an object that can be used with the lock manager to provide
+     * the compatibility space of a transaction.  2 transactions with the
+     * same compatibility space will not conflict in locks.  The usual case
+     * is that each transaction has it's own unique compatibility space.
+     * 
+     *
+	 * @return The compatibility space of the transaction.
+     **/
+
+/**
+     * Tells whether lock requests should time out immediately if they can't
+     * be granted without waiting. Only works if this object is the owner of
+     * the compatibility space used in the request.
+     *
+     * @return whether waiting for locks should time out immediately
+     */
+
+/**
+     * {@inheritDoc}
+     *
+     * 
+     *
+     * This only works if this transaction is the owner of the compatibility
+     * space used in the request. If this transaction has inherited the
+     * compatibility space from its parent, the call to this method has no
+     * effect (except in debug builds, where an error will be raised).
+     */
+
+/**
+		get the short (internal to raw store) transaction id that is unique
+		only for this raw store
+	*/
+
+/**
+		Get the transaction id without sanity check, this should only be called
+		by a cloned TransactionTableEntry 
+	 */
+
+/**
+     * Get my transaction context Id
+     */
+
+/**
+		Get the current default locking policy for all operations within this
+		transaction. The transaction is initially started with a default
+		locking policy equivalent to
+		
+			 newLockingPolicy(
+              LockingPolicy.MODE_RECORD, TransactionController.ISOLATION_SERIALIZABLE, true);
+		
+        This default can be changed by subsequent calls to 
+        setDefaultLockingPolicy(LockingPolicy policy).
+
+	    
+
+		@return The current default locking policy in this transaction.
+	*/
+
+/** @see Transaction#newLockingPolicy */
+
+/** @see Transaction#setDefaultLockingPolicy */
+
+/** 
+	  @exception StandardException  Standard Derby exception policy
+	*/
+
+/** 
+	  @exception StandardException  Standard Derby exception policy
+	*/
+
+/** 
+	  @exception StandardException  Standard Derby exception policy
+	  	*/
+
+/**
+     * Do work of commit that is common to xa_prepare and commit.
+     * 
+     * Do all the work necessary as part of a commit up to and including
+     * writing the commit log record.  This routine is used by both prepare
+     * and commit.  The work post commit is done by completeCommit().
+     * 
+     *
+     * @param commitflag various flavors of commit.
+     *
+	 * @exception  StandardException  Standard exception policy.
+	 *      **/
+
+/**
+     * Do work to complete a commit which is not just a prepare.
+     * 
+     * Releases locks, does post commit work, and moves the state of the
+     * transaction to IDLE.
+     * 
+     *
+     * @param commitflag various flavors of commit.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/** 
+	  @exception StandardException  Standard Derby exception policy
+	  	*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+     * During recovery re-prepare a transaction.
+     * 
+     * After redo() and undo(), this routine is called on all outstanding 
+     * in-doubt (prepared) transactions.  This routine re-acquires all 
+     * logical write locks for operations in the xact, and then modifies
+     * the transaction table entry to make the transaction look as if it
+     * had just been prepared following startup after recovery.
+     * 
+     * This routine is only called during Recovery.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+        If this transaction is not idle, abort it.  After this call close().
+
+		@exception StandardException Standard Derby error policy
+        Thrown if the transaction is not idle.
+
+		
+	*/
+
+/**
+		@exception StandardException Thrown if the transaction is not idle, the
+		transaction remains open.
+			*/
+
+/** 
+		Log the operation and do it.
+
+		If this transaction has not generated any log records prior to this,
+		then log a beginXact log record.
+
+		If the passed in operation is null, then do nothing (after logging the
+		beginXact if needed).
+
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+		Add to the list of post abort work that may be processed after this
+		transaction aborts.  
+
+		@param work the post commit work that is added
+	*/
+
+/**
+		Return a record handle that is initialized to the given page number and
+        record id.
+
+		@exception StandardException Standard Derby exception policy.
+
+		@param segmentId    segment where the RecordHandle belongs.
+		@param containerId  container where the RecordHandle belongs.
+		@param pageNumber   the page number of the RecordHandle.
+		@param recordId     the record id of the RecordHandle.
+
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+		Open a container that may already have been dropped.
+
+		@exception StandardException  Standard Derby exception policy
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+				@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Recreate a container during redo recovery.
+
+        Used only during redo recovery while processing log records which
+        are trying to create a container, and no valid container is found
+        in the database.
+
+		@exception StandardException  Standard Derby exception policy
+			 */
+
+/**
+				@exception StandardException Standard Derby error policy
+	*/
+
+/**
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/** 
+	    @exception StandardException  Standard Derby exception policy
+			*/
+
+/**
+		Get the Logger object used to write log records to the transaction log.
+	*/
+
+/**
+		Transform this identity to the one stored in transaction table entry.
+		Used by recovery only!
+	*/
+
+/**
+     * Assume complete identity of the given Transaction Table Entry.
+     * 
+     * Used by the final phase of the recovery to create new real transactions
+     * to take on the identity of in-doubt prepared transactions found during
+     * redo.  Need to assume the globalId.
+     *
+     * @param ent The original entry we are assuming the identity of.
+     *
+     **/
+
+/**
+		Move the transaction into the update state.
+		@exception StandardException problem setting a transaction id
+	*/
+
+/**
+     * Move the state of the transaction from UPDATE to PREPARE.
+     * 
+     * The state transition should only be from UPDATE to PREPARE.  Read-only
+     * transactions (IDLE and ACTIVE) will never be prepared, they will be
+     * commited when the prepare is requested.  Only Update transactions will
+     * be allowed to go to prepared state.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+	  If this is a user transaction (not an internal or nested top
+	  transaction), and this is not already taking care of post
+	  commit work, and not an XA transaction, then take care of hi prioirty 
+      work right now using this thread and this context manager.  
+      Otherwise, leave it to the post commit daemon.
+	  */
+
+/**
+		Does a save point exist in the stack with the given name.
+		Returns the position of the savepoint in the array
+	*/
+
+/**
+		Pop all savepoints upto the one with the given name and rollback
+		all changes made since this savepoint was pushed.
+		If release is true then this savepoint is popped as well,
+		otherwise it is left in the stack (at the top).
+
+		@return true if any work is rolled back, false if no work is rolled back
+		@exception StandardException Thrown if a error of severity less than TransactionException#SEVERITY
+		is encountered during the rollback of this savepoint.
+	*/
+
+/**
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+ 	 * see if this transaction is a user transaction.
+ 	 *
+ 	 * @return true if this transaction is a user transaction
+ 	 */
+
+/**
+ 	 * see if this transaction has ever done anything.
+ 	 *
+ 	 * MT - single thread through synchronizing this.  This method may be
+ 	 * called by other thread to test the state of this transaction.  That's
+ 	 * why we need to synchronize with all methods which enters or exits the
+	 * Idle state.
+	 *
+	 * Local method which read the state need not be synchronized because 
+ 	 * the other thread may look at the state but it may not change it.
+ 	 *
+ 	 * @return true if this transaction is not in idle or closed state
+ 	 */
+
+/**
+ 	 * see if this transaction is in PREPARED state.
+ 	 *
+ 	 * MT - single thread through synchronizing this.  This method may be
+ 	 * called by other thread to test the state of this transaction.
+	 *
+ 	 * @return true if this transaction is in PREPARED state.
+ 	 */
+
+/**
+		See if this transaction is in the idle state, called by other thread to
+		test the state of this transaction.  That's why we need to synchronzied
+		with all methods whcih enters or exits the idle state
+
+		@return true if it is idle, otherwise false
+	*/
+
+/**
+		see if this transaction is in a pristine state.
+
+		MT - called only by the same thread that owns the xact, no need to synchronize.
+
+		@return true if it hasn't done any updates, otherwise false
+	*/
+
+/**
+	 * put this into the beginXact log record to help recovery
+	 * if we needs to rolled back first, put that in
+	 */
+
+/**
+	 * put this into the endXact log record to help recovery, 
+	 * nothing to add
+	 */
+
+/**	
+		Set the transaction to issue pre complete work at postComplete
+		time, instead of preComplete time. This means that latches
+		and containers will be held open until after a commit or an abort.
+	*/
+
+/**
+     * Make the transaction block the online backup.
+     *
+     * @param wait if true, waits until the transaction
+     *             can block the backup.
+     * @return     true if the transaction  blocked the  
+     *             backup.  false otherwise.
+     * @exception StandardException if interrupted while waiting 
+     *            for the backup in progress to complete.
+     */
+
+/**
+	 * Unblock the backup, if it was blocked by some operation in 
+	 * this transaction. Unblocking is done at commit/abort of this 
+	 * transaction.
+	 */
+
+/**
+     * Check if the transaction is blocking the backup ?
+     * @return  true  if this transaction is 
+     *         blocking the backup, otherwise  false 
+     */
+
+/**
+     * Convert a local transaction to a global transaction.
+     * 
+     * Must only be called a previous local transaction was created and exists
+     * in the context.  Can only be called if the current transaction is in
+     * the idle state, and no current global id.  
+     * 
+     * Simply call setTransactionId() which takes care of error checking.
+     *
+     * @param format_id the format id part of the Xid - ie. Xid.getFormatId().
+     * @param global_id the global transaction identifier part of XID - ie.
+     *                  Xid.getGlobalTransactionId().
+     * @param branch_id The branch qualifier of the Xid - ie. 
+     *                  Xid.getBranchQaulifier()
+     * 	
+	 * @exception StandardException Standard exception policy.
+	 **/
+
+/**
+     * This method is called to commit the current XA global transaction.
+     * 
+     * RESOLVE - how do we map to the "right" XAExceptions.
+     * 
+     *
+     * @param onePhase If true, the resource manager should use a one-phase
+     *                 commit protocol to commit the work done on behalf of 
+     *                 current xid.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * This method is called to ask the resource manager to prepare for
+     * a transaction commit of the transaction specified in xid.
+     * 
+     *
+     * @return         A value indicating the resource manager's vote on the
+     *                 the outcome of the transaction.  The possible values
+     *                 are:  XA_RDONLY or XA_OK.  If the resource manager wants
+     *                 to roll back the transaction, it should do so by 
+     *                 throwing an appropriate XAException in the prepare
+     *                 method.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * rollback the current global transaction.
+     * 
+     * The given transaction is roll'ed back and it's history is not
+     * maintained in the transaction table or long term log.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Return the xid as a string.
+     * 
+     * The virtual lock table depends on this routine returning just the
+     * local transaction id as a string, even if it is a global transaction.
+     * Joins between the lock table and the transaction table will not work
+     * if this routine returns anything other than myId.toString().
+     * 
+     *
+	 * @return The xid as a string.
+     *
+     **/
+
+/**
+	 * Get string id of the transaction that would be when the Transaction
+	 * is IN active state.
+	 *
+	 * This transaction "name" will be the same id which is returned in
+	 * the TransactionInfo information if Tx is already in Active State.
+	 * If the Transaction is in IDLE state, Transaction ID is 
+	 * incremented when getActiveStateTxIdString() on raw transaction is called,
+	 * instead of the Tx ID being incremented when Transaction gets into
+	 * active state. The reason for incrementing the Tx ID earlier than when Tx
+	 * is actually goes into active state is some debug statement cases like 
+	 * log statement text. SQL statements are written to log before they are
+	 * actually executed; In such cases we would like to display the actual TX
+	 * ID on which locks are acquired when the statement is executed.
+	 * @return The a string which identifies the transaction.  
+	 */
+
+/**
+     * Get DataValueFactory.
+     * 
+     * Return a DataValueFactory that can be used to allocate objects.  Used
+     * to make calls to: 
+     *     DataValueFactory.getInstanceUsingFormatIdAndCollationType()
+     *
+	 * @return a booted data value factory.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**	
+		Is the transaction in rollforward recovery
+	*/
+
+/**	
+	 * Perform a checkpoint during rollforward recovery.
+     * 
+     *      */
+

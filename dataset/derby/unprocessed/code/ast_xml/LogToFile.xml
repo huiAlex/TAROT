@@ -1,0 +1,3193 @@
+<Class>
+    <Id>1205</Id>
+    <Package>org.apache.derby.impl.store.raw.log</Package>
+    <ClassName>LogToFile</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>LogFactory</SuperInterface>
+        <SuperInterface>ModuleControl</SuperInterface>
+        <SuperInterface>ModuleSupportable</SuperInterface>
+        <SuperInterface>Serviceable</SuperInterface>
+        <SuperInterface>java.security.PrivilegedExceptionAction</SuperInterface>
+        <SuperInterface>Object</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LogToFile  /** 
+ * This is an implementation of the log using a non-circular file system file. No support for incremental log backup or media recovery. Only crash recovery is supported.   &lt;P&gt; The 'log' is a stream of log records.  The 'log' is implemented as a series of numbered log files.  These numbered log files are logically continuous so a transaction can have log records that span multiple log files. A single log record cannot span more then one log file.  The log file number is monotonically increasing. &lt;P&gt; The log belongs to a log factory of a RawStore.  In the current implementation, each RawStore only has one log factory, so each RawStore only has one log (which composed of multiple log files). At any given time, a log factory only writes new log records to one log file, this log file is called the 'current log file'. &lt;P&gt; A log file is named log&lt;em&gt;logNumber&lt;/em&gt;.dat &lt;P&gt; Everytime a checkpoint is taken, a new log file is created and all subsequent log records will go to the new log file.  After a checkpoint is taken, old and useless log files will be deleted. &lt;P&gt; RawStore exposes a checkpoint method which clients can call, or a checkpoint is taken automatically by the RawStore when &lt;OL&gt; &lt;LI&gt; the log file grows beyond a certain size (configurable, default 100K bytes) &lt;LI&gt; RawStore is shutdown and a checkpoint hasn't been done "for a while" &lt;LI&gt; RawStore is recovered and a checkpoint hasn't been done "for a while" &lt;/OL&gt; &lt;P&gt; This LogFactory is responsible for the formats of 2 kinds of file: the log file and the log control file.  And it is responsible for the format of the log record wrapper. &lt;P&gt; &lt;PRE&gt; Format of log control file 
+ * @derby.formatId	FILE_STREAM_LOG_FILE
+ * @derby.purpose	The log control file contains information about which log filesare present and where the last checkpoint log record is located.
+ * @derby.upgrade	
+ * @derby.diskLayout int format id int obsolete log file version long the log instant (LogCounter) of the last completed checkpoint (logfile counter, position) int Derby major version int Derby minor version int subversion revision/build number byte Flags (beta flag (0 or 1), test durability flag (0 or 1)) byte spare (0) byte spare (0) byte spare (0) long spare (value set to 0) long checksum for control data written
+ * @derby.endFormat &lt;/PRE&gt;	 &lt;HR WIDTH="100%"&gt; &lt;PRE&gt; Format of the log file
+ * @derby.formatId	FILE_STREAM_LOG_FILE
+ * @derby.purpose	The log file contains log record which record all the changesto the database.  The complete transaction log is composed of a series of log files.
+ * @derby.upgrade
+ * @derby.diskLayout int format id - 	the format Id of this log file int obsolete log file version - not used long log file number - this number orders the log files in a series to form the complete transaction log long prevLogRecord - log instant of the previous log record, in the previous log file.  [log record wrapper]* one or more log records with wrapper int endMarker - value of zero.  The beginning of a log record wrapper is the length of the log record, therefore it is never zero [int fuzzy end]* zero or more int's of value 0, in case this log file has been recovered and any incomplete log record set to zero.
+ * @derby.endFormat &lt;/PRE&gt;	 &lt;HR WIDTH="100%"&gt; &lt;PRE&gt; Format of the log record wrapper
+ * @derby.formatId none.  The format is implied by the FILE_STREAM_LOG_FILE
+ * @derby.purpose	The log record wrapper provides information for the log scan.
+ * @derby.upgrade
+ * @derby.diskLayout length(int) length of the log record (for forward scan) instant(long) LogInstant of the log record logRecord(byte[length]) byte array that is written by the FileLogger length(int) length of the log record (for backward scan)
+ * @derby.endFormat &lt;/PRE&gt; &lt;P&gt;Multithreading considerations:&lt;BR&gt; Log Factory must be MT-safe. &lt;P&gt; Class is final as it has methods with privilege blocks and implements PrivilegedExceptionAction.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>INT_LENGTH</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fid</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_FILE_HEADER_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_FILE_HEADER_PREVIOUS_LOG_INSTANT_OFFSET</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_RECORD_OVERHEAD</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DBG_FLAG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DUMP_LOG_ONLY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DUMP_LOG_FROM_LOG_FILE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_SYNC_STATISTICS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OBSOLETE_LOG_VERSION_NUMBER</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_LOG_SWITCH_INTERVAL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_SWITCH_INTERVAL_MIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_SWITCH_INTERVAL_MAX</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CHECKPOINT_INTERVAL_MIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CHECKPOINT_INTERVAL_MAX</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_CHECKPOINT_INTERVAL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_LOG_BUFFER_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_BUFFER_SIZE_MIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_BUFFER_SIZE_MAX</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logBufferSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IS_BETA_FLAG</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IS_DURABILITY_TESTMODE_NO_SYNC_FLAG</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wasDBInDurabilityTestModeNoSync</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_LOG_ARCHIVE_DIRECTORY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logSwitchInterval</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>checkpointInterval</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dataDirectory</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logStorageFactory</FieldName>
+            <FieldType>WritableStorageFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logBeingFlushed</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logOut</FieldName>
+            <FieldType>LogAccessFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>firstLog</FieldName>
+            <FieldType>StorageRandomAccessFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>endPosition</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastFlush</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bootTimeLogFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>firstLogFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxLogFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentCheckpoint</FieldName>
+            <FieldType>CheckpointOperation</FieldType>
+        </Field>
+        <Field>
+            <FieldName>checkpointInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>checkpointDaemon</FieldName>
+            <FieldType>DaemonService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myClientNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>checkpointDaemonCalled</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logWrittenFromLastCheckPoint</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rawStoreFactory</FieldName>
+            <FieldType>RawStoreFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dataFactory</FieldName>
+            <FieldType>DataFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ReadOnlyDB</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>masterFactory</FieldName>
+            <FieldType>MasterFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inReplicationMasterMode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inReplicationSlaveMode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>replicationSlaveException</FieldName>
+            <FieldType>StandardException</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inReplicationSlavePreMode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>slaveRecoveryMonitor</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>allowedToReadFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keepAllLogs</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>databaseEncrypted</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>recoveryNeeded</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inCheckpoint</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inRedo</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inLogSwitch</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stopped</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logDevice</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logNotSynced</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logArchived</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logSwitchRequired</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>test_logWritten</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>test_numRecordToFillLog</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mon_flushCalls</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mon_syncCalls</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mon_numLogFlushWaits</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mon_LogSyncStatistics</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mon_numBytesToLog</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>corrupt</FieldName>
+            <FieldType>StandardException</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isFrozen</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jbmsVersion</FieldName>
+            <FieldType>ProductVersionHolder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>onDiskMajorVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>onDiskMinorVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>onDiskBeta</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>checksum</FieldName>
+            <FieldType>CRC32</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isWriteSynced</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jvmSyncErrorChecked</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logFileToBackup</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>backupInProgress</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_LOG_SWITCH_LOG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_LOG_INCOMPLETE_LOG_WRITE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_LOG_PARTIAL_LOG_WRITE_NUM_BYTES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_LOG_FULL</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_SWITCH_LOG_FAIL1</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_SWITCH_LOG_FAIL2</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_RECORD_TO_FILL_LOG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEST_MAX_LOGFILE_NUMBER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>action</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>activeFile</FieldName>
+            <FieldType>StorageFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>toFile</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>activePerms</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Return my format identifier.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LogToFile</MethodName>
+            <MethodComment>/** 
+ * MT- not needed for constructor
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markCorrupt</MethodName>
+            <MethodComment>/** 
+ * Once the log factory is marked as corrupt then the raw store will shut down.
+ */
+</MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>originalError</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firsttime=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkCorrupt</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogger</MethodName>
+            <MethodComment>/** 
+ * MT- not needed
+ */
+</MethodComment>
+            <ReturnType>Logger</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRawStoreFactory</MethodName>
+            <MethodComment>/** 
+ * Make log factory aware of which raw store factory it belongs to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rsf</ParamName>
+                    <ParamType>RawStoreFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recover</MethodName>
+            <MethodComment>/** 
+ * Recover the rawStore to a consistent state using the log. &lt;P&gt; In this implementation, the log is a stream of log records stored in one or more flat files.  Recovery is done in 2 passes: redo and undo. &lt;BR&gt; &lt;B&gt;Redo pass&lt;/B&gt; &lt;BR&gt; In the redo pass, reconstruct the state of the rawstore by repeating exactly what happened before as recorded in the log. &lt;BR&gt;&lt;B&gt;Undo pass&lt;/B&gt; &lt;BR&gt; In the undo pass, all incomplete transactions are rolled back in the order from the most recently started to the oldest. &lt;P&gt;MT - synchronization provided by caller - RawStore boot. This method is guaranteed to be the only method being called and can assume single thread access on all fields.
+ * @see Loggable#needsRedo
+ * @see FileLogger#redo
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>df</ParamName>
+                    <ParamType>DataFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tf</ParamName>
+                    <ParamType>TransactionFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkpoint</MethodName>
+            <MethodComment>/** 
+ * Checkpoint the rawStore. &lt;P&gt; MT- Only one checkpoint is to be taking place at any given time. &lt;P&gt; The steps of a checkpoint are &lt;OL&gt; &lt;LI&gt; switch to a new log file if possible &lt;PRE&gt; freeze the log (for the transition to a new log file) flush current log file create and flush the new log file (with file number 1 higher than the previous log file). The new log file becomes the current log file. unfreeze the log &lt;/PRE&gt; &lt;LI&gt; start checkpoint transaction &lt;LI&gt; gather interesting information about the rawStore: the current log instant (redoLWM) the earliest active transaction begin tran log record  instant (undoLWM), all the truncation LWM set by clients  of raw store (replication) &lt;LI&gt; clean the buffer cache  &lt;LI&gt; log the next checkpoint log record, which contains  (repPoint, undoLWM, redoLWM) and commit checkpoint transaction. &lt;LI&gt; synchronously write the control file containing the next checkpoint log record log instant &lt;LI&gt; the new checkpoint becomes the current checkpoint. Somewhere near the beginning of each log file should be a checkpoint log record (not guarenteed to be there) &lt;LI&gt; see if the log can be truncated &lt;P&gt; The earliest useful log record is determined by the repPoint and the  undoLWM, whichever is earlier.  &lt;P&gt; Every log file whose log file number is smaller than the earliest  useful log record's log file number can be deleted. &lt;P&gt;&lt;PRE&gt; Transactions can be at the following states w/r to a checkpoint - consider the log as a continous stream and not as series of log  files for the sake of clarity.   |(BT)-------(ET)| marks the begin and end of a transaction. .                          checkpoint started .       |__undoLWM          | .       V                   |___redoLWM .                           |___TruncationLWM .                           | .                           V 1 |-----------------| 2       |--------------------------------| 3           |-------| 4               |--------------------------------------(end of log) 5                                       |-^-| .                                   Checkpoint Log Record ---A---&amp;gt;|&amp;lt;-------B---------&amp;gt;|&amp;lt;-------------C----------- &lt;/PRE&gt; &lt;P&gt; There are only 3 periods of interest : &lt;BR&gt; A) before undoLWM,  B) between undo and redo LWM, C) after redoLWM. &lt;P&gt; Transaction 1 started in A and terminates in B.&lt;BR&gt; During redo, we should only see log records and endXact from this transaction in the first phase (between undoLWM and redoLWM).  No beginXact log record for this transaction will be seen. &lt;P&gt; Transaction 2 started in B (right on the undoLWM) and terminated in C.&lt;BR&gt; Any transaction that terminates in C must have a beginXact at or  after undoLWM.  In other words, no transaction can span A, B and C. During redo, we will see beginXact, other log records and endXact  for this transaction. &lt;P&gt; Transaction 3 started in B and ended in B.&lt;BR&gt; During redo, we will see beginXact, other log records and endXact  for this transaction. &lt;P&gt; Transaction 4 begins in B and never ends.&lt;BR&gt; During redo, we will see beginXact, other log records. In undo, this loser transaction will be rolled back. &lt;P&gt; Transaction 5 is the transaction taking the checkpoint.&lt;BR&gt; The checkpoint action started way back in time but the checkpoint log record is only written after the buffer cache has been flushed. &lt;P&gt; Note that if any time elapse between taking the undoLWM and the redoLWM, then it will create a 4th period of interest.
+ * @exception StandardException - encounter exception while doing checkpoint.
+ * @param rsf          The RawStoreFactory to use to do the checkpoint.
+ * @param df           The DataFactory to use to do the checkpoint. 
+ * @param tf           The TransactionFactory to use to do the checkpoint.
+ * @param wait         If an existing checkpoint is in progress, then ifwait=true then this routine will wait for the  checkpoint to complete and the do another checkpoint and wait for it to finish before returning.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rsf</ParamName>
+                    <ParamType>RawStoreFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>df</ParamName>
+                    <ParamType>DataFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tf</ParamName>
+                    <ParamType>TransactionFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [done=checkpointWithTran(null,rsf,df,tf,wait)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkpointWithTran</MethodName>
+            <MethodComment>/** 
+ * checkpoint with pre-start transaction
+ * @param rsf          The RawStoreFactory to use to do the checkpoint.
+ * @param df           The DataFactory to use to do the checkpoint. 
+ * @param tf           The TransactionFactory to use to do the checkpoint.
+ * @param wait         If an existing checkpoint is in progress, then ifwait=true then this routine will wait for the  checkpoint to complete and the do another checkpoint and wait for it to finish before returning.
+ * @exception StandardException Derby Standard Error Policy 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cptran</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rsf</ParamName>
+                    <ParamType>RawStoreFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>df</ParamName>
+                    <ParamType>DataFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tf</ParamName>
+                    <ParamType>TransactionFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogInstant [redoLWM]</InnerVar>
+                <InnerVar>long [approxLogLength]</InnerVar>
+                <InnerVar>boolean [proceed=true]</InnerVar>
+                <InnerVar>boolean [needCPTran=(cptran == null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flush</MethodName>
+            <MethodComment>/** 
+ * Flush all unwritten log record up to the log instance indicated to disk and sync. Also check to see if database is frozen or corrupt. &lt;P&gt;MT - not needed, wrapper method
+ * @param where flush log up to here
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>where</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [fileNumber]</InnerVar>
+                <InnerVar>long [wherePosition]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;flush;[fileNumber, wherePosition]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushAll</MethodName>
+            <MethodComment>/** 
+ * Flush all unwritten log record to disk and sync. Also check to see if database is frozen or corrupt. &lt;P&gt;MT - not needed, wrapper method
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [fnum]</InnerVar>
+                <InnerVar>long [whereTo]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;flush;[fnum, whereTo]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyLogFormat</MethodName>
+            <MethodComment>/** 
+ * Verify that we the log file is of the right format and of the right version and log file number. &lt;P&gt;MT - not needed, no global variables used
+ * @param logFileName the name of the log file
+ * @param number the log file number
+ * @return true if the log file is of the current version and of thecorrect format
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logFileName</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>number</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyLogFormat</MethodName>
+            <MethodComment>/** 
+ * Verify that we the log file is of the right format and of the right version and log file number.  The log file position is set to the beginning. &lt;P&gt;MT - MT-unsafe, caller must synchronize
+ * @param log the log file
+ * @param number the log file number
+ * @return true if the log file is of the current version and of thecorrect format
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>StorageRandomAccessFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>number</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initLogFile</MethodName>
+            <MethodComment>/** 
+ * Initialize the log to the correct format with the given version and log file number.  The new log file must be empty.  After initializing, the file is synchronously written to disk. &lt;P&gt;MT - synchornization provided by caller
+ * @param newlog the new log file to be initialized
+ * @param number the log file number
+ * @param prevLogRecordEndInstant the end position of the  previous log record
+ * @return true if the log file is empty, else false.
+ * @exception IOException if new log file cannot be accessed or initialized
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newlog</ParamName>
+                    <ParamType>StorageRandomAccessFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>number</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prevLogRecordEndInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newlog;seek;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>newlog;writeInt;[fid]</InnerMethodInvoke>
+                <InnerMethodInvoke>newlog;writeInt;[OBSOLETE_LOG_VERSION_NUMBER]</InnerMethodInvoke>
+                <InnerMethodInvoke>newlog;writeLong;[number]</InnerMethodInvoke>
+                <InnerMethodInvoke>newlog;writeLong;[prevLogRecordEndInstant]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;syncFile;[newlog]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>switchLogFile</MethodName>
+            <MethodComment>/** 
+ * Switch to the next log file if possible. &lt;P&gt;MT - log factory is single threaded thru a log file switch, the log is frozen for the duration of the switch
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [switchedOver=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushBuffer</MethodName>
+            <MethodComment>/** 
+ * Flush all unwritten log record up to the log instance indicated to disk without syncing. &lt;P&gt;MT - not needed, wrapper method
+ * @param wherePosition flush log up to here
+ * @exception IOException Failed to flush to the log
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wherePosition</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>truncateLog</MethodName>
+            <MethodComment>/** 
+ * Get rid of old and unnecessary log files &lt;P&gt; MT- only one truncate log is allowed to be taking place at any given time.  Synchronized on this.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>checkpoint</ParamName>
+                    <ParamType>CheckpointOperation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [firstLogNeeded]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;truncateLog;[firstLogNeeded]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>truncateLog</MethodName>
+            <MethodComment>/** 
+ * Get rid of old and unnecessary log files
+ * @param firstLogNeeded The log file number of the oldest log fileneeded for recovery.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>firstLogNeeded</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [oldFirstLog]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstLogNeeded</MethodName>
+            <MethodComment>/** 
+ * Return the "oldest" log file still needed by recovery.  &lt;p&gt; Returns the log file that contains the undoLWM, ie. the oldest log record of all uncommitted transactions in the given checkpoint. If no checkpoint is given then returns -1, indicating all log records may be necessary.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>checkpoint</ParamName>
+                    <ParamType>CheckpointOperation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [firstLogNeeded]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeControlFile</MethodName>
+            <MethodComment>/** 
+ * Carefully write out this value to the control file. We do safe write of this data by writing the data  into two files every time we write the control data. we write checksum at the end of the file, so if by chance system crashes while writing into the file, using the checksum we find that the control file is hosed then we  use the mirror file, which will have the control data written at last check point. see comment at beginning of file for log control file format. &lt;P&gt; MT- synchronized by caller
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logControlFileName</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageRandomAccessFile [logControlFile=null]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [baos=new ByteArrayOutputStream(64)]</InnerVar>
+                <InnerVar>DataOutputStream [daos=new DataOutputStream(baos)]</InnerVar>
+                <InnerVar>byte [flags=0]</InnerVar>
+                <InnerVar>long [spare=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>daos;writeInt;[fid]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeInt;[OBSOLETE_LOG_VERSION_NUMBER]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeLong;[value]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeInt;[onDiskMajorVersion]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeInt;[onDiskMinorVersion]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeInt;[jbmsVersion.getBuildNumberAsInt()]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeByte;[flags]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeByte;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeByte;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeByte;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeLong;[spare]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;flush;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>checksum;reset;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>checksum;update;[baos.toByteArray(), 0, baos.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;writeLong;[checksum.getValue()]</InnerMethodInvoke>
+                <InnerMethodInvoke>daos;flush;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readControlFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logControlFileName</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageRandomAccessFile [logControlFile=null]</InnerVar>
+                <InnerVar>ByteArrayInputStream [bais=null]</InnerVar>
+                <InnerVar>DataInputStream [dais=null]</InnerVar>
+                <InnerVar>boolean [upgradeNeeded=false]</InnerVar>
+                <InnerVar>long [value=LogCounter.INVALID_LOG_INSTANT]</InnerVar>
+                <InnerVar>long [onDiskChecksum=0]</InnerVar>
+                <InnerVar>long [controlFilelength=logControlFile.length()]</InnerVar>
+                <InnerVar>byte [barray[]=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createLogDirectory</MethodName>
+            <MethodComment>/** 
+ * Create the directory where transaction log should go.
+ * @exception StandardException Standard Error Policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StorageFile [logDir=logStorageFactory.newStorageFile(LogFactory.LOG_DIRECTORY_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDataWarningFile</MethodName>
+            <MethodComment>/** 
+ * Create readme file in log directory warning users against touching any files in the directory
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StorageFile [fileReadMe=logStorageFactory.newStorageFile(LogFactory.LOG_DIRECTORY_NAME,PersistentService.DB_README_FILE_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogDirectory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StorageFile [logDir=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCanonicalLogPath</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getControlFileName</MethodName>
+            <MethodComment>/** 
+ * Return the control file name  &lt;P&gt; MT- read only
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMirrorControlFileName</MethodName>
+            <MethodComment>/** 
+ * Return the mirror control file name  &lt;P&gt; MT- read only
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFileName</MethodName>
+            <MethodComment>/** 
+ * Given a log file number, return its file name  &lt;P&gt; MT- read only
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filenumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findCheckpoint</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CheckpointOperation</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>checkpointInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logger</ParamName>
+                    <ParamType>FileLogger</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StreamLogScan [scan=(StreamLogScan)openForwardsScan(checkpointInstant,(LogInstant)null)]</InnerVar>
+                <InnerVar>Loggable [lop=logger.readLogRecord(scan,100)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>scan;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openBackwardsScan</MethodName>
+            <MethodComment>/** 
+ * Scan backward from start position. &lt;P&gt; MT- read only
+ * @exception IOException cannot access the log
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>LogScan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startAt</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;flushBuffer;[LogCounter.getLogFileNumber(startAt), LogCounter.getLogFilePosition(startAt)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openBackwardsScan</MethodName>
+            <MethodComment>/** 
+ * Scan backward from end of log. &lt;P&gt; MT- read only
+ * @exception IOException cannot access the log
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>LogScan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [startAt]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openFlushedScan</MethodName>
+            <MethodComment>/** 
+ * @see LogFactory#openFlushedScan
+ * @exception StandardException Ooops.
+ */
+</MethodComment>
+            <ReturnType>ScanHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>DatabaseInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupsIWant</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openForwardsScan</MethodName>
+            <MethodComment>/** 
+ * Scan Forward from start position. &lt;P&gt; MT- read only
+ * @param startAt - if startAt == INVALID_LOG_INSTANT,start from the beginning of the log. Otherwise, start scan from startAt.
+ * @param stopAt - if not null, stop at this log instant (inclusive).Otherwise, stop at the end of the log
+ * @exception IOException cannot access the log
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>LogScan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startAt</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFileAtBeginning</MethodName>
+            <MethodComment>/** 
+ * Open a log file and position the file at the beginning. Used by scan to switch to the next log file &lt;P&gt; MT- read only &lt;/p&gt; &lt;p&gt; When the database is in slave replication mode only: Assumes that only recover() will call this method after initializeReplicationSlaveRole() has been called, and until slave replication has ended. If this changes, the current implementation will fail.&lt;/p&gt;
+ * @exception StandardException Standard Derby error policy
+ * @exception IOException cannot access the log at the new position.
+ */
+</MethodComment>
+            <ReturnType>StorageRandomAccessFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filenumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [instant=LogCounter.makeLogInstantAsLong(filenumber,LOG_FILE_HEADER_SIZE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFileAtPosition</MethodName>
+            <MethodComment>/** 
+ * Get a read-only handle to the log file positioned at the stated position &lt;P&gt; MT- read only
+ * @return null if file does not exist or of the wrong format
+ * @exception IOException cannot access the log at the new position.
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>StorageRandomAccessFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [filenum=LogCounter.getLogFileNumber(logInstant)]</InnerVar>
+                <InnerVar>long [filepos=LogCounter.getLogFilePosition(logInstant)]</InnerVar>
+                <InnerVar>StorageFile [fileName=getLogFileName(filenum)]</InnerVar>
+                <InnerVar>StorageRandomAccessFile [log=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canSupport</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [runtimeLogAttributes=startParams.getProperty(LogFactory.RUNTIME_ATTRIBUTES)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>boot</MethodName>
+            <MethodComment>/** 
+ * Boot up the log factory. &lt;P&gt; MT- caller provide synchronization
+ * @exception StandardException log factory cannot start up
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [mode=startParams.getProperty(SlaveFactory.REPLICATION_MODE)]</InnerVar>
+                <InnerVar>String [logArchiveMode=startParams.getProperty(Property.LOG_ARCHIVE_MODE)]</InnerVar>
+                <InnerVar>boolean [createNewLog=create]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getLogFactoryProperties;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogStorageFactory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment>/** 
+ * Stop the log factory &lt;P&gt; MT- caller provide synchronization (RESOLVE: this should be called AFTER dataFactory and transFactory are stopped)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deleteObsoleteLogfiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StorageFile [logDir]</InnerVar>
+                <InnerVar>long [firstLogNeeded=getFirstLogNeeded(currentCheckpoint)]</InnerVar>
+                <InnerVar>String[] [logfiles=privList(logDir)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceASAP</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceImmediately</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFactoryProperties</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>set</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [lsInterval]</InnerVar>
+                <InnerVar>String [cpInterval]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>performWork</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AccessFactory [af=(AccessFactory)getServiceModule(this,AccessFactory.MODULE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendLogRecord</MethodName>
+            <MethodComment>/** 
+ * Append length bytes of data to the log prepended by a long log instant and followed by 4 bytes of length information. &lt;P&gt; This method is synchronized to ensure log records are added sequentially to the end of the log. &lt;P&gt;MT- single threaded through this log factory.  Log records are appended one at a time.
+ * @exception StandardException Log Full.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalData</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalDataOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalDataLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [instant]</InnerVar>
+                <InnerVar>boolean [testIncompleteLogWrite=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>currentInstant</MethodName>
+            <MethodComment>/** 
+ * Get the current log instant - this is the log instant of the Next log record to be written out &lt;P&gt; MT - This method is synchronized to ensure that it always points to the end of a log record, not the middle of one. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>endPosition</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFileNumber</MethodName>
+            <MethodComment>/** 
+ * Return the current log file number. &lt;P&gt; MT - this method is synchronized so that it is not in the middle of being changed by swithLogFile
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>firstLogInstant</MethodName>
+            <MethodComment>/** 
+ * Get the first valid log instant - this is the beginning of the first log file &lt;P&gt;MT- synchronized on this
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flush</MethodName>
+            <MethodComment>/** 
+ * Flush the log such that the log record written with the instant  wherePosition is guaranteed to be on disk. &lt;P&gt;MT - only one flush is allowed to be taking place at any given time  (RESOLVE: right now it single thread thru the log factory while the log is frozen) 
+ * @exception StandardException cannot sync log file
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wherePosition</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [potentialLastFlush=0]</InnerVar>
+                <InnerVar>boolean [syncSuceed=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>syncFile</MethodName>
+            <MethodComment>/** 
+ * Utility routine to call sync() on the input file descriptor. &lt;p&gt; 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>raf</ParamName>
+                    <ParamType>StorageRandomAccessFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openForwardsFlushedScan</MethodName>
+            <MethodComment>/** 
+ * Open a forward scan of the transaction log. &lt;P&gt; MT- read only
+ * @exception StandardException  Standard Derby exception policy
+ */
+</MethodComment>
+            <ReturnType>LogScan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCorrupt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openForwardsScan</MethodName>
+            <MethodComment>/** 
+ * Get a forwards scan
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>LogScan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>databaseEncrypted</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDatabaseEncrypted</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc} 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>isEncrypted</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flushLog</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNewLogFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;switchLogFile;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCheckpointInLastLogFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [logFileNumberAfterCheckpoint=LogCounter.getLogFileNumber(checkpointInstant) + 1]</InnerVar>
+                <InnerVar>StorageFile [logFileAfterCheckpoint=getLogFileName(logFileNumberAfterCheckpoint)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deleteLogFileAfterCheckpointLogFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [logFileNumberAfterCheckpoint=LogCounter.getLogFileNumber(checkpointInstant) + 1]</InnerVar>
+                <InnerVar>StorageFile [logFileAfterCheckpoint=getLogFileName(logFileNumberAfterCheckpoint)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encrypt</MethodName>
+            <MethodComment>/** 
+ * @see RawStoreFactory#encrypt
+ * @exception StandardException Standard Derby Error Policy
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cleartext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ciphertext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decrypt</MethodName>
+            <MethodComment>/** 
+ * @see RawStoreFactory#decrypt
+ * @exception StandardException Standard Derby Error Policy
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ciphertext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cleartext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEncryptionBlockSize</MethodName>
+            <MethodComment>/** 
+ * return the encryption block size used during encrypted db creation
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEncryptedDataLength</MethodName>
+            <MethodComment>/** 
+ * returns the length that will make the data to be multiple of encryption block size based on the given length. Block cipher algorithms like DES  and Blowfish ..etc  require their input to be an exact multiple of the block size.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstUnflushedInstant</MethodName>
+            <MethodComment>/** 
+ * Get the instant of the first record which was not flushed. &lt;P&gt;This only works after running recovery the first time. &lt;P&gt;MT - RESOLVE:
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstUnflushedInstantAsLong</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>freezePersistentStore</MethodName>
+            <MethodComment>/** 
+ * Backup restore - stop sending log record to the log stream
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unfreezePersistentStore</MethodName>
+            <MethodComment>/** 
+ * Backup restore - start sending log record to the log stream
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logArchived</MethodName>
+            <MethodComment>/** 
+ * Backup restore - is the log being archived to some directory? if log archive mode is enabled return true else false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkVersion</MethodName>
+            <MethodComment>/** 
+ * Check to see if a database has been upgraded to the required level in order to use a store feature.
+ * @param requiredMajorVersion  required database Engine major version
+ * @param requiredMinorVersion  required database Engine minor version
+ * @return True if the database has been upgraded to the required level, false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requiredMajorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>requiredMinorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkVersion</MethodName>
+            <MethodComment>/** 
+ * Check to see if a database has been upgraded to the required level in order to use a store feature.
+ * @param requiredMajorVersion  required database Engine major version
+ * @param requiredMinorVersion  required database Engine minor version
+ * @param feature Non-null to throw an exception, null to return the state of the version match.
+ * @return &lt;code&gt; true &lt;/code&gt; if the database has been upgraded to the required level, &lt;code&gt; false &lt;/code&gt; otherwise.
+ * @exception StandardException if the database is not at the require version  when &lt;code&gt;feature&lt;/code&gt; feature is  not &lt;code&gt; null &lt;/code&gt;. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requiredMajorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>requiredMinorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>feature</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isRequiredVersion=checkVersion(requiredMajorVersion,requiredMinorVersion)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logErrMsg</MethodName>
+            <MethodComment>/** 
+ * Print error message to user about the log MT - not needed, informational only
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;logErrMsgForDurabilityTestModeNoSync;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logTextMessage;[MessageId.LOG_BEGIN_ERROR]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logMessage;[msg]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logTextMessage;[MessageId.LOG_END_ERROR]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logErrMsg</MethodName>
+            <MethodComment>/** 
+ * Print error message to user about the log MT - not needed, informational only
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;logErrMsgForDurabilityTestModeNoSync;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logErrMsgForDurabilityTestModeNoSync</MethodName>
+            <MethodComment>/** 
+ * In case of boot errors, and if database is either booted with derby.system.durability=test or was previously at any time booted in this mode, mention in the error message that the error is probably  because the derby.system.durability was set.  Dont want to waste time to resolve issues in such cases &lt;p&gt; MT - not needed, informational only
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printErrorStack</MethodName>
+            <MethodComment>/** 
+ * print stack trace from the Throwable including its nested exceptions 
+ * @param t trace starts from this error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ErrorStringBuilder [esb=new ErrorStringBuilder(Monitor.getStream().getHeader())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>esb;stackTrace;[t]</InnerMethodInvoke>
+                <InnerMethodInvoke>Monitor;logMessage;[esb.get().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>esb;reset;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logtest_appendPartialLogRecord</MethodName>
+            <MethodComment>/** 
+ * Writes out a partial log record - takes the appendLogRecord. Need to shutdown the database before another log record gets written, or the database is not recoverable.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalData</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalDataOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optionalDataLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testLogFull</MethodName>
+            <MethodComment>/** 
+ * Simulate a log full condition if TEST_LOG_FULL is set to true, then the property TEST_RECORD_TO_FILL_LOG indicates the number of times this function is call before an IOException simulating a log full condition is raised. If TEST_RECORD_TO_FILL_LOG is not set, it defaults to 100 log record
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFileToSimulateCorruption</MethodName>
+            <MethodComment>/** 
+ * Get the log file to Simulate a log corruption  FOR UNIT TESTING USAGE ONLY 
+ */
+</MethodComment>
+            <ReturnType>StorageRandomAccessFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filenum</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inReplicationMasterMode</MethodName>
+            <MethodComment>/** 
+ * Used to determine if the replication master mode has been started, and the logging for unlogged operations needs to be enabled.
+ * @return true If the master replication mode is turned on and the unlogged operations need to be logged. false If the master replication mode is turned off and the  unlogged operations need not be logged.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>enableLogArchiveMode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>disableLogArchiveMode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>AccessFactory [af=(AccessFactory)getServiceModule(this,AccessFactory.MODULE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deleteOnlineArchivedLogFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;deleteObsoleteLogfiles;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startLogBackup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>toDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;backupLogFiles;[toDir, getLogFileNumber() - 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backupLogFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>toDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastLogFileToBackup</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>endLogBackup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>toDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [lastLogFileToBackup]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;flush;[logFileNumber, endPosition]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;backupLogFiles;[toDir, lastLogFileToBackup]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>abortLogBackup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inRFR</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkpointInRFR</MethodName>
+            <MethodComment>/** 
+ * redo a checkpoint during rollforward recovery
+ * @throws org.apache.derby.iapi.error.StandardException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cinstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>redoLWM</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoLWM</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>df</ParamName>
+                    <ParamType>DataFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>df;checkpoint;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>df;removeDroppedContainerFileStubs;[new LogCounter(redoLWM)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startReplicationMasterRole</MethodName>
+            <MethodComment>/** 
+ * Make this LogFactory pass log records to the MasterFactory every time a log record is appended to the log on disk, and notify the MasterFactory when a log disk flush has taken place.
+ * @param masterFactory The MasterFactory service responsible forcontrolling the master side replication behaviour.
+ * @exception StandardException Standard Derby exception policy,thrown on replication startup error. Will only be thrown if replication is attempted started on a readonly database, i.e, never thrown here.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>masterFactory</ParamName>
+                    <ParamType>MasterFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopReplicationMasterRole</MethodName>
+            <MethodComment>/** 
+ * Stop this LogFactory from passing log records to the MasterFactory and from notifying the MasterFactory when a log disk flush has taken place.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopReplicationSlaveRole</MethodName>
+            <MethodComment>/** 
+ * Stop the slave functionality for this LogFactory. Calling this method causes the thread currently doing recovery to stop the recovery process and throw a StandardException with SQLState SHUTDOWN_DATABASE. This should only be done when the database will be shutdown.
+ * @throws StandardException Standard Derby exception policy
+ * @see org.apache.derby.impl.db.SlaveDatabase
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkForReplication</MethodName>
+            <MethodComment>/** 
+ * Used by LogAccessFile to check if it should take the replication master role, and thereby send log records to the MasterFactory.
+ * @param log The LogAccessFile that will take the replicationmaster role iff this database is master.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>LogAccessFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeReplicationSlaveRole</MethodName>
+            <MethodComment>/** 
+ * Initializes logOut so that log received from the replication master can be appended to the log file. Normally, logOut (the file log records are appended to) is set up as part of the recovery process. When the database is booted in replication slave mode, however, recovery will not get to the point where logOut is initialized until this database is no longer in slave mode. Since logOut is needed to append log records received from the master, logOut needs to be set up for replication slave mode. This method finds the last log record in the log file with the highest number. logOut is set up so that log records will be appended to the end of that file, and the endPosition and lastFlush variables are set to point to the end of the same file. All this is normally done as part of recovery. After the first log file switch resulting from applying log received from the master, recovery will be allowed to read up to, but not including, the current log file which is the file numbered logFileNumber. Note that this method must not be called until LogToFile#boot() has completed. Currently, this is ensured because RawStore#boot starts the SlaveFactory (in turn calling this method) after LogFactory.boot() has completed. Race conditions for logFileNumber may occur if this is changed.
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>failoverSlave</MethodName>
+            <MethodComment>/** 
+ * Used to make the slave stop appending log records, complete recovery  and boot the database.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreLogs</MethodName>
+            <MethodComment>/** 
+ * This function restores logs based on the  following attributes are specified on connection URL: Attribute.CREATE_FROM (Create database from backup if it does not exist) Attribute.RESTORE_FROM (Delete the whole database if it exists and then  restore it from backup) Attribute.ROLL_FORWARD_RECOVERY_FROM:(Perform Rollforward Recovery; except for the log directory everything else is replaced by the copy from backup. log files in the backup are copied to the existing online log  directory. In case of RESTORE_FROM, the whole database directory is removed in Directory.java while restoring service.properties so even the log directory is removed. In case of CREATE_FROM, log directory will not exist if we came so far because it should fail if a database already exists. In case ROLL_FORWARD_RECOVERY_FROM log directory should not be removed. So only thing that needs to be done here is create a a log directory if it does not exists and copy the  log files(including control files) that exists in the backup from which  we are are trying to restore the database to the online log directory.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [backupPath=null]</InnerVar>
+                <InnerVar>boolean [isCreateFrom=false]</InnerVar>
+                <InnerVar>boolean [isRestoreFrom=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preAllocateNewLogFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>StorageRandomAccessFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [amountToWrite=logSwitchInterval - LOG_FILE_HEADER_SIZE]</InnerVar>
+                <InnerVar>int [bufferSize=logBufferSize * 2]</InnerVar>
+                <InnerVar>byte[] [emptyBuffer=new byte[bufferSize]]</InnerVar>
+                <InnerVar>int [nWrites=amountToWrite / bufferSize]</InnerVar>
+                <InnerVar>int [remainingBytes=amountToWrite % bufferSize]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openLogFileInWriteMode</MethodName>
+            <MethodComment>/** 
+ * open the given log file name for writes; if file can not be  be opened in write sync mode then disable the write sync mode and  open the file in "rw" mode.
+ */
+</MethodComment>
+            <ReturnType>StorageRandomAccessFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logFile</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageRandomAccessFile [log=privRandomAccessFile(logFile,"rwd")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogDirPath</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logDir</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkJvmSyncError</MethodName>
+            <MethodComment>/** 
+ * In Java 1.4.2 and newer rws and rwd modes for RandomAccessFile are supported. Still, on some JVMs (e.g. early versions of 1.4.2 and 1.5 on Mac OS and FreeBSD) the support for rws and rwd is not working. This method attempts to detect this by opening an existing file in "rws" mode. If this fails, Derby should fall back to use "rw" mode for the log files followed by explicit syncing of the log. Note: it is important to use "rws" for the test. If "rwd" is used, no exception is thrown when opening the file, but the syncing does not take place. For more details see DERBY-1 (and DERBY-2020).
+ * @param logFile information about the log file to be opened
+ * @return true if a JVM error is detected, false otherwise
+ * @exception StandardException Standard Derby exception
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logFile</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [hasJvmSyncError=false]</InnerVar>
+                <InnerVar>StorageRandomAccessFile [rwsTest]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rwsTest;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privExists</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privDelete</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privRandomAccessFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StorageRandomAccessFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>perms</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privGetOutputStreamWriter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OutputStreamWriter</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privCanWrite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privMkdirs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privCopyFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>from</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>to</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privCopyFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>from</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>to</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privRemoveDirectory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runBooleanAction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>action</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setEndPosition</MethodName>
+            <MethodComment>/** 
+ * set the endPosition of the log and make sure the new position won't spill off the end of the log 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newPosition</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextService</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of the ContextService. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findServiceModule</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceModule</MethodName>
+            <MethodComment>/** 
+ * Privileged module lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isFullUpgrade</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldVersionInfo</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

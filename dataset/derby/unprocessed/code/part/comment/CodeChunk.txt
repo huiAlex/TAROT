@@ -1,0 +1,296 @@
+/**
+ * This class represents a chunk of code in a CodeAttribute.
+ * Typically, a CodeAttribute represents the code in a method.
+ * If there is a try/catch block, each catch block will get its
+ * own code chunk.  This allows the catch blocks to all be put at
+ * the end of the generated code for a method, which eliminates
+ * the need to generate a jump around each catch block, which
+ * would be a forward reference.
+ */
+
+/**
+	 * Starting point of the byte code stream in the underlying stream/array.
+	 */
+
+/**
+	 * Constant used by OPCODE_ACTION to represent the
+	 * common action of push one word, 1 byte
+	 * for the instruction.
+	 */
+
+/**
+	 * Constant used by OPCODE_ACTION to represent the
+	 * common action of push two words, 1 byte
+	 * for the instruction.
+	 */
+
+/**
+	 * Constant used by OPCODE_ACTION to the opcode is
+	 * not yet supported.
+	 */
+
+/**
+	 * Value for OPCODE_ACTION[opcode][0] to represent
+	 * the number of words popped or pushed in variable.
+	 */
+
+/**
+	 * Array that provides two pieces of information about
+	 * each VM opcode. Each opcode has a two byte array.
+	 * 
+	 * The first element in the array [0] is the number of
+	 * stack words (double/long count as two) pushed by the opcode.
+	 * Will be negative if the opcode pops values.
+	 * 
+	 * 
+	 * The second element in the array [1] is the number of bytes
+	 * in the instruction stream that this opcode's instruction
+	 * takes up, including the opocode.
+	 */
+
+/**
+     * Assume an IOException means some limit of the class file
+     * format was hit
+     * 
+     */
+
+/**
+	 * Add an instruction that has no operand.
+	 * All opcodes are 1 byte large.
+	 */
+
+/**
+	 * Add an instruction that has a 16 bit operand.
+	 */
+
+/**
+	 * Add an instruction that has a 32 bit operand.
+	 */
+
+/**
+ 	 * Add an instruction that has an 8 bit operand.
+ 	 */
+
+/**
+	 * This takes an instruction that has a narrow
+	 * and a wide form for CPE access, and
+	 * generates accordingly the right one.
+	 * We assume the narrow instruction is what
+	 * we were given, and that the wide form is
+	 * the next possible instruction.
+	 */
+
+/**
+	 * This takes an instruction that can be wrapped in
+	 * a wide for large variable #s and does so.
+	 */
+
+/**
+	 * For adding an instruction with 3 operands, a U2 and two U1's.
+	 * So far, this is used by VMOpcode.INVOKEINTERFACE.
+	 */
+
+/** Get the current program counter */
+
+/**
+	 * Return the complete instruction length for the
+	 * passed in opcode. This will include the space for
+	 * the opcode and its operand.
+	 */
+
+/**
+	 * The delta between cout.size() and the pc.
+	 * For an initial code chunk this is -8 (CODE_OFFSET)
+	 * since 8 bytes are written.
+	 * For a nested CodeChunk return by insertCodeSpace the delta
+	 * corresponds to the original starting pc.
+	 * 	 */
+
+/**
+     * The class we are generating code for, used to indicate that
+     * some limit was hit during code generation.
+     */
+
+/**
+	 * Return a CodeChunk that has limited visibility into
+	 * this CodeChunk. Used when a caller needs to insert instructions
+	 * into an existing stream.
+	 * @param pc
+	 * @param byteCount
+	 */
+
+/**
+	 * now that we have codeBytes, fix the lengths fields in it
+	 * to reflect what was stored.
+	 * Limits checked here are from these sections of the JVM spec.
+	 * 
+	 *  4.7.3 The Code Attribute
+	 *  4.10 Limitations of the Java Virtual Machine 
+	 * 
+	 */
+
+/**
+	 * wrap up the entry and stuff it in the class,
+	 * now that it holds all of the instructions and
+	 * the exception table.
+	 */
+
+/**
+	 * Return the opcode at the given pc.
+	 */
+
+/**
+	 * Get the unsigned short value for the opcode at the program
+	 * counter pc.
+	 */
+
+/**
+	 * Get the unsigned 32 bit value for the opcode at the program
+	 * counter pc.
+	 */
+
+/**
+	 * Insert room for byteCount bytes after the instruction at pc
+	 * and prepare to replace the instruction at pc. The instruction
+	 * at pc is not modified by this call, space is allocated after it.
+	 * The newly inserted space will be filled with NOP instructions.
+	 * 
+	 * Returns a CodeChunk positioned at pc and available to write
+	 * instructions upto (byteCode + length(existing instruction at pc) bytes.
+	 * 
+	 * This chunk is left correctly positioned at the end of the code
+	 * stream, ready to accept more code. Its pc will have increased by
+	 * additionalBytes.
+	 * 
+	 * It is the responsibility of the caller to patch up any
+	 * branches or gotos.
+	 * 
+	 * @param pc
+	 * @param additionalBytes
+	 */
+
+/**
+     * For a block of byte code starting at program counter pc for codeLength
+     * bytes return the maximum stack value, assuming a initial stack depth of
+     * zero.
+     */
+
+/**
+     * Return the number of stack words pushed (positive) or popped (negative)
+     * by this instruction.
+     */
+
+/**
+     * Get the type descriptor in the virtual machine format for the type
+     * defined by the constant pool index for the instruction at pc.
+     */
+
+/**
+     * Get the word count for a type descriptor in the format of the virual
+     * machine. For a method this returns the the word count for the return
+     * type.
+     */
+
+/**
+     * Get the number of words pushed (positive) or popped (negative) by this
+     * instruction. The instruction is a get/put field or a method call, thus
+     * the size of the words is defined by the field or method being access.
+     */
+
+/**
+     * Calculate the number of stack words in the arguments pushed for this
+     * method descriptor.
+     */
+
+/**
+     * Find the limits of a conditional block starting at the instruction with
+     * the given opcode at the program counter pc.
+     * 
+     * Returns a six element integer array of program counters and lengths.
+     *  [0] - program counter of the IF opcode (passed in as pc) [1] -
+     * program counter of the start of the then block [2] - length of the then
+     * block [3] - program counter of the else block, -1 if no else block
+     * exists. [4] - length of of the else block, -1 if no else block exists.
+     * [5] - program counter of the common end point. 
+     * 
+     * Looks for and handles conditionals that are written by the Conditional
+     * class.
+     * 
+     * @return Null if the opcode is not the start of a conditional otherwise
+     *         the array of values.
+     */
+
+/**
+     * Start a sub method that we will split the portion of our current code to,
+     * starting from start_pc and including codeLength bytes of code.
+     * 
+     * Return a BCMethod obtained from BCMethod.getNewSubMethod with the passed
+     * in return type and same parameters as mb if the code block to be moved
+     * uses parameters.
+     */
+
+/**
+     * Does a section of code use parameters.
+     * Any load, exception ALOAD_0 in an instance method, is
+     * seen as using parameters, as this complete byte code
+     * implementation does not use local variables.
+     * 
+     */
+
+/**
+     * Split a block of code from this method into a sub-method
+     * and call it.
+     * 
+     * Returns the pc of this method just after the call
+     * to the sub-method.
+     
+     * @param mb My method
+     * @param ch My class
+     * @param subMethod Sub-method code was pushed into
+     * @param split_pc Program counter the split started at
+     * @param splitLength Length of code split
+     */
+
+/**
+     * Remove a block of code from this method that was pushed into a sub-method
+     * and call the sub-method.
+     * 
+     * Returns the pc of this method just after the call to the sub-method.
+     * 
+     * @param mb
+     *            My method
+     * @param ch
+     *            My class
+     * @param subMethod
+     *            Sub-method code was pushed into
+     * @param split_pc
+     *            Program counter the split started at
+     * @param splitLength
+     *            Length of code split
+     */
+
+/**
+     * See if the opcode is a return instruction.
+     * @param opcode opcode to be checked
+     * @return true for is a return instruction, false otherwise.
+     */
+
+/**
+     * Minimum split length for a sub-method. If the number of
+     * instructions to call the sub-method exceeds the length
+     * of the sub-method, then there's no point splitting.
+     * The number of bytes in the code stream to call
+     * a generated sub-method can take is based upon the number of method args.
+     * A method can have maximum of 255 words of arguments (section 4.10 JVM spec)
+     * which in the worst case would be 254 (one-word) parameters
+     * and this. For a sub-method the arguments will come from the
+     * parameters to the method, i.e. ALOAD, ILOAD etc.
+     * 
+     * This leads to this number of instructions.
+     * 
+     *  4 - 'this' and first 3 parameters have single byte instructions
+     *  (N-4)*2 - Remaining parameters have two byte instructions
+     *  3 for the invoke instruction.
+     * 
+     */
+

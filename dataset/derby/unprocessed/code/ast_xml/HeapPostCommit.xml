@@ -1,0 +1,148 @@
+<Class>
+    <Id>638</Id>
+    <Package>org.apache.derby.impl.store.access.heap</Package>
+    <ClassName>HeapPostCommit</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Serviceable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>HeapPostCommit  /** 
+ * The HeapPostCommit class implements the Serviceable protocol.   In it's role as a Serviceable object, it stores the state necessary to  find a page in a heap that may have committed delete's to reclaim. It looks up the page described, and reclaims space in the conglomerate.   It first trys to clean up any deleted commits on the page.  It will then  deallocate the page if no rows remain on the page.  All work is done while holding the latch on the page, and locks are never "waited" on while holding this latch. This implementation uses record level locking to reclaim the space.   For the protocols to work correctly all other heap methods must be  prepared for a record or a page to "disappear" if they don't hold a latch and/or a lock.  An example of the problem case is a scan which does not hold locks on it's current position (group scan works this way), which is positioned on a row deleted by another xact, it must be prepared to continue the  scan after getting an error if the current page/row disapppears.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>access_factory</FieldName>
+            <FieldType>AccessFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>page_key</FieldName>
+            <FieldType>PageKey</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>HeapPostCommit</MethodName>
+            <MethodComment>/** 
+ * Constructors for This class:
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access_factory</ParamName>
+                    <ParamType>AccessFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page_key</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>purgeCommittedDeletes</MethodName>
+            <MethodComment>/** 
+ * Reclaim space taken of committed deleted rows or aborted inserted rows. &lt;p&gt; This routine assumes it has been called by an internal transaction which has performed no work so far, and that it has an exclusive intent table  lock.  It will attempt obtain exclusive row locks on rows marked  deleted, where successful those rows can be reclaimed as they must be  "committed deleted" or "aborted inserted" rows. &lt;p&gt; This routine will latch the page and hold the latch due to interface requirement from Page.purgeAtSlot.
+ * @param heap_control  The heap, already opened.
+ * @param pageno        number of page to look for committed deletes.
+ * @see Page#purgeAtSlot
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>heap_control</ParamName>
+                    <ParamType>HeapController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=heap_control.getUserPageWait(pageno)]</InnerVar>
+                <InnerVar>boolean [purgingDone=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceASAP</MethodName>
+            <MethodComment>/** 
+ * The urgency of this post commit work. &lt;p&gt; This determines where this Serviceable is put in the post commit  queue.  Post commit work in the heap can be safely delayed until there is not user work to do.
+ * @return false, this work should not be serviced ASAP
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceImmediately</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>performWork</MethodName>
+            <MethodComment>/** 
+ * perform the work described in the postcommit work. &lt;p&gt; In this implementation the only work that can be executed by this post commit processor is this class itself. &lt;p&gt;
+ * @return Returns Serviceable.DONE when work has completed, orreturns Serviceable.REQUEUE if work needs to be requeued.
+ * @param contextMgr the context manager started by the post commit daemon
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionManager [tc=(TransactionManager)this.access_factory.getAndNameTransaction(contextMgr,AccessFactoryGlobals.SYS_TRANS_NAME)]</InnerVar>
+                <InnerVar>TransactionManager [internal_xact=tc.getInternalTransaction()]</InnerVar>
+                <InnerVar>boolean [requeue_work=false]</InnerVar>
+                <InnerVar>HeapController [heapcontroller]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>internal_xact;commitNoSync;[Transaction.RELEASE_LOCKS]</InnerMethodInvoke>
+                <InnerMethodInvoke>internal_xact;destroy;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

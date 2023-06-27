@@ -1,0 +1,265 @@
+<Class>
+    <Id>1906</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>BTreePostCommit</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Serviceable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BTreePostCommit  /** 
+ * The BTreePostCommit class implements the Serviceable protocol.   In it's role as a Serviceable object, it stores the state necessary to  find a page in a btree that may have committed delete's to reclaim. In it's role as a PostCommitProcessor it looks up the page described, and reclaims space in the btree.  It first trys to clean up any deleted commits on the page.  It then will shrink the tree if it is going to delete all rows from the page (RESOLVE - not done yet).
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>access_factory</FieldName>
+            <FieldType>AccessFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>page_number</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>btree</FieldName>
+            <FieldType>BTree</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>BTreePostCommit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access_factory</ParamName>
+                    <ParamType>AccessFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>BTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>input_page_number</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceASAP</MethodName>
+            <MethodComment>/** 
+ * The urgency of this post commit work. &lt;p&gt; This determines where this Serviceable is put in the post commit  queue.  Post commit work in the btree can be safely delayed until there is not user work to do.
+ * @return false, this work should not be serviced ASAP
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceImmediately</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doShrink</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>shrink_row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [root=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>root;shrinkFor;[open_btree, shrink_row]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openIndex</MethodName>
+            <MethodComment>/** 
+ * Open index for either table level or row level update. &lt;p&gt;
+ * @param lock_level For table level use TransactionManager.MODE_TABLE,for row   level use TransactionManager.MODE_RECORD
+ * @param lock_mode  For table level use LockingPolicy.MODE_CONTAINER,for row   level use LockingPolicy.MODE_RECORD
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>OpenBTree</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>internal_xact</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_mode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OpenBTree [open_btree=new OpenBTree()]</InnerVar>
+                <InnerVar>ConglomerateController [base_cc=btree.lockTable(internal_xact,(ContainerHandle.MODE_FORUPDATE | ContainerHandle.MODE_LOCK_NOWAIT),lock_level,TransactionController.ISOLATION_REPEATABLE_READ)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>open_btree;init;[(TransactionManager)null, internal_xact, (ContainerHandle)null, internal_xact.getRawStoreXact(), false, (ContainerHandle.MODE_FORUPDATE | ContainerHandle.MODE_LOCK_NOWAIT), lock_level, btree.getBtreeLockingPolicy(internal_xact.getRawStoreXact(),lock_level,lock_mode,TransactionController.ISOLATION_REPEATABLE_READ,base_cc,open_btree), btree, (LogicalUndo)null, (DynamicCompiledOpenConglomInfo)null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>performWork</MethodName>
+            <MethodComment>/** 
+ * perform the work described in the postcommit work. &lt;p&gt; In this implementation the only work that can be executed by this post commit processor is this class itself. &lt;p&gt;
+ * @return Returns Serviceable.DONE when work has completed, orreturns Serviceable.REQUEUE if work needs to be requeued.
+ * @param contextMgr the context manager started by thepost commit daemon
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [requeue_work=false]</InnerVar>
+                <InnerVar>TransactionManager [tc=(TransactionManager)this.access_factory.getAndNameTransaction(contextMgr,AccessFactoryGlobals.SYS_TRANS_NAME)]</InnerVar>
+                <InnerVar>TransactionManager [internal_xact=tc.getInternalTransaction()]</InnerVar>
+                <InnerVar>OpenBTree [open_btree=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getShrinkKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>control_row</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slot_no</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [shrink_key=open_btree.getConglomerate().createTemplate(open_btree.getRawTran())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>control_row.page;fetchFromSlot;[(RecordHandle)null, slot_no, shrink_key, (FetchDescriptor)null, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>purgeCommittedDeletes</MethodName>
+            <MethodComment>/** 
+ * Reclaim space taken up by committed deleted rows. &lt;p&gt; This routine assumes it has been called by an internal transaction which has performed no work so far, and that it has an exclusive table lock.   These assumptions mean that any deleted rows encountered must be from committed transactions (otherwise we could not have gotten the exclusive table lock). &lt;p&gt; This routine handles purging committed deletes while holding a table level exclusive lock.  See purgeRowLevelCommittedDeletes() for row level purging.
+ * @param open_btree The btree already opened.
+ * @param pageno The page number of the page to look for committed deletes.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ControlRow [control_row=null]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [shrink_key=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>purgeRowLevelCommittedDeletes</MethodName>
+            <MethodComment>/** 
+ * Attempt to reclaim committed deleted rows from the page with row locking. &lt;p&gt; Get exclusive latch on page, and then loop backward through page searching for deleted rows which are committed.   This routine is called only from post commit processing so it will never see rows deleted by the current transaction. For each deleted row on the page it attempts to get an exclusive lock on the deleted row, NOWAIT. If it succeeds, and since this transaction did not delete the row then  the row must have been deleted by a transaction which has committed, so it is safe to purge the row.  It then purges the row from the page. &lt;p&gt; The latch on the leaf page containing the purged rows must be kept until after the transaction has been committed or aborted in order to insure proper undo of the purges can take place.  Otherwise another transaction could use the space freed by the purge and then prevent the purge from being able to undo.
+ * @param open_btree The already open btree, which has been locked with IXtable lock, to use to get latch on page.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LeafControlRow [leaf=null]</InnerVar>
+                <InnerVar>BTreeLockingPolicy [btree_locking_policy=open_btree.getLockingPolicy()]</InnerVar>
+                <InnerVar>int [num_possible_commit_delete=leaf.page.recordCount() - 1 - leaf.page.nonDeletedRecordCount()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

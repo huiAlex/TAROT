@@ -1,0 +1,899 @@
+<Class>
+    <Id>1881</Id>
+    <Package>org.apache.derby.iapi.services.monitor</Package>
+    <ClassName>Monitor</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Monitor  /** 
+ * &lt;P&gt;&lt;B&gt;Services&lt;/B&gt;&lt;BR&gt; A service is a collection of modules that combine to provide the full functionality defined by the service. A service is defined by three pieces of information: &lt;OL&gt; &lt;LI&gt;A fully qualified java class name that identifies the functionality or API that the service must provide. Typically this class represents a java interface. This class name is termed the &lt;EM&gt;factory interface&lt;/EM&gt;. &lt;LI&gt;The &lt;EM&gt;identifier&lt;/EM&gt; of the service. Services are identified by a String, this may be hard-coded, come from a UUID or any other source. &lt;LI&gt;An optional java.util.Properties set. &lt;/OL&gt; &lt;BR&gt; The running functionality of the service is provided by a module that implements the factory interface. The identifier of the this module is not (need not be) the same as the identifier of the service. The identifier of the service is held by the monitor in its service tables. &lt;BR&gt; Each module in a service is keyed by at least one factory interface, identifier} pair. This pair is guaranteed to be unique within the service. &lt;BR&gt; The lifetime of a module in a service is no longer than the lifetime of the service. Thus shutting down a service shuts down all the modules within a service. &lt;B&gt;Optionally - &lt;/B&gt; an individual module within a service may be shutdown, this will in turn shutdown any modules it started if those module are not in use by other modules within the service. This would be handled by the monitor, not the module itself. &lt;BR&gt; A service may be persistent, it goes through a boot in create mode, and subsequently boot in non-create mode, or a non-peristent service, it always boots in non-create mode. Persistent services can store their re-start parameters in their properties set, the monitor provides the persistent storage of the properties set. Non-persistent services do not have a properties set. &lt;P&gt;&lt;B&gt;Booting Services&lt;/B&gt;&lt;BR&gt; Services can be booted a number of ways &lt;UL&gt; &lt;LI&gt;A non-persistent service can be booted by having a property in the application properties or the system (JVM) set. &lt;PRE&gt; derby.service.&lt;EM&gt;service name&lt;/EM&gt;=&lt;EM&gt;class name&lt;/EM&gt; e.g. # Added to the properties automatically by the class org.apache.derby.jdbc.EmbeddedDriver derby.service.jdbc=java.sql.Driver &lt;/PRE&gt; &lt;LI&gt;A persistent service can be booted by having a property in the application properties or the system (JVM) set. &lt;PRE&gt; derby.service.&lt;EM&gt;service name&lt;/EM&gt;=&lt;EM&gt;persistent storage type&lt;/EM&gt; e.g. derby.service.mydatabase=serviceDirectory &lt;/PRE&gt; serviceDirectory is a type understood by the monitor which means that there is a directory named mydatabase within the system directory and within it is a properties file service.properties. This properties set is the set for the service and must contain a property &lt;PRE&gt; derby.protocol=&lt;EM&gt;class name&lt;/EM&gt; &lt;/PRE&gt; This is then the factory interface for the service. Other storage types could be added in the future. &lt;LI&gt; The monitor at start time looks for all persistent services that it can find and starts them. E.g. all directories in the system directory that have a file service.properties are started as services. &lt;LI&gt;Services are started on demand, e.g. a findService attempts to boot a service if it cannot be found. &lt;/UL&gt; &lt;B&gt;Any or all of these three latter methods can be implemented. A first release may just implement the look for all services and boot them.&lt;/B&gt; . &lt;P&gt;&lt;B&gt;System Service&lt;/B&gt;&lt;BR&gt; A special service exists, the System Service. This service has no factory interface, no identifier and no Properties set. It allows modules to be started that are required by another service (or the monitor itself) but are not fundamentally part of the service. Modules within this service are unidentified. Typically these modules are system wide types of functionality like streams, uuid creation etc. &lt;BR&gt; The lifetime of a system module is the lifetime of the monitor. &lt;B&gt;Optionally - &lt;/B&gt; this could be changed to reference count on individual modules, requires some minor api changes. &lt;P&gt;&lt;B&gt;Modules&lt;/B&gt;&lt;BR&gt; A module is found or booted using four pieces of information: &lt;OL&gt; &lt;LI&gt;The service the module lives in or will live in. &lt;LI&gt;A fully qualified java class name that identifies the functionality or API that the module must provide. Typically this class represents a java interface. This class name is termed the &lt;EM&gt;factory interface&lt;/EM&gt;. &lt;LI&gt;The &lt;EM&gt;identifier&lt;/EM&gt; of the module. Modules are identified by a String, this may be null, be hard-coded, come from a UUID or any other source. If the identifier is null then the module is described as &lt;EM&gt;unidentified&lt;/EM&gt;. &lt;LI&gt;Boot time only - A java.util.Properties set. This Properties set is service wide and typically contains parameters used to determine module implementation or runtime behaviour. &lt;/OL&gt; &lt;BR&gt; The service is identified by explicitly identifiying the System Service or by providing a reference to a module that already exists with the required service. &lt;BR&gt; The factory interface is provided by a String constant of the form class.MODULE from the required interface. &lt;BR&gt; The module identifier is provided in a fashion determined by the code, in most cases a unidentified module will suffice. &lt;BR&gt; The Properties set is also determined in a fashion determined by the code at create or add service time. &lt;P&gt;&lt;B&gt;Module Implementations&lt;/B&gt;&lt;BR&gt; When creating an instance of a module, an implementation is found through lists of potential implementations. &lt;BR&gt; A list of potential implementations is obtained from a Properties set. Any property within this set that is of the form &lt;PRE&gt; derby.module.&lt;EM&gt;tag&lt;/EM&gt;=&lt;EM&gt;java class name&lt;/EM&gt; &lt;/PRE&gt; is seen by the monitor as a possible implementation. &lt;EM&gt;tag&lt;/EM&gt; has no meaning within the monitor, it is only there to provide uniqueness within the properties file. Typically the tag is to provide some description for human readers of the properties file, e.g. derby.module.lockManager for an implementation of a lock manager. &lt;BR&gt; The monitor looks through four properties sets for lists of potential implementations in this order.  &lt;OL&gt; &lt;LI&gt;The properties set of the service (i.e. that passed into Monitor.createPersistentService() or Monitor.startService()). &lt;LI&gt;The System (JVM) properties set (i.e. java.lang.System.getProperties()). &lt;LI&gt;The application properties set (i.e. obtained from the derby.properties file). &lt;LI&gt;The default implementation properties set (i.e. obtained from the /org/apache/derby/modules.properties resource). &lt;/OL&gt; Any one of the properties can be missing or not have any implementations listed within it. &lt;BR&gt; Every request to create an instance of a module searches the four implementation lists in the order above. Which list the current running code or the passed in service module came from is not relevant. &lt;BR&gt; Within each list of potential implementations the search is conducted as follows: &lt;OL&gt; &lt;LI&gt;Attempt to load the class, if the class cannot be loaded skip to the next potential implementation. &lt;LI&gt;See if the factory interface is assignable from the class (isAssignableFrom() method of java.lang.Class), if not skip to the next potential implementation. &lt;LI&gt;See if an instance of the class can be created without any exceptions (newInstance() method of java.lang.Class), if not skip to the next potential implementation. &lt;LI&gt;[boot time only] See if the canSupport() method of ModuleControl returns true when called with the Properties set of the service, if not skip to the next potential implementation. &lt;/OL&gt; If all these checks pass then the instance is a valid implementation and its boot() method of ModuleControl is called to activate it. Note that the search order within the list obtained from a Properties set is not guaranteed. &lt;P&gt;&lt;B&gt;Module Searching&lt;/B&gt;&lt;BR&gt; When searching for a module the search space is always restricted to a single service. This service is usually the system service or the service of the module making the search request. It would be very rare (wrong?) to search for a module in a service that was not the current service and not the system service. &lt;BR&gt; Within the list of modules in the service the search is conducted as follows: &lt;OL&gt; &lt;LI&gt;See if the instance of the module an instance of the factory interface (isInstance() method of java.lang.Class), if not skip to the next module. &lt;LI&gt;See if the identifier of the module matches the required identifier, if not skip to the next module. &lt;LI&gt;See if the canSupport() method of ModuleControl returns true when called with the Properties set of the service, if not skip to the next module. &lt;/OL&gt; Note that no search order of the modules is guaranteed. &lt;BR&gt; Also note that a module may be found by a different factory interface to the one it was created under. Thus a class may implement multiple factory interfaces, its boot method has no knowledge of which factory interface it was requested by. &lt;P&gt;&lt;B&gt;Service Properties&lt;/B&gt;&lt;BR&gt; Within the service's Properties a module may search for its parameters. It identifies its parameters using a unqiue parameter name and its identifier. &lt;BR&gt; Unique parameter names are made unique through the 'dot' convention of Properties files. A module protocol picks some unique key portion to start, e.g. RawStore for the RawStoreFactory and then extends that for specific parameters, e.g. RawStore.PageSize. Thus parameters that are typically understood by all implementations of that protocol would start with that key portion. Parameters for specific implementations add another key portion onto the protocol key portion, e.g. RawStore.FileSystem for an file system implementation of the raw store, with a specific parameter being RawStore.FileSystem.SectorSize. &lt;BR&gt;These are general guidelines, UUID's could be used as the properties keys but would make the parameters hard to read. &lt;BR&gt; When a module is unidentified it should look for a parameter using just the property key for that parameter, e.g. getProperty("RawStore.PageSize"). &lt;BR&gt; When a module has an identifier is should look for a property using the key with a dot and the identifier appended, e.g. getProperty("RawStore.PageSize" + "." + identifier). &lt;BR&gt; In addition to searching for parameters in the service properties set, the system and application set may be searched using the getProperty() method of ModuleFactory. &lt;BR&gt;&lt;B&gt;Should any order be defined for this, should it be automatic?&lt;/B&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SERVICE_TYPE_DIRECTORY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>syncMe</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NEW_INSTANCE_FROM_ID_TRACE_DEBUG_FLAG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEBUG_TRUE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEBUG_FALSE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>monitor</FieldName>
+            <FieldType>ModuleFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>active</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>Monitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startMonitor</MethodName>
+            <MethodComment>/** 
+ * Start a Monitor based software system. This method will execute the following steps. &lt;OL&gt; &lt;LI&gt; Create an instance of a module (monitor) of the required implementation. &lt;LI&gt; Start the monitor which will in turn start any requested services &lt;LI&gt; Execute the run() method of startCode (if startCode was not null). &lt;LI&gt; Return. &lt;/OL&gt; &lt;P&gt; If MonitorBoot.start() is called more then once then subsequent calls have no effect.
+ * @param bootProperties The application properties
+ * @param logging Where to place initial error output. This location will be useduntil an InfoStreams module is successfully started.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bootProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logging</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMonitor</MethodName>
+            <MethodComment>/** 
+ * Initialize this class, must only be called by an implementation of the monitor (ModuleFactory).
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theMonitor</ParamName>
+                    <ParamType>ModuleFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearMonitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Get the monitor.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitorLite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStream</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HeaderPrintWriter</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceName</MethodName>
+            <MethodComment>/** 
+ * Return the name of the service that the passed in module lives in.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startSystemModule</MethodName>
+            <MethodComment>/** 
+ * Start or find a module in the system service. This call allows modules to explictly start services they require. If no module matching the criteria is found (see this class's prologue for details) then an instance will be created (see prologue) and booted as follows. &lt;PRE&gt; ((ModuleControl) instance).boot(false, (String) null, (Properties) null); &lt;/PRE&gt;
+ * @return a reference to a module.
+ * @exception StandardException An attempt to start the module failed.
+ * @see ModuleControl#boot
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=monitor.startModule(false,(Object)null,factoryInterface,(String)null,(Properties)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findSystemModule</MethodName>
+            <MethodComment>/** 
+ * Find a module in the system service.
+ * @return a reference to a module or null if one cannot be found.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=getMonitor().findModule((Object)null,factoryInterface,(String)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemModule</MethodName>
+            <MethodComment>/** 
+ * Return a system module. If it cannot be found or the monitor is not running then null is returned.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ModuleFactory [monitor=getMonitor()]</InnerVar>
+                <InnerVar>Object [module=monitor.findModule((Object)null,factoryInterface,(String)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bootServiceModule</MethodName>
+            <MethodComment>/** 
+ * Boot or find a unidentified module within a service. This call allows modules to start or create any modules they explicitly require to exist within their service. If no module matching the criteria is found (see this class's prologue for details) then an instance will be created (see prologue) and booted as follows. &lt;PRE&gt; ((ModuleControl) instance).boot(create, (String) null, properties); &lt;/PRE&gt; &lt;BR&gt; The service is defined by the service that the module serviceModule lives in, typically this call is made from the boot method of a module and thus 'this' is passed in for serviceModule.
+ * @return a reference to a module.
+ * @exception StandardException An attempt to start the module failed.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=monitor.startModule(create,serviceModule,factoryInterface,(String)null,properties)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bootServiceModule</MethodName>
+            <MethodComment>/** 
+ * Boot or find a identified module within a service. This call allows modules to start or create any modules they explicitly require to exist within their service. If no module matching the criteria is found (see this class's prologue for details) then an instance will be created (see prologue) and booted as follows. &lt;PRE&gt; ((ModuleControl) instance).boot(create, identifer, properties); &lt;/PRE&gt; &lt;BR&gt; The service is defined by the service that the module serviceModule lives in, typically this call is made from the boot method of a module and thus 'this' is passed in for serviceModule.
+ * @return a reference to a module.
+ * @exception StandardException An attempt to start the module failed.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>identifier</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=monitor.startModule(create,serviceModule,factoryInterface,identifier,properties)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findServiceModule</MethodName>
+            <MethodComment>/** 
+ * Find an unidentified module within a service. &lt;BR&gt; The service is defined by the service that the module serviceModule lives in.
+ * @return a reference to a module or null if one cannot be found.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=getMonitor().findModule(serviceModule,factoryInterface,(String)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceModule</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [module=getMonitor().findModule(serviceModule,factoryInterface,(String)null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findService</MethodName>
+            <MethodComment>/** 
+ * Find a service.
+ * @return a refrence to a module represeting the service or null if the service does not exist.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startPersistentService</MethodName>
+            <MethodComment>/** 
+ * Start a persistent service. The name of the service can include a service type, in the form 'type:serviceName'. &lt;BR&gt; Note that the return type only indicates if the service can be handled by the monitor. It does not indicate the service was started successfully. The cases are &lt;OL&gt; &lt;LI&gt; Service type not handled - false returned. &lt;LI&gt; Service type handled, service does not exist, true returned. &lt;LI&gt; Service type handled, service exists and booted OK, true returned. &lt;LI&gt; Service type handled, service exists and failed to boot, exception thrown. &lt;/OL&gt; If true is returned then findService should be used to see if the service exists or not. &lt;P&gt; The poperty set passed in is for boot options for the modules required to start the service. It does not support defining different or new modules implementations.
+ * @param serviceName Name of the service to be started
+ * @param properties Property set made available to all modules bootedfor this service, through their ModuleControl.boot method.
+ * @return true if the service type is handled by the monitor, false if it isn't
+ * @exception StandardException An attempt to start the service failed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNonPersistentService</MethodName>
+            <MethodComment>/** 
+ * Start a non-persistent service.  &lt;P&gt;&lt;B&gt;Context&lt;/B&gt;&lt;BR&gt; A context manager will be created and installed at the start of this method and destroyed just before this method returns.
+ * @return The module from the service if it was started successfully. 
+ * @exception StandardException An exception was thrown trying to start the service.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPersistentService</MethodName>
+            <MethodComment>/** 
+ * Create a named service that implements the java interface (or class) fully qualified by factoryInterface. The Properties object specifies create time parameters to be used by the modules within the service. Any module created by this service may add or remove parameters within the properties object in their ModuleControl.boot() method. The properties set will be saved by the Monitor for later use when the monitor is started. &lt;P&gt;&lt;B&gt;Context&lt;/B&gt;&lt;BR&gt; A context manager will be created and installed at the start of this method and destroyed just before this method returns.
+ * @return The module from the service if it was created successfully, null if a service already existed. 
+ * @exception StandardException An exception was thrown trying to create the service.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePersistentService</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>monitor;removePersistentService;[name]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>classFromIdentifier</MethodName>
+            <MethodComment>/** 
+ * Obtain the class object for a class that supports the given identifier. If no class has been registered for the identifier then a StandardException is thrown with no attached java.lang exception (nextException). If a problem loading or accessing the class is obtained then a StandardException is thrown with the real java.lang exception attached.
+ * @return a valid class object
+ * @exception StandardException See text above.
+ */
+</MethodComment>
+            <ReturnType>InstanceGetter</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>identifier</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newInstanceFromIdentifier</MethodName>
+            <MethodComment>/** 
+ * Obtain an new instance of a class that supports the given identifier. If no class has been registered for the identifier then a StandardException is thrown with no attached java.lang exception (getNestedException). If a problem loading or accessing the class or creating the object is obtained then a StandardException is thrown with the real java.lang exception attached.
+ * @return a reference to a newly created object
+ * @exception StandardException See text above.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>identifier</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>missingProductVersion</MethodName>
+            <MethodComment>/** 
+ * return a StandardException to indicate that a module failed to start because it could not obtain the version of a required product.
+ * @param productGenusName The genus name of the product.
+ * @return The exception.
+ */
+</MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>productGenusName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>missingImplementation</MethodName>
+            <MethodComment>/** 
+ * return a StandardException to indicate a missing implementation.
+ * @param implementation the module name of the missing implementation.
+ * @return The exception.
+ */
+</MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>implementation</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exceptionStartingModule</MethodName>
+            <MethodComment>/** 
+ * return a StandardException to indicate that an exception caused starting the module to fail.
+ * @param t the exception which caused starting the module to fail.
+ * @return The exception.
+ */
+</MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logMessage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>messageText</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getStream();println;[messageText]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logTextMessage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>messageID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getStream();println;[MessageService.getTextMessage(messageID,args)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocaleFromString</MethodName>
+            <MethodComment>/** 
+ * Translate a localeDescription of the form ll[_CC[_variant]] to a Locale object.
+ */
+</MethodComment>
+            <ReturnType>Locale</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localeDescription</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isFullUpgrade</MethodName>
+            <MethodComment>/** 
+ * Single point for checking if an upgrade is allowed.
+ * @return true a full upgrade has been requested, false soft upgrade mode is active.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldVersionInfo</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [fullUpgrade=Boolean.valueOf(startParams.getProperty(org.apache.derby.iapi.reference.Attribute.UPGRADE_ATTR)).booleanValue()]</InnerVar>
+                <InnerVar>ProductVersionHolder [engineVersion=Monitor.getMonitor().getEngineVersion()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDesiredType</MethodName>
+            <MethodComment>/** 
+ * @param startParams			startup parameters
+ * @param desiredProperty		property we're interested in
+ * @return	true		type is as desired.false		otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desiredProperty</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [engineType=EngineType.STANDALONE_DB]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDesiredType</MethodName>
+            <MethodComment>/** 
+ * Is engineType a match for desiredType. A match exists if the bit intersect of the two values is no zero.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>engineType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desiredType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEngineType</MethodName>
+            <MethodComment>/** 
+ * @param startParams		startup parameters
+ * @return	type of engine
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startParams</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDesiredCreateType</MethodName>
+            <MethodComment>/** 
+ * Return true if the properties set provided contains database creation attributes for a database of the correct type
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [plainCreate=Boolean.valueOf(p.getProperty(Attribute.CREATE_ATTR)).booleanValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logThrowable</MethodName>
+            <MethodComment>/** 
+ * Logs the stack trace of the specified throwable object.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t;printStackTrace;[getStream().getPrintWriter()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

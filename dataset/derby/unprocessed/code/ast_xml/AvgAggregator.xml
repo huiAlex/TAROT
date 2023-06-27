@@ -1,0 +1,173 @@
+<Class>
+    <Id>263</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>AvgAggregator</ClassName>
+    <SuperClass>SumAggregator</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AvgAggregator  /** 
+ * Aggregator for AVG(). Extends the SumAggregator and implements a count. Result is then sum()/count(). To handle overflow we catch the exception for value out of range, then we swap the holder for the current sum to one that can handle a larger range. Eventually a sum may end up in a SQLDecimal which can handle an infinite range. Once this type promotion has happened, it will not revert back to the original type, even if the sum would fit in a lesser type.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>count</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scale</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>accumulate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>addend</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [typeName=value.getTypeName()]</InnerVar>
+                <InnerVar>DataValueDescriptor [newValue]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newValue;setValue;[value]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;accumulate;[addend]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>merge</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>addend</ParamName>
+                    <ParamType>ExecAggregator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AvgAggregator [otherAvg=(AvgAggregator)addend]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResult</MethodName>
+            <MethodComment>/** 
+ * Return the result of the aggregation.  If the count is zero, then we haven't averaged anything yet, so we return null.  Otherwise, return the running average as a double.
+ * @return null or the average as Double
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>NumberDataValue [sum=(NumberDataValue)value]</InnerVar>
+                <InnerVar>NumberDataValue [avg=(NumberDataValue)value.getNewNull()]</InnerVar>
+                <InnerVar>NumberDataValue [countv=new org.apache.derby.iapi.types.SQLLongint(count)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sum;divide;[sum, countv, avg, scale]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newAggregator</MethodName>
+            <MethodComment>/** 
+ */
+</MethodComment>
+            <ReturnType>ExecAggregator</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment>/** 
+ * @exception IOException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;writeLong;[count]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeInt;[scale]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment>/** 
+ * @see java.io.Externalizable#readExternal 
+ * @exception IOException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Get the formatID which corresponds to this class.
+ * @return	the formatID of this class
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

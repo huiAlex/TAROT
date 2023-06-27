@@ -1,0 +1,701 @@
+<Class>
+    <Id>878</Id>
+    <Package>org.apache.derby.iapi.services.info</Package>
+    <ClassName>ProductVersionHolder</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>java.security.PrivilegedAction</SuperInterface>
+        <SuperInterface>Properties</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ProductVersionHolder  /** 
+ * Class to hold a Derby Product version. This class includes the following product version features. &lt;OL&gt; &lt;LI&gt;Save the product version information this holds as a String. We call the string a 'product version string'. &lt;LI&gt;Construct a ProductVersionHolder from a valid 'product version string'. &lt;LI&gt;Determine if two product versions are feature compatible. This means products of these versions may interoperate with ***NO*** compatibility problems. &lt;LI&gt;Determine if two product versions are the same. This is a stronger test than the test for feature compatibility. &lt;/OL&gt; Cloudscape 5.1 and older versions used the majorVersion, minorVersion, maintVersion versions directly. That is a three part version number, majorVersion.minorVersion.maintVersion, e.g. 5.1.21. For Cloudscape 5.2 onwards a four part name is required. majorVersion.minorVersion.fixPack.bugVersion e.g. 5.2.1.2 This follows the IBM standard and allows us to state that a fix pack will be 5.2.3 without worrying about how many maintence fixes there are between fix packs. We implement this using the existing format of ProductVersionHolder to reduce disruption to the code, however we make the maintVersion encode the {fixPack.bugVersion}. Since the maintVersion is represented by a int (2G values) we have plenty of room for encoding. If we assign a given majorVersion.minorVersion.fixPack a 10 year life, then we about the maximum number of individual releases it can have is 10 years * 365 days/year = 3650. Thus with the pre 5.2 scheme we would not expect a  5.1.x to have an x &amp;gt; 3650 (approximately). Usually the rate of point releases has been much less than one per day, 5.1.31 is released about 225 days after GA which makes around a point release every 7 days. But in the encoding we need to be conservative. With fix packs the maximum is about 2 per year and fix packs are only made to the current release, thus with a yearly minor release cycle we would imagine only 2 fixpacks per major.minor. However like other IBM products or release cycle may be extended thus we can expect up to a handful of fix packs. Thus we might imagine releases like 5.2.0.12 5.2.0.234 5.2.1.34 5.2.4.2445 but highly unlikey to have 5.2.2.59321 5.2.23.1 The encoding number must continue to increase so that the encodedMaintB &amp;gt; encodedMaintA if (fixPackB &amp;gt; fixPackA) || ((fixPackB == fixPackA) &amp;amp;&amp;amp; (bugB &amp;gt; bugA)) Selected encoding encodedMaint = (fixPack * 1,000,000) + (bugVersion); Handles many many fixpacks and upto one million bug fixes per fix pack and remains somewhat human readable. Special fix packs fixpack == 0 = alpha (version off main codeline) fixpack == 1 = first release of major.minor (may be marked with beta) fixpack == 2 = first fix pack (displayed as 1) The drdaMaintVersion is sent in the Network Server PRDID. It never displays but may be used by the client for version specific behaviour. It should be  reset to 0 with each minor release.	 The product version string has the form: &lt;PRE&gt; productVendorName - ProductName - majorVersion.minorVersion.maintVersion [beta] - (buildNumber) &lt;/PRE&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>BAD_NUMBER</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ALPHA</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BETA</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAINT_ENCODING</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>productVendorName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>productName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>productTechnologyName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>majorVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>minorVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maintVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>drdaMaintVersion</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buildNumber</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isBeta</FieldName>
+            <FieldType>Boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>productGenus</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ProductVersionHolder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ProductVersionHolder</MethodName>
+            <MethodComment>/** 
+ * Create a ProductVersionHolder &lt;P&gt;Please see the documentation for the varient of getProductVesionHolder that takes the same parameters as this for a description of the parameters.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>productVendorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>productName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>productTechnologyName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>majorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maintVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>drdaMaintVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>buildNumber</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isBeta</ParamName>
+                    <ParamType>Boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductVersionHolder</MethodName>
+            <MethodComment>/** 
+ * Create a valid ProductVersionHolder. If any of the parameters provided is invalid, this returns null.
+ * @param productName The name of the product. productName.length()must be greater than 0. The syntax for a product name is 'productGenus[:productSpecies]'. 
+ * @param majorVersion The most significant portion of a 3 part product version.  Must be non-negative.
+ * @param minorVersion The second portion of a 3 part product version. Must be non-negative.
+ * @param maintVersion The least significant portion of a 3 partproduct version. Must be non-negative.
+ * @param drdaMaintVersion The protocol modification number for minor release.
+ * @param buildNumber The buildNumber for a product. 
+ * @param isBeta true iff the product is beta.
+ * @return A valid ProductVersionHolder of null if any of the parametersprovided are not valid.
+ */
+</MethodComment>
+            <ReturnType>ProductVersionHolder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>productVendorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>productName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>productTechnologyName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>majorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maintVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>drdaMaintVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>buildNumber</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isBeta</ParamName>
+                    <ParamType>Boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ProductVersionHolder [pvh=new ProductVersionHolder(productVendorName,productName,productTechnologyName,majorVersion,minorVersion,maintVersion,drdaMaintVersion,buildNumber,isBeta)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductVersionHolderFromMyEnv</MethodName>
+            <MethodComment>/** 
+ * Get a ProductVersionHolder for a product of a given genus, that is available in the caller's environment.  Even though this uses a priv bock, it may stil fail when the jar the version is being fetched from, is different to the one that loaded this class, AND the jars are in different security contexts.
+ * @param productGenus The genus for the product.
+ * @return The ProductVersionHolder or null ifa product with the given genus is not available in the caller's environment.
+ */
+</MethodComment>
+            <ReturnType>ProductVersionHolder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>productGenus</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ProductVersionHolder [tempPVH=new ProductVersionHolder()]</InnerVar>
+                <InnerVar>Properties [p=(Properties)java.security.AccessController.doPrivileged(tempPVH)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductVersionHolderFromMyEnv</MethodName>
+            <MethodComment>/** 
+ * Load the version info from the already opened properties files. We need to do this because if the jar files (e.g. db2jtools and db2j) are in different security contexts (entries in the policy files) then we cannot load the version information for one of them correctly. This is because the this class will either have been loaded from only one of the jars and hence can only access the resource in its own jar. By making code specific to the jar open the resource we are guaranteed it will work.
+ */
+</MethodComment>
+            <ReturnType>ProductVersionHolder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>propertiesStream</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Properties [p=new Properties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductVersionHolder</MethodName>
+            <MethodComment>/** 
+ * Get a ProductVersionHolder based on the information in the Properties object provided.
+ * @param p The properties object that holds the productVersioninformation.
+ * @return The ProductVersionHolder or null ifa product with the given genus is not available in the caller's environment.
+ */
+</MethodComment>
+            <ReturnType>ProductVersionHolder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [pvn=p.getProperty(PropertyNames.PRODUCT_VENDOR_NAME)]</InnerVar>
+                <InnerVar>String [pn=p.getProperty(PropertyNames.PRODUCT_EXTERNAL_NAME)]</InnerVar>
+                <InnerVar>String [ptn=p.getProperty(PropertyNames.PRODUCT_TECHNOLOGY_NAME)]</InnerVar>
+                <InnerVar>int [v1=parseInt(p.getProperty(PropertyNames.PRODUCT_MAJOR_VERSION))]</InnerVar>
+                <InnerVar>int [v2=parseInt(p.getProperty(PropertyNames.PRODUCT_MINOR_VERSION))]</InnerVar>
+                <InnerVar>int [v3=parseInt(p.getProperty(PropertyNames.PRODUCT_MAINT_VERSION))]</InnerVar>
+                <InnerVar>int [v4=parseInt(p.getProperty(PropertyNames.PRODUCT_DRDA_MAINT_VERSION))]</InnerVar>
+                <InnerVar>String [bn=p.getProperty(PropertyNames.PRODUCT_BUILD_NUMBER)]</InnerVar>
+                <InnerVar>Boolean [isBeta=Boolean.valueOf(p.getProperty(PropertyNames.PRODUCT_BETA_VERSION))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductVendorName</MethodName>
+            <MethodComment>/** 
+ * Return the product vendor name.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductName</MethodName>
+            <MethodComment>/** 
+ * Return the external product name.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProductTechnologyName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMajorVersion</MethodName>
+            <MethodComment>/** 
+ * Return the major version number.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMinorVersion</MethodName>
+            <MethodComment>/** 
+ * Return the minor version number.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaintVersion</MethodName>
+            <MethodComment>/** 
+ * Return the &lt;B&gt;encoded&lt;/B&gt; maintainence version number.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDrdaMaintVersion</MethodName>
+            <MethodComment>/** 
+ * Return the drda protocol maintenance version for this minor release. Starts at 0 for each minor release and only incremented  when client behaviour changes based on the server version.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFixPackVersion</MethodName>
+            <MethodComment>/** 
+ * Return the fix pack version from the maintenance encoding.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isBeta</MethodName>
+            <MethodComment>/** 
+ * Return true if this is a beta product.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isAlpha</MethodName>
+            <MethodComment>/** 
+ * Return true if this is a alpha product.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBuildNumber</MethodName>
+            <MethodComment>/** 
+ * Return the build number for this product.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBuildNumberAsInt</MethodName>
+            <MethodComment>/** 
+ * Return the build number as an integer if possible, mapping from the SVN number. nnnnn -&amp;gt; returns nnnnn nnnnnM -&amp;gt; returns -nnnnn indicates a modified code base nnnnn:mmmmm -&amp;gt; returns -nnnnn anything else -&amp;gt; returns -1
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [dubiousCode=false]</InnerVar>
+                <InnerVar>int [offset=buildNumber.indexOf('M')]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseInt</MethodName>
+            <MethodComment>/** 
+ * Parse a string containing a non-negative integer. Return a negative integer is the String is invalid.
+ * @param s A string with a non-negative integer (a sequenceof decimal digits.)
+ * @return the integer or a negative number if s is invalid.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [result=BAD_NUMBER]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Return  a string representation of this ProductVersion. The difference between this and createProductVersionString, is that this method retruns a String when this ProductVersionHolder holds invalid version information.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[getProductVendorName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" - "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[getProductName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" - "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[getVersionBuildString(true)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSimpleVersionString</MethodName>
+            <MethodComment>/** 
+ * Return the feature version string, ie. major.minor. (e.g. 5.2)
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>simpleVersionString</MethodName>
+            <MethodComment>/** 
+ * Convert a major and minor number with beta status into a string.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>major</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minor</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isBeta</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[major]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;['.']</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[minor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fullVersionString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>major</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minor</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maint</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isBeta</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>build</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer()]</InnerVar>
+                <InnerVar>String [preRelease=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[major]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;['.']</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[minor]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;['.']</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVersionBuildString</MethodName>
+            <MethodComment>/** 
+ * Returns a short-hand value for the product version string. Used by Sysinfo. Includes the optional &lt;beta&gt; designation
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>withBuild</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadProperties</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>productGenus</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [resourceName="/org/apache/derby/info/" + productGenus + ".properties"]</InnerVar>
+                <InnerVar>InputStream [is=getClass().getResourceAsStream(resourceName)]</InnerVar>
+                <InnerVar>Properties [p=new Properties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

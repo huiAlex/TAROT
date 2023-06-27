@@ -1,0 +1,298 @@
+/** Maximum number of work units allowed in the queue. */
+
+/** Tells if logging is enabled. */
+
+/** Tells if tracing is enabled. */
+
+/** Tells if traces are written to the Derby log file. */
+
+/** Tells if traces are written to standard out. */
+
+/** Tells if the daemon has been disabled. */
+
+/** The context manager for the worker thread. */
+
+/**
+     * Tells if disposable stats should be generated, which will happen in
+     * soft-upgrade mode or when the user asks us to revert to the old behavior.
+     * 
+     * Made public to allow access for CreateIndexConstantAction and
+     * FromBaseTable, but this is no longer necessary when the debug property
+     * to keep disposable statistics is removed.
+     */
+
+/** The language connection context for the worker thread. */
+
+/**
+     * The database object for the database we are handling automatic index
+     * statistics update for.
+     */
+
+/** The name of the database owner. */
+
+/**
+     * A list of tables that shall have their index statistics updated.
+     * Note that the descriptor isn't removed before the work has
+     * been completed.
+     */
+
+/**
+     * The thread in which the index statistics refresh operation is being
+     * executed, if any. Created as needed, but there will only be one
+     * thread doing the work. The thread is allowed to die since it is assumed
+     * that index statistics regeneration is rather infrequent.
+     */
+
+/**
+     * Number of consecutive errors, used as a metric to decide if the damoen
+     * should be automatically shut down.
+     */
+
+/** Specifies when the daemon was created. */
+
+/**
+     * The period of time (ms) for which the daemon has been doing active work.
+     */
+
+/**
+     * Creates a new daemon.
+     *
+     * @param log the log to write to
+     * @param doLog whether to log activity information
+     * @param traceLevel whether, and to where, trace information should be
+     *      written ("off|log|stdout|both")
+     * @param db the database ("off|log|stdout|both")
+     * @param userName the name of the database owner
+     * @param databaseName the name of the database (not stored in the db obj)
+     */
+
+/** Tells if the database is 10.9 or newer. */
+
+/**
+     * Schedules an update of the index statistics for the specified table.
+     * 
+     * Assume the descriptor will be valid until we get around to generate
+     * the statistics. If it turns out to be invalid, it will be discarded.
+     *
+     * @param td base table descriptor to update index statistics for
+     */
+
+/**
+     * Determines if the given work can be accepted.
+     *
+     * @param td the table descriptor to check
+     * @return {@code true} if work can be accepted, {@code false} if not.
+     */
+
+/**
+     * Generates index statistics for all indexes associated with the given
+     * table descriptor.
+     * 
+     * This method is run as a background task.
+     *
+     * @param lcc connection context to use to perform the work
+     * @param td target base table descriptor
+     *      */
+
+/** Return true if we are being shutdown */
+
+/**
+     * Updates the index statistics for the given table and the specified
+     * indexes.
+     * 
+     * API note: Using {@code null} to update the statistics
+     * for all conglomerates is preferred over explicitly passing an array with
+     * all the conglomerates for the table. Doing so allows for some
+     * optimizations, and will cause a disposable statistics check to be
+     * performed.
+     *
+     * @param lcc language connection context used to perform the work
+     * @param td the table to update index stats for
+     * @param cds the conglomerates to update statistics for (non-index
+     *      conglomerates will be ignored), {@code null} means all indexes
+     * @param asBackgroundTask whether the updates are done automatically as
+     *      part of a background task or if explicitly invoked by the user
+     *      */
+
+/**
+     * Writes updated statistics for the specified index to the data dictionary.
+     *
+     * @param lcc connection context to use to perform the work
+     * @param td the base table
+     * @param index the index of the base table
+     * @param numRows number of rows in the base table
+     * @param cardinality the number of unique values in the index (per number
+     *      of leading columns)
+     * @param asBackgroundTask whether the update is done automatically as
+     *      part of a background task or if explicitly invoked by the user
+     *      */
+
+/**
+     * Performs an invalidation action for the given table (the event being
+     * statistics update).
+     *
+     * @param lcc connection context to use to perform the work
+     * @param td the table to invalidate for
+     * @param asBackgroundTask whether the update is done automatically as
+     *      part of a background task or if explicitly invoked by the user
+     *      */
+
+/**
+     * Sets the row estimate for the heap conglomerate.
+     *
+     * @param tc transaction to use
+     * @param tableId the heap table
+     * @param rowEstimate estimate of number of rows in the table
+     *      */
+
+/**
+     * Drives the statistics generation.
+     * 
+     * This method will be run in a separate thread, and it will keep working
+     * as long as there is work to do. When the queue is exhausted, the method
+     * will exit (the thread dies).
+     */
+
+/**
+     * Main processing loop which will compute statistics until the queue
+     * of scheduled work units has been drained.
+     */
+
+/**
+     * Runs the statistics update sequence explicitly as requested by the user.
+     *
+     * @param lcc connection context to use to perform the work
+     * @param td the base table
+     * @param cds the indexes to update (non-index conglomerates are ignored)
+     * @param runContext the context in which the operation is run (i.e.
+     *      'ALTER TABLE', may be {@code null})
+     *      */
+
+/**
+     * Stops the daemon.
+     * 
+     * Will also clear the queue and print runtime statistics to the log the
+     * first time the method is invoked.
+     */
+
+/**
+     * Handles fatal errors that will cause the daemon to be shut down.
+     *
+     * @param cm context manager
+     * @param se the exception to handle
+     * @return {@code true} if the error was handled, {@code false} otherwise
+     */
+
+/**
+     * Handles expected errors.
+     * 
+     * The logging of expected errors is for observability purposes only. The
+     * daemon is capable of dealing with these errors, and no interaction from
+     * the user is expected.
+     *
+     * @param se the exception to handle
+     * @return {@code true} if the error was handled, {@code false} otherwise
+     */
+
+/**
+     * Handles unexpected errors.
+     * 
+     * Unexpected errors are error conditions the daemon isn't set up to handle
+     * specifically. For this reason the stack trace will be logged to allow
+     * for later investigation.
+     * 
+     * In general it is expected that the daemon will be able to recover by
+     * dropping the current unit of work and move on to the next one (if any).
+     *
+     * @param se the exception to handle
+     * @return {@code true} if the error was handled, {@code false} otherwise
+     */
+
+/**
+     * Puts the current thread to sleep for maximum {@code ms} milliseconds.
+     * 
+     * No guarantee is provided for the minimum amount of time slept. If
+     * interrupted, the interrupt flag will be set again.
+     *
+     * @param ms target sleep time
+     */
+
+/** Format array of scan durations as a string. */
+
+/** @see #log(boolean, TableDescriptor, Throwable, String)  */
+
+/**
+     * Logs the information given.
+     * 
+     * Note that if {@code asBackgroundTask} is false, nothing will be logged
+     * currently.
+     *
+     * @param asBackgroundTask {@code true} if logging for the background
+     *      daemon automatically updating stats, {@code false} if not
+     * @param td current table descriptor being worked on, may be {@code null}
+     * @param t raised error, may be {@code null}
+     * @param msg the message to log
+     */
+
+/**
+     * Logs the information given.
+     *
+     * @param td current table descriptor being worked on, may be {@code null}
+     * @param t raised error, may be {@code null}
+     * @param msg the message to log
+     */
+
+/**
+     * Appends runtime statistics to the given string buffer.
+     *
+     * @param sb the string buffer to append to
+     */
+
+/**
+     * Produces a textual representation of the cardinality numbers.
+     *
+     * @param cardinality index cardinality
+     * @return A string.
+     */
+
+/** Purely for debugging, to avoid printing too much info. */
+
+/**
+     * Privileged lookup of the ContextService. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Support class used to compare keys when scanning indexes.
+     */
+
+/** Number of rows fetched per iteration. */
+
+/**
+         * Creates a key comparator for the given index.
+         *
+         * @param ir index row (template)
+         */
+
+/**
+         * Fetches rows from the scan controller.
+         *
+         * @param gsc the scan controller
+         * @return Number of rows fetched.
+         *          */
+
+/**
+         * Compares the key at the specified index with the previous key.
+         *
+         * @param index row index
+         * @return {@code -1} if the current and previous key are identical,
+         *      the index of the changed part of the key otherwise
+         *      ([0, key length&gt;)
+         *          */
+
+/**
+         * Returns the number of rows fetched.
+         *
+         * @return Number of rows fetched.
+         */
+

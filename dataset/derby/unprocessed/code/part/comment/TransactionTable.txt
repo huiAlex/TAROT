@@ -1,0 +1,196 @@
+/**
+		MT - not needed for constructor
+	*/
+
+/*************************************************************
+	 * generic methods called by all clients of transaction table
+	 * Must be MT -safe
+	 ************************************************************/
+
+/**
+     * Interface for visiting entries in the transaction table.
+     *      */
+
+/**
+		remove the transaction Id an return false iff the transaction is found
+		in the table and it doesn't need exclusion during quiesce state
+	 */
+
+/**
+		Change a transaction to update or add an update transaction to this table.
+
+		@param tid the transaction id
+		@param tran the transaction to be added
+		@param transactionStatus the transaction status that is stored in the
+				BeginXact log record
+	 */
+
+/**
+	    Change update transaction to non-update
+
+		MT - MT safe, since vector is MT-safe.
+
+		@param id the transaction Id
+	  */
+
+/**************************************************************************
+     * Transaction table methods used by XA.
+     **************************************************************************
+     */
+
+/**
+	    Change transaction to prepared.
+
+		MT - unsafe, caller is recovery, which is single threaded.
+
+		@param id the transaction Id
+	  */
+
+/**
+     * Find a transaction in the table by Global transaction id.
+     * 
+     * This routine use to be only called during offline recovery so performance
+     * was not critical.  Since that time more calls have been made, including
+     * one in startGlobalTransaction() so a linear search may no longer
+     * be appropriate.  See DERBY-828.
+     *
+	 * @return The ContextManager of the transaction being searched for.
+     *
+     * @param global_id The global transaction we are searching for.
+     **/
+
+/***********************************************************
+	 * called when system is being quiesced, must be MT - safe
+	 ***********************************************************/
+
+/**
+		Return true if there is no transaction actively updating the database.
+		New transaction may be started or old transaction committed
+		right afterward, the caller of this routine must have other ways to
+		stop transactions from starting or ending.
+
+		MT - safe
+	*/
+
+/************************************************************
+	 * methods called only by checkpoint
+	 ***********************************************************/
+
+/**
+		Return my format identifier.
+	*/
+
+/**
+	  @exception IOException problem reading the transaction table
+	*/
+
+/************************************************************
+	 * methods called only by recovery
+	 ************************************************************/
+
+/**
+	  @exception IOException problem reading the transaction table
+	  @exception ClassNotFoundException problem reading the transaction table
+	 */
+
+/**
+		Return the largest update transactionId I have seen so far.
+
+		MT - unsafe, caller is recovery, which is single threaded.
+	*/
+
+/**
+		Is there an active internal transaction in the transaction table.
+
+		MT - unsafe, caller is recovery, which is single threaded.
+	*/
+
+/**
+       Is there a prepared transaction that are recovered 
+       durring the recovery in the transaction table.
+
+       MT - unsafe, caller is recovery, which is single threaded.
+    */
+
+/**
+       Is there a prepared transaction in the transaction table.
+       MT - unsafe, called during boot, which is single threaded.
+    */
+
+/**
+     * Is there a prepared transaction in the transaction table.
+     * 
+     * MT - unsafe, caller is recovery/at boot, which is single threaded.
+     *
+     * @param recovered   true  to search  for transaction 
+     *                  that are in prepared during recovery.  
+     *                  recovered tranaction. 
+     *                   false &gt; to search for just prepared 
+     *                  transactons. 
+     * @return          true if there is a prepared transaction and
+     *                  recovered when  recovered  argument is 
+     *                   true 
+     */
+
+/**
+		Get the most recently added transaction that says it needs to be
+		rolled back first (an InternalXact) from the transaction table and make
+		the passed in transaction assume its identity. 
+		 Should only be used in recovery undo !! 
+		RESOLVE: (sku)I don't think even these internal transactions need to be
+		rolled back in the reverse order, because they are physical in nature.
+		But it won't hurt.
+
+		MT - unsafe, caller is recovery, which is single threaded.
+	*/
+
+/**
+		Get the most recently non-prepared added transaction from the 
+        transaction table and make the passed in transaction assume its 
+        identity.  Prepared transactions will not be undone.
+
+		RESOLVE: (sku) I don't think normal user transactions needs to be
+		rolled back in order, but it won't hurt.
+
+		 Should only be used in recovery undo !! 
+
+		MT - unsafe, caller is recovery, which is single threaded.
+	*/
+
+/**
+		Get the most recently added transaction that says it is prepared during
+        recovery the transaction table and make the passed in transaction 
+        assume its identity. This routine turns off the isRecovery() state
+		 Should only be used in recovery handle prepare after undo !! 
+
+		MT - unsafe, caller is recovery, which is single threaded.
+	*/
+
+/**
+		Get the least recently added (oldest) transaction
+		@return the RawTransaction's first log instant
+
+		MT - safe, caller can be recovery or checkpoint
+	*/
+
+/**
+		Find a transaction using the transaction id, and make the passed in
+		transaction assume the identity and properties of that transaction.
+
+		MT - unsafe, caller is recovery, which is single threaded.
+
+		@param id transaction Id
+		@param tran the transaction that was made to assume the transactionID
+		and all other relevant information stored in the transaction table
+		@return true if transaction can be found, false otherwise
+	*/
+
+/**********************************************************
+	 * Transaction table vti and diagnostics
+	 * MT - unsafe, caller is getting a snap shot which may be inconsistent 
+	 *********************************************************/
+
+/**
+		Get a printable version of the transaction table
+	 */
+

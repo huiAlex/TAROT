@@ -1,0 +1,273 @@
+/**
+ * A cache manager based on the utilities found in the
+ * java.util.concurrent package. It allows multiple threads to
+ * access the cache concurrently without blocking each other, given that they
+ * request different objects and the requested objects are present in the
+ * cache.
+ *
+ * 
+ *
+ * All methods of this class should be thread safe. When exclusive access to an
+ * entry is required, it is achieved by calling the lock() method
+ * on the CacheEntry object. To ensure that the entry is always
+ * unlocked, all calls to CacheEntry.lock() should be followed by
+ * a try block with a finally clause that unlocks the
+ * entry.
+ */
+
+/** Map with all the cached objects. */
+
+/** Factory which creates Cacheables. */
+
+/** Name of this cache. */
+
+/** The maximum size (number of elements) for this cache. */
+
+/** Replacement policy to be used for this cache. */
+
+/** The identifier of the MBean that allows monitoring of this instance. */
+
+/** Flag that tells if hit/miss/eviction counts should be collected. */
+
+/** The number of cache hits. */
+
+/** The number of cache misses. */
+
+/** The number of evictions from the cache. */
+
+/**
+     * Flag that indicates whether this cache instance has been shut down. When
+     * it has been stopped, find(), findCached() and
+     * create() will return null. The flag is
+     * declared volatile so that no synchronization is needed when
+     * it is accessed by concurrent threads.
+     */
+
+/**
+     * Background cleaner which can be used to clean cached objects in a
+     * separate thread to avoid blocking the user threads.
+     */
+
+/**
+     * Creates a new cache manager.
+     *
+     * @param holderFactory factory which creates Cacheables
+     * @param name the name of the cache
+     * @param initialSize the initial capacity of the cache
+     * @param maxSize maximum number of elements in the cache
+     */
+
+/**
+     * Return the ReplacementPolicy instance for this cache.
+     *
+     * @return replacement policy
+     */
+
+/**
+     * Get the entry associated with the specified key from the cache. If the
+     * entry does not exist, insert an empty one and return it. The returned
+     * entry is always locked for exclusive access by the current thread, but
+     * not kept. If another thread is currently setting the identity of this
+     * entry, this method will block until the identity has been set.
+     *
+     * @param key the identity of the cached object
+     * @return an entry for the specified key, always locked
+     */
+
+/**
+     * Remove an entry from the cache. Its Cacheable is cleared
+     * and made available for other entries. This method should only be called
+     * if the entry is present in the cache and locked by the current thread.
+     *
+     * @param key the identity of the entry to remove
+     */
+
+/**
+     * Evict an entry to make room for a new entry that is being inserted into
+     * the cache. Clear the identity of its {@code Cacheable} and set it to
+     * {@code null}. When this method is called, the caller has already chosen
+     * the {@code Cacheable} for reuse. Therefore, this method won't call
+     * {@code CacheEntry.free()} as that would make the {@code Cacheable} free
+     * for reuse by other entries as well.
+     *
+     * 
+     *
+     * The caller must have locked the entry that is about to be evicted.
+     *
+     * @param key identity of the entry to remove
+     */
+
+/**
+     * Insert a {@code CacheEntry} into a free slot in the {@code
+     * ReplacementPolicy}'s internal data structure, and return a {@code
+     * Cacheable} that the caller can reuse. The entry must have been locked
+     * before this method is called.
+     *
+     * @param key the identity of the object being inserted
+     * @param entry the entry that is being inserted
+     * @return a {@code Cacheable} object that the caller can reuse
+     *      * or while allocating a new {@code Cacheable}
+     */
+
+/**
+     * Complete the setting of the identity. This includes notifying the
+     * threads that are waiting for the setting of the identity to complete,
+     * so that they can wake up and continue. If setting the identity failed,
+     * the entry will be removed from the cache.
+     *
+     * @param key the identity of the object being inserted
+     * @param entry the entry which is going to hold the cached object
+     * @param item a {@code Cacheable} object with the identity set (if
+     * the identity was successfully set), or {@code null} if setting the
+     * identity failed
+     */
+
+/**
+     * Find an object in the cache. If it is not present, add it to the
+     * cache. The returned object is kept until release() is
+     * called.
+     *
+     * @param key identity of the object to find
+     * @return the cached object, or null if it cannot be found
+     */
+
+/**
+     * Find an object in the cache. If it is not present, return
+     * null. The returned object is kept until
+     * release() is called.
+     *
+     * @param key identity of the object to find
+     * @return the cached object, or null if it's not in the cache
+     */
+
+/**
+     * Create an object in the cache. The object is kept until
+     * release() is called.
+     *
+     * @param key identity of the object to create
+     * @param createParameter parameters passed to
+     * Cacheable.createIdentity()
+     * @return a reference to the cached object, or null if the
+     * object cannot be created
+     * @exception StandardException if the object is already in the cache, or
+     * if some other error occurs
+     *      */
+
+/**
+     * Release an object that has been fetched from the cache with
+     * find(), findCached() or create().
+     *
+     * @param item a Cacheable value
+     */
+
+/**
+     * Remove an object from the cache. The object must previously have been
+     * fetched from the cache with find(),
+     * findCached() or create(). The user of the
+     * cache must make sure that only one caller executes this method on a
+     * cached object. This method will wait until the object has been removed
+     * (its keep count must drop to zero before it can be removed).
+     *
+     * @param item the object to remove from the cache
+     */
+
+/**
+     * Clean all dirty objects in the cache. All objects that existed in the
+     * cache at the time of the call will be cleaned. Objects added later may
+     * or may not be cleaned.
+     */
+
+/**
+     * Clean all dirty objects matching a partial key.
+     *
+     * @param partialKey the partial (or exact) key to match
+     */
+
+/**
+     * Clean all dirty objects matching a partial key. If no key is specified,
+     * clean all dirty objects in the cache.
+     *
+     * @param partialKey the partial (or exact) key to match, or
+     * null to match all keys
+     */
+
+/**
+     * Clean an entry in the cache.
+     *
+     * @param entry the entry to clean
+     * @exception StandardException if an error occurs while cleaning
+     */
+
+/**
+     * Clean an entry in the cache and decrement its keep count. The entry must
+     * be kept before this method is called, and it must contain the specified
+     * Cacheable.
+     *
+     * @param entry the entry to clean
+     * @param item the cached object contained in the entry
+     * @exception StandardException if an error occurs while cleaning
+     */
+
+/**
+     * Remove all objects that are not kept and not dirty.
+     */
+
+/**
+     * Shut down the cache.
+     */
+
+/**
+     * Specify a daemon service that can be used to perform operations in
+     * the background. Callers must provide enough synchronization so that
+     * they have exclusive access to the cache when this method is called.
+     *
+     * @param daemon the daemon service to use
+     */
+
+/**
+     * Discard all unused objects that match a partial key. Dirty objects will
+     * not be cleaned before their removal.
+     *
+     * @param partialKey the partial (or exact) key, or null to
+     * match all keys
+     * @return true if all matching objects were removed,
+     * false otherwise
+     */
+
+/**
+     * Return a collection view of all the Cacheables in the
+     * cache. There is no guarantee that the objects in the collection can be
+     * accessed in a thread-safe manner once this method has returned, so it
+     * should only be used for diagnostic purposes. (Currently, it is only used
+     * by the StatementCache VTI.)
+     *
+     * @return a collection view of the objects in the cache
+     */
+
+/** Count a cache hit. */
+
+/** Count a cache miss. */
+
+/** Count an eviction from the cache. */
+
+/** Enable or disable collection of hit/miss/eviction counts. */
+
+/** Check if collection of hit/miss/eviction counts is enabled. */
+
+/** Get the number of cache hits. */
+
+/** Get the number of cache misses. */
+
+/** Get the number of evictions from the cache. */
+
+/** Get the maximum number of entries in the cache. */
+
+/** Get the number of allocated entries in the cache. */
+
+/** Get the number of cached objects. */
+
+/**
+     * Privileged module lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+

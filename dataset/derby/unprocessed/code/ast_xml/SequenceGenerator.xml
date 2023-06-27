@@ -1,0 +1,463 @@
+<Class>
+    <Id>1528</Id>
+    <Package>org.apache.derby.impl.sql.catalog</Package>
+    <ClassName>SequenceGenerator</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SequenceGenerator  /** 
+ * &lt;p&gt; This is a generic machine for pre-allocating ranges of sequence numbers in order to improve concurrency. The public methods are synchronized and should be brief. The caller of the methods in this class is responsible for updating values on disk when the generator is exhausted or when it needs to allocate a new range of values. &lt;/p&gt; &lt;p&gt; The most used method in this class is getCurrentValueAndAdvance(). This method returns the next number in the range managed by the sequence generator. This method will raise an exception if the sequence generator is exhausted. Otherwise getCurrentValueAndAdvance() hands back a tuple of return values: &lt;/p&gt; &lt;blockquote&gt; ( &lt;i&gt;status, currentValue, lastAllocatedValue, numberOfValuesAllocated&lt;/i&gt; ) &lt;/blockquote&gt; &lt;p&gt; The &lt;i&gt;status&lt;/i&gt; field takes the following values: &lt;/p&gt; &lt;ul&gt; &lt;li&gt;&lt;b&gt;RET_I_AM_CONFUSED&lt;/b&gt; - This value should never be returned. If this value comes back, then the sequence generator is confused.&lt;/li&gt; &lt;li&gt;&lt;b&gt;RET_OK&lt;/b&gt; - This means that the generator has successfully obtained a next value. That value is &lt;i&gt;currentValue&lt;/i&gt;.&lt;/li&gt; &lt;li&gt;&lt;b&gt;RET_MARK_EXHAUSTED&lt;/b&gt; - This means that the generator has reached the end of its legal range and is handing back its very last value. The caller must mark the catalogs to indicate that the range is exhausted. The very last value being handed back is &lt;i&gt;currentValue&lt;/i&gt;.&lt;/li&gt; &lt;li&gt;&lt;b&gt;RET_ALLOCATE_NEW_VALUES&lt;/b&gt; - This means that the generator has come to the end of its pre-allocated values. The caller needs to update the catalog to grab a new range of legal values and then call allocateNewRange() to tell the generator that the range was successfully allocated. The remaining values in the return tuple have these meanings: &lt;ul&gt; &lt;li&gt;&lt;i&gt;currentValue&lt;/i&gt; - This is what is expected to be the current value in the catalog before allocating a new range. If, in fact, this is not the value in the catalog, then we are racing with another session to drain values from the generator and update the disk. Do not update the catalog if the value there is not &lt;i&gt;currentValue&lt;/i&gt;. Instead, assume that another session got in ahead of us and grabbed a new range of values. Simply call getCurrentValueAndAdvance() again.&lt;/li&gt; &lt;li&gt;&lt;i&gt;lastAllocatedValue&lt;/i&gt; - This is the next value to write to the catalog.&lt;/li&gt; &lt;li&gt;&lt;i&gt;numberOfValuesAllocated&lt;/i&gt; - This is the number of values which were allocated if we successfully updated the catalog. If we successfully updated the catalog, then we should call allocateNewRange(), handing it this value so that it can reset its range. As a sanity check, we also hand allocateNewRange() the &lt;i&gt;currentValue&lt;/i&gt; that we were given. The allocateNewRange() method will assume we're racing another session and will ignore us if its sense of &lt;i&gt;currentValue&lt;/i&gt; does not agree with ours.&lt;/li&gt; &lt;/ul&gt; &lt;/li&gt; &lt;/ul&gt; &lt;p&gt; It may happen that getCurrentValueAndAdvance() tells its caller to allocate a new range of sequence numbers in the system catalog. If the caller successfully allocates a new range, the caller should call allocateNewRange() to tell the generator to update its internal memory of that range. &lt;/p&gt; &lt;p&gt; The peekAtCurrentValue() method is provided so that unused, pre-allocated values can be flushed when the sequence generator is being discarded. The caller updates the catalog with the value returned by peekAtCurrentValue(). The peekAtCurrentValue() method is also called by the syscs_peek_at_sequence() function which users should call rather than try to scan the underlying catalog themselves. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>PREALLOCATION_THRESHHOLD</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RET_I_AM_CONFUSED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RET_OK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RET_MARK_EXHAUSTED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RET_ALLOCATE_NEW_VALUES</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CVAA_STATUS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CVAA_CURRENT_VALUE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CVAA_LAST_ALLOCATED_VALUE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CVAA_NUMBER_OF_VALUES_ALLOCATED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CVAA_LENGTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_CAN_CYCLE</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_STEP_INCREASES</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_INCREMENT</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_MAX_VALUE</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_MIN_VALUE</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_RESTART_VALUE</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_SCHEMA_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_SEQUENCE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_PREALLOCATOR</FieldName>
+            <FieldType>SequencePreallocator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_isExhausted</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_currentValue</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_remainingPreallocatedValues</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SequenceGenerator</MethodName>
+            <MethodComment>/** 
+ * Normal constructor 
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>currentValue</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>canCycle</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>increment</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>restartValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sequenceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sequencePreallocator</ParamName>
+                    <ParamType>SequencePreallocator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clone</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Clone this sequence generator. This method supports the special bulk-insert optimization in InsertResultSet. &lt;/p&gt;
+ * @param restart   True if the clone should be reset to start at the beginning instead of at the current value.
+ */
+</MethodComment>
+            <ReturnType>SequenceGenerator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>restart</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Long [startValue]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clone</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Clone this sequence generator. This method supports the special bulk-insert optimization in InsertResultSet. &lt;/p&gt;
+ * @param newStartValue New value to start with.
+ */
+</MethodComment>
+            <ReturnType>SequenceGenerator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newStartValue</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSchemaName</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the name of the schema of this sequence generator. Technically, this doesn't need to be synchronized. But it is simpler to just maintain a rule that all public methods should be synchronized. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getName</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the name of this sequence generator. Technically, this doesn't need to be synchronized. But it is simpler to just maintain a rule that all public methods should be synchronized. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allocateNewRange</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Allocate a new range. Is a NOP if the current value is not what we expected. See the class header comment for more information on how this method is used. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expectedCurrentValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numberOfAllocatedValues</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>peekAtCurrentValue</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Peek at the current value of the sequence generator without advancing the generator. Returns null if the generator is exhausted. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Long [currentValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentValueAndAdvance</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the next sequence number managed by this generator and advance the number. Could raise an exception if the legal range is exhausted and wrap-around is not allowed--that is, if NO CYCLE was specified when the sequence was defined. See the class header comment for a description of how this method operates. &lt;/p&gt;
+ * @return Returns an array of longs indexed by the CVAA_* constants.
+ */
+</MethodComment>
+            <ReturnType>long[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [retval[]=new long[CVAA_LENGTH]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;advanceValue;[retval]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>advanceValue</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Advance the sequence generator. Pre-allocate a range of new values if necessary. &lt;/p&gt;
+ * @param retval Array of return values to fill in: see CVAA_* constants
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>retval</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [nextValue=_currentValue + _INCREMENT]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markExhausted</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Mark the generator as exhausted. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>retval</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>overflowed</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Return true if an overflow/underflow occurred. This happens if the originalValue and incrementedValue have opposite sign. Overflow also occurs if the incrementedValue falls outside the range of the sequence. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>originalValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>incrementedValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [overflowed=(_STEP_INCREASES == (incrementedValue &lt; originalValue))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>computeNewAllocation</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Compute the number of values to allocate. The range may wrap around. &lt;/p&gt;
+ * @param oldCurrentValue INPUT Used to compute how many values need to be allocated
+ * @param retval OUTPUT Array of values to fill in (see CVAA_* constants)
+ * @throws StandardException if any error occurs.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldCurrentValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>retval</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [preferredValuesPerAllocation=computePreAllocationCount()]</InnerVar>
+                <InnerVar>long [remainingLegalValues=computeRemainingValues(oldCurrentValue)]</InnerVar>
+                <InnerVar>long [newValueOnDisk]</InnerVar>
+                <InnerVar>long [valuesToAllocate]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>computeRemainingValues</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the number of values remaining until we bump against an endpoint of the legal range of values. This is a positive number and so may understate the number of remaining values if the datatype is BIGINT. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldCurrentValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [spaceLeft=_STEP_INCREASES ? _MAX_VALUE - oldCurrentValue : -(_MIN_VALUE - oldCurrentValue)]</InnerVar>
+                <InnerVar>long [divisor=_STEP_INCREASES ? _INCREMENT : -_INCREMENT]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>computePreAllocationCount</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; This method returns the number of values to pre-allocate when we grab a new chunk of values. This is a bit of defensive coding to cover the case when the sequence's parameters are absurdly large. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [happyResult=_PREALLOCATOR.nextRangeSize(_SCHEMA_NAME,_SEQUENCE_NAME)]</InnerVar>
+                <InnerVar>int [unhappyResult=PREALLOCATION_THRESHHOLD]</InnerVar>
+                <InnerVar>double [min=_MIN_VALUE]</InnerVar>
+                <InnerVar>double [max=_MAX_VALUE]</InnerVar>
+                <InnerVar>double [range=max - min]</InnerVar>
+                <InnerVar>double [step=_INCREMENT]</InnerVar>
+                <InnerVar>double [chunkSize=step * happyResult]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

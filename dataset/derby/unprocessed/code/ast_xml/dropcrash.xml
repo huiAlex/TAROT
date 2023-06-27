@@ -1,0 +1,140 @@
+<Class>
+    <Id>907</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.store</Package>
+    <ClassName>dropcrash</ClassName>
+    <SuperClass>BaseTest</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>dropcrash  /** 
+ * The purpose of this test is to reproduce JIRA DERBY-662: Sometimes during redo the system would incorrectly remove the file associated with a table.  The bug required the following conditions to reproduce: 1) The OS/filesystem must be case insensitive such that a request to delete a file named C2080.dat would also remove c2080.dat.  This is true in windows default file systems, not true in unix/linux filesystems that I am aware of. 2) The system must be shutdown not in a clean manner, such that a subsequent access of the database causes a REDO recovery action of a drop table statement.  This means that a drop table statement must have happened since the last checkpoint in the log file.  Examples of things that cause checkpoints are: o clean shutdown from ij using the "exit" command o clean shutdown of database using the "shutdown=true" url o calling the checkpoint system procedure o generating enough log activity to cause a regularly scheduled checkpoint. 3) If the conglomerate number of the above described drop table is TABLE_1, then for a problem to occur there must also exist in the database a table such that it's HEX(TABLE_2) = TABLE_1 4) Either TABLE_2 must not be accessed during REDO prior to the REDO operation of the drop of TABLE_1 or there must be enough other table references during the REDO phase to push the caching of of the open of TABLE_2 out of cache. If all of the above conditions are met then during REDO the system will  incorrectly delete TABLE_2 while trying to redo the drop of TABLE_1. &lt;p&gt; This test reproduces the problem by doing the following: 1) create 500 tables, need enough tables to insure that conglomerate number 2080 (c820.dat) and 8320 (c2080.dat) exist. 2) checkpoint the database so that create does not happen during REDO 3) drop table with conglomerate number 2080, mapping to c820.dat.  It looks it up in the catalog in case conglomerate number assignment changes for some reason. 4) exit the database without a clean shudown, this is the default for test suites which run multiple tests in a single db - no clean shutdown is done. Since we only do a single drop since the last checkpoint, test will cause the drop during the subsequent REDO. 5) run next test program dropcrash2, which will cause redo of the drop.  At this point the bug will cause file c2080.dat to be incorrectly deleted and thus accesses to conglomerate 8320 will throw container does not exist errors. 6) check the consistency of the database which will find the container does not exist error.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>verbose</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>dropcrash</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>drop_crash_setup</MethodName>
+            <MethodComment>/** 
+ * create tables, commit, and cause checkpoint of db.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>num_create</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [create_stmt_str1="create table dropcrash_"]</InnerVar>
+                <InnerVar>String [create_stmt_str2=" (a int)"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;beginTest;[conn, "creating " + num_create + " tables."]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeQuery;[conn, "CALL SYSCS_UTIL.SYSCS_CHECKPOINT_DATABASE()", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;endTest;[conn, "creating " + num_create + " tables."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>drop_crash_drop_table</MethodName>
+            <MethodComment>/** 
+ * Reproduce JIRA DERBY-662 &lt;p&gt; Find the conglomerate with number 2080, and drop it.  The bug is that during redo the system, on windows, will incorrectly delete C2080.dat because it did not do the hex conversion on the conglomerate number.  This will result in conglomerate 8320 not having it's  associate data file c2080.dat.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("select sys.systables.tablename, sys.sysconglomerates.conglomeratenumber from sys.systables, sys.sysconglomerates where sys.systables.tableid = sys.sysconglomerates.tableid and sys.systables.schemaid = sys.sysconglomerates.schemaid and sys.sysconglomerates.conglomeratenumber = ?")]</InnerVar>
+                <InnerVar>ResultSet [rs=ps.executeQuery()]</InnerVar>
+                <InnerVar>String [drop_name=rs.getString(1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;beginTest;[conn, "dropping table with conglomerate number 2080."]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setInt;[1, 2080]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeQuery;[conn, "drop table " + drop_name, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;endTest;[conn, "dropping table with conglomerate number 2080."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;drop_crash_setup;[conn, 500]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;drop_crash_drop_table;[conn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>argv</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>dropcrash [test=new dropcrash()]</InnerVar>
+                <InnerVar>Connection [conn=ij.startJBMS()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ij;getPropertyArg;[argv]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn;setAutoCommit;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Throwable</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

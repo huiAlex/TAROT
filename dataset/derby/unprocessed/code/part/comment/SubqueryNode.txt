@@ -1,0 +1,371 @@
+/**
+     * is this subquery part of a having clause.  We need to know this so 
+     * we can avoid flattening.
+     */
+
+/**
+     * Constructor.
+	 *
+	 * @param resultSet		The ResultSetNode for the subquery
+	 * @param subqueryType	The type of the subquery
+	 * @param leftOperand	The left operand, if any, of the subquery
+	 * @param orderCols     ORDER BY list
+     * @param offset        OFFSET n ROWS
+     * @param fetchFirst    FETCH FIRST n ROWS ONLY
+	 * @param hasJDBClimitClause True if the offset/fetchFirst clauses come from JDBC limit/offset escape syntax
+     * @param cm            Context Manager
+	 */
+
+/**
+	 * Convert this object to a String.  See comments in QueryTreeNode.java
+	 * for how this should be done for tree printing.
+	 *
+	 * @return	This object as a String
+	 */
+
+/**
+	 * Prints the sub-nodes of this object.  See QueryTreeNode.java for
+	 * how tree printing is supposed to work.
+	 *
+	 * @param depth		The depth of this node in the tree
+	 */
+
+/**
+	 * Return the resultSet for this SubqueryNode.
+	 *
+	 * @return ResultSetNode underlying this SubqueryNode.
+	 */
+
+/**
+	 * Return the type of this subquery.
+	 *
+	 * @return int	Type of this subquery.
+	 */
+
+/**
+	 * Set the type of this subquery.
+	 *
+	 * @param subqueryType of this subquery.
+	 */
+
+/**
+	 * Set the point of attachment of this subquery.
+	 *
+	 * @param pointOfAttachment	The point of attachment of this subquery.
+	 *
+	 * @exception StandardException			Thrown on error
+	 */
+
+/**
+	 * Return whether or not this subquery is immediately under a top level
+	 * AndNode.
+	 *
+	 * @return boolean	Whether or not this subquery is immediately under a
+	 *					top level AndNode.
+	 */
+
+/**
+	 * Get the ResultSet # for the point of attachment for this SubqueryNode.
+	 *
+	 * @return int		The ResultSet # for the point of attachment
+	 */
+
+/**
+	 * Get whether or not this SubqueryNode has already been
+	 * preprocessed.
+	 * 
+	 * @return	Whether or not this SubqueryNode has already been
+	 *			preprocessed.
+	 */
+
+/**
+	 * Set the parent BCON.  Useful when considering flattening
+	 * expression subqueries.
+	 *
+	 * @param parent	The parent BCON.
+	 */
+
+/**
+	 * Remap all ColumnReferences in this tree to be clones of the
+	 * underlying expression.
+	 *
+	 * @return ValueNode			The remapped expression tree.
+	 *
+	 * @exception StandardException			Thrown on error
+	 */
+
+/**
+	 * Bind this expression.  This means binding the sub-expressions,
+	 * as well as figuring out what the return type is for this expression.
+	 *
+	 * @param fromList			The FROM list for the query this
+	 *							expression is in, for binding columns.
+	 *							NOTE: fromList will be null if the subquery appears
+	 *							in a VALUES clause.
+	 * @param subqueryList		The subquery list being built as we find SubqueryNodes
+     * @param aggregates        The aggregate list being built as we find AggregateNodes
+	 *
+	 * @return	The new top of the expression tree.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Preprocess an expression tree.  We do a number of transformations
+	 * here (including subqueries, IN lists, LIKE and BETWEEN) plus
+	 * subquery flattening.
+	 * NOTE: This is done before the outer ResultSetNode is preprocessed.
+	 *
+	 * @param	numTables			Number of tables in the DML Statement
+	 * @param	outerFromList		FromList from outer query block
+	 * @param	outerSubqueryList	SubqueryList from outer query block
+	 * @param	outerPredicateList	PredicateList from outer query block
+	 *
+	 * @return		The modified expression
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Does the from list from the subquery contain a
+	 * single entry which is a FBT or a PRN/FBT.
+	 *
+	 * @param fromList	The from list from the subquery
+	 *
+     * @return the {@code FromBaseTable} if the from list from the subquery
+     * contains a single entry which is a FBT or a PRN/FBT, or {@code null}
+     * if the subquery does not contain a single FBT
+	 */
+
+/**
+	 * Can NOT IN, ALL be falttened to NOT EXISTS join?  We can't or the flattening doesn't
+	 * easily make sense if either side of the comparison is nullable. (beetle 5173)
+	 *
+	 * @return Whether or not the NOT IN or ALL subquery can be flattened.
+	 */
+
+/**
+	 * Flatten this subquery into the outer query block
+	 * as an exists join.  
+	 * At this point we are only flattening non-aggregate subqueries
+	 * with a single FBT in the from list.
+	 * So, we transform all FBTs in the from list into ExistBaseTables,
+	 * update the dependency lists for each of the tables and then
+	 * flatten the subquery.
+	 * RESOLVE - we will need to modify this logic to account
+	 * for aggregates as we support flattening
+	 * for them.
+	 *
+	 * @param	numTables			Number of tables in the DML Statement
+	 * @param	outerFromList		FromList from outer query block
+	 * @param	outerSubqueryList	SubqueryList from outer query block
+	 * @param	outerPredicateList	PredicateList from outer query block
+	 * @param	flattenableNotExists Is it a flattening into a NOT EXISTS join
+	 *
+	 * @return	The modified expression
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * Get the node that will be the right operand in the join condition if
+     * this ALL/ANY/SOME/(NOT) IN subquery is flattened to a join.
+     *
+     * @return the right operand
+     */
+
+/**
+	 * Check to see if we have a Variant value below us.
+	 * If so, return true.  Caches the result so multiple
+	 * calls are ok.
+	 *  
+	 * @return boolean whether we have 
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Check to see if this subquery has correlated
+	 * column references.  Only useful results if
+	 * called AFTER binding (after CRs have been bound).
+	 *
+	 * @return whether the subquery has correlated column
+	 *	references.
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Build a new join condition between the leftOperand
+	 * and the rightOperand.  The comparison operator
+	 * is dependent on the subquery type.
+	 *
+	 * @param leftOperand	The left operand for the new condition.
+	 * @param rightOperand	The right operand for the new condition.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Eliminate NotNodes in the current query block.  We traverse the tree, 
+	 * inverting ANDs and ORs and eliminating NOTs as we go.  We stop at 
+	 * ComparisonOperators and boolean expressions.  We invert 
+	 * ComparisonOperators and replace boolean expressions with 
+	 * boolean expression = false.
+	 * NOTE: Since we do not recurse under ComparisonOperators, there
+	 * still could be NotNodes left in the tree.
+	 *
+	 * @param	underNotNode		Whether or not we are under a NotNode.
+	 *							
+	 *
+	 * @return		The modified expression
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Categorize this predicate.  Initially, this means
+	 * building a bit map of the referenced tables for each predicate.
+	 * If the source of this ColumnReference (at the next underlying level) 
+	 * is not a ColumnReference or a VirtualColumnNode then this predicate
+	 * will not be pushed down.
+	 *
+	 * For example, in:
+	 *		select * from (select 1 from s) a (x) where x = 1
+	 * we will not push down x = 1.
+	 * NOTE: It would be easy to handle the case of a constant, but if the
+	 * inner SELECT returns an arbitrary expression, then we would have to copy
+	 * that tree into the pushed predicate, and that tree could contain
+	 * subqueries and method calls.
+	 * RESOLVE - revisit this issue once we have views.
+	 *
+	 * @param referencedTabs	JBitSet with bit map of referenced FromTables
+	 * @return boolean		Whether or not source.expression is a ColumnReference
+	 *						or a VirtualColumnNode.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Optimize this SubqueryNode.  
+	 *
+	 * @param dataDictionary	The DataDictionary to use for optimization
+	 * @param outerRows			The optimizer's estimate of the number of
+	 *							times this subquery will be executed.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Make any changes to the access paths, as decided by the optimizer.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return the variant type for the underlying expression.
+	 * The variant type can be:
+	 *		VARIANT				- variant within a scan
+	 *							  (method calls and non-static field access)
+	 *		SCAN_INVARIANT		- invariant within a scan
+	 *							  (column references from outer tables)
+	 *		QUERY_INVARIANT		- invariant within the life of a query
+	 *							  (constant expressions)
+	 *
+	 * @return	The variant type for the underlying expression.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Do code generation for this subquery.
+	 *
+	 * @param expressionBuilder	The ExpressionClassBuilder for the class being built
+	 * @param mbex	The method the expression will go into
+	 *
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Accept the visitor for all visitable children of this node.
+	 * 
+	 * @param v the visitor
+	 *
+	 * @exception StandardException on error
+	 */
+
+/**
+	 * Convert this IN/ANY subquery, which is known to return at most 1 row,
+	 * to an equivalent expression subquery.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * {@inheritDoc}
+     */
+
+/**
+     * Is this subquery part of a having clause?
+     * 
+     * @return true if it is part of a having clause, otherwise false
+     */
+
+/**
+     * Mark this subquery as being part of a having clause.
+     * @param havingSubquery
+     */
+
+/**
+	 * Is this subquery part of a whereclause?
+	 *
+	 * @return true if it is part of a where clause, otherwise false
+	 */
+
+/**
+	 * Mark this subquery as being part of a where clause.
+	 * @param whereSubquery
+	 */
+
+/**
+	 * Check whether this is a WHERE EXISTS | ANY | IN subquery with a subquery
+	 * in its own WHERE clause. Used in flattening decision making.
+	 * 
+	 * DERBY-3301 reported wrong results from a nested WHERE EXISTS, but 
+	 * according to the derby optimizer docs this applies to a broader range of 
+	 * WHERE clauses in a WHERE EXISTS subquery. No WHERE EXISTS subquery with 
+	 * anohter subquery in it own WHERE clause can be flattened. 
+	 * 
+	 * @return true if this subquery is a WHERE EXISTS | ANY | IN subquery with 
+	 *              a subquery in its own WHERE clause
+	 */
+
+/**
+     * Get ORDER BY list (used to construct FROM_SUBQUERY only), cf.
+     * FromSubquery, for which this node is transient.
+     *
+     * @return order by list if specified, else null.
+     */
+
+/**
+     * Get OFFSET  (used to construct FROM_SUBQUERY only), cf.
+     * FromSubquery, for which this node is transient.
+     *
+     * @return offset if specified, else null.
+     */
+
+/**
+     * Get FETCH FIRST (used to construct FROM_SUBQUERY only), cf.
+     * FromSubquery, for which this node is transient.
+     *
+     * @return fetch first if specified, else null.
+     */
+
+/**
+     * Return true if the offset/fetchFirst clauses were added by JDBC LIMIT escape syntax.
+     * This method is used to construct a FROM_SUBQUERY only, cf.
+     * FromSubquery, for which this node is transient.
+     *
+     * @return true if the JDBC limit/offset semantics (rather than the SQL Standard OFFSET/FETCH NEXT) semantics apply
+     */
+

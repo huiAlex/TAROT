@@ -1,0 +1,631 @@
+<Class>
+    <Id>1789</Id>
+    <Package>org.apache.derby.iapi.store.raw</Package>
+    <ClassName>ContainerHandle</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ContainerHandle  /** 
+ * A Container contains a contigious address space of pages, the pages start at page number Container.FIRST_PAGE_NUMBER and are numbered sequentially. The page size is set at addContainer() time. RESOLVE: this style of coding is not currently enforced If the caller calls getPage (or one of its variants) more than once on the  same page, the caller must call unlatch a corresponding number of times in  order to ensure that the page is latched.  For example: &lt;p&gt; &lt;blockquote&gt;&lt;pre&gt; Container c; Page p1 = c.getPage(Container.FIRST_PAGE_NUMBER); Page p2 = c.getPage(Container.FIRST_PAGE_NUMBER); p1.unlatch();  -- Page is still latched. p2.unlatch();  -- Page is now unlatched. &lt;/pre&gt;&lt;/blockquote&gt; &lt;p&gt; There is no restriction on the order in which latching and unlatching is  done.  In the example, p1 could have been unlatched after p2 with no ill 	 effects. &lt;P&gt;	&lt;B&gt;Open container modes&lt;/B&gt; ContainerHandle.MODE are used to open or create the container. Unlike TableProperties, MODEs are not permanantely associated with the container, it is effective only for the lifetime of the containerHandle itself. &lt;BR&gt;A container may use any of these mode flags when it is opened. &lt;UL&gt; &lt;LI&gt;MODE_READONLY - Open the container in read only mode. &lt;LI&gt;MODE_FORUPDATE - Open the container in update mode, if the underlying  storage does not allow updates then the container will be opned in read only mode. &lt;LI&gt;MODE_UNLOGGED - If Unset, any changes to the container are logged. If set, any user changes to the container are unlogged. It is guaranteed at commit time that all changes made during the transaction will have been  flushed to disk. Using this mode automatically opens the container in  container locking, isolation 3 level. The state of the container following an abort or any type of rollback is unspecified. &lt;LI&gt;MODE_CREATE_UNLOGGED - If set, not only are user changes to the container are unlogged, page allocations are also unlogged.  This MODE is only useful for container is created in the same statement and no change on the container (other than the create) is ever logged.  The difference between MODE_UNLOGGED and MODE_CREATE_UNLOGGED is that page allocation is also unlogged and commit of nested transaction will not cause the container to be forced from the cache.  Unlike MODE_UNLOGGED, MODE_CREATE_UNLOGGED does not force the cache.  It is up to the client of raw store to force the cache at the appropriate time - this allows a statement to create and open the container serveral times for bulk loading without logging or doing any synchronous I/O.  &lt;LI&gt;MODE_LOCK_NOWAIT - if set, then don't wait for the container lock, else wait for the container lock.  This flag only dictates whether the lock should be waited for or not.  After the container is successfully opened, whether this bit is set or not has no effect on the container handle. &lt;/UL&gt; If neither or both of the {MODE_READONLY, MODE_FORUPDATE} modes are  specified then the behaviour of the container is unspecified. &lt;BR&gt; MODE_UNLOGGED must be set for MODE_CREATE_UNLOGGED to be set. &lt;P&gt; &lt;B&gt;Temporary Containers&lt;/B&gt;&lt;BR&gt; If when creating a container the segment used is  ContainerHandle.TEMPORARY_SEGMENT then the container is a temporary  container. Temporary containers are not logged or locked and do not live  across re-boots of the system. In addition any abort or rollback including rollbacks to savepoints truncate the container if it has been opened for  update since the last commit or abort.  Temporary containers are private  to a transaction and must only be used a single thread within the  transaction at any time, these restrictions are not currently enforced. &lt;BR&gt; When opening a temporary container for update access these additional mode flags may be used &lt;UL&gt; &lt;LI&gt; MODE_TRUNCATE_ON_COMMIT - At commit/abort time container is truncated. &lt;LI&gt; MODE_DROP_ON_COMMIT - At commit/abort time the container is dropped. &lt;LI&gt; MODE_TEMP_IS_KEPT - At commit/abort time the container is kept around. &lt;/UL&gt; If a temporary container is opened multiple times in the same transaction  with different modes then the most severe mode is used, ie. none &amp;lt;  truncate on commit &amp;lt; drop on commit. The MODE_UNLOGGED, MODE_CREAT_UNLOGGED flags are ignored when opening a  temporary container, not logged is always assumed.  
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_PAGESIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_SPARESPACE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_ASSIGN_ID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_UNLOGGED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_CREATE_UNLOGGED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_FORUPDATE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_READONLY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_TRUNCATE_ON_COMMIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_DROP_ON_COMMIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_OPEN_FOR_LOCK_ONLY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_LOCK_NOWAIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_TRUNCATE_ON_ROLLBACK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_FLUSH_ON_COMMIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_NO_ACTIONS_ON_COMMIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_TEMP_IS_KEPT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_USE_UPDATE_LOCKS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_SECONDARY_LOCKED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_BASEROW_INSERT_LOCKED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODE_LOCK_ROW_NOWAIT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TEMPORARY_SEGMENT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FIRST_PAGE_NUMBER</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INVALID_PAGE_NUMBER</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ADD_PAGE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ADD_PAGE_BULK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GET_PAGE_UNFILLED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getId</MethodName>
+            <MethodComment>/** 
+ * Return my identifier.
+ */
+</MethodComment>
+            <ReturnType>ContainerKey</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUniqueId</MethodName>
+            <MethodComment>/** 
+ * Return my unique identifier, this identifier will be unique to each instance of an open container handle.  This id is used by the locking system to group locks to an open container handle.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isReadOnly</MethodName>
+            <MethodComment>/** 
+ * Is the container opened for read only or update?
+ * @return true if container is opened for read only, else false.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPage</MethodName>
+            <MethodComment>/** 
+ * Add an empty page to the container and obtain exclusive access to it. &lt;P&gt; Note that the added page may not be the last page in the Container. Once the Page is no longer required the Page's unlatch() method must  be called.
+ * @return a reference to the page that was added.
+ * @see Page#unlatch
+ * @exception StandardException If a page could not be allocated.
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compressContainer</MethodName>
+            <MethodComment>/** 
+ * Release free space to the OS. &lt;P&gt; As is possible release any free space to the operating system.  This will usually mean releasing any free pages located at the end of the file using the java truncate() interface.
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReusableRecordIdSequenceNumber</MethodName>
+            <MethodComment>/** 
+ * Get the reusable recordId sequence number.
+ * @return version sequence number
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPage</MethodName>
+            <MethodComment>/** 
+ * Add an empty page to the container and obtain exclusive access to it. &lt;P&gt; If flag == ADD_PAGE_DEFAULT, this call is identical to addPage(). &lt;BR&gt; If flag == ADD_PAGE_BULK, then this call signifies to the container that this addPage is part of a large number of additional pages and it is desirable to do whatever possible to facilitate adding many subsequent pages. The actual container implementation will decide whether or not to heed this hint and what to do about it.
+ * @return a reference to the page that was added.
+ * @see Page#unlatch
+ * @exception StandardException	Standard Derby error policy
+ * @exception StandardException If a page could not be allocated.
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preAllocate</MethodName>
+            <MethodComment>/** 
+ * Try to preallocate numPage new pages if possible.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numPage</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePage</MethodName>
+            <MethodComment>/** 
+ * Remove this page from the container and unlatch the page.  &lt;B&gt;Caller should commit or abort this transaction ASAP because failure to do so will slow down page allocation of this container. &lt;/B&gt; &lt;BR&gt;The page to be removed must be latched and gotten (or added) by this ContainerHandle.  The page should not be used again after this call as if it has been unlatched.  If the call to removePage is successful, this page is invalid should not be gotten again with getPage.  &lt;BR&gt;RemovePage will guarantee to unlatch the page even if a StandardException is thrown.  &lt;P&gt; &lt;B&gt;Locking Policy&lt;/B&gt; &lt;BR&gt; The page will not be freed until the transaction that removed the page  commits.  A special RecordHandle.DEALLOC_PROTECTION_HANDLE lock will be  gotten for the transaction and which is used to prevent the page from  being freed.  This lock will be held regardless of the default locking  policy of the transaction that called removedPage.
+ * @see LockingPolicy
+ * @see RecordHandle
+ * @exception StandardException Standard Derby error policy 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPage</MethodName>
+            <MethodComment>/** 
+ * Obtain exclusive access to the page with the given page number. Once the Page is no longer required the Page's unlatch() method must  be called. &lt;P&gt; The Page object is guaranteed to remain in-memory and exclusive to the  caller until its unlatch() method is called.
+ * @return the required Page or null if the page does not exist or is not valid (i.e, it has been deallocated or freed or never initialized) Note that an overflow page will be returned since it is a valid page.
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageNoWait</MethodName>
+            <MethodComment>/** 
+ * Identical to getPage but returns null immediately if the desired page is already latched by another Container.
+ * @return the required Page or null if the page does not exist or the pageis already latched.
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUserPageNoWait</MethodName>
+            <MethodComment>/** 
+ * Obtain exclusive access to the page with the given page number. Will only return a valid, non-overflow user page - so can be used by routines in post commit to get pages to attempt deleted row space reclamation.  If for some reason a request is made for an overflow page a null will be returned. Once the Page is no longer required the Page's unlatch() method must  be called. &lt;P&gt; The Page object is guaranteed to remain in-memory and exclusive to the  caller until its unlatch() method is called.
+ * @return the required Page or null if the page does not exist or is not valid (i.e, it has been deallocated, freed, never initialized, or is an allocation page or overflow page)
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUserPageWait</MethodName>
+            <MethodComment>/** 
+ * Obtain exclusive access to the page with the given page number. Will only return a valid, non-overflow user page - so can be used by routines in post commit to get pages to attempt deleted row space reclamation.  If for some reason a request is made for an overflow page a null will be returned. Once the Page is no longer required the Page's unlatch() method must  be called. &lt;P&gt; The Page object is guaranteed to remain in-memory and exclusive to the  caller until its unlatch() method is called.
+ * @return the required Page or null if the page does not exist or is not valid (i.e, it has been deallocated, freed, never initialized, or is an allocation page or overflow page)
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstPage</MethodName>
+            <MethodComment>/** 
+ * Obtain exclusive access to the current first page of the container. Only a valid, non overflow page will be returned. Pages in the container are ordered in an internally defined ordering. &lt;P&gt; Note that once this method returns this page may no longer be the  first page of the container.  I.e, other threads may allocate pages  prior to this page number while this page is latched.  It is up to the caller of this routine to synchronize this call with addPage to  assure that this is the first page.   &lt;BR&gt; As long as the client provide the necessary lock to ensure  that no addPage is called, then this page is guaranteed to be the first page of the container in some internally defined ordering of the pages.
+ * @return latched page or null if there is no page in the container
+ * @exception StandardException	Standard Derby error policy
+ * @see ContainerHandle#getPage
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextPage</MethodName>
+            <MethodComment>/** 
+ * Obtain exclusive access to the next valid page of the given page number  in the container. Only a valid, non overflow page will be returned. Pages in the container are ordered in an internally defined ordering. &lt;P&gt; Note that once this method returns this page may no longer be the  next page of the container.  I.e, other threads may allocate pages  prior to this page number while this page is latched.  It is up to the caller of this routine to synchronize this call with addPage to  assure that this is the first page.   &lt;BR&gt; As long as the client provide the necessary lock to ensure  that no addPage is called, then this page is guaranteed to be the next page of the container in some internally defined ordering of the pages. &lt;BR&gt; If no pages are added or removed, then an iteration such as: &lt;PRE&gt; for (Page p = containerHandle.getFirstPage(); p != null; p = containerHandle.getNextPage(p.getPageNumber())) &lt;PRE&gt; will guarentee to iterate thru and latched all the valid pages  in the container
+ * @param prevNum the pagenumber of the page previous to the pagethat is to be gotten.  The page which correspond to prevNum may or may not be latched by the caller, but it must be gotten  via a page which was (or currently still is) latched, and the page number must be gotten while the container must not have been closed  or dropped or removed in the interim. In other words, if the user manufactures a page number, or remembers  the page number from a previous session or a previous openContainer,  then the behavior of this routine is undefined.
+ * @return latched page or null if there is no next page in the container
+ * @exception StandardException	Standard Derby error policy
+ * @see ContainerHandle#getPage
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prevNum</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageForInsert</MethodName>
+            <MethodComment>/** 
+ * Get a page for insert.  If RawStore thinks it knows where a potentially suitable page is for insert, it will return it.  If RawStore doesn't know where a suitable page for insert is, or if there are no allocated page, then null is returned.  If a page is returned, it will be a valid, non-overflow page.   A potentially suitable page is one which has enough space for a minium sized record.
+ * @return a valid, non-overflow page.  Or null if RawStore doesn't knowwhere to find a good valid, non-overflow page.
+ * @param flag a GET_PAGE_* flag.
+ * @exception StandardException Standard Derby error policy 
+ */
+</MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageForCompress</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContainerProperties</MethodName>
+            <MethodComment>/** 
+ * Request the system properties associated with a container.  &lt;p&gt; Request the value of properties that are associated with a table.  The following properties can be requested: derby.storage.pageSize  derby.storage.pageReservedSpace derby.storage.minimumRecordSize &lt;p&gt; To get the value of a particular property add it to the property list, and on return the value of the property will be set to it's current  value.  For example: get_prop(ConglomerateController cc) { Properties prop = new Properties(); prop.put("derby.storage.pageSize", ""); cc.getTableProperties(prop); System.out.println( "table's page size = " +  prop.getProperty("derby.storage.pageSize"); }
+ * @param prop   Property list to fill in.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prop</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close me. After using this method the caller must throw away the reference to the Container object, e.g. &lt;PRE&gt; ref.close(); ref = null; &lt;/PRE&gt; &lt;BR&gt; The container will be closed automatically at the commit or abort of the transaction if this method is not called explictly. &lt;BR&gt; Any pages that were obtained using me and have not been released using Page's unlatch method are released, and references to them must be thrown away.
+ * @see Page#unlatch
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimatedRowCount</MethodName>
+            <MethodComment>/** 
+ * Get the total estimated number of rows in the container, not including overflow rows.  This number is a rough estimate and may be grossly off.
+ * @param flag different flavors of row count (reserved for future use)
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setEstimatedRowCount</MethodName>
+            <MethodComment>/** 
+ * Set the total estimated number of rows in the container.  Often, after a scan, the client of RawStore has a much better estimate of the number of rows in the container then what RawStore has.  Use this better number for future reference. &lt;BR&gt; It is OK for a ReadOnly ContainerHandle to set the estimated row count.
+ * @param count the estimated number of rows in the container.
+ * @param flag different flavors of row count (reserved for future use)
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>count</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimatedPageCount</MethodName>
+            <MethodComment>/** 
+ * Get the total estimated number of allocated (not freed, not deallocated) user pages in the container, including overflow pages. this number is a rough estimate and may be grossly off.
+ * @param flag different flavors of page count (reserved for future use)
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushContainer</MethodName>
+            <MethodComment>/** 
+ * Flush all dirty pages of the container to disk.  Used mainly for UNLOGGED or CREATE_UNLOGGED operation.
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLockingPolicy</MethodName>
+            <MethodComment>/** 
+ * Return the locking policy for this open container.
+ */
+</MethodComment>
+            <ReturnType>LockingPolicy</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLockingPolicy</MethodName>
+            <MethodComment>/** 
+ * Set the locking policy for this open container
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newLockingPolicy</ParamName>
+                    <ParamType>LockingPolicy</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeRecordHandle</MethodName>
+            <MethodComment>/** 
+ * Return a record handle that is initialized to the given segment id, container id, page number and record id.
+ * @exception StandardException Standard Derby exception policy.
+ * @param pageNumber   the page number of the RecordHandle.
+ * @param recordId     the record id of the RecordHandle.
+ * @see RecordHandle
+ */
+</MethodComment>
+            <ReturnType>RecordHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>recordId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compactRecord</MethodName>
+            <MethodComment>/** 
+ * This record probably has shrunk considerably.  Free its reserved space or compact it.
+ * @param record	The record handle, the record must have been locked execlusively already.
+ * @exception StandardException Standard Derby exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isTemporaryContainer</MethodName>
+            <MethodComment>/** 
+ * Return true if this containerHandle refers to a temporary container.
+ * @exception StandardException Standard Derby exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSpaceInfo</MethodName>
+            <MethodComment>/** 
+ * Get information about space used by the container.
+ */
+</MethodComment>
+            <ReturnType>SpaceInfo</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backupContainer</MethodName>
+            <MethodComment>/** 
+ * Backup the container to the specified path.
+ * @exception StandardException	Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>backupContainerPath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

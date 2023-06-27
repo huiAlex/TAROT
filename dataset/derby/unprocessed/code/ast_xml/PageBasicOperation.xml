@@ -1,0 +1,402 @@
+<Class>
+    <Id>1119</Id>
+    <Package>org.apache.derby.impl.store.raw.data</Package>
+    <ClassName>PageBasicOperation</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Loggable</SuperInterface>
+        <SuperInterface>RePreparable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>PageBasicOperation  /** 
+ * A PageBasicOperation changed the content of a page, this is the root class of all page oriented operation. Each PageBasicOperation record change(s) that apply to &lt;B&gt;one and only one page&lt;/B&gt;.  The pageID that is changed must be recorded in the log operation - in other words, redo must be physical (or more correctly, in Gray's term, physiological, since changes are logical &lt;B&gt;within&lt;/B&gt; a page). &lt;BR&gt;Undo can be logical, but the undo logic must be hidden in generateUndo. By the time a compensation operation is logged as a LogOperation, the page that needs roll back must be determined. &lt;PRE&gt;
+ * @derby.formatId	no format id, an abstract class.
+ * @derby.purpose	provide methods for logical undo
+ * @derby.upgrade
+ * @derby.diskLayout pageId(PageKey)			the page this operation applies to pageVersion(CompressedLong)	the page version this operation applied to OptionalData	none
+ * @derby.endFormat &lt;/PRE&gt;
+ * @see Loggable
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>pageId</FieldName>
+            <FieldType>PageKey</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pageVersion</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>page</FieldName>
+            <FieldType>BasePage</FieldType>
+        </Field>
+        <Field>
+            <FieldName>containerHdl</FieldName>
+            <FieldType>RawContainerHandle</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foundHere</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>PageBasicOperation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>BasePage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>PageBasicOperation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pageId;writeExternal;[out]</InnerMethodInvoke>
+                <InnerMethodInvoke>CompressedNumber;writeLong;[out, pageVersion]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>needsRedo</MethodName>
+            <MethodComment>/** 
+ * Returns true if this op should be redone during recovery redo, if so, get and latched the page.
+ * @exception StandardException Standard Derby policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [pversion=page.getPageVersion()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;releaseResource;[xact]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>releaseResource</MethodName>
+            <MethodComment>/** 
+ * Release latched page and any other resources acquired during a previous findpage, safe to call multiple times. In this RawStore implementataion, resource is acquired by a log operation in one of two places &lt;nl&gt; &lt;li&gt; during runtime or recovery undo in PageOperation.generateUndo() &lt;li&gt; during recovery redo in PageBasicOperation.needsRedo() &lt;/nl&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>group</MethodName>
+            <MethodComment>/** 
+ * A page operation is a RAWSTORE log record
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPreparedLog</MethodName>
+            <MethodComment>/** 
+ * the default for optional data is set to null.  If an operation has optional data, the operation need to prepare the optional data for this method. WARNING: If a log operation extends this class, and the operation has optional data, it MUST overwrite this method to return a ByteArray that contains the optional data. 
+ * @exception StandardException Standard Derby policy.
+ */
+</MethodComment>
+            <ReturnType>ByteArray</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reclaimPrepareLocks</MethodName>
+            <MethodComment>/** 
+ * reclaim locks associated with the changes in this log record. &lt;p&gt;
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>locking_policy</ParamName>
+                    <ParamType>LockingPolicy</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetPageNumber</MethodName>
+            <MethodComment>/** 
+ * Reset the pageNumber
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pageNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageId</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PageKey</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findpage</MethodName>
+            <MethodComment>/** 
+ * Find the page the operation applies to and latch it, this only uses the segmentId, containerId, and pageId stored in this log record to find the page.
+ * @return null if container is dropped and committed (possiblystubbified), else return the latched page
+ * @exception StandardException Standard Derby policy.
+ */
+</MethodComment>
+            <ReturnType>BasePage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RawTransaction [rtran=(RawTransaction)xact]</InnerVar>
+                <InnerVar>StandardException [getPageException=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;releaseResource;[xact]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageForRedoRecovery</MethodName>
+            <MethodComment>/** 
+ * Subclass (e.g., init page) that wishes to do something about missing pages in load tran should override this method to return the page
+ * @exception StandardException Derby Standard error policy
+ */
+</MethodComment>
+            <ReturnType>BasePage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Page</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPageVersion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreMe</MethodName>
+            <MethodComment>/** 
+ * Undo the change indicated by this log operation and optional data. The page the undo should apply to is the latched undoPage. The undoPage must be the same page as the doMe page and the undo operation must restore the before image of the row that changed.   &lt;BR&gt; this can only be used under special circumstances: namely table level locking, and no internal or nested transaction, and all operations are rollec back with restoreMe instead of undoMe. &lt;BR&gt;&lt;B&gt;This method is here to support BeforeImageLogging&lt;/B&gt;
+ * @param xact			the Transaction doing the rollback
+ * @param undoPage		the page to rollback changes on
+ * @param CLRinstant	the log instant of this (PageUndo) operation
+ * @param in			optional data for the rollback operation
+ * @exception IOException Can be thrown by any of the methods of ObjectInput.
+ * @exception StandardException Standard Derby policy.		
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoPage</ParamName>
+                    <ParamType>BasePage</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>CLRinstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

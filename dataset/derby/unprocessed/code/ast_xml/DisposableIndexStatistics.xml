@@ -1,0 +1,331 @@
+<Class>
+    <Id>2134</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.upgradeTests.helpers</Package>
+    <ClassName>DisposableIndexStatistics</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DisposableIndexStatistics  /** 
+ * Helper class encapsulating logic used in the upgrade test for testing functionality dropping, and skipping generation of, disposable statistics entries.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>ROW_COUNT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>oldVersion</FieldName>
+            <FieldType>DerbyVersion</FieldType>
+        </Field>
+        <Field>
+            <FieldName>con</FieldName>
+            <FieldType>Connection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tbl</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fktbl</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pktbl</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DisposableIndexStatistics</MethodName>
+            <MethodComment>/** 
+ * Creates a new helper instance using the given connection and table.
+ * @param con connection
+ * @param tableName base table name
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldVersion</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>con</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createAndPopulateTables</MethodName>
+            <MethodComment>/** 
+ * Creates and populates the test tables. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [stmt=con.createStatement()]</InnerVar>
+                <InnerVar>IndexStatsUtil [stats=new IndexStatsUtil(con)]</InnerVar>
+                <InnerVar>int [preFkAddition=stats.getStatsTable(tbl).length]</InnerVar>
+                <InnerVar>int [tableStatsCount=stats.getStatsTable(tbl).length]</InnerVar>
+                <InnerVar>int [max=getNumTotalPossibleStats()]</InnerVar>
+                <InnerVar>int [min=max - (getNumNotNeededDisposableStats() + getNumOrphanedDisposableStats())]</InnerVar>
+                <InnerVar>int [cur=getAllRelevantStats(null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>con;setAutoCommit;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["create table " + pktbl + "( "+ "id1 int generated always as identity, "+ "id2 int not null"+ ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["create table " + fktbl + "( "+ "id int not null generated always as identity"+ ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["create table " + tbl + "( "+ "id int not null generated always as identity, "+ "fk_dropped int not null, "+ "fk_self int, "+ "fk_self_notnull int not null, "+ "nonunique int"+ ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;insertData;[con]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + pktbl + " add constraint "+ "PK_TWOCOL_PKTAB primary key (id1, id2)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[pktbl, 2]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + fktbl + " add constraint "+ "PK_FKTAB primary key (id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[fktbl, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " add constraint "+ "PK_MAIN primary key (id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[tbl, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["create index DUPS_MAIN on " + tbl + "(nonunique)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[tbl, 2]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " add constraint "+ "FKS_MAIN foreign key (fk_self) references "+ tbl+ "(id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[tbl, 3]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " add constraint "+ "FKSNN_MAIN foreign key (fk_self_notnull) references "+ tbl+ "(id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;getStatsTable;[tbl, 4]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " add constraint "+ "fk_to_be_dropped foreign key (fk_dropped) "+ "references "+ fktbl+ "(id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertTrue;[stats.getStatsTable(tbl).length == preFkAddition + 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " drop constraint "+ "fk_to_be_dropped"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertTrue;[stats.getStatsTable(tbl).length == preFkAddition]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " add constraint "+ "fk_on_pk foreign key (id) "+ "references "+ fktbl+ "(id)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["call syscs_util.syscs_update_statistics(" + "'APP', '" + tbl + "', null)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertTrue;[stats.getStatsTable(tbl).length == preFkAddition + 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;executeUpdate;["alter table " + tbl + " drop constraint "+ "fk_on_pk"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertTrue;["cur=" + cur + ", min="+ min, cur &gt;= min]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertTrue;["cur=" + cur + ", max="+ max, cur &lt;= max]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>con</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [oldAutoCommitValue=con.getAutoCommit()]</InnerVar>
+                <InnerVar>PreparedStatement [ps=con.prepareStatement("insert into " + fktbl + " values (DEFAULT)")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>con;setAutoCommit;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;setAutoCommit;[oldAutoCommitValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTableNames</MethodName>
+            <MethodComment>/** 
+ * Returns the names of the tables used by this test. 
+ */
+</MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>assertStatsCount</MethodName>
+            <MethodComment>/** 
+ * Asserts the number of statistics entries for all relevant tables.
+ * @param orphaned_disposedOf tells if the orphaned disposable statistics entries are expected to have been removed at this point
+ * @param notneeded_disposedOf tells if the unneeded statistics (like single column unique key indexes) are expected to have been  removed at this point
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>orphaned_disposedOf</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>notneeded_disposedOf</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [expected=getNumTotalPossibleStats()]</InnerVar>
+                <InnerVar>ArrayList&lt;IndexStatsUtil.IdxStats&gt; [entries=new ArrayList&lt;IndexStatsUtil.IdxStats&gt;()]</InnerVar>
+                <InnerVar>int [found=getAllRelevantStats(entries)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStatArray</MethodName>
+            <MethodComment>/** 
+ * Converts the list of statistics to an array. 
+ */
+</MethodComment>
+            <ReturnType>IndexStatsUtil.IdxStats[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>IndexStatsUtil.IdxStats</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllRelevantStats</MethodName>
+            <MethodComment>/** 
+ * Fetches all relevant statistics.
+ * @param list list to append statistics to (may be {@code null})
+ * @return The number of relevant statistics entries found.
+ * @throws SQLException if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>IndexStatsUtil.IdxStats</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [oldAutoCommitValue=con.getAutoCommit()]</InnerVar>
+                <InnerVar>IndexStatsUtil [stats=new IndexStatsUtil(con)]</InnerVar>
+                <InnerVar>String[] [tables=getTableNames()]</InnerVar>
+                <InnerVar>int [count=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>con;setAutoCommit;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>stats;release;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;setAutoCommit;[oldAutoCommitValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumTotalPossibleStats</MethodName>
+            <MethodComment>/** 
+ * Total number of possible statistics entries. &lt;p&gt; This number includes orphaned and unnecessary statistics, and these entries are expected to be purged out when running with the current/ newest version of Derby.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumNotNeededDisposableStats</MethodName>
+            <MethodComment>/** 
+ * Number of disposable statistics entries. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumOrphanedDisposableStats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasDerby5681Bug</MethodName>
+            <MethodComment>/** 
+ * Tells if the old version is affected by the DERBY-5681 bug. &lt;p&gt; The bug is that Derby fails to drop a statistics entry for a foreign key constraint, leaving an orphaned and outdated entry behind.
+ * @param oldVersion the old derbyVersion used in the test
+ * @return {@code true} if the old version has the bug.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldVersion</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,384 @@
+<Class>
+    <Id>1115</Id>
+    <Package>org.apache.derbyTesting.functionTests.harness</Package>
+    <ClassName>GenerateReport</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>GenerateReport  /** 
+ * Generate summary information from a RunSuite run. Can be called separately, if given the suite name. Will be called from RunSuite if System property genrep=true. Condenses run information down, prints out result stats, and shows details of failures (.diff files).
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DASHLINE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>passFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>diffFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>skipFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>propFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>passFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>diffFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>skipFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>propFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reportFile</FieldName>
+            <FieldType>PrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fileFilter</FieldName>
+            <FieldType>FilenameFilter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NumPass</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NumFail</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NumRun</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NumSkip</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PercentPass</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PercentFail</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TestStart</FieldName>
+            <FieldType>Timestamp</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TestDuration</FieldName>
+            <FieldType>Time</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SuiteName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CollectProperties</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Properties [ps=System.getProperties()]</InnerVar>
+                <InnerVar>char[] [newline={' '}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>propFile;println;[PropertyUtil.sortProperties(ps,newline)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CalculateRunLength</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [odn=System.getProperty("outputdir")]</InnerVar>
+                <InnerVar>BufferedReader [sumFile=null]</InnerVar>
+                <InnerVar>String [firstLine=null]</InnerVar>
+                <InnerVar>String [lastLine=null]</InnerVar>
+                <InnerVar>int [tsStart=22 + SuiteName.length()]</InnerVar>
+                <InnerVar>int [tsEnd=firstLine.length() - 8]</InnerVar>
+                <InnerVar>Timestamp [testEnd=Timestamp.valueOf(lastLine.substring(tsStart,tsEnd))]</InnerVar>
+                <InnerVar>long [testLen=testEnd.getTime() - TestStart.getTime()]</InnerVar>
+                <InnerVar>int [sec=(int)(testLen / 1000)]</InnerVar>
+                <InnerVar>int [min=sec / 60]</InnerVar>
+                <InnerVar>int [hr=min / 60]</InnerVar>
+                <InnerVar>Calendar [cal=new GregorianCalendar()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cal;set;[Calendar.HOUR_OF_DAY, hr]</InnerMethodInvoke>
+                <InnerMethodInvoke>cal;set;[Calendar.MINUTE, min]</InnerMethodInvoke>
+                <InnerMethodInvoke>cal;set;[Calendar.SECOND, sec]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CollectPassFailStats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [odn=System.getProperty("outputdir")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;CollectPassFailStats;[new File(odn), ""]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addLines</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outFile</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inFile</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedReader [readFile=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDiff</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outFile</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inFile</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedReader [readFile=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CollectPassFailStats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [fileList=dir.list(fileFilter)]</InnerVar>
+                <InnerVar>int [l=fileList.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CalculatePassFailStats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CountLines</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedReader [readFile=null]</InnerVar>
+                <InnerVar>int [line=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>OutputFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedReader [readFile=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PrintWriter</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fn</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>File [f=null]</InnerVar>
+                <InnerVar>PrintWriter [pw=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [jvmName=args[1]]</InnerVar>
+                <InnerVar>String [javaCmd=args[2]]</InnerVar>
+                <InnerVar>String [classpath=args[3]]</InnerVar>
+                <InnerVar>String [framework=args[4]]</InnerVar>
+                <InnerVar>String [processexec=args[5]]</InnerVar>
+                <InnerVar>boolean [useprocess=true]</InnerVar>
+                <InnerVar>String [reportFileName=SuiteName + "_report.txt"]</InnerVar>
+                <InnerVar>SysInfoLog [sysLog=new SysInfoLog()]</InnerVar>
+                <InnerVar>String [jvm=System.getProperty("jvm")]</InnerVar>
+                <InnerVar>String [canondir=System.getProperty("canondir")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>reportFile;print;["Generating report for RunSuite "]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;["Test environment information:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;print;["COMMAND LINE STYLE: "]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[jvm]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;print;["TEST CANONS: "]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[canondir]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;["Summary results:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;CalculateRunLength;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;CollectPassFailStats;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;CollectProperties;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>passFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>failFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>skipFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>diffFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>propFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;CalculatePassFailStats;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;["Test Run Started: " + TestStart]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;["Test Run Duration: " + TestDuration]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[NumRun + " Tests Run"]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[PercentPass + "% Pass (" + NumPass+ " tests passed)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[PercentFail + "% Fail (" + NumFail+ " tests failed)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[NumSkip + " Suites skipped"]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;["System properties in: " + propFileName]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;println;[DASHLINE]</InnerMethodInvoke>
+                <InnerMethodInvoke>reportFile;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Generated report: " + reportFileName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

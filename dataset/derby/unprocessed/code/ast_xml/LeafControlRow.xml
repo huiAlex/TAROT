@@ -1,0 +1,571 @@
+<Class>
+    <Id>1113</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>LeafControlRow</ClassName>
+    <SuperClass>ControlRow</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LeafControlRow  /** 
+ * @derby.formatId ACCESS_BTREE_LEAFCONTROLROW_V1_ID
+ * @derby.purpose   Btree pages all have a control row at the front of every page.  Todetermine the type of row, read the first column which is a format id and it tells what kind of control row it is.
+ * @derby.upgrade   This format was made obsolete in the kimono release.
+ * @derby.diskLayout column 1 - control row type         : StorableFormatId column 2 - left sibling page number : SQLLongint column 3 - right sibling page number: SQLLongint column 4 - parent page number       : SQLLongint column 5 - level number (0 is leaf) : SQLLongint column 6 - isRoot                   : SQLLongint column 7 - Conglomerate object      : null unless it is root else a Conglomerate object, matching that of current table. Currently this field is only used by logical undo and the type of object is inferred by the logical undo code.
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>LeafControlRow</MethodName>
+            <MethodComment>/** 
+ * No arg constructor. &lt;p&gt; Public no arg constructor is for the monitor to call for format id implemenation, it should not be called for any other reason.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LeafControlRow</MethodName>
+            <MethodComment>/** 
+ * Constructs a leaf-page control row, for a newly allocated leaf page.  
+ * @param btree     The open btree to allocate this page from.
+ * @param page      The newly allocated page where the control row willbe inserted.
+ * @param parent    The parent of the leaf page.  Set to null for root.RESOLVE (mikem) - set to null otherwise?
+ * @param isRoot    Is this page the root of the tree?
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page</ParamName>
+                    <ParamType>Page</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRoot</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allocate</MethodName>
+            <MethodComment>/** 
+ * Allocate a new leaf page to the conglomerate.
+ * @param btree     The open conglomerate from which to get the leaf from
+ * @param parent    The parent page of the newly allocated page, null ifallocating root page.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>LeafControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=btree.container.addPage()]</InnerVar>
+                <InnerVar>LeafControlRow [control_row=new LeafControlRow(btree,page,parent,false)]</InnerVar>
+                <InnerVar>byte [insertFlag=Page.INSERT_INITIAL]</InnerVar>
+                <InnerVar>RecordHandle [rh=page.insertAtSlot(Page.FIRST_SLOT_NUMBER,control_row.getRow(),(FormatableBitSet)null,(LogicalUndo)null,insertFlag,AccessFactoryGlobals.BTREE_OVERFLOW_THRESHOLD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get_left_nondeleted_rowcnt</MethodName>
+            <MethodComment>/** 
+ * Return the number of non-deleted rows from slot 1 through "startslot" &lt;p&gt; Return the number of non-deleted rows that exist on the page starting at slot one through "startslot". &lt;p&gt; RESOLVE (mikem) - is the expense of this routine worth it, it is only used for costing.  Could an estimate from the nonDeletedRecordCount() be used instead?
+ * @return The requested non_deleted_row_count.
+ * @param startslot  Count non deleted row up to and including this slot.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>float</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startslot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [non_deleted_row_count=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>controlRowInit</MethodName>
+            <MethodComment>/** 
+ * Perform page specific initialization. &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initEmptyBtree</MethodName>
+            <MethodComment>/** 
+ * Initialize conglomerate with one page, to be a 1 page btree. Given a conglomerate which already has one page allocated to it,  initialize the page to be a leaf-root page with no entries.  Allocate the control row and store it on the page.
+ * @param open_btree The open btree to initialize (container is open).
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Page [page=open_btree.container.getPage(ContainerHandle.FIRST_PAGE_NUMBER)]</InnerVar>
+                <InnerVar>LeafControlRow [control_row=new LeafControlRow(open_btree,page,null,true)]</InnerVar>
+                <InnerVar>byte [insertFlag=Page.INSERT_INITIAL]</InnerVar>
+                <InnerVar>RecordHandle [rh=page.insertAtSlot(Page.FIRST_SLOT_NUMBER,control_row.getRow(),(FormatableBitSet)null,(LogicalUndo)null,insertFlag,AccessFactoryGlobals.BTREE_OVERFLOW_THRESHOLD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>page;unlatch;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumberOfControlRowColumns</MethodName>
+            <MethodComment>/** 
+ * Get the number of columns in the control row.   &lt;p&gt; Control rows all share the first columns as defined by this class and then add columns to the end of the control row.  For instance a branch control row add a child page pointer field. &lt;p&gt;
+ * @return The total number of columns in the control row.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isLeftmostLeaf</MethodName>
+            <MethodComment>/** 
+ * Is the current page the leftmost leaf of tree? &lt;p&gt;
+ * @return true if the current page is the leftmost leaf of the tree,else return false.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isRightmostLeaf</MethodName>
+            <MethodComment>/** 
+ * Is the current page the rightmost leaf of tree? &lt;p&gt;
+ * @return true if the current page is the rightmost leaf of the tree,else return false.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>search</MethodName>
+            <MethodComment>/** 
+ * Perform a search of this leaf page, ultimately returning the latched leaf page and row slot after which the given key belongs. The slot is returned in the result structure.  If the key exists on the page, the result.exact will be true.  Otherwise, result.exact will be false, and the row slot returned will be the one immediately preceding the position at which the key belongs.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sp</ParamName>
+                    <ParamType>SearchParameters</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;searchForEntry;[sp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchLeft</MethodName>
+            <MethodComment>/** 
+ * Search and return the left most leaf page. &lt;p&gt; Perform a recursive search, ultimately returning the leftmost leaf page which is the first leaf page in the leaf sibling chain.  (This method might better be called getFirstLeafPage()).
+ * @return The leftmost leaf page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>searchRight</MethodName>
+            <MethodComment>/** 
+ * Search and return the right most leaf page. &lt;p&gt; Perform a recursive search, ultimately returning the rightmost leaf page which is the last leaf page in the leaf sibling chain.  (This method might better be called getLastLeafPage()).
+ * @return The rightmost leaf page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shrinkFor</MethodName>
+            <MethodComment>/** 
+ * Perform a recursive shrink operation for the key. If this method returns true, the caller should remove the corresponding entry for the page. This routine is not guaranteed to successfully shrink anything.  The page lead to by the key might turn out not to be empty by the time shrink gets there, and shrinks will give up if there is a deadlock. &lt;P&gt; The receiver page must be latched on entry and is returned unlatched.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [shrink_me=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>splitFor</MethodName>
+            <MethodComment>/** 
+ * Perform a top down split pass making room for the the key in "row". &lt;p&gt; Perform a split such that a subsequent call to insert given the argument index row will likely find room for it.  Since  latches are released the client must code for the case where another user has grabbed the space made available by the split pass and be ready to do another split. &lt;p&gt; On entry, the parent is either null or latched, and the current page is latched.  On exit, all pages will have been unlatched.  If the parent is null, then this page is a root leaf page.
+ * @return page number of the newly allocated leaf page created by split.
+ * @param open_btree  The open btree to associate latches with.
+ * @param template    A scratch area to use while searching for split pass.
+ * @param parent_page The parent page of the current page in the split pass.starts at null for root.
+ * @param splitrow    The key to make room for during the split pass.
+ * @param flag        A flag used to direct where point of split should bechosen.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent_page</ParamName>
+                    <ParamType>BranchControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitrow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [current_leaf_pageno=this.page.getPageNumber()]</InnerVar>
+                <InnerVar>int [splitpoint=(this.page.recordCount() - 1) / 2 + 1]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [split_leaf_row=open_btree.getConglomerate().createTemplate(open_btree.getRawTran())]</InnerVar>
+                <InnerVar>BranchRow [branchrow=BranchRow.createBranchRowFromOldLeafRow(split_leaf_row,BranchRow.DUMMY_PAGE_NUMBER)]</InnerVar>
+                <InnerVar>LeafControlRow [newleaf=LeafControlRow.allocate(open_btree,parent_page)]</InnerVar>
+                <InnerVar>int [num_rows_to_move=this.page.recordCount() - splitpoint]</InnerVar>
+                <InnerVar>BranchRow [branch_template=BranchRow.createEmptyTemplate(open_btree.getRawTran(),open_btree.getConglomerate())]</InnerVar>
+                <InnerVar>SearchParameters [sp=new SearchParameters(branchrow.getRow(),SearchParameters.POSITION_LEFT_OF_PARTIAL_KEY_MATCH,branch_template.getRow(),open_btree,false)]</InnerVar>
+                <InnerVar>byte [insertFlag=Page.INSERT_INITIAL]</InnerVar>
+                <InnerVar>long [new_leaf_pageno=newleaf.page.getPageNumber()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.page;fetchFromSlot;[(RecordHandle)null, splitpoint, split_leaf_row, (FetchDescriptor)null, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>branchrow;setPageNumber;[newleaf.page.getPageNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newleaf;linkRight;[open_btree, this]</InnerMethodInvoke>
+                <InnerMethodInvoke>parent_page;searchForEntry;[sp]</InnerMethodInvoke>
+                <InnerMethodInvoke>page;setRepositionNeeded;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>open_btree.getXactMgr();commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>parent_page;release;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;release;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>newleaf;release;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>growRoot</MethodName>
+            <MethodComment>/** 
+ * Grow a new root page from a leaf page.  Slightly tricky because we want to retain page 0 as the root. &lt;P&gt; On entry, the current leaf root page is expected  to be latched.  On exit, all latches will have been released. &lt;P&gt; The caller cannot not assume success.  If we have to release latches this routine just returns and assumes the caller will retry the  grow root if necessary.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leafroot</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BranchControlRow [branchroot=null]</InnerVar>
+                <InnerVar>LeafControlRow [newleaf=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leafroot.page;copyAndPurge;[newleaf.page, 1, leafroot.page.recordCount() - 1, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>branchroot.page;updateAtSlot;[0, branchroot.getRow(), (FormatableBitSet)null]</InnerMethodInvoke>
+                <InnerMethodInvoke>branchroot.page;setRepositionNeeded;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>open_btree.getXactMgr();commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLeftChild</MethodName>
+            <MethodComment>/** 
+ * Return the left child pointer for the page. &lt;p&gt; Leaf pages don't have children, so they override this and return null.
+ * @return The page which is the leftmost child of this page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightChild</MethodName>
+            <MethodComment>/** 
+ * Return the right child pointer for the page. &lt;p&gt; Leaf pages don't have children, so they override this and return null.
+ * @return The page which is the rightmost child of this page.
+ * @param btree  The open btree to associate latches/locks with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkConsistency</MethodName>
+            <MethodComment>/** 
+ * Perform consistency checks on a leaf page. Check consistency of the page and its children, returning the number of pages seen, and throwing errors if inconsistencies are found. The checks specific to a leaf page are: &lt;menu&gt; &lt;li&gt; Page is at level 0. &lt;li&gt; Version is a valid leaf page version. &lt;li&gt; Control row has right number of columns for leaf. &lt;/menu&gt; This method also performs the consistency checks that are common to both leaf and branch pages.
+ * @see ControlRow#checkGeneric
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>check_other_pages</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkGeneric;[btree, parent, check_other_pages]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printTree</MethodName>
+            <MethodComment>/** 
+ * Recursively print the tree starting at current node in tree. This is a leaf so return.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Return my format identifier.
+ * @see org.apache.derby.iapi.services.io.TypedFormat#getTypeFormatId
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

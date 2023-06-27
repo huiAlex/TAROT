@@ -1,0 +1,215 @@
+<Class>
+    <Id>1726</Id>
+    <Package>org.apache.derby.catalog</Package>
+    <ClassName>IndexDescriptor</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>IndexDescriptor  /** 
+ * This interface describes an index. It is used in the column SYS.SYSCONGLOMERATES.DESCRIPTOR and describes everything about an index except the index name and  the table on which the index is defined. That information is available  in the columns NAME and TABLEID of the table SYS.SYSCONGLOMERATES. &lt;p&gt; Whereas non-deferrable constraints are backed by UNIQUE indexes, deferrable constraints are backed by non-unique indexes. The duplicate checking on inserts and updates for deferrable constraints are handled at the language level, not by the store level. The following table shows the correspondence between the constraint types and the index attributes used: &lt;ul&gt; &lt;li&gt;Non-deferrable PRIMARY KEY and UNIQUE NOT NULL on all constraint columns &lt;pre&gt; \  Value  | Number of index columns | Check Attribute                 \        | in physical BTree key   | in -------------------------------------------------------------------- unique                     | true  | N - 1 (row location     | isUniqueWithDuplicateNulls | false |        not part of key) | Store uniqueDeferrable           | false |                         | Btree hasDeferrableChecking      | false |                         | code &lt;/pre&gt; &lt;li&gt;Non-deferrable UNIQUE, where at least one constraint column is nullable. &lt;pre&gt; \  Value  | Number of index columns | Check Attribute                 \        | in physical BTree key   | in ------------------------------------------------------------ ------- unique                     | false | N                       | isUniqueWithDuplicateNulls | true  |                         | Store uniqueDeferrable           | false |                         | Btree hasDeferrableChecking      | false |                         | code &lt;/pre&gt; &lt;li&gt;Deferrable PRIMARY KEY and UNIQUE NOT NULL on all constraint columns &lt;pre&gt; \  Value  | Number of index columns | Check Attribute                 \        | in physical BTree key   | in ------------------------------------------------------------ ------- unique                     | false | N                       | isUniqueWithDuplicateNulls | false |                         | Lang. uniqueDeferrable           | true  |                         | code hasDeferrableChecking      | true  |                         | &lt;/pre&gt; &lt;li&gt;Deferrable UNIQUE, where at least one constraint column is nullable. &lt;pre&gt; \  Value  | Number of index columns | Check Attribute                 \        | in physical BTree key   | in ------------------------------------------------------------ ------- unique                     | false | N                       | isUniqueWithDuplicateNulls | true  |                         | Lang. uniqueDeferrable           | false |                         | code hasDeferrableChecking      | true  |                         | &lt;/pre&gt; &lt;/ul&gt;
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>isUnique</MethodName>
+            <MethodComment>/** 
+ * Returns true if the index is unique.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isUniqueWithDuplicateNulls</MethodName>
+            <MethodComment>/** 
+ * Returns true if the index is duplicate keys only for null key parts.  This is effective only if isUnique is false.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isUniqueDeferrable</MethodName>
+            <MethodComment>/** 
+ * The index represents a PRIMARY KEY or a UNIQUE NOT NULL constraint which is deferrable. {@code true} implies {@code isUnique() == false} and{@code isUniqueWithDuplicateNulls() == false} and{@code hasDeferrableChecking() == true}.
+ * @return {@code true} if the index represents such a constraint
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasDeferrableChecking</MethodName>
+            <MethodComment>/** 
+ * Returns true if the index is used to support a deferrable constraint.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>baseColumnPositions</MethodName>
+            <MethodComment>/** 
+ * Returns an array of column positions in the base table.  Each index column corresponds to a column position in the base table, except the column representing the location of the row in the base table. The returned array holds the column positions in the base table, so, if entry 2 is the number 4, the second column in the index is the fourth column in the table.
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeyColumnPosition</MethodName>
+            <MethodComment>/** 
+ * Returns the postion of a column. &lt;p&gt; Returns the position of a column within the key (1-based). 0 means that the column is not in the key.  Same as the above method, but it uses int instead of Integer.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>heapColumnPosition</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>numberOfOrderedColumns</MethodName>
+            <MethodComment>/** 
+ * Returns the number of ordered columns.   &lt;p&gt; In the future, it will be possible to store non-ordered columns in an index.  These will be useful for covered queries.  The ordered columns will be at the beginning of the index row, and they will be followed by the non-ordered columns. For now, all columns in an index must be ordered.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>indexType</MethodName>
+            <MethodComment>/** 
+ * Returns the type of the index.  For now, we only support B-Trees, so the value "BTREE" is returned.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isAscending</MethodName>
+            <MethodComment>/** 
+ * Returns array of boolean telling asc/desc info for each index key column for convenience of using together with baseColumnPositions method.  Both methods return an array with subscript starting from 0.
+ */
+</MethodComment>
+            <ReturnType>boolean[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isAscending</MethodName>
+            <MethodComment>/** 
+ * Returns true if the specified column is ascending in the index (1-based).
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyColumnPosition</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDescending</MethodName>
+            <MethodComment>/** 
+ * Returns true if the specified column is descending in the index (1-based).  In the current release, only ascending columns are supported.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyColumnPosition</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setBaseColumnPositions</MethodName>
+            <MethodComment>/** 
+ * set the baseColumnPositions field of the index descriptor.  This is for updating the field in operations such as "alter table drop column" where baseColumnPositions is changed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>baseColumnPositions</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIsAscending</MethodName>
+            <MethodComment>/** 
+ * set the isAscending field of the index descriptor.  This is for updating the field in operations such as "alter table drop column" where isAscending is changed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>isAscending</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNumberOfOrderedColumns</MethodName>
+            <MethodComment>/** 
+ * set the numberOfOrderedColumns field of the index descriptor.  This is for updating the field in operations such as "alter table drop column" where numberOfOrderedColumns is changed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numberOfOrderedColumns</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

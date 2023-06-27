@@ -1,0 +1,414 @@
+<Class>
+    <Id>2170</Id>
+    <Package>org.apache.derby.impl.store.raw.data</Package>
+    <ClassName>EncryptOrDecryptData</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>PrivilegedAction</SuperInterface>
+        <SuperInterface>Boolean</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EncryptOrDecryptData  /** 
+ * This class is used to encrypt all the containers in the data segment with a new encryption key when password/key is changed or when an existing database is reconfigured for encryption. Encryption of existing data in the data segments is done by doing the following: Find all the containers in data segment (seg0) and encrypt all of them with the new  encryption key, the process for each container is: 1.Write a log record to indicate that the container is getting encrypted. 2.Read all the pages of the container through the page cache and encrypt each page with new encryption key and then write to a temporary file(n&lt;cid&gt;.dat) in the data segment itself. 3. Rename the current container file (c&lt;cid&gt;.dat) to another file (o&lt;cid&gt;.dat) 4. Rename the new encrypted version of the file (n&amp;lt;cid).dat) to be the current container file (c&lt;cid&gt;.dat). 5. All the old version of  the container (o&lt;cid&gt;.dat) files are removed after a successful checkpoint with a new key or on a rollback.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>dataFactory</FieldName>
+            <FieldType>BaseDataFileFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>storageFactory</FieldName>
+            <FieldType>StorageFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STORAGE_FILE_EXISTS_ACTION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STORAGE_FILE_DELETE_ACTION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STORAGE_FILE_RENAME_ACTION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>actionCode</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>actionStorageFile</FieldName>
+            <FieldType>StorageFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>actionDestStorageFile</FieldName>
+            <FieldType>StorageFile</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>EncryptOrDecryptData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataFactory</ParamName>
+                    <ParamType>BaseDataFileFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decryptAllContainers</MethodName>
+            <MethodComment>/** 
+ * Finds all the all the containers stored in the data directory and decrypts them.
+ * @param t the transaction that is used for the decryption operation
+ * @throws StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;encryptOrDecryptAllContainers;[t, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encryptAllContainers</MethodName>
+            <MethodComment>/** 
+ * Find all the all the containers stored in the data directory and encrypt them.
+ * @param t the transaction that is used for the encryption operation
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;encryptOrDecryptAllContainers;[t, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encryptOrDecryptAllContainers</MethodName>
+            <MethodComment>/** 
+ * Encrypts or decrypts all containers in the database data directory.
+ * @param t transaction used for the cryptographic operation
+ * @param doEncrypt tells whether to encrypt or decrypt
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>doEncrypt</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [files=dataFactory.getContainerNames()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encryptOrDecryptContainer</MethodName>
+            <MethodComment>/** 
+ * Encrypts or decrypts the specified container.
+ * @param t transaction that used to perform the cryptographic operation
+ * @param ckey the key of the container that is being encrypted/decrypted
+ * @param doEncrypt tells whether to encrypt or decrypt
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ckey</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>doEncrypt</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LockingPolicy [cl=t.newLockingPolicy(LockingPolicy.MODE_CONTAINER,TransactionController.ISOLATION_SERIALIZABLE,true)]</InnerVar>
+                <InnerVar>RawContainerHandle [containerHdl=(RawContainerHandle)t.openContainer(ckey,cl,ContainerHandle.MODE_FORUPDATE)]</InnerVar>
+                <InnerVar>EncryptContainerOperation [lop=new EncryptContainerOperation(containerHdl)]</InnerVar>
+                <InnerVar>String [newFilePath=getFilePath(ckey,false)]</InnerVar>
+                <InnerVar>StorageFile [newFile=storageFactory.newStorageFile(newFilePath)]</InnerVar>
+                <InnerVar>StorageFile [currentFile=dataFactory.getContainerPath(ckey,false)]</InnerVar>
+                <InnerVar>StorageFile [oldFile=getFile(ckey,true)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>t;logAndDo;[lop]</InnerMethodInvoke>
+                <InnerMethodInvoke>dataFactory;flush;[t.getLastLogInstant()]</InnerMethodInvoke>
+                <InnerMethodInvoke>containerHdl;encryptOrDecryptContainer;[newFilePath, doEncrypt]</InnerMethodInvoke>
+                <InnerMethodInvoke>containerHdl;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFile</MethodName>
+            <MethodComment>/** 
+ * Get file handle to a container file that is used to keep temporary versions of the container file.
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>old</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFilePath</MethodName>
+            <MethodComment>/** 
+ * Get path to a container file that is used to keep temporary versions of the container file.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>old</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer("seg")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[containerId.getSegmentId()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[storageFactory.getSeparator()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[old ? 'o' : 'n']</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[Long.toHexString(containerId.getContainerId())]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[".dat"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOldContainerFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctrFileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [segmentId=0]</InnerVar>
+                <InnerVar>StringBuffer [sb=new StringBuffer("seg")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[segmentId]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[storageFactory.getSeparator()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[ctrFileName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreContainer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageFile [currentFile=dataFactory.getContainerPath(containerId,false)]</InnerVar>
+                <InnerVar>StorageFile [oldFile=getFile(containerId,true)]</InnerVar>
+                <InnerVar>StorageFile [newFile=getFile(containerId,false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeOldVersionOfContainers</MethodName>
+            <MethodComment>/** 
+ * Removes old versions of the containers after a cryptographic operation on the database.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String[] [files=dataFactory.getContainerNames()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privExists</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [ret=AccessController.doPrivileged(this)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privDelete</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [ret=AccessController.doPrivileged(this)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privRename</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromFile</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destFile</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [ret=AccessController.doPrivileged(this)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

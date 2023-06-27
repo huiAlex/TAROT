@@ -1,0 +1,574 @@
+<Class>
+    <Id>1188</Id>
+    <Package>org.apache.derby.impl.tools.optional</Package>
+    <ClassName>ForeignDBViews</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>OptionalTool</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ForeignDBViews  /** 
+ * &lt;p&gt; OptionalTool to create wrapper functions and views for all of the user tables in a foreign database. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>XML_TYPE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SAFE_DROP_SQLSTATES</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ForeignDBViews</MethodName>
+            <MethodComment>/** 
+ * 0-arg constructor required by the OptionalTool contract 
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadTool</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Creates a local Derby schema for every foreign schema which contains a user table. Then creates a table function and convenience view for every user table found in the foreign database. The parameters to this method are: &lt;/p&gt; &lt;ul&gt; &lt;li&gt;foreignConnectionURL (required) - URL to connect to the foreign database&lt;/li&gt; &lt;li&gt;schemaPrefix (optional) - If not specified, then the local Derby schema which is created has the same name as the foreign schema. Otherwise, this prefix is prepended to the names of the local Derby schemas which are created.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>configurationParameters</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [foreignConnectionURL=configurationParameters[0]]</InnerVar>
+                <InnerVar>String [schemaPrefix=(configurationParameters.length == 1) ? null : configurationParameters[1]]</InnerVar>
+                <InnerVar>Connection [foreignConn=getForeignConnection(foreignConnectionURL)]</InnerVar>
+                <InnerVar>Connection [derbyConn=getDerbyConnection()]</InnerVar>
+                <InnerVar>DatabaseMetaData [foreignDBMD=foreignConn.getMetaData()]</InnerVar>
+                <InnerVar>ResultSet [tableCursor=getForeignTables(foreignDBMD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tableCursor;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>foreignConn;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unloadTool</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Removes the schemas, table functions, and views created by loadTool(). &lt;/p&gt; &lt;ul&gt; &lt;li&gt;connectionURL (required) - URL to connect to the foreign database&lt;/li&gt; &lt;li&gt;schemaPrefix (optional) - See loadTool() for more information on this argument.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>configurationParameters</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [foreignConnectionURL=configurationParameters[0]]</InnerVar>
+                <InnerVar>String [schemaPrefix=(configurationParameters.length == 1) ? null : configurationParameters[1]]</InnerVar>
+                <InnerVar>Connection [foreignConn=getForeignConnection(foreignConnectionURL)]</InnerVar>
+                <InnerVar>Connection [derbyConn=getDerbyConnection()]</InnerVar>
+                <InnerVar>DatabaseMetaData [foreignDBMD=foreignConn.getMetaData()]</InnerVar>
+                <InnerVar>ResultSet [tableCursor=getForeignTables(foreignDBMD)]</InnerVar>
+                <InnerVar>HashSet&lt;String&gt; [schemas=new HashSet&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tableCursor;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>foreignConn;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ForeignTableVTI;dropConnection;[foreignConnectionURL]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerForeignTable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>foreignDBMD</ParamName>
+                    <ParamType>DatabaseMetaData</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignSchemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignTableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignConnectionURL</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaPrefix</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derbyConn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [tfBuffer=new StringBuilder()]</InnerVar>
+                <InnerVar>String [derbySchemaName=getDerbySchemaName(schemaPrefix,foreignSchemaName)]</InnerVar>
+                <InnerVar>String [dotSchemaName=dotSeparatedSchemaName(derbySchemaName)]</InnerVar>
+                <InnerVar>ResultSet [columnCursor=foreignDBMD.getColumns(null,foreignSchemaName,foreignTableName,"%")]</InnerVar>
+                <InnerVar>int [columnCount=0]</InnerVar>
+                <InnerVar>String [tfDDL=tfBuffer.toString()]</InnerVar>
+                <InnerVar>StringBuilder [viewBuffer=new StringBuilder()]</InnerVar>
+                <InnerVar>String [viewDDL=viewBuffer.toString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;createDerbySchema;[derbyConn, derbySchemaName]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["create function " + dotSchemaName + delimitedID(foreignTableName)]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n("]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n\tforeignSchemaName varchar( 32672 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n\tforeignTableName varchar( 32672 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n\tconnectionURL varchar( 32672 )"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n)\nreturns table\n("]</InnerMethodInvoke>
+                <InnerMethodInvoke>columnCursor;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\n)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\nlanguage java parameter style derby_jdbc_result_set no sql"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tfBuffer;append;["\nexternal name 'org.apache.derby.vti.ForeignTableVTI.readForeignTable'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["create view " + dotSchemaName + delimitedID(foreignTableName)]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\nas select *"]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\nfrom table"]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n(\n"]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\t" + dotSchemaName + delimitedID(foreignTableName)]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n\t("]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n\t\t" + stringLiteral(foreignSchemaName) + ","]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n\t\t" + stringLiteral(foreignTableName) + ","]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n\t\t" + stringLiteral(foreignConnectionURL)]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n\t)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>viewBuffer;append;["\n) s"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[derbyConn, tfDDL]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[derbyConn, viewDDL]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForeignTables</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get a cursor through the user tables in the foreign database. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>ResultSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>foreignDBMD</ParamName>
+                    <ParamType>DatabaseMetaData</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDerbySchema</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Create a Derby schema if it does not already exist. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>derbyConn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derbySchemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [existsPS=prepareStatement(derbyConn,"select count(*) from sys.sysschemas where schemaname = ?")]</InnerVar>
+                <InnerVar>ResultSet [existsRS=existsPS.executeQuery()]</InnerVar>
+                <InnerVar>boolean [exists=existsRS.getInt(1) &gt; 0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>existsPS;setString;[1, derbySchemaName]</InnerMethodInvoke>
+                <InnerMethodInvoke>existsRS;next;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>existsRS;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>existsPS;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropDerbySchema</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Drop a Derby schema. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>derbyConn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derbySchemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;dropObject;[derbyConn, null, derbySchemaName, "schema", true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDerbySchemaName</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the name of the local Derby schema corresponding to a foreign schema name. Returns null if the default (current) schema is to be used. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schemaPrefix</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignSchemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dotSeparatedSchemaName</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Turn a Derby schema name into a schema name suitable for use in a dot-separated object name. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapType</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the type of an external database's column as a Derby type name. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jdbcType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignTypeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>precisionToLength</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Turns precision into a length designator. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>precisionAndScale</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Build a precision and scale designator. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropObject</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Drop a schema object. If the object does not exist, silently swallow the error. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>objectName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>objectType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>restrict</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [dotSchemaName=dotSeparatedSchemaName(schemaName)]</InnerVar>
+                <InnerVar>String [restrictString=restrict ? " restrict" : ""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForeignConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Connection</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>connectionURL</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDerbyConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Connection</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>delimitedID</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stringLiteral</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>executeDDL</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ddl=prepareStatement(conn,text)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ddl;execute;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ddl;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SQLException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>errorMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [sqlState=org.apache.derby.shared.common.reference.SQLState.JAVA_EXCEPTION.substring(0,5)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

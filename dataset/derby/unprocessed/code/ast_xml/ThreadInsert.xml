@@ -1,0 +1,230 @@
+<Class>
+    <Id>1672</Id>
+    <Package>org.apache.derbyTesting.system.oe.load</Package>
+    <ClassName>ThreadInsert</ClassName>
+    <SuperClass>SimpleInsert</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Runnable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ThreadInsert  /** 
+ * Multi-threaded version of SimpleInsert. A number of threads execute the INSERT statements (each with their own connection). All the rows for a given warehouse are executed by one thread. The threads each get a warehouse to complete and then insert all the rows. Then they loop back to get the next warehouse. Warehouses are assigned to threads in a first come first served fashion. The main thread also inserts the ITEM table. &lt;BR&gt; By default the number of threads is the number of cpus on the machine, unless the scale to be loaded is larger than the number of threads. Then the number of threads will be equal to the scale. If the scale is one or the number of threads is one then the load is just like SimpleInsert. &lt;BR&gt; The number of threads can be set but if it it larger than the scale then the number of threads will be equal to the scale. &lt;BR&gt; It is assumed that foreign key constraints are created after the load.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>master</FieldName>
+            <FieldType>ThreadInsert</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loadExceptions</FieldName>
+            <FieldType>SQLException</FieldType>
+        </Field>
+        <Field>
+            <FieldName>threadCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ds</FieldName>
+            <FieldType>DataSource</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nextWarehouse</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ThreadInsert</MethodName>
+            <MethodComment>/** 
+ * Create a ThreadInsert loader.
+ * @param ds getConnection() will be used to create connectionsfor the spaened threads.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ds</ParamName>
+                    <ParamType>DataSource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ThreadInsert</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>master</ParamName>
+                    <ParamType>ThreadInsert</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupLoad</MethodName>
+            <MethodComment>/** 
+ * Initialize the load by calling the super-class's method and default the number of threads to the smaller of the number of cpus and the scale.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [cpuCount=Runtime.getRuntime().availableProcessors()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setThreadCount;[cpuCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setThreadCount</MethodName>
+            <MethodComment>/** 
+ * Set the thread count. If the scale is less than the number of threads then the number of threads inserting data will  be equal to the scale.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>threadCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populateAllTables</MethodName>
+            <MethodComment>/** 
+ * Populate the database.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>threadPopulate</MethodName>
+            <MethodComment>/** 
+ * Populate the database using multiple threads. The main thread (ie the one calling this method). is one of the threads that will insert the data It will handle the ITEM table by itself and its fair share of the remaining tables.
+ * @throws SQLException 
+ * @throws InterruptedException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Thread[] [threads=new Thread[threadCount - 1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;itemTable;[1, Load.ITEM_COUNT]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;run;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextWarehouse</MethodName>
+            <MethodComment>/** 
+ * Get the next warehouse to populate. If all have been populated then -1 is returned. Warehouse is one based.
+ */
+</MethodComment>
+            <ReturnType>short</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>short [next=nextWarehouse++]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addException</MethodName>
+            <MethodComment>/** 
+ * Save all the exceptions seen during load.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sqle</ParamName>
+                    <ParamType>SQLException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment>/** 
+ * Run the load for a thread. Loop insert the data for a single warehouse while there are warehouses left to do.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>short [w]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

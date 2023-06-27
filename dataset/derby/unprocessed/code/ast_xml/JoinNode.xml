@@ -1,0 +1,1441 @@
+<Class>
+    <Id>834</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>JoinNode</ClassName>
+    <SuperClass>TableOperatorNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>JoinNode  /** 
+ * A JoinNode represents a join result set for either of the basic DML operations: SELECT and INSERT.  For INSERT - SELECT, any of the fields in a JoinNode can be used (the JoinNode represents the (join) SELECT statement in the INSERT - SELECT).  For INSERT, the resultColumns in the selectList will contain the names of the columns being inserted into or updated.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>INNERJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CROSSJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LEFTOUTERJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RIGHTOUTERJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FULLOUTERJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>UNIONJOIN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>naturalJoin</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>optimized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftPredicateList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rightPredicateList</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>flattenableJoin</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggregates</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggregates</FieldName>
+            <FieldType>AggregateNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>subqueryList</FieldName>
+            <FieldType>SubqueryList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinClause</FieldName>
+            <FieldType>ValueNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinClauseNormalized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinPredicates</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>usingClause</FieldName>
+            <FieldType>ResultColumnList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinOrderStrategyProperties</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>JoinNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a JoinNode.
+ * @param leftResult	The ResultSetNode on the left side of this join
+ * @param rightResult	The ResultSetNode on the right side of this join
+ * @param onClause		The ON clause
+ * @param usingClause	The USING clause
+ * @param selectList	The result column list for the join
+ * @param tableProperties	Properties list associated with the table
+ * @param joinOrderStrategyProperties	User provided optimizer overrides
+ * @param cm            The context manager
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>onClause</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>usingClause</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinOrderStrategyProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[selectList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimizeIt</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#optimizeIt
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;updateBestPlanMap;[ADD_PLAN, this]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCostEstimate;[getCostEstimate(optimizer)]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCostEstimate();setCost;[leftResultSet.getCostEstimate().getEstimatedCost() + rightResultSet.getCostEstimate().getEstimatedCost(), rightResultSet.getCostEstimate().rowCount(), rightResultSet.getCostEstimate().rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;adjustNumberOfRowsReturned;[getCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCurrentAccessPath().getJoinStrategy();estimateCost;[this, predList, (ConglomerateDescriptor)null, outerCost, optimizer, getCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>optimizer;considerCost;[this, predList, getCostEstimate(), outerCost]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOptPredicate</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#pushOptPredicate
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicate</ParamName>
+                    <ParamType>OptimizablePredicate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemapCRsVisitor [rcrv=new RemapCRsVisitor(true)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>joinPredicates;addPredicate;[(Predicate)optimizablePredicate]</InnerMethodInvoke>
+                <InnerMethodInvoke>((Predicate)optimizablePredicate).getAndNode();accept;[rcrv]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPath</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#modifyAccessPath
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>Optimizable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerTables</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustNumberOfRowsReturned</MethodName>
+            <MethodComment>/** 
+ * Some types of joins (e.g. outer joins) will return a different number of rows than is predicted by optimizeIt() in JoinNode. So, adjust this value now. This method does nothing for most join types.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>costEstimate</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllResultColumns</MethodName>
+            <MethodComment>/** 
+ * Return a ResultColumnList with all of the columns in this table. (Used in expanding '*'s.) NOTE: Since this method is for expanding a "*" in the SELECT list, ResultColumn.expression will be a ColumnReference.
+ * @param allTableName		The qualifier on the "*"
+ * @return ResultColumnList	List of result columns from this table.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>allTableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [logicalLeftRS=getLogicalLeftResultSet()]</InnerVar>
+                <InnerVar>ResultColumnList [joinRCL=logicalLeftRS.getAllResultColumns(null).getJoinColumns(usingClause)]</InnerVar>
+                <InnerVar>ResultColumnList [leftRCL=leftResultSet.getAllResultColumns(allTableName)]</InnerVar>
+                <InnerVar>ResultColumnList [rightRCL=rightResultSet.getAllResultColumns(allTableName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllResultColumnsNoUsing</MethodName>
+            <MethodComment>/** 
+ * Return a ResultColumnList with all of the columns in this table. (Used in expanding '*'s.) NOTE: Since this method is for expanding a "*" in the SELECT list, ResultColumn.expression will be a ColumnReference. NOTE: This method is handles the case when there is no USING clause. The caller handles the case when there is a USING clause.
+ * @param allTableName		The qualifier on the "*"
+ * @return ResultColumnList	List of result columns from this table.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>allTableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [leftRCL=leftResultSet.getAllResultColumns(allTableName)]</InnerVar>
+                <InnerVar>ResultColumnList [rightRCL=rightResultSet.getAllResultColumns(allTableName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMatchingColumn</MethodName>
+            <MethodComment>/** 
+ * Try to find a ResultColumn in the table represented by this FromTable that matches the name in the given ColumnReference.
+ * @param columnReference	The columnReference whose name we're lookingfor in the given table.
+ * @return	A ResultColumn whose expression is the ColumnNodethat matches the ColumnReference. Returns null if there is no match.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnReference</ParamName>
+                    <ParamType>ColumnReference</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [logicalLeftRS=getLogicalLeftResultSet()]</InnerVar>
+                <InnerVar>ResultSetNode [logicalRightRS=getLogicalRightResultSet()]</InnerVar>
+                <InnerVar>ResultColumn [resultColumn=null]</InnerVar>
+                <InnerVar>ResultColumn [rightRC=null]</InnerVar>
+                <InnerVar>ResultColumn [usingRC=null]</InnerVar>
+                <InnerVar>ResultColumn [leftRC=logicalLeftRS.getMatchingColumn(columnReference)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions under this node.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns of this ResultSetNode when there is no base table to bind them to.  This is useful for SELECT statements, where the result columns get their types from the expressions that live under them.
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;buildRCL;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;deferredBindExpressions;[fromListParam]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns for this ResultSetNode to a base table. This is useful for INSERT and UPDATE statements, where the result columns get their types from the table being updated or inserted into. If a result column list is specified, then the verification that the  result column list does not contain any duplicates will be done when binding them by name.
+ * @param targetTableDescriptor	The TableDescriptor for the table beingupdated or inserted into
+ * @param targetColumnList	For INSERT statements, the userdoes not have to supply column names (for example, "insert into t values (1,2,3)".  When this parameter is null, it means that the user did not supply column names, and so the binding should be done based on order.  When it is not null, it means do the binding by name, not position.
+ * @param statement			Calling DMLStatementNode (Insert or Update)
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetTableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetVTI</ParamName>
+                    <ParamType>FromVTI</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetColumnList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>DMLStatementNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;buildRCL;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;deferredBindExpressions;[fromListParam]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildRCL</MethodName>
+            <MethodComment>/** 
+ * Build the RCL for this node.  We propagate the RCLs up from the children and splice them to form this node's RCL.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [leftRCL]</InnerVar>
+                <InnerVar>ResultColumnList [rightRCL]</InnerVar>
+                <InnerVar>ResultColumnList [tmpRCL]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[leftResultSet.getResultColumns()]</InnerMethodInvoke>
+                <InnerMethodInvoke>leftResultSet;setResultColumns;[leftRCL]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();genVirtualColumnNodes;[leftResultSet, leftRCL, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;setResultColumns;[rightRCL]</InnerMethodInvoke>
+                <InnerMethodInvoke>tmpRCL;genVirtualColumnNodes;[rightResultSet, rightRCL, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>tmpRCL;adjustVirtualColumnIds;[getResultColumns().size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();nondestructiveAppend;[tmpRCL]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deferredBindExpressions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ContextManager [cm=getContextManager()]</InnerVar>
+                <InnerVar>CompilerContext [cc=getCompilerContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpression</MethodName>
+            <MethodComment>/** 
+ * Bind an expression against the child tables of the JoinNode. May update the subquery and aggregate lists in the JoinNode. Assumes that the subquery and aggregate lists for the JoinNode have already been created.
+ * @return the bound expression
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expression</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useLeftChild</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useRightChild</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expressionType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ContextManager [cm=getContextManager()]</InnerVar>
+                <InnerVar>CompilerContext [cc=getCompilerContext()]</InnerVar>
+                <InnerVar>FromList [fromList=makeFromList(useLeftChild,useRightChild)]</InnerVar>
+                <InnerVar>int [previousReliability=orReliability(CompilerContext.ON_CLAUSE_RESTRICTION)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cc;setReliability;[previousReliability]</InnerMethodInvoke>
+                <InnerMethodInvoke>SelectNode;checkNoWindowFunctions;[expression, expressionType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeFromList</MethodName>
+            <MethodComment>/** 
+ * Make a FromList for binding 
+ */
+</MethodComment>
+            <ReturnType>FromList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>useLeftChild</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useRightChild</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromList [fromList=new FromList(getOptimizerFactory().doJoinOrderOptimization(),getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCommonColumnsForNaturalJoin</MethodName>
+            <MethodComment>/** 
+ * Generate a result column list with all the column names that appear on both sides of the join operator. Those are the columns to use as join columns in a natural join.
+ * @return RCL with all the common columns
+ * @throws StandardException on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [leftRCL=getLeftResultSet().getAllResultColumns(null)]</InnerVar>
+                <InnerVar>ResultColumnList [rightRCL=getRightResultSet().getAllResultColumns(null)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [columnNames=extractColumnNames(leftRCL)]</InnerVar>
+                <InnerVar>ResultColumnList [commonColumns=new ResultColumnList((getContextManager()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>columnNames;retainAll;[extractColumnNames(rightRCL)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractColumnNames</MethodName>
+            <MethodComment>/** 
+ * Extract all the column names from a result column list.
+ * @param rcl the result column list to extract the names from
+ * @return a list of all the column names in the RCL
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;String&gt; [names=new ArrayList&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Put a ProjectRestrictNode on top of each FromTable in the FromList. ColumnReferences must continue to point to the same ResultColumn, so that ResultColumn must percolate up to the new PRN.  However, that ResultColumn will point to a new expression, a VirtualColumnNode,  which points to the FromTable and the ResultColumn that is the source for the ColumnReference.   (The new PRN will have the original of the ResultColumnList and the ResultColumns from that list.  The FromTable will get shallow copies of the ResultColumnList and its ResultColumns.  ResultColumn.expression will remain at the FromTable, with the PRN getting a new  VirtualColumnNode for each ResultColumn.expression.) We then project out the non-referenced columns.  If there are no referenced columns, then the PRN's ResultColumnList will consist of a single ResultColumn whose expression is 1.
+ * @param numTables			Number of tables in the DML Statement
+ * @param gbl				The group by list, if any
+ * @param fromList			The from list, if any
+ * @return The generated ProjectRestrictNode atop the original FromTable.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gbl</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [newTreeTop]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>projectResultColumns</MethodName>
+            <MethodComment>/** 
+ * Find the unreferenced result columns and project them out. This is used in pre-processing joins that are not flattened into the where clause.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;projectResultColumns;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;projectResultColumns;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();pullVirtualIsReferenced;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>normExpressions</MethodName>
+            <MethodComment>/** 
+ * Put the expression trees in conjunctive normal form 
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushExpressions</MethodName>
+            <MethodComment>/** 
+ * Push expressions down to the first ResultSetNode which can do expression evaluation and has the same referenced table map. RESOLVE - This means only pushing down single table expressions to DistinctNodes today.  Once we have a better understanding of how the optimizer will work, we can push down join clauses.
+ * @param outerPredicateList	The PredicateList from the outer RS.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromTable [leftFromTable=(FromTable)leftResultSet]</InnerVar>
+                <InnerVar>FromTable [rightFromTable=(FromTable)rightResultSet]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;pushExpressionsToLeft;[outerPredicateList]</InnerMethodInvoke>
+                <InnerMethodInvoke>leftFromTable;pushExpressions;[getLeftPredicateList()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;pushExpressionsToRight;[outerPredicateList]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightFromTable;pushExpressions;[getRightPredicateList()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;grabJoinPredicates;[outerPredicateList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushExpressionsToLeft</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromTable [leftFromTable=(FromTable)leftResultSet]</InnerVar>
+                <InnerVar>JBitSet [leftReferencedTableMap=leftFromTable.getReferencedTableMap()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushExpressionsToRight</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromTable [rightFromTable=(FromTable)rightResultSet]</InnerVar>
+                <InnerVar>JBitSet [rightReferencedTableMap=rightFromTable.getReferencedTableMap()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>grabJoinPredicates</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromTable [leftFromTable=(FromTable)leftResultSet]</InnerVar>
+                <InnerVar>FromTable [rightFromTable=(FromTable)rightResultSet]</InnerVar>
+                <InnerVar>JBitSet [leftReferencedTableMap=leftFromTable.getReferencedTableMap()]</InnerVar>
+                <InnerVar>JBitSet [rightReferencedTableMap=rightFromTable.getReferencedTableMap()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flatten</MethodName>
+            <MethodComment>/** 
+ * Flatten this JoinNode into the outer query block. The steps in flattening are: o  Mark all ResultColumns as redundant, so that they are "skipped over" at generate(). o  Append the joinPredicates to the outer list. o  Create a FromList from the tables being joined and return  that list so that the caller will merge the 2 lists 
+ * @param rcl				The RCL from the outer query
+ * @param outerPList		PredicateList to append wherePredicates to.
+ * @param sql				The SubqueryList from the outer query
+ * @param gbl				The group by list, if any
+ * @param havingClause      The HAVING clause, if any
+ * @return FromList		The fromList from the underlying SelectNode.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>FromList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerPList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gbl</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>havingClause</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromList [fromList=new FromList(getOptimizerFactory().doJoinOrderOptimization(),getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fromList;addElement;[(FromTable)leftResultSet]</InnerMethodInvoke>
+                <InnerMethodInvoke>fromList;addElement;[(FromTable)rightResultSet]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();setRedundant;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcl;remapColumnReferencesToExpressions;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>outerPList;remapColumnReferencesToExpressions;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LOJ_reorderable</MethodName>
+            <MethodComment>/** 
+ * Currently we don't reordering any outer join w/ inner joins.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transformOuterJoins</MethodName>
+            <MethodComment>/** 
+ * Transform any Outer Join into an Inner Join where applicable. (Based on the existence of a null intolerant predicate on the inner table.)
+ * @param predicateTree	The predicate tree for the query block
+ * @return The new tree top (OuterJoin or InnerJoin).
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>FromTable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predicateTree</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * For joins, the tree will be (nodes are left out if the clauses are empty): ProjectRestrictResultSet -- for the having and the select list SortResultSet -- for the group by list ProjectRestrictResultSet -- for the where and the select list (if no group or having) the result set for the fromList
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateCore;[acb, mb, INNERJOIN, null, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateCore</MethodName>
+            <MethodComment>/** 
+ * Generate the code for a qualified join node.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateCore;[acb, mb, joinType, joinClause, subqueryList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateCore</MethodName>
+            <MethodComment>/** 
+ * Do the generation work for the join node hierarchy.
+ * @param acb			The ActivationClassBuilder
+ * @param mb the method the code is to go into
+ * @param joinType		The join type
+ * @param joinClause	The join clause, if any
+ * @param subquerys		The list of subqueries in the join clause, if any
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinClause</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subquerys</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [joinResultSetString]</InnerVar>
+                <InnerVar>int [nargs=getJoinArguments(acb,mb,joinClause)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assignResultSetNumber;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, joinResultSetString, ClassName.NoPutResultSet, nargs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getJoinArguments</MethodName>
+            <MethodComment>/** 
+ * Get the arguments to the join result set.
+ * @param acb	The ActivationClassBuilder for the class we're building.
+ * @param mb the method the generated code is going into
+ * @param joinClause	The join clause, if any
+ * @return	The array of arguments to the join result set
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinClause</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [numArgs=getNumJoinArguments()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[leftResultSet.getResultColumns().size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[rightResultSet.getResultColumns().size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCostEstimate;[getFinalCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addOuterJoinArguments;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;oneRowRightSide;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().getEstimatedCost()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFinalCostEstimate</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#getFinalCostEstimate Get the final CostEstimate for this JoinNode.
+ * @return	The final CostEstimate for this JoinNode, which is sumthe costs for the inner and outer table.  The number of rows, though, is that for the inner table only.
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>CostEstimate [leftCE=leftResultSet.getFinalCostEstimate()]</InnerVar>
+                <InnerVar>CostEstimate [rightCE=rightResultSet.getFinalCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCandidateFinalCostEstimate;[getNewCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCandidateFinalCostEstimate();setCost;[leftCE.getEstimatedCost() + rightCE.getEstimatedCost(), rightCE.rowCount(), rightCE.rowCount()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>oneRowRightSide</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mb;push;[rightResultSet.isOneRowResultSet()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[rightResultSet.isNotExists()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumJoinArguments</MethodName>
+            <MethodComment>/** 
+ * Return the number of arguments to the join result set.  This will be overridden for other types of joins (for example, outer joins).
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addOuterJoinArguments</MethodName>
+            <MethodComment>/** 
+ * Generate	and add any arguments specifict to outer joins. (Expected to be overriden, where appropriate, in subclasses.)
+ * @param acb		The ActivationClassBuilder
+ * @param mb the method  the generated code is to go intoreturn The number of args added
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>joinTypeToString</MethodName>
+            <MethodComment>/** 
+ * Convert the joinType to a string.
+ * @param joinType			The joinType as an int.
+ * @return String		The joinType as a String.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>joinType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLeftPredicateList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PredicateList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightPredicateList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PredicateList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateTargetLockMode</MethodName>
+            <MethodComment>/** 
+ * Get the lock mode for the target of an update statement (a delete or update).  The update mode will always be row for CurrentOfNodes.  It will be table if there is no where clause.
+ * @return	The lock mode
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notFlattenableJoin</MethodName>
+            <MethodComment>/** 
+ * Mark this node and its children as not being a flattenable join.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;notFlattenableJoin;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;notFlattenableJoin;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isFlattenableJoinNode</MethodName>
+            <MethodComment>/** 
+ * Is this FromTable a JoinNode which can be flattened into  the parents FromList.
+ * @return boolean		Whether or not this FromTable can be flattened.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOrderedOn</MethodName>
+            <MethodComment>/** 
+ * Return whether or not the underlying ResultSet tree is ordered on the specified columns. RESOLVE - This method currently only considers the outermost table  of the query block.
+ * @param crs					The specified ColumnReference[]
+ * @param permuteOrdering		Whether or not the order of the CRs in the array can be permuted
+ * @param fbtHolder           List that is to be filled with the FromBaseTable
+ * @return	Whether the underlying ResultSet treeis ordered on the specified column.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>crs</ParamName>
+                    <ParamType>ColumnReference[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>permuteOrdering</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fbtHolder</ParamName>
+                    <ParamType>FromBaseTable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSubNodes</MethodName>
+            <MethodComment>/** 
+ * Prints the sub-nodes of this object.  See QueryTreeNode.java for how tree printing is supposed to work.
+ * @param depth		The depth of this node in the tree
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>depth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSubqueryList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAggregates</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNaturalJoin</MethodName>
+            <MethodComment>/** 
+ * Flag this as a natural join so that an implicit USING clause will be generated in the bind phase.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogicalLeftResultSet</MethodName>
+            <MethodComment>/** 
+ * Return the logical left result set for this qualified join node. (For RIGHT OUTER JOIN, the left is the right and the right is the left and the JOIN is the NIOJ).
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogicalRightResultSet</MethodName>
+            <MethodComment>/** 
+ * Return the logical right result set for this qualified join node. (For RIGHT OUTER JOIN, the left is the right and the right is the left and the JOIN is the NIOJ).
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptChildren</MethodName>
+            <MethodComment>/** 
+ * Accept the visitor for all visitable children of this node.
+ * @param v the visitor
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Visitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LOJgetReferencedTables</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>JBitSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JBitSet [map=leftResultSet.LOJgetReferencedTables(numTables)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

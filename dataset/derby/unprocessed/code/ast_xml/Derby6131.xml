@@ -1,0 +1,138 @@
+<Class>
+    <Id>678</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.lang</Package>
+    <ClassName>Derby6131</ClassName>
+    <SuperClass>BaseJDBCTestCase</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Derby6131  /** 
+ * Test case for DERBY-6131: select from view with "upper" and "in" list  throws a ClassCastException null value functionality.
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>Derby6131</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>suite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Test</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getConnection();setAutoCommit;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testOrigUserRepro</MethodName>
+            <MethodComment>/** 
+ * Test the original user report of this issue: &lt;p&gt; the issue can be reproduced 1. create table myTbl1 (name varchar(1000)); 2. create table myTbl2 (name varchar(1000)); 3. create view myView (name) as  select t1.name from myTbl1 t1  union all select t2.name from myTbl2 t2; 4. select name from myView where upper(name) in ('AA', 'BB'); #4 failed with  "org.apache.derby.impl.sql.compile.SimpleStringOperatorNode  incompatible with org.apache.derby.impl.sql.compile.ColumnReference: java.lang.ClassCastException" If the view is created as  "create myView (name) as select t1.name from myTbl1 t1",  the query worked fine.  &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [st=createStatement()]</InnerVar>
+                <InnerVar>String [sql="select name from myView where upper(name) in ('AA', 'BB')"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>st;executeUpdate;["create table myTbl1 (name varchar(1000))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["create table myTbl2 (name varchar(1000))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["create view myView (name) as " + "select t1.name from myTbl1 t1 " + "union all select t2.name from myTbl2 t2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{}]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropView;["myView"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["myTbl1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["myTbl2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testOrigUserReproWithData</MethodName>
+            <MethodComment>/** 
+ * Test the original DERBY-6131 queries with some data to make sure results look right in addtion to not getting an exception. &lt;p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [st=createStatement()]</InnerVar>
+                <InnerVar>String [sql="select name from myView where upper(name) in ('AA', 'BB')"]</InnerVar>
+                <InnerVar>String [prepared_sql="select name from myView where upper(name) in (?, ?)"]</InnerVar>
+                <InnerVar>PreparedStatement [pstmt=prepareStatement(prepared_sql)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>st;executeUpdate;["create table myTbl1 (name varchar(1000))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["create table myTbl2 (name varchar(1000))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["insert into myTbl1 values ('aA'), ('bB'), ('Cc'), ('Dd')"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["insert into myTbl2 values ('eE'), ('fF'), ('GG'), ('hh')"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;executeUpdate;["create view myView (name) as " + "select t1.name from myTbl1 t1 " + "union all select t2.name from myTbl2 t2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{{"aA"},{"bB"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[1, "AA"]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[2, "BB"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[pstmt.executeQuery(), new String[][]{{"aA"},{"bB"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{{"Cc"},{"hh"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[1, "CC"]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[2, "HH"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{{"Cc"},{"hh"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{}]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[1, "cc"]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[2, "hh"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{}]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{{"Cc"},{"hh"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[1, "cc"]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;setString;[2, "hh"]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[st.executeQuery(sql), new String[][]{{"Cc"},{"hh"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropView;["myView"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["myTbl1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["myTbl2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>pstmt;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

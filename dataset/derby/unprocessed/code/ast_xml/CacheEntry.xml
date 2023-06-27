@@ -1,0 +1,297 @@
+<Class>
+    <Id>1158</Id>
+    <Package>org.apache.derby.impl.services.cache</Package>
+    <ClassName>CacheEntry</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CacheEntry  /** 
+ * Class representing an entry in the cache. It is used by &lt;code&gt;ConcurrentCache&lt;/code&gt;. When a thread invokes any of the methods in this class, except &lt;code&gt;lock()&lt;/code&gt;, it must first have called &lt;code&gt;lock()&lt;/code&gt; to ensure exclusive access to the entry. &lt;p&gt; When no thread holds the lock on the entry, it must be in one of the following states: &lt;dl&gt; &lt;dt&gt;Uninitialized&lt;/dt&gt; &lt;dd&gt;The entry object has just been constructed, but has not yet been initialized. In this state, &lt;code&gt;isValid()&lt;/code&gt; returns &lt;code&gt;false&lt;/code&gt;, whereas &lt;code&gt;isKept()&lt;/code&gt; returns &lt;code&gt;true&lt;/code&gt; in order to prevent removal of the entry until it has been initialized. When the entry is in this state, calls to &lt;code&gt;lockWhenIdentityIsSet()&lt;/code&gt; will block until &lt;code&gt;settingIdentityComplete()&lt;/code&gt; has been called.&lt;/dd&gt; &lt;dt&gt;Unkept&lt;/dt&gt; &lt;dd&gt;In this state, the entry object contains a reference to a &lt;code&gt;Cacheable&lt;/code&gt; and the keep count is zero. &lt;code&gt;isValid()&lt;/code&gt; returns &lt;code&gt;true&lt;/code&gt; and &lt;code&gt;isKept()&lt;/code&gt; returns &lt;code&gt;false&lt;/code&gt; in this state. &lt;code&gt;getCacheable()&lt;/code&gt; returns a non-null value.&lt;dd&gt; &lt;dt&gt;Kept&lt;/dt&gt; &lt;dd&gt;Same as the unkept state, except that the keep count is positive and &lt;code&gt;isKept()&lt;/code&gt; returns &lt;code&gt;true&lt;/code&gt;.&lt;/dd&gt; &lt;dt&gt;Removed&lt;/dt&gt; &lt;dd&gt;The entry has been removed from the cache. In this state, &lt;code&gt;isValid()&lt;/code&gt; and &lt;code&gt;isKept()&lt;/code&gt; return &lt;code&gt;false&lt;/code&gt;, and &lt;code&gt;getCacheable()&lt;/code&gt; returns &lt;code&gt;null&lt;/code&gt;. When an entry has entered the removed state, it cannot be transitioned back to any of the other states.&lt;/dd&gt; &lt;/dl&gt; &lt;p&gt; To prevent deadlocks, each thread should normally lock only one entry at a time. In some cases it is legitimate to hold the lock on two entries, for instance if an entry must be evicted to make room for a new entry. If this is the case, exactly one of the two entries must be in the uninitialized state, and the uninitialized entry must be locked before the lock on the other entry can be requested.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>mutex</FieldName>
+            <FieldType>ReentrantLock</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cacheable</FieldName>
+            <FieldType>Cacheable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keepCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forRemove</FieldName>
+            <FieldType>Condition</FieldType>
+        </Field>
+        <Field>
+            <FieldName>settingIdentity</FieldName>
+            <FieldType>Condition</FieldType>
+        </Field>
+        <Field>
+            <FieldName>callback</FieldName>
+            <FieldType>ReplacementPolicy.Callback</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>lock</MethodName>
+            <MethodComment>/** 
+ * Block until the current thread is granted exclusive access to the entry.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>waitUntilIdentityIsSet</MethodName>
+            <MethodComment>/** 
+ * Block until this entry's cacheable has been initialized (that is, until {@code settingIdentityComplete()} has been called on this object). Ifthe cacheable has been initialized before this method is called, it will return immediately. The entry must have been locked for exclusive access before this method is called. If the method needs to wait, it will release the lock and reobtain it when it wakes up again.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlock</MethodName>
+            <MethodComment>/** 
+ * Give up exclusive access.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;unlock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>settingIdentityComplete</MethodName>
+            <MethodComment>/** 
+ * Notify this entry that the initialization of its cacheable has been completed. This method should be called after &lt;code&gt;Cacheable.setIdentity()&lt;/code&gt; or &lt;code&gt;Cacheable.createIdentity()&lt;/code&gt; has been called.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>settingIdentity;signalAll;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>keep</MethodName>
+            <MethodComment>/** 
+ * Increase the keep count for this entry. An entry which is kept cannot be removed from the cache.
+ * @param accessed if &lt;code&gt;true&lt;/code&gt;, notify the entry's callback objectthat it has been accessed (normally because of calls to create, find or findCached); otherwise, don't notify the callback object
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>accessed</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unkeep</MethodName>
+            <MethodComment>/** 
+ * Decrement the keep count for this entry. An entry cannot be removed from the cache until its keep count is zero.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isKept</MethodName>
+            <MethodComment>/** 
+ * Check whether or not this entry is kept.
+ * @return &lt;code&gt;true&lt;/code&gt; if the object is kept
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unkeepForRemove</MethodName>
+            <MethodComment>/** 
+ * Unkeep the entry and wait until no other thread is keeping it. This method is used when a thread requests the removal of the entry. As defined by the contract of &lt;code&gt;CacheManager.remove()&lt;/code&gt;, it is the responsibility of the caller to ensure that only a single thread executes this method on an object.
+ * @see org.apache.derby.iapi.services.cache.CacheManager#remove
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCacheable</MethodName>
+            <MethodComment>/** 
+ * Set the cached object held by this entry.
+ * @param c a cacheable, or &lt;code&gt;null&lt;/code&gt; if the entry is about to beremoved
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>c</ParamName>
+                    <ParamType>Cacheable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCacheable</MethodName>
+            <MethodComment>/** 
+ * Return the cached object held by this entry.
+ * @return the cached object in this entry
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isValid</MethodName>
+            <MethodComment>/** 
+ * Check whether this entry holds a valid object. That is, it must hold a non-null &lt;code&gt;Cacheable&lt;/code&gt; and have completed setting its identity.
+ * @return &lt;code&gt;true&lt;/code&gt; if the entry holds a valid object
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCallback</MethodName>
+            <MethodComment>/** 
+ * Set the callback object used to notify the replacement algorithm about actions performed on the cached object.
+ * @param cb the callback object
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cb</ParamName>
+                    <ParamType>ReplacementPolicy.Callback</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>free</MethodName>
+            <MethodComment>/** 
+ * Clear this entry and notify the replacement algorithm that the &lt;code&gt;Cacheable&lt;/code&gt; can be reused.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

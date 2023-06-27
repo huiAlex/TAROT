@@ -1,0 +1,798 @@
+<Class>
+    <Id>428</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>DeferredConstraintsMemory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DeferredConstraintsMemory  /** 
+ * This class provides support for deferrable constraints. When the constraint mode is deferred, any violation of the constraint should not be flagged until the constraint mode is switched back to immediate, which may happen by explicitly setting the constraint mode to immediate, or implicitly at commit time. It may also happen implicitly when returning from a stored procedure if the constraint mode is immediate in the caller context. &lt;p&gt; The approach taken in Derby to support deferred constraints is to make a note when the violation happens (at insert or update time), and then remember that violation until the mode switches back as described above.  We note exactly which rows cause violations, so checking can happen as quickly as possible when we get there. The core mechanism used to remember the violations as well as the deferred checking is embodied in this class.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>infoRows</FieldName>
+            <FieldType>BackingStoreHashtable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>constraintId</FieldName>
+            <FieldType>UUID</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemaName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>culprits</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>culprits</FieldName>
+            <FieldType>UUID</FieldType>
+        </Field>
+        <Field>
+            <FieldName>invalidatedDueToCompress</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fkId</FieldName>
+            <FieldType>UUID</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemaName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>rememberDuplicate</MethodName>
+            <MethodComment>/** 
+ * Save the contents of an constraint supporting index row in a hash table (which may spill to disk) for later checking, typically on transaction commit, or upon request.
+ * @param lcc       the language connection context
+ * @param deferredRowsHashTable client cached value
+ * @param constraintId the id of the unique or primary key constraint
+ * @param insertRow the duplicate row to be saved in the hash tablefor later checking
+ * @return the hash table (for caching by client to minimize lookups)
+ * @throws StandardException standard error policy
+ */
+</MethodComment>
+            <ReturnType>BackingStoreHashtable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredRowsHashTable</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>insertRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [keyLength=insertRow.length - 1]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [hashRowArray=new DataValueDescriptor[keyLength]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[insertRow, 0, hashRowArray, 0, keyLength]</InnerMethodInvoke>
+                <InnerMethodInvoke>deferredRowsHashTable;putRow;[true, hashRowArray, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rememberCheckViolations</MethodName>
+            <MethodComment>/** 
+ * Save the row location of an offending row (one or more check constraints were violated) in a hash table (which may spill to disk) for later checking, typically on transaction commit, or upon request. The row locations are subject to invalidation, cf. {@code CheckInfo#setInvalidatedRowLocations}.
+ * @param basetableId the id of the target table
+ * @param schemaName the schema of the target table
+ * @param tableName the target table name
+ * @param deferredCheckViolations client cached value
+ * @param lcc       the language connection context
+ * @param violatingCheckConstraints offending constraint(s)
+ * @param offendingRow the duplicate row to be saved in the hash tablefor later checking
+ * @param result OUT parameter: the allocated CheckInfo
+ * @return the hash table (for caching by client to minimize lookups)
+ * @throws StandardException standard error policy
+ */
+</MethodComment>
+            <ReturnType>BackingStoreHashtable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>basetableId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredCheckViolations</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>violatingCheckConstraints</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offendingRow</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>CheckInfo[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [hashRowArray=new DataValueDescriptor[1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>deferredCheckViolations;putRow;[true, hashRowArray, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDeferredCheckConstraintLocations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>validatingBaseTableUUID</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CheckInfo [ci=(DeferredConstraintsMemory.CheckInfo)activation.getLanguageConnectionContext().getDeferredHashTables().get(validatingBaseTableUUID)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rememberFKViolation</MethodName>
+            <MethodComment>/** 
+ * Make note of a violated foreign key constraint, i.e. the referenced key is not present
+ * @param lcc the language connection context
+ * @param deferredRowsHashTable cached client copy
+ * @param fkId the UUID of the foreign key constraint
+ * @param indexRow the row in the supporting index which containsthe key which is not present in the referenced index.
+ * @param schemaName the schema of the table
+ * @param tableName the table being modified that has a FK.
+ * @return value to cache
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>BackingStoreHashtable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredRowsHashTable</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fkId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [hashRowArray=new DataValueDescriptor[indexRow.length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[indexRow, 0, hashRowArray, 0, indexRow.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>deferredRowsHashTable;putRow;[true, hashRowArray, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeDeferredHashTable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BackingStoreHashtable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cols</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [keyCols=new int[cols]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compressOrTruncate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HashMap&lt;UUID,DeferredConstraintsMemory.ValidationInfo&gt; [vis=lcc.getDeferredHashTables()]</InnerVar>
+                <InnerVar>TableDescriptor [td=lcc.getDataDictionary().getTableDescriptor(tableId)]</InnerVar>
+                <InnerVar>DeferredConstraintsMemory.ValidationInfo [vi=vis.get(tableId)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ValidationInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infoRows</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>possiblyValidateOnReturn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nested</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>caller</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateConstraint</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>UniquePkInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infoRows</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>possiblyValidateOnReturn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nested</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>caller</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateUniquePK;[lcc, infoRows, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateConstraint</MethodName>
+            <MethodComment>/** 
+ * Validate one primary key or unique constraint
+ * @param lcc       The language connection context
+ * @param constraintId Not used by this constraint type
+ * @param rollbackOnError {@code true} if we should roll back thetransaction if we see a violation of the constraint
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateUniquePK;[lcc, this.infoRows, rollbackOnError]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateUniquePK</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ht</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>Enumeration&lt;?&gt; [e=ht.elements()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>KeyConstraintDescriptor [cd=(KeyConstraintDescriptor)dd.getConstraintDescriptor(constraintId)]</InnerVar>
+                <InnerVar>long [indexCID=cd.getIndexConglomerateDescriptor(dd).getConglomerateNumber()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CheckInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infoRows</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>culprits</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setInvalidatedRowLocations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInvalidated</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addCulprits</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newCulprits</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;UUID&gt; [old=new HashSet&lt;UUID&gt;(culprits)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>old;addAll;[newCulprits]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCulprints</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>UUID</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>possiblyValidateOnReturn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nested</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>caller</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [allEffectivelyDeferred=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateCheck;[lcc, null, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateConstraint</MethodName>
+            <MethodComment>/** 
+ * Validate one or more CHECK constraints on a table. &lt;p&gt; Implementation note: We remember violations for a row by storing its row location in a disk based hash table, similar to what we do for the index location for primary key and unique constraints. As far as which constraints caused which violations, constraints are only presently remembered as having caused "one or more violations", i.e. for any violating row, we do not know at checking time exactly which constraint caused a problem for that exact row. So, for any given constraint which was violated in the transaction we visit all rows which had one or more violations and check again. This could be improved upon by remembering for each violating row the exact set of constraint(s) that saw a violation. Still, this is much faster than a full table scan in most use cases.  We use a special internal query option to achieve this.  The row locations may not be usable if Derby does a compress or otherwise makes them invalid. In that case we resort to a full table scan.&lt;/p&gt;
+ * @see ValidateCheckConstraintResultSet
+ * @param lcc          The language connection context
+ * @param constraintId If not {@code null}, check only for this constraint.  This is used when switching mode to immediate.  If  {@code null}, we check all check constraints, i.e.  at commit or if we have  {@code SET CONSTRAINT ALL IMMEDIATE}.
+ * @param rollbackOnError If {@code true} and a violation occurs, throwand exception that will cause rollback.
+ * @throws StandardException Default error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateCheck;[lcc, constraintId, rollbackOnError]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateCheck</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>SchemaDescriptor [sd=dd.getSchemaDescriptor(schemaName,tc,true)]</InnerVar>
+                <InnerVar>TableDescriptor [td=dd.getTableDescriptor(tableName,sd,tc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ForeignKeyInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infoRows</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fkId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFkId</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>UUID</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>possiblyValidateOnReturn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nested</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>caller</ParamName>
+                    <ParamType>SQLSessionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateForeignKey;[lcc, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateConstraint</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;validateForeignKey;[lcc, rollbackOnError]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validateForeignKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnError</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>ForeignKeyConstraintDescriptor [cd=(ForeignKeyConstraintDescriptor)dd.getConstraintDescriptor(fkId)]</InnerVar>
+                <InnerVar>ReferencedKeyConstraintDescriptor [rcd=cd.getReferencedConstraint()]</InnerVar>
+                <InnerVar>long[] [cids={cd.getIndexConglomerateDescriptor(dd).getConglomerateNumber(),rcd.getIndexConglomerateDescriptor(dd).getConglomerateNumber()}]</InnerVar>
+                <InnerVar>Enumeration&lt;?&gt; [e=infoRows.elements()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

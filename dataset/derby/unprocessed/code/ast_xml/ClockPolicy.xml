@@ -1,0 +1,479 @@
+<Class>
+    <Id>85</Id>
+    <Package>org.apache.derby.impl.services.cache</Package>
+    <ClassName>ClockPolicy</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ReplacementPolicy</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClockPolicy  /** 
+ * Implementation of a replacement policy which uses the clock algorithm. All the cache entries are stored in a circular buffer, called the clock. There is also a clock hand which points to one of the entries in the clock. Each time an entry is accessed, it is marked as recently used. If a new entry is inserted into the cache and the cache is full, the clock hand is moved until it is over a not recently used entry, and that entry is evicted to make space for the new entry. Each time the clock hand sweeps over a recently used entry, it is marked as not recently used, and it will be a candidate for removal the next time the clock hand sweeps over it, unless it has been marked as recently used in the meantime. &lt;p&gt; To allow concurrent access from multiple threads, the methods in this class need to synchronize on a number of different objects: &lt;ul&gt; &lt;li&gt;&lt;code&gt;CacheEntry&lt;/code&gt; objects must be locked before they can be used&lt;/li&gt; &lt;li&gt;accesses to the clock structure (circular buffer + clock hand) should be synchronized on the &lt;code&gt;ArrayList&lt;/code&gt; representing the circular buffer&lt;/li&gt; &lt;li&gt;accesses to individual &lt;code&gt;Holder&lt;/code&gt; objects in the clock structure should be protected by synchronizing on the holder&lt;/li&gt; &lt;/ul&gt; To avoid deadlocks, we need to ensure that all threads obtain synchronization locks in the same order. &lt;code&gt;CacheEntry&lt;/code&gt;'s class javadoc dictates the order when locking &lt;code&gt;CacheEntry&lt;/code&gt; objects. Additionally, we require that no thread should obtain any other synchronization locks while it is holding a synchronization lock on the clock structure or on a &lt;code&gt;Holder&lt;/code&gt; object. The threads are however allowed to obtain synchronization locks on the clock structure or on a holder while they are locking one or more &lt;code&gt;CacheEntry&lt;/code&gt; objects.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MIN_ITEMS_TO_CHECK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_ROTATION</FieldName>
+            <FieldType>float</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PART_OF_CLOCK_FOR_SHRINK</FieldName>
+            <FieldType>float</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cacheManager</FieldName>
+            <FieldType>ConcurrentCache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clock</FieldName>
+            <FieldType>ArrayList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clock</FieldName>
+            <FieldType>Holder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hand</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>freeEntries</FieldName>
+            <FieldType>AtomicInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isShrinking</FieldName>
+            <FieldType>AtomicBoolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>recentlyUsed</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>entry</FieldName>
+            <FieldType>CacheEntry</FieldType>
+        </Field>
+        <Field>
+            <FieldName>freedCacheable</FieldName>
+            <FieldType>Cacheable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>evicted</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ClockPolicy</MethodName>
+            <MethodComment>/** 
+ * Create a new &lt;code&gt;ClockPolicy&lt;/code&gt; instance.
+ * @param cacheManager the cache manager that requests this policy
+ * @param initialSize the initial capacity of the cache
+ * @param maxSize the maximum size of the cache
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheManager</ParamName>
+                    <ParamType>ConcurrentCache</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initialSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>size</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertEntry</MethodName>
+            <MethodComment>/** 
+ * Insert an entry into the cache. If the maximum size is exceeded, evict a &lt;em&gt;not recently used&lt;/em&gt; object from the cache. If there are no entries available for reuse, increase the size of the cache.
+ * @param entry the entry to insert (must be locked)
+ * @exception StandardException if an error occurs when inserting the entry
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size]</InnerVar>
+                <InnerVar>Holder [h=rotateClock(entry,size &gt;= maxSize)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Holder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>e;setCallback;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>access</MethodName>
+            <MethodComment>/** 
+ * Mark this entry as recently used. Caller must have locked &lt;code&gt;entry&lt;/code&gt;.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>free</MethodName>
+            <MethodComment>/** 
+ * Mark this object as free and reusable. Caller must have locked &lt;code&gt;entry&lt;/code&gt;.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [free=freeEntries.incrementAndGet()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>takeIfFree</MethodName>
+            <MethodComment>/** 
+ * Associate this holder with the specified entry if the holder is free (that is, not associated with any other entry).
+ * @param e the entry to associate the holder with (it must be lockedby the current thread)
+ * @return &lt;code&gt;true&lt;/code&gt; if the holder has been associated with thespecified entry, &lt;code&gt;false&lt;/code&gt; if someone else has taken it or the holder has been evicted from the clock
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEntry</MethodName>
+            <MethodComment>/** 
+ * Returns the entry that is currently associated with this holder.
+ * @return the associated entry
+ */
+</MethodComment>
+            <ReturnType>CacheEntry</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>switchEntry</MethodName>
+            <MethodComment>/** 
+ * Switch which entry the holder is associated with. Will be called when we evict an entry to make room for a new one. When this method is called, the current thread must have locked both the entry that is evicted and the entry that is inserted.
+ * @param e the entry to associate this holder with
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>e;setCallback;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>e;setCacheable;[entry.getCacheable()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evictIfFree</MethodName>
+            <MethodComment>/** 
+ * Evict this holder from the clock if it is not associated with an entry.
+ * @return &lt;code&gt;true&lt;/code&gt; if the holder was successfully evicted,&lt;code&gt;false&lt;/code&gt; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setEvicted</MethodName>
+            <MethodComment>/** 
+ * Mark this holder as evicted from the clock, effectively preventing reuse of the holder. Calling thread must have locked the holder's entry.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEvicted</MethodName>
+            <MethodComment>/** 
+ * Check whether this holder has been evicted from the clock.
+ * @return &lt;code&gt;true&lt;/code&gt; if it has been evicted, &lt;code&gt;false&lt;/code&gt;otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>moveHand</MethodName>
+            <MethodComment>/** 
+ * Get the holder under the clock hand, and move the hand to the next holder.
+ * @return the holder under the clock hand, or {@code null} if the clock isempty
+ */
+</MethodComment>
+            <ReturnType>Holder</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rotateClock</MethodName>
+            <MethodComment>/** 
+ * Rotate the clock in order to find a free space for a new entry. If &lt;code&gt;allowEvictions&lt;/code&gt; is &lt;code&gt;true&lt;/code&gt;, an not recently used object might be evicted to make room for the new entry. Otherwise, only unused entries are searched for. When evictions are allowed, entries are marked as not recently used when the clock hand sweeps over them. The search stops when a reusable entry is found, or when more than a certain percentage of the entries have been visited. If there are free (unused) entries, the search will continue until a reusable entry is found, regardless of how many entries that need to be checked.
+ * @param entry the entry to insert
+ * @param allowEvictions tells whether evictions are allowed (normally&lt;code&gt;true&lt;/code&gt; if the cache is full and &lt;code&gt;false&lt;/code&gt; otherwise)
+ * @return a holder that we can reuse, or &lt;code&gt;null&lt;/code&gt; if we didn'tfind one
+ */
+</MethodComment>
+            <ReturnType>Holder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>allowEvictions</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [itemsToCheck=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEvictable</MethodName>
+            <MethodComment>/** 
+ * Check if an entry can be evicted. Only entries that still are present in the cache, are not kept and not recently used, can be evicted. This method does not check whether the  {@code Cacheable} contained in theentry is dirty, so it may be necessary to clean it before an eviction can take place even if the method returns  {@code true}. The caller must hold the lock on the entry before calling this method.
+ * @param e the entry to check
+ * @param h the holder which holds the entry
+ * @param clearRecentlyUsedFlag tells whether or not the recently used flagshould be cleared on the entry ( {@code true} only when called as part ofa normal clock rotation)
+ * @return whether or not this entry can be evicted (provided that its{@code Cacheable} is cleaned first)
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>h</ParamName>
+                    <ParamType>Holder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>clearRecentlyUsedFlag</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeHolder</MethodName>
+            <MethodComment>/** 
+ * Remove the holder at the given clock position.
+ * @param pos position of the holder
+ * @param h the holder to remove
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>h</ParamName>
+                    <ParamType>Holder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doShrink</MethodName>
+            <MethodComment>/** 
+ * Try to shrink the clock if it's larger than its maximum size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shrinkMe</MethodName>
+            <MethodComment>/** 
+ * Perform the shrinking of the clock. This method should only be called by a single thread at a time.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [maxLooks=Math.max(1,(int)(maxSize * PART_OF_CLOCK_FOR_SHRINK))]</InnerVar>
+                <InnerVar>int [pos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

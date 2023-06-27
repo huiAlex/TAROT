@@ -1,0 +1,472 @@
+/**
+	FileContainer is an abstract base class for containers
+	which are based on files.
+
+	This class extends BaseContainer and implements Cacheable and TypedFormat
+*/
+
+/**
+		Return my format identifier.
+	*/
+
+/** 
+	 * The sequence number for reusable recordIds . 
+	 * As long as this number does not change, recordIds will be stable within
+	 * the container.
+	 **/
+
+/**
+		The page that was last inserted into.  Use this for getPageForInsert.
+		Remember the last allocated non-overflow page, and remember it in
+		memory only.
+		Use Get/Set method to access this field except when we know it is
+		being single thread access.
+	 */
+
+/** 
+		The last unfilled page found.  Use this for getPageForInsert.
+		Remember the last unfilled page found, and remember it in memory only.
+		Use Get/Set method to access this field except when we know it is
+		being single thread access.
+	*/
+
+/**
+		The last allocated page.  This global var is access *without*
+		synchronization.  It is used as a hint for page allocation to find the
+		next reusable page.
+	 */
+
+/**
+		An estimated page count. Use this for getEstimatedPagecount.
+		Remember it in memory only.
+	 */
+
+/** the container format must fit in this many bytes */
+
+/** 
+		The size of the persistently stored container info
+		ContainerHeader contains the following information:
+		4 bytes int	FormatId
+		4 bytes	int	status
+		4 bytes int	pageSize
+		4 bytes int	spareSpace
+		4 bytes int minimumRecordSize
+		2 bytes short initialPages
+		2 bytes short spare1
+		8 bytes	long	first Allocation page number
+		8 bytes	long	first Allocation page offset
+		8 bytes	long	container version
+		8 bytes long	estimated number of rows
+		8 bytes long	reusable recordId sequence number
+		8 bytes long	spare3
+		8 bytes	long	checksum
+		container info size is 80 bytes, with 10 bytes of spare space
+	*/
+
+/**
+	 * where the first alloc page is located - 
+	 * the logical page number and the physical page offset
+	 * NOTE if it is not 0 this is not going to work for Stream 
+	 * file which doesn't support seek
+	 */
+
+/**
+    Get information about space used by the container.
+    **/
+
+/**
+		Containers
+	*/
+
+/**
+		Open the container.
+
+		@return a valid object if the container was successfully opened, null if
+		it does not exist.
+
+		@exception StandardException Some problem in opening a container.
+
+			*/
+
+/**
+     * Open the container.
+     * 
+     * Open the container with key "newIdentity".
+     * 
+     * should be same name as setIdentity but seems to cause method resolution 
+     * ambiguities
+     *
+     * @exception StandardException Some problem in opening a container.
+     *
+     *      **/
+
+/**
+		We treat this container as dirty if it has the container file open.
+			*/
+
+/**
+     * Create a new container.
+     * 
+     * Create a new container, all references to identity must be through the
+     * passed in identity, this object will no identity until after this 
+     * method returns.
+     *
+     * @exception StandardException Derby Standard error policy
+     **/
+
+/**
+     * Open a container.
+     * 
+     * Longer descrption of routine.
+     * 
+     * Open a container. Open the file that maps to this container, if the
+     * file does not exist then we assume the container was never created.
+     * If the file exists but we have trouble opening it then we throw some 
+     * exception.
+     *
+     *  MT - single thread required - Enforced by cache manager.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Drop Container.
+     * 
+     *
+     *      *
+     **/
+
+/**
+		increment the version by one and return the new version.
+
+		 MT - caller must synchronized this in the same sync block that
+		modifies the container header.
+	*/
+
+/**
+		Read containerInfo from a byte array
+		The container Header array must be written by or of
+		the same format as put together by writeHeaderFromArray.
+
+		@exception StandardException Derby Standard error policy
+		@exception IOException error in reading the header from file
+	*/
+
+/**
+		Write the container header to a page array (the first allocation page)
+
+		@exception StandardException Derby Standard error policy
+		@exception IOException error in writing the header to file
+	*/
+
+/**
+		Write the container header directly to file.
+
+		Subclasses that can writes the container header is expected to
+		manufacture a DataOutput stream which is used here.
+
+		 MT - single thread required - Enforced by caller
+
+		@exception StandardException Derby Standard error policy
+		@exception IOException error in writing the header to file
+	 */
+
+/**
+     * Write a sequence of bytes at the given offset in a file. This method
+     * is not thread safe, so the caller must make sure that no other thread
+     * is performing operations that may change current position in the file.
+     *
+     * @param file the file to write to
+     * @param bytes the bytes to write
+     * @param offset the offset to start writing at
+     * 	 * @exception StandardException  Derby Standard error policy
+     */
+
+/**
+		Get an embryonic page from the dataInput stream.
+
+		The embryonic page will be read
+		in from the input stream (fileData), which is assumed to be 
+		positioned at the beginning of the first allocation page.
+
+		@exception IOException error in read the embryonic page from file
+		@exception StandardException  Derby Standard error policy
+	*/
+
+/**
+     * Read an embryonic page (that is, a section of the first alloc page that
+     * is so large that we know all the borrowed space is included in it) from
+     * the specified offset in a {@code StorageRandomAccessFile}. This method
+     * is not thread safe, so the caller must make sure that no other thread
+     * is performing operations that may change current position in the file.
+     *
+     * @param file the file to read from
+     * @param offset where to start reading (normally
+     * {@code FileContainer.FIRST_ALLOC_PAGE_OFFSET})
+     * @return a byte array containing the embryonic page
+     * 	 *      */
+
+/**
+		Write containerInfo into a byte array
+		The container Header thus put together can be read by readHeaderFromArray.
+
+		@exception IOException error in writing the header
+	*/
+
+/**
+		Log all information on the container creation necessary to recreate the
+		container during a load tran.
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Set container properties from the passed in ByteArray, which is created
+		by logCreateContainerInfo.  This information is used to recreate the
+		container during recovery load tran.
+
+		The following container properties are set:
+
+		pageSize
+		spareSpace
+		minimumRecordSize
+		isReusableRecordId
+		initialPages
+
+	 */
+
+/**
+		Set container properties from the passed in createArgs.  
+		The following container properties are set:
+
+		pageSize
+		spareSpace
+		minimumRecordSize
+		isReusableRecordId
+		initialPages
+
+		RESOLVE - in the future setting parameters should be overridable
+		by sub-class, e.g. one implementation of Container may require a
+		minimum page size of 4k.
+	 */
+
+/**
+	*/
+
+/**
+		Deallocate a page from the container.  
+
+		@param handle the container handle doing the deallocation
+		@param page the page to be deallocated.  It is latched upon entry and
+		will be unlatched by the caller of this function
+
+		@exception StandardException Derby Standard error policy
+	*/
+
+/** deallocate the page from the alloc page */
+
+/**
+	 * Get the reusable RecordId sequence number for the container.
+	 * 	 * @return reusable RecordId sequence number for the container.
+	 */
+
+/**
+	 * Increment the reusable RecordId version sequence number.
+	 */
+
+/**
+		Find the last alloc page, returns null if no alloc page is found
+	 */
+
+/**
+		Initialize a page 
+
+		@return a latched page that has been initialized.
+
+		@param allochandle the contianer handle to initialize the page with - the ntt
+		@param pkey the page number of the page to be initialized
+		@param createArgs the arguments for page creation
+		@param reuse is true if we are reusing a page that has 
+				already been initialized once
+
+		@exception StandardException Derby Standard error policy
+	*/
+
+/**
+		Get a page in the container.    
+
+		Get User page is the generic base routine for all user (client to raw
+		store) getPage.  This routine coordinate with allocation/deallocation
+		to ensure that no page can be gotten from the container while page is
+		in the middle of being allocated or deallocated.
+        This routine latches the page.
+
+		@param handle the container handle
+		@param pageNumber the page number of the page to get
+		@param overflowOK if true then an overflow page is OK,
+				if false, then only non-overflow page is OK
+        @param wait if true then wait for a latch
+        @return the latched page
+
+		 MT - thread safe
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get a valid (non-deallocated or free) page in the container.
+		Overflow page is OK. Resulting page is latched.
+
+		 MT - thread safe
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get any old page - turn off all validation
+
+		@exception StandardException Derby Standard error policy
+	*/
+
+/** 
+		Get an alloc page - only accessible to the raw store 
+		(container and recovery)
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Get only a valid, non-overflow page.  If page number is either invalid
+		or overflow, returns null
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Get the first valid page in the container
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Get the next page in the container.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+     * Get candidate page to move a row for compressing the table.
+     * 
+     * The caller is moving rows from the end of the table toward the beginning,
+     * with the goal of freeing up a block of empty pages at the end of the
+     * container which can be returned to the OS.
+     * 
+     * On entry pageno will be latched by the caller.  Only return pages with
+     * numbers below pageno.  Attempting to return pageno will result in a
+     * latch/latch deadlock on the same thread.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+		Get a potentially suitable page for insert and latch it.
+		@exception StandardException Standard Derby error policy
+	 */
+
+/** 
+	 *  Get a latched page. Incase of backup page Latch is necessary to 
+	 *  prevent modification to the page when it is being written to the backup.
+	 *  Backup process relies on latches to get consistent snap
+	 *  shot of the page , user level table/page/row locks are NOT 
+	 *  acquired  by the online backup mechanism.
+     *
+     *  @param handle the container handle used to latch the page
+     *  @param pageNumber the page number of the page to get
+     *  @return the latched page
+	 *	@exception StandardException Standard Derby error policy
+	 */
+
+/**
+		MT - this routine is NOT MT-safe and clients don't need to provide
+		synchronization.
+
+			 */
+
+/**
+			 */
+
+/**
+		Update estimated row count by page as it leaves the cache.
+		The estimated row count is updated without logging!
+	 */
+
+/**
+				@exception StandardException Standard Derby error policy
+	 */
+
+/**
+		Read a page into the supplied array.
+
+		 MT - thread safe
+		@exception IOException error reading page
+		@exception StandardException standard Derby error message
+	*/
+
+/**
+		Write a page from the supplied array.
+
+		 MT - thread safe
+		@exception IOException error writing page
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Decrypts a page
+
+		MT - MT safe.
+
+		@exception StandardException Standard Derby error policy
+	 */
+
+/**
+		Encrypts a page.
+
+		 MT - not safe, call within synchronized block and only use the
+		returned byte array withing synchronized block. 
+
+		@exception StandardException Standard Derby error policy
+	 */
+
+/** 
+     * Get encryption buffer.
+     *  MT - not safe, call within synchronized block and only use the
+     *  returned byte array withing synchronized block. 
+     * @return byte array to be used for encryping a page.
+     */
+
+/**
+		Preallocate the pages - actually doing it, called by subclass only
+	*/
+
+/**
+		The container is kept by the find() in File.openContainer. 
+	*/
+
+/**
+     * backup the container.
+     * 
+     * @param handle the container handle.
+     * @param backupLocation location of the backup container. 
+     * @exception StandardException Standard Derby error policy 
+     */
+
+/**
+     * Privileged lookup of the ContextService. Must be limited to
+     * package visibility so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged module lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+

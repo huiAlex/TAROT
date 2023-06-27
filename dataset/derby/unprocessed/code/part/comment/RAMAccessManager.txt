@@ -1,0 +1,347 @@
+/**************************************************************************
+     * Fields of the class
+     **************************************************************************
+     */
+
+/**
+    The raw store that this access manager uses.
+    **/
+
+/**
+    Hash table on primary implementation type.
+    **/
+
+/**
+    Hash table on primary format.
+    **/
+
+/**
+	Service properties.  These are supplied from ModuleControl.boot(),
+	and ultimately come from the service.properties file.
+	By convention, these properties are passed down to all modules
+	booted by this one.  If this module needs to pass specific instructions
+	to its sub-modules, it should create a new Properties object with
+	serviceProperties as its default (so that the rest of the modules
+	that are looking at it don't see the properties that this module
+	needs to add).
+	**/
+
+/**
+     * Default locking policy for the entire system.
+     **/
+
+/**	
+		The object providing the properties like behaviour
+		that is transactional.
+	*/
+
+/**
+     * A map of the implementation specific id to conglomerate object.
+     * 
+     * A map of the implementation specific id to conglomerate object.
+     * The id is encoded into the conglomerate number, and then used to
+     * pick the right implementation of the conglomerate.  It is then
+     * up to the conglomerate implementation to retrieve it's stored 
+     * representation from disk.
+     *
+     * An internal mapping of the encoding of conglomerate identity in the
+     * conglomerate number to the actual conglomerate implementation.  Encoding
+     * this means that we can't dynamically add conglomerate implementations
+     * into the system, so when we want to do that this mapping will have to
+     * be more dynamic - but for now store knows exactly what implementations
+     * there are.
+     **/
+
+/**
+     * Cache of Conglomerate objects, keyed by conglom id.  Used to speed up
+     * subsquent open of conglomerates, first open will need to call the 
+     * conglomerate to read and return it's description.
+     **/
+
+/**************************************************************************
+     * Constructors for This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Private/Protected methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * Return the default locking policy for this access manager.
+     *
+	 * @return the default locking policy for this accessmanager.
+     **/
+
+/***************************************************************************
+    ** Abstract Methods of RAMAccessManager, interfaces that control locking
+    ** level of the system.
+    ****************************************************************************
+    */
+
+/**
+     * Return the locking level of the system.
+     * 
+     * This routine controls the lowest level of locking enabled for all locks
+     * for all tables accessed through this accessmanager.  The concrete 
+     * implementation may set this value always to table level locking for
+     * a client configuration, or it may set it to row level locking for a
+     * server configuration.
+     * 
+     * If TransactionController.MODE_RECORD is returned table may either be
+     * locked at table or row locking depending on the type of access expected
+     * (ie. level 3 will require table locking for heap scans.)
+     *
+	 * @return TransactionController.MODE_TABLE if only table locking allowed,
+     *         else returns TransactionController.MODE_RECORD.
+     *
+     **/
+
+/**
+     * Query property system to get the System lock level.
+     * 
+     * This routine will be called during boot after access has booted far 
+     * enough, to allow access to the property conglomerate.  This routine
+     * will call the property system and set the value to be returned by
+     * getSystemLockLevel().
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Routines to map to/from conglomid/containerid:
+     **************************************************************************
+     */
+
+/**
+     * Return next conglomid to try to add the container with.
+     * 
+     * The conglomerate number has 2 parts.  The low 4 bits are used to 
+     * encode the factory which "owns" the conglomerate.  The high 60 bits
+     * are used as a normal unique id mechanism.
+     * 
+     * So for example if the next id to assign is 0x54 the following will
+     * be the conglomid:
+     *     if a HEAP  (factory 0) - 0x540
+     *     if a BTREE (factory 1) - 0x541
+     *
+     * And the next id assigned will be:
+     *     if a HEAP  (factory 0) - 0x550
+     *     if a BTREE (factory 1) - 0x551
+     *
+     * @param factory_type factory id as gotten from getConglomerateFactoryId()
+     *
+	 * @return The identifier to be used to open the conglomerate later.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Bump the conglomid.
+     * 
+     * For some reason we have found that the give conglomid already exists
+     * in the directory so just bump the next conglomid to greater than this
+     * one.  The algorithm to store and retrieve the last conglomid is not
+     * transactional as we don't want to pay the overhead for such an algorithm
+     * on every ddl statement - so it is possible to "lose" an update to the
+     * counter if we crash at an inopportune moment.  In general the upper
+     * level store code will just handle the error from addContainer which 
+     * says there already exists a conglom with that id, update the next
+     * conglomid and then try again.
+     * 
+     *
+     * @param conglomid The conglomid which already exists.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Given a conglomid, return the factory which "owns" it.
+     * 
+     * A simple lookup on the boot time built table which maps the low order
+     * 4 bits into which factory owns the conglomerate.
+     * 
+     *
+     * @param conglom_id The conglomerate id of the conglomerate to look up.
+     *
+	 * @return The ConglomerateFactory which "owns" this conglomerate.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Conglomerate Cache routines:
+     **************************************************************************
+     */
+
+/**
+     * Initialize the conglomerate cache.
+     * 
+     * Simply calls the cache manager to create the cache with some hard
+     * coded defaults for size.
+     * 
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Find a conglomerate by conglomid in the cache.
+     * 
+     * Look for a conglomerate given a conglomid.  If in cache return it,
+     * otherwise fault in an entry by asking the owning factory to produce
+     * an entry.
+     * 
+     *
+	 * @return The conglomerate object identified by "conglomid".
+     *
+     * @param conglomid The conglomerate id of the conglomerate to look up.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Invalide the current Conglomerate Cache.
+     * 
+     * Abort of certain operations will invalidate the contents of the 
+     * cache.  Longer term we could just invalidate those entries, but
+     * for now just invalidate the whole cache.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Add a newly created conglomerate to the cache.
+     * 
+     *
+     * @param conglomid   The conglomid of conglomerate to replace.
+     * @param conglom     The Conglom to add.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Remove an entry from the cache.
+     * 
+     *
+     * @param conglomid   The conglomid of conglomerate to replace.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * 
+     * Get the current transaction context.
+     * 
+     *
+     * 
+     * If there is an internal transaction on the context stack, return the
+     * internal transaction. Otherwise, if there is a nested user transaction
+     * on the context stack, return the nested transaction. Otherwise,
+     * return the current user transaction.
+     * 
+     *
+     * @return a context object referencing the current transaction
+     */
+
+/**************************************************************************
+     * Public Methods implementing AccessFactory Interface:
+     **************************************************************************
+     */
+
+/**
+	Database creation finished.  Tell RawStore.
+	@exception StandardException standard Derby error policy
+	*/
+
+/**
+    Find an access method that implements a format type.
+        **/
+
+/**
+    Find an access method that implements an implementation type.
+        **/
+
+/**
+     * Return the XAResourceManager associated with this AccessFactory.
+     * 
+     * Returns an object which can be used to implement the "offline" 
+     * 2 phase commit interaction between the accessfactory and outstanding
+     * transaction managers taking care of in-doubt transactions.
+     *
+     * @return The XAResourceManager associated with this accessfactory.
+     *
+     **/
+
+/**
+     * DERBY-5996(Create readme files (cautioning users against modifying 
+     *  database files) at database hard upgrade time)
+     * This gets called during hard upgrade. It will create 3 readme files
+     *  one in database directory, one in "seg0" directory and one in log
+     *  directory. These readme files warn users against touching any of
+     *  files associated with derby database 
+     */
+
+/**
+     * Start the replication master role for this database.
+     * @param dbmaster The master database that is being replicated.
+     * @param host The hostname for the slave
+     * @param port The port the slave is listening on
+     * @param replicationMode The type of replication contract.
+     * Currently only asynchronous replication is supported, but
+     * 1-safe/2-safe/very-safe modes may be added later.
+     * @exception StandardException Standard Derby exception policy,
+     * thrown on error.
+     */
+
+/**
+     *      */
+
+/**
+     * Stop the replication master role for this database.
+     * 
+     * @exception StandardException Standard Derby exception policy,
+     * thrown on error.
+     */
+
+/**************************************************************************
+     * Public Methods implementing ModuleControl Interface:
+     **************************************************************************
+     */
+
+/**
+     * Privileged lookup of the ContextService. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged lookup of a Context. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged Monitor lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+

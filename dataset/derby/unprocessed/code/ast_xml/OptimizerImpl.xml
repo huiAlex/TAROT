@@ -1,0 +1,1217 @@
+<Class>
+    <Id>119</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>OptimizerImpl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Optimizer</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>OptimizerImpl  /** 
+ * Optimizer uses OptimizableList to keep track of the best join order as it builds it.  For each available slot in the join order, we cost all of the Optimizables from that slot til the end of the OptimizableList.  Later, we will choose the best Optimizable for that slot and reorder the list accordingly. In order to do this, we probably need to move the temporary pushing and pulling of join clauses into Optimizer, since the logic will be different for other implementations.  (Of course, we're not pushing and pulling join clauses between permutations yet.)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>lcc</FieldName>
+            <FieldType>LanguageConnectionContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dDictionary</FieldName>
+            <FieldType>DataDictionary</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numTablesInQuery</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numOptimizables</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>assignedTableMap</FieldName>
+            <FieldType>JBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>optimizableList</FieldName>
+            <FieldType>OptimizableList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>overridingPlan</FieldName>
+            <FieldType>OptimizerPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentPlan</FieldName>
+            <FieldType>OptimizerPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>predicateList</FieldName>
+            <FieldType>OptimizablePredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nonCorrelatedTableMap</FieldName>
+            <FieldType>JBitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>proposedJoinOrder</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bestJoinOrder</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinPosition</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>desiredJoinOrderFound</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_JUMP</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>READY_TO_JUMP</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JUMPING</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WALK_HIGH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WALK_LOW</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>permuteState</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>firstLookOrder</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ruleBasedOptimization</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outermostCostEstimate</FieldName>
+            <FieldType>CostEstimateImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentCost</FieldName>
+            <FieldType>CostEstimateImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentSortAvoidanceCost</FieldName>
+            <FieldType>CostEstimateImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bestCost</FieldName>
+            <FieldType>CostEstimateImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeOptimizationStarted</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentTime</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeExceeded</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>noTimeout</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>useStatistics</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableLockThreshold</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>joinStrategies</FieldName>
+            <FieldType>JoinStrategy[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>requiredRowOrdering</FieldName>
+            <FieldType>RequiredRowOrdering</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foundABestPlan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortCost</FieldName>
+            <FieldType>CostEstimate</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentRowOrdering</FieldName>
+            <FieldType>RowOrdering</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bestRowOrdering</FieldName>
+            <FieldType>RowOrdering</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxMemoryPerTable</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reloadBestPlan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>savedJoinOrders</FieldName>
+            <FieldType>HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>savedJoinOrders</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeLimit</FieldName>
+            <FieldType>double</FieldType>
+        </Field>
+        <Field>
+            <FieldName>finalCostEstimate</FieldName>
+            <FieldType>CostEstimate</FieldType>
+        </Field>
+        <Field>
+            <FieldName>usingPredsPushedFromAbove</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bestJoinOrderUsedPredsFromAbove</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>OptimizerImpl</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizableList</ParamName>
+                    <ParamType>OptimizableList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predicateList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ruleBasedOptimization</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>noTimeout</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useStatistics</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxMemoryPerTable</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>joinStrategies</ParamName>
+                    <ParamType>JoinStrategy[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableLockThreshold</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>requiredRowOrdering</ParamName>
+                    <ParamType>RequiredRowOrdering</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numTablesInQuery</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>overridingPlan</ParamName>
+                    <ParamType>OptimizerPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizableList;verifyProperties;[dDictionary]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepForNextRound</MethodName>
+            <MethodComment>/** 
+ * This method is called before every "round" of optimization, where we define a "round" to be the period between the last time a call to getOptimizer() (on either a ResultSetNode or an OptimizerFactory) returned _this_ OptimizerImpl and the time a call to this OptimizerImpl's getNextPermutation() method returns FALSE.  Any re-initialization of state that is required before each round should be done in this method.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initJumpState;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initJumpState</MethodName>
+            <MethodComment>/** 
+ * Determine if we want to try "jumping" permutations with this OptimizerImpl, and (re-)initialize the permuteState field accordingly.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tracingIsOn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxMemoryPerTable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextPermutation</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getNextPermutation
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [joinPosAdvanced=false]</InnerVar>
+                <InnerVar>boolean [alreadyCostsMore=!bestCost.isUninitialized() &amp;&amp; (currentCost.compare(bestCost) &gt; 0) &amp;&amp; ((requiredRowOrdering == null) || (currentSortAvoidanceCost.compare(bestCost) &gt; 0))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizableList;initAccessPaths;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;endOfRoundCleanup;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rewindJoinOrder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>currentCost;setCost;[0.0d, 0.0d, 0.0d]</InnerMethodInvoke>
+                <InnerMethodInvoke>currentSortAvoidanceCost;setCost;[0.0d, 0.0d, 0.0d]</InnerMethodInvoke>
+                <InnerMethodInvoke>assignedTableMap;clearAll;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>endOfRoundCleanup</MethodName>
+            <MethodComment>/** 
+ * Do any work that needs to be done after the current round of optimization has completed.  For now this just means walking the subtrees for each optimizable and removing the "bestPlan" that we saved (w.r.t to this OptimizerImpl) from all of the nodes.  If we don't do this post-optimization cleanup we can end up consuming a huge amount of memory for deeply- nested queries, which can lead to OOM errors.  DERBY-1315.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recoverCostFromProposedJoinOrder</MethodName>
+            <MethodComment>/** 
+ * Iterate through all optimizables in the current proposedJoinOrder and find the accumulated sum of their estimated costs.  This method is used to 'recover' cost estimate sums that have been lost due to the addition/subtraction of the cost estimate for the Optimizable at position "joinPosition".  Ex. If the total cost for Optimizables at positions &amp;lt; joinPosition is 1500, and then the Optimizable at joinPosition has an estimated cost of 3.14E40, adding those two numbers effectively "loses" the 1500. When we later subtract 3.14E40 from the total cost estimate (as part of "pull" processing), we'll end up with 0 as the result--which is wrong. This method allows us to recover the "1500" that we lost in the process of adding and subtracting 3.14E40.
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sortAvoidance</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [recoveredCost=0.0d]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>joinOrderMeetsDependencies</MethodName>
+            <MethodComment>/** 
+ * Check to see if the optimizable corresponding to the received optNumber can legally be placed within the current join order. More specifically, if the optimizable has any dependencies, check to see if those dependencies are satisified by the table map representing the current join order.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Optimizable [nextOpt=optimizableList.getOptimizable(optNumber)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pullOptimizableFromJoinOrder</MethodName>
+            <MethodComment>/** 
+ * Pull whatever optimizable is at joinPosition in the proposed join order from the join order, and update all corresponding state accordingly.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Optimizable [pullMe=optimizableList.getOptimizable(proposedJoinOrder[joinPosition])]</InnerVar>
+                <InnerVar>double [prevRowCount]</InnerVar>
+                <InnerVar>double [prevSingleScanRowCount]</InnerVar>
+                <InnerVar>int [prevPosition=0]</InnerVar>
+                <InnerVar>double [newCost=currentCost.getEstimatedCost()]</InnerVar>
+                <InnerVar>CostEstimate [pullCostEstimate=pullMe.getBestAccessPath().getCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>currentCost;setCost;[newCost, prevRowCount, prevSingleScanRowCount]</InnerMethodInvoke>
+                <InnerMethodInvoke>pullMe;pullOptPredicates;[predicateList]</InnerMethodInvoke>
+                <InnerMethodInvoke>assignedTableMap;xor;[pullMe.getReferencedTableMap()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushPredicates</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>curTable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerTables</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [numPreds=predicateList.size()]</InnerVar>
+                <InnerVar>JBitSet [predMap=new JBitSet(numTablesInQuery)]</InnerVar>
+                <InnerVar>JBitSet [curTableNums=null]</InnerVar>
+                <InnerVar>BaseTableNumbersVisitor [btnVis=null]</InnerVar>
+                <InnerVar>int [tNum]</InnerVar>
+                <InnerVar>Predicate [pred]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextDecoratedPermutation</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getNextDecoratedPermutation
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [retval]</InnerVar>
+                <InnerVar>Optimizable [curOpt=optimizableList.getOptimizable(proposedJoinOrder[joinPosition])]</InnerVar>
+                <InnerVar>double [originalRowCount=0.0]</InnerVar>
+                <InnerVar>CostEstimate [ce=curOpt.getBestAccessPath().getCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>curOpt;updateBestPlanMap;[FromTable.REMOVE_PLAN, curOpt]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTupleDescriptor</MethodName>
+            <MethodComment>/** 
+ * Get the unique tuple descriptor of the current access path for an Optimizable.
+ */
+</MethodComment>
+            <ReturnType>UniqueTupleDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isTableFunction</MethodName>
+            <MethodComment>/** 
+ * Return true if the optimizable is a table function 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [rsn=((ProjectRestrictNode)optimizable).getChildResult()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rememberBestCost</MethodName>
+            <MethodComment>/** 
+ * Is the cost of this join order lower than the best one we've found so far?  If so, remember it. NOTE: If the user has specified a join order, it will be the only join order the optimizer considers, so it is OK to use costing to decide that it is the "best" join order.
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>currentCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>planType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bestCost;setCost;[currentCost]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;arraycopy;[proposedJoinOrder, 0, bestJoinOrder, 0, numOptimizables]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>costPermutation</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizer#costPermutation
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>CostEstimate [outerCost]</InnerVar>
+                <InnerVar>Optimizable [optimizable=optimizableList.getOptimizable(proposedJoinOrder[joinPosition])]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizable;optimizeIt;[this, predicateList, outerCost, currentRowOrdering]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>costOptimizable</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizer#costOptimizable
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ruleBasedCostOptimizable</MethodName>
+            <MethodComment>/** 
+ * This method decides whether the given conglomerate descriptor is cheapest based on rules, rather than based on cost estimates. The rules are: Covering matching indexes are preferred above all Non-covering matching indexes are next in order of preference Covering non-matching indexes are next in order of preference Heap scans are next in order of preference Non-covering, non-matching indexes are last in order of preference. In the current language architecture, there will always be a heap, so a non-covering, non-matching index scan will never be chosen.  However, the optimizer may see a non-covering, non-matching index first, in which case it will choose it temporarily as the best conglomerate seen so far. NOTE: This method sets the cost in the optimizable, even though it doesn't use the cost to determine which access path to choose.  There are two reasons for this: the cost might be needed to determine join order, and the cost information is copied to the query plan.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AccessPath [bestAp=optimizable.getBestAccessPath()]</InnerVar>
+                <InnerVar>ConglomerateDescriptor [bestConglomerateDescriptor=bestAp.getConglomerateDescriptor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>costBasedCostOptimizable</MethodName>
+            <MethodComment>/** 
+ * This method decides whether the given conglomerate descriptor is cheapest based on cost, rather than based on rules.  It compares the cost of using the given ConglomerateDescriptor with the cost of using the best ConglomerateDescriptor so far.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [estimatedCost=estimateTotalCost(predList,cd,outerCost,optimizable)]</InnerVar>
+                <InnerVar>AccessPath [ap=optimizable.getBestAccessPath()]</InnerVar>
+                <InnerVar>CostEstimate [bestCostEstimate=ap.getCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizable.getCurrentAccessPath();setCostEstimate;[estimatedCost]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>considerCost</MethodName>
+            <MethodComment>/** 
+ * This is the version of costOptimizable for non-base-tables.
+ * @see Optimizer#considerCost
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>estimatedCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AccessPath [ap=optimizable.getBestAccessPath()]</InnerVar>
+                <InnerVar>CostEstimate [bestCostEstimate=ap.getCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizable.getCurrentAccessPath();setCostEstimate;[estimatedCost]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataDictionary</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizer#getDataDictionary
+ */
+</MethodComment>
+            <ReturnType>DataDictionary</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPaths</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#modifyAccessPaths
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>JBitSet [outerTables=new JBitSet(numOptimizables)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optimizableList;reOrder;[bestJoinOrder]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newCostEstimate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOptimizedCost</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getOptimizedCost 
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFinalCost</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getFinalCost Sum up the cost of all of the trulyTheBestAccessPaths for the Optimizables in our list.  Assumption is that we only get here after optimization has completed--i.e. while modifying access paths.
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setOuterRows</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#setOuterRows 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerRows</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>outermostCostEstimate;setCost;[outermostCostEstimate.getEstimatedCost(), outerRows, outermostCostEstimate.singleScanRowCount()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tableLockThreshold</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#tableLockThreshold 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumberOfJoinStrategies</MethodName>
+            <MethodComment>/** 
+ * Get the number of join strategies supported by this optimizer.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getJoinStrategy</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getJoinStrategy 
+ */
+</MethodComment>
+            <ReturnType>JoinStrategy</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>whichStrategy</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getJoinStrategy</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getJoinStrategy 
+ */
+</MethodComment>
+            <ReturnType>JoinStrategy</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>whichStrategy</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JoinStrategy [retval=null]</InnerVar>
+                <InnerVar>String [upperValue=StringUtil.SQLToUpperCase(whichStrategy)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>uniqueJoinWithOuterTable</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#uniqueJoinWithOuterTable
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [retval=-1.0]</InnerVar>
+                <InnerVar>double [numUniqueKeys=1.0]</InnerVar>
+                <InnerVar>double [currentRows=currentCost.rowCount()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isPushable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pred</ParamName>
+                    <ParamType>OptimizablePredicate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>estimateTotalCost</MethodName>
+            <MethodComment>/** 
+ * Estimate the total cost of doing a join with the given optimizable.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizable</ParamName>
+                    <ParamType>Optimizable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [resultCost=optimizable.estimateCost(predList,cd,outerCost,this,currentRowOrdering)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLevel</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#getLevel 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewCostEstimate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CostEstimateImpl</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>theRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>theSingleScanRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>useStatistics</MethodName>
+            <MethodComment>/** 
+ * @see Optimizer#useStatistics 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateBestPlanMaps</MethodName>
+            <MethodComment>/** 
+ * Process (i.e. add, load, or remove) current best join order as the best one for some outer query or ancestor node, represented by another OptimizerImpl or an instance of FromTable, respectively. Then iterate through our optimizableList and tell each Optimizable to do the same.  See Optimizable.updateBestPlan() for more on why this is necessary.
+ * @param action Indicates whether to add, load, or remove the plan
+ * @param planKey Object to use as the map key when adding/looking upa plan.  If this is an instance of OptimizerImpl then it corresponds to an outer query; otherwise it's some Optimizable above this OptimizerImpl that could potentially reject plans chosen by this OptimizerImpl.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>action</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>planKey</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addScopedPredicatesToList</MethodName>
+            <MethodComment>/** 
+ * Add scoped predicates to this optimizer's predicateList. This method is intended for use during the modifyAccessPath() phase of compilation, as it allows nodes (esp. SelectNodes) to add to the list of predicates available for the final "push" before code generation.  Just as the constructor for this class allows a caller to specify a predicate list to use during the optimization phase, this method allows a caller to specify a predicate list to use during the modify-access-paths phase. Before adding the received predicates, this method also clears out any scoped predicates that might be sitting in OptimizerImpl's list from the last round of optimizing. This method should be in the Optimizer interface, but it relies on an argument type (PredicateList) which lives in an impl package.
+ * @param pList List of predicates to add to this OptimizerImpl'sown list for pushing.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Predicate [pred]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tracer</MethodName>
+            <MethodComment>/** 
+ * Get the trace machinery 
+ */
+</MethodComment>
+            <ReturnType>OptTrace</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOptimizableCount</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOptimizable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Optimizable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>idx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

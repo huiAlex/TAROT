@@ -1,0 +1,760 @@
+<Class>
+    <Id>913</Id>
+    <Package>org.apache.derby.drda</Package>
+    <ClassName>NetworkServerControl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>NetworkServerControl  /** 
+ * NetworkServerControl provides the ability to start a Network Server or  connect to a running Network Server to shutdown, configure or retrieve  diagnostic information.  With the exception of ping, these commands  can  only be performed from the  machine on which the server is running.   Commands can be performed from  the command line with the following  arguments: &lt;P&gt; &lt;UL&gt; &lt;LI&gt;start [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;]:  This starts the Network Server on the port/host specified or on localhost, port 1527 if no host/port is specified and no properties are set to override the  defaults. By default a security manager with a default security policy will  be installed. The default security policy file is called server.policy.  By default the Network Server will only listen for  connections from the machine on which it is running.  Use -h 0.0.0.0 to listen on all interfaces or -h &amp;lt;hostname&amp;gt; to listen  on a specific interface on a  multiple IP machine.  For documentation on &amp;lt;sslmode&amp;gt;, consult the Server and Administration Guide.&lt;/LI&gt; &lt;LI&gt;shutdown [-h &amp;lt;host&amp;gt;][-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;] [-user &amp;lt;username&amp;gt;] [-password &amp;lt;password&amp;gt;]: This shutdowns the Network Server with given user credentials on the host and port specified or on the local host and port 1527(default) if no host or port is specified.  &lt;/LI&gt;  &lt;LI&gt;ping [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;] This will test whether the Network Server is up. &lt;/LI&gt; &lt;LI&gt;sysinfo [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;]:  This prints  classpath and version information about the Network Server,  the JVM and the Derby engine.  &lt;/LI&gt; &lt;LI&gt;runtimeinfo [-h &amp;lt;host] [-p &amp;lt;portnumber] [-ssl &amp;lt;sslmode&amp;gt;]: This prints extensive debbugging information about sessions, threads,  prepared statements, and memory usage for the running Network Server. &lt;/LI&gt; &lt;LI&gt;logconnections {on | off} [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;]:   This turns logging of connections on or off.   Connections are logged to derby.log.  Default is off.&lt;/LI&gt; &lt;LI&gt;maxthreads &amp;lt;max&amp;gt; [-h &amp;lt;host&amp;gt;][-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;]:   This sets the maximum number of threads that can be used for connections.  Default 0 (unlimitted). &lt;/LI&gt; &lt;LI&gt;timeslice &amp;lt;milliseconds&amp;gt; [-h &amp;lt;host&amp;gt;][-p &amp;lt;portnumber&amp;gt;] [-ssl &amp;lt;sslmode&amp;gt;]:  This sets the time each session can have using a connection thread  before yielding to a waiting session. Default is 0 (no yeild). &lt;/LI&gt; &lt;LI&gt;trace {on | off} [-s &amp;lt;session id&amp;gt;] [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;]  [-ssl &amp;lt;sslmode&amp;gt;]:  This turns drda tracing on or off for the specified session or if no  session is  specified for all sessions. Default is off&lt;/LI&gt; &lt;LI&gt;tracedirectory &amp;lt;tracedirectory&amp;gt; [-h &amp;lt;host&amp;gt;] [-p &amp;lt;portnumber&amp;gt;]  [-ssl &amp;lt;sslmode&amp;gt;]:  This changes where new trace files will be placed.  For sessions with tracing already turned on,   trace files remain in the previous location.  Default is derby.system.home, if it is set.  Otherwise the default is the current directory.&lt;/LI&gt; &lt;/UL&gt; &lt;/P&gt; &lt;P&gt;Properties can be set in the derby.properties file or on the command line. Properties on the command line take precedence over properties in the  derby.properties file.  Arguments on the command line take precedence over properties.  The following is a list of properties that can be set for  NetworkServerControl: &lt;UL&gt;&lt;LI&gt;derby.drda.portNumber=&amp;lt;port number&amp;gt;: This property  indicates which port should be used for the Network Server. &lt;/LI&gt; &lt;LI&gt;derby.drda.host=&amp;lt;host name  or ip address &amp;gt;: This property  indicates the ip address to which NetworkServerControl should connect. &lt;/LI&gt; &lt;LI&gt;derby.drda.traceDirectory=&amp;lt;trace directory&amp;gt;: This property  indicates where to put trace files. &lt;/LI&gt; &lt;LI&gt;derby.drda.traceAll=true:  This property turns on tracing for all sessions. Default is tracing is off.&lt;/LI&gt; &lt;LI&gt;derby.drda.logConnections=true:  This property turns on logging of connections. Default is connections are not logged.&lt;/LI&gt; &lt;LI&gt;derby.drda.minThreads=&amp;lt;value&amp;gt;: If this property is set, the &amp;lt;value&amp;gt; number of threads will be created when the Network Server is booted. &lt;/LI&gt; &lt;LI&gt;derby.drda.maxThreads=&amp;lt;value&amp;gt;: If this property is set, the &amp;lt;value&amp;gt; is the maximum number of connection threads that will be  created.  If a session starts when there are no connection threads available and the maximum number of threads has been reached, it will wait until a  conection thread becomes available. &lt;/LI&gt; &lt;LI&gt;derby.drda.timeSlice=&amp;lt;milliseconds&amp;gt;: If this property is set, the connection threads will not check for waiting sessions until the current session has been working for &amp;lt;milliseconds&amp;gt;.   A value of 0 causes the thread to work on the current session until the  session exits. If this property is not set, the default value is 0. &lt;/LI&gt; &lt;LI&gt;derby.drda.sslMode=&amp;lt;sslmode&amp;gt; This property sets the SSL mode of the server. &lt;/LI&gt; &lt;/UL&gt; &lt;/P&gt; &lt;P&gt;&lt;B&gt;Examples.&lt;/B&gt;&lt;/P&gt; &lt;P&gt;This is an example of shutting down the server on port 1621. &lt;PRE&gt;  java org.apache.derby.drda.NetworkServerControl shutdown -p 1621 &lt;/PRE&gt; &lt;/P&gt; &lt;P&gt;This is an example of turning tracing on for session 3 &lt;PRE&gt; java org.apache.derby.drda.NetworkServerControl  trace on -s 3  &lt;/PRE&gt; &lt;/P&gt; &lt;P&gt;This is an example of starting and then shutting down the Network  Server on port 1621 on machine myhost    &lt;PRE&gt; java org.apache.derby.drda.NetworkServerControl  start -h myhost -p 1621 java org.apache.derby.drda.NetworkServerControl  shutdown -h myhost -p 1621 &lt;/PRE&gt; &lt;/P&gt; &lt;P&gt; This is an example of starting and shutting down the Network Server in the example above with the API. &lt;PRE&gt; NetworkServerControl serverControl = new NetworkServerControl(InetAddress.getByName("myhost"),1621) serverControl.shutdown(); &lt;/PRE&gt; &lt;/P&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_PORTNUMBER</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBYNET_JAR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>POLICY_FILENAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>POLICY_FILE_PROPERTY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_HOSTNAME_WILDCARD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IPV6_HOSTNAME_WILDCARD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SOCKET_PERMISSION_HOSTNAME_WILDCARD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>serverImpl</FieldName>
+            <FieldType>NetworkServerControlImpl</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>NetworkServerControl</MethodName>
+            <MethodComment>/** 
+ * Creates a NetworkServerControl object that is configured to control a Network Server on a specified port and InetAddress with given user credentials.
+ * @param address     The IP address of the Network Server host.address cannot be null.
+ * @param portNumber  port number server is to used. If &amp;lt;= 0,default port number is used
+ * @param userName    The user name for actions requiring authorization.
+ * @param password    The password for actions requiring authorization.
+ * @throws Exception on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>InetAddress</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>portNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>password</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>NetworkServerControl</MethodName>
+            <MethodComment>/** 
+ * Creates a NetworkServerControl object that is configured to control a Network Server on the default host and the default port with given user credentials.
+ * @param userName    The user name for actions requiring authorization.
+ * @param password    The password for actions requiring authorization.
+ * @throws Exception on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>password</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>NetworkServerControl</MethodName>
+            <MethodComment>/** 
+ * Creates a NetworkServerControl object that is configured to control a Network Server on a  specified port and InetAddress. &lt;P&gt; &lt;B&gt; Examples: &lt;/B&gt; &lt;/P&gt; &lt;P&gt; To configure for port 1621 and listen on the loopback address: &lt;PRE&gt; NetworkServerControl  util = new NetworkServerControl(InetAddress.getByName("localhost"), 1621); &lt;/PRE&gt; &lt;/P&gt;
+ * @param address     The IP address of the Network Server host.address cannot be null.
+ * @param portNumber  port number server is to used. If &amp;lt;= 0,default port number is used
+ * @throws Exception on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>InetAddress</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>portNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>NetworkServerControl</MethodName>
+            <MethodComment>/** 
+ * Creates a NetworkServerControl object that is configured to control a Network Server on the default host(localhost) and the default port(1527) unless derby.drda.portNumber and  derby.drda.host are set. &lt;P&gt;&lt;PRE&gt; new NetworkServerControl()  is equivalent to calling new NetworkServerControl(InetAddress.getByName("localhost"),1527); &lt;/PRE&gt; &lt;/P&gt;
+ * @throws Exception on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment>/** 
+ * main routine for NetworkServerControl
+ * @param args  array of arguments indicating command to be executed.See class comments for more information
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>NetworkServerControlImpl [server=null]</InnerVar>
+                <InnerVar>boolean [printErrors=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;exit;[0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start</MethodName>
+            <MethodComment>/** 
+ * Start a Network Server. This method will launch a separate thread and start a Network Server. This method  may return before the server is ready to accept connections. This will also install a security manager with a default security policy. Use the ping method to verify that the server has started. &lt;P&gt; Note: an alternate method to starting the Network Server with the API, is to use the derby.drda.startNetworkServer property in  derby.properties. &lt;/P&gt;
+ * @param consoleWriter   PrintWriter to which server console will be output. Null will disable console output. 
+ * @exception Exception if there is an error starting the server.
+ * @see #shutdown
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>consoleWriter</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;start;[consoleWriter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shutdown</MethodName>
+            <MethodComment>/** 
+ * Shutdown a Network Server. Shuts down the Network Server listening on the port and InetAddress specified in the constructor for this NetworkServerControl object.
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;shutdown;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ping</MethodName>
+            <MethodComment>/** 
+ * Check if the Network Server is started. Excecutes and returns without error if the server has started
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;ping;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trace</MethodName>
+            <MethodComment>/** 
+ * Turn tracing on or off for the specified connection  on the Network Server.
+ * @param on true to turn tracing on, false to turn tracing off.
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>on</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;trace;[on]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trace</MethodName>
+            <MethodComment>/** 
+ * Turn tracing on or off for all connections on the Network Server.
+ * @param connNum connection number. Note: Connection numbers will printin the Derby error log if logConnections is on
+ * @param on true to turn tracing on, false to turn tracing off.
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>connNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>on</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;trace;[connNum, on]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logConnections</MethodName>
+            <MethodComment>/** 
+ * Turn logging connections on or off. When logging is turned on a message is written to the Derby error log each time a connection  is made.
+ * @param on            true to turn on, false to turn  off
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>on</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;logConnections;[on]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTraceDirectory</MethodName>
+            <MethodComment>/** 
+ * Set directory for trace files. The directory must be on the machine where the server is running.
+ * @param traceDirectory    directory for trace files on machine where server is running
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>traceDirectory</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;sendSetTraceDirectory;[traceDirectory]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSysinfo</MethodName>
+            <MethodComment>/** 
+ * Return classpath and version information about the running  Network Server. 
+ * @return sysinfo output
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRuntimeInfo</MethodName>
+            <MethodComment>/** 
+ * Return detailed session runtime information about sessions, prepared statements, and memory usage for the running Network Server. 
+ * @return run time information
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMaxThreads</MethodName>
+            <MethodComment>/** 
+ * Set Network Server maxthread parameter.  This is the maximum number  of threads that will be used for JDBC client connections.   setTimeSlice should also be set so that clients will yield appropriately.
+ * @param max       maximum number of connection threads.If &amp;lt;= 0, connection threads will be created when  there are no free connection threads.
+ * @exception Exception throws an exception if an error occurs
+ * @see #setTimeSlice
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;netSetMaxThreads;[max]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxThreads</MethodName>
+            <MethodComment>/** 
+ * Returns the current maxThreads setting for the running Network Server
+ * @return maxThreads setting 
+ * @exception Exception throws an exception if an error occurs
+ * @see #setMaxThreads
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [val=serverImpl.getCurrentProperties().getProperty(Property.DRDA_PROP_MAXTHREADS)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTimeSlice</MethodName>
+            <MethodComment>/** 
+ * Set Network Server connection time slice parameter.   This should be set and is only relevant if setMaxThreads &amp;gt; 0.
+ * @param timeslice number of milliseconds given to each session before yielding toanother session, if &amp;lt;=0, never yield.
+ * @exception Exception throws an exception if an error occurs
+ * @see #setMaxThreads
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeslice</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;netSetTimeSlice;[timeslice]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimeSlice</MethodName>
+            <MethodComment>/** 
+ * Return the current timeSlice setting for the running Network Server
+ * @return timeSlice  setting
+ * @exception Exception throws an exception if an error occurs
+ * @see #setTimeSlice
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [val=serverImpl.getCurrentProperties().getProperty(Property.DRDA_PROP_TIMESLICE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentProperties</MethodName>
+            <MethodComment>/** 
+ * Get current Network server properties
+ * @return Properties object containing Network server properties
+ * @exception Exception throws an exception if an error occurs
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setClientLocale</MethodName>
+            <MethodComment>/** 
+ * set the client locale. Used by servlet for localization
+ * @param locale  Locale to use
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>locale</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverImpl;setClientLocale;[locale]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>needsSecurityManager</MethodName>
+            <MethodComment>/** 
+ * Return true if we need to install a Security Manager. All of the following must apply. See DERBY-2196. &lt;ul&gt; &lt;li&gt;The VM was booted with NetworkServerContro.main() as the entry point. This is handled by the fact that this method is only called by main().&lt;/li&gt; &lt;li&gt;The VM isn't already running a SecurityManager.&lt;/li&gt; &lt;li&gt;The command must be "start".&lt;/li&gt; &lt;li&gt;The customer didn't specify the -noSecurityManager flag on the startup command line.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifySecurityState</MethodName>
+            <MethodComment>/** 
+ * Verify that all prerequisites are met before bringing up a security manager. See DERBY-2196. If prerequisites aren't met, raise an exception which explains how to get up and running. At one point, we were going to require that authentication be enabled before bringing up a security manager. This, however, gave rise to incompatibilities. See DERBY-2757. Currently, this method is a nop.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>installSecurityManager</MethodName>
+            <MethodComment>/** 
+ * Install a SecurityManager governed by the Basic startup policy. See DERBY-2196.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>URL [derbyInstallURL=getCodeSourceURL(server)]</InnerVar>
+                <InnerVar>String [derbyInstallStr=getCodeSourcePrefix(server,derbyInstallURL)]</InnerVar>
+                <InnerVar>String [derbyInstallPth=new File(derbyInstallURL.getFile()).getParentFile().getAbsolutePath()]</InnerVar>
+                <InnerVar>String [policyFileURL=getPolicyFileURL()]</InnerVar>
+                <InnerVar>SecurityManager [securityManager=new SecurityManager()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;setProperty;[Property.DERBY_SECURITY_HOST, getHostNameForSocketPermission(server)]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;setProperty;[Property.DERBY_SECURITY_PORT, String.valueOf(server.getPort())]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;setProperty;[Property.DERBY_INSTALL_URL, derbyInstallStr]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;setProperty;[Property.DERBY_INSTALL_PATH, derbyInstallPth]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;setProperty;[POLICY_FILE_PROPERTY, policyFileURL]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;setSecurityManager;[securityManager]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHostNameForSocketPermission</MethodName>
+            <MethodComment>/** 
+ * Get the hostname as a value suitable for substituting into the default server policy file. The special wildcard valuse "0.0.0.0" and "::" are forced to be "*" since that is the wildcard hostname understood by SocketPermission. SocketPermission does not understand the "0.0.0.0" and "::" wildcards. IPV6 addresses are enclosed in square brackets. This logic arose from two JIRAs: DERBY-2811 and DERBY-2874.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [hostname=server.getHost()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hostnamesEqual</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isIPV6Address</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>hostname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [count=hostname.length()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCodeSourceURL</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Find the url of the library directory which holds derby.jar and derbynet.jar. The Basic policy assumes that both jar files live in the same directory. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>URL</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ProtectionDomain [pd=NetworkServerControl.class.getProtectionDomain()]</InnerVar>
+                <InnerVar>CodeSource [cs=pd.getCodeSource()]</InnerVar>
+                <InnerVar>URL [url=cs.getLocation()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCodeSourcePrefix</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControlImpl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>url</ParamName>
+                    <ParamType>URL</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [extForm=url.toExternalForm().replaceFirst("^file://([^/].*)","file:////$1")]</InnerVar>
+                <InnerVar>int [idx=extForm.indexOf(DERBYNET_JAR)]</InnerVar>
+                <InnerVar>String [directoryPrefix=extForm.substring(0,idx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPolicyFileURL</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the URL of the policy file. Typically, this will be some pointer into derbynet.jar. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [resourceName=NetworkServerControl.class.getPackage().getName().replace('.','/') + '/' + POLICY_FILENAME]</InnerVar>
+                <InnerVar>URL [resourceURL=NetworkServerControl.class.getClassLoader().getResource(resourceName)]</InnerVar>
+                <InnerVar>String [stringForm=resourceURL.toExternalForm()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

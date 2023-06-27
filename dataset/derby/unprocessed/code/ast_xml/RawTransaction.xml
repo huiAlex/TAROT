@@ -1,0 +1,551 @@
+<Class>
+    <Id>1871</Id>
+    <Package>org.apache.derby.iapi.store.raw.xact</Package>
+    <ClassName>RawTransaction</ClassName>
+    <SuperClass>DerbyObservable</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Transaction</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RawTransaction  /** 
+ * RawTransaction is the form of Transaction used within the raw store. This allows the break down of RawStore functionality into (at least) three modules (Transactions, Data, Log) without exposing internal information on the external interface. &lt;P&gt; The transaction will notify any Observer's just before the transaction is committed, aborted or a rollback to savepoint occurs. The argument passed to the update() method of the Observer's will be one of &lt;UL&gt; &lt;LI&gt; RawTransaction.COMMIT - transaction is committing &lt;LI&gt; RawTransaction.ABORT - transaction is aborting &lt;LI&gt; RawTransaction.SAVEPOINTROLLBACK - transaction is being rolled back to a savepoint &lt;/UL&gt; The observer's must perform a value equality check (equals()) on the  update arg to see why it is being notified.
+ * @see java.util.Observer
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>COMMIT</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ABORT</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SAVEPOINT_ROLLBACK</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOCK_ESCALATE</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>observerException</FieldName>
+            <FieldType>StandardException</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getLockFactory</MethodName>
+            <MethodComment>/** 
+ * Get the lock factory to be used during this transaction.
+ */
+</MethodComment>
+            <ReturnType>LockFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataFactory</MethodName>
+            <MethodComment>/** 
+ * Get the data factory to be used during this transaction.
+ */
+</MethodComment>
+            <ReturnType>DataFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFactory</MethodName>
+            <MethodComment>/** 
+ * Get the log factory to be used during this transaction.
+ */
+</MethodComment>
+            <ReturnType>LogFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogBuffer</MethodName>
+            <MethodComment>/** 
+ * Get the log buffer to be used during this transaction.
+ */
+</MethodComment>
+            <ReturnType>DynamicByteArrayOutputStream</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logAndUndo</MethodName>
+            <MethodComment>/** 
+ * Log a compensation operation and then action it in the context of this  transaction. The CompensationOperation is logged in the transaction log file and  then its doMe method is called to perform the required change.  This  compensation operation will rollback the change that was done by the  Loggable Operation at undoInstant. 
+ * @param compensation	the Compensation Operation
+ * @param undoInstant	the LogInstant of the Loggable Operation this compensation operation is going to roll back
+ * @param in			optional data for the rollback operation
+ * @see Compensation
+ * @exception StandardException  Standard Derby exception policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>compensation</ParamName>
+                    <ParamType>Compensation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoInstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTransactionId</MethodName>
+            <MethodComment>/** 
+ * Set the transactionId (Global and internal) of this transaction using a log record that contains the Global id
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>beginXact</ParamName>
+                    <ParamType>Loggable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>shortId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getId</MethodName>
+            <MethodComment>/** 
+ * Get the shortId of this transaction.  May return null if transactio has no ID.
+ */
+</MethodComment>
+            <ReturnType>TransactionId</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getGlobalId</MethodName>
+            <MethodComment>/** 
+ * Get the shortId of this transaction.  May return null if transactio has no ID.
+ */
+</MethodComment>
+            <ReturnType>GlobalTransactionId</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addUpdateTransaction</MethodName>
+            <MethodComment>/** 
+ * Add this raw transaction on to the list of update transaction
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>transactionStatus</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeUpdateTransaction</MethodName>
+            <MethodComment>/** 
+ * Remove this raw transaction from the list of update transaction
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareTransaction</MethodName>
+            <MethodComment>/** 
+ * Change the state of transaction in table to prepare.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setFirstLogInstant</MethodName>
+            <MethodComment>/** 
+ * Set the log instant for the first log record written by this  transaction.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>instant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFirstLogInstant</MethodName>
+            <MethodComment>/** 
+ * Get the log instant for the first log record written by this  transaction.
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLastLogInstant</MethodName>
+            <MethodComment>/** 
+ * Set the log instant for the last log record written by this transaction. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>instant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLastLogInstant</MethodName>
+            <MethodComment>/** 
+ * Get the log instant for the last log record written by this transaction.  If the transaction is unclear what its last log instant is,  than it may return null.
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkLogicalOperationOk</MethodName>
+            <MethodComment>/** 
+ * Check to see if a logical operation is allowed by this transaction,  throws a TransactionExceotion if it isn't. This implementation allows logical operations. Transactions that need to disallow logical  operations should hide this method.
+ * @exception StandardException Standard Derby error policy,
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recoveryRollbackFirst</MethodName>
+            <MethodComment>/** 
+ * Return true if this transaction should be rolled back first in recovery. This implementation returns false. Transactions that need to rollback first during recovery should hide this method.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reprepare</MethodName>
+            <MethodComment>/** 
+ * During recovery re-prepare a transaction. &lt;p&gt; After redo() and undo(), this routine is called on all outstanding  in-doubt (prepared) transactions.  This routine re-acquires all  logical write locks for operations in the xact, and then modifies the transaction table entry to make the transaction look as if it had just been prepared following startup after recovery. &lt;p&gt;
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setObserverException</MethodName>
+            <MethodComment>/** 
+ * Allow an Observer to indicate an exception to the transaction that is raised in its update() method.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNestedTopTransaction</MethodName>
+            <MethodComment>/** 
+ * Start a nested top transaction. A nested top transaction behaves exactly like a user transaction. Nested top transaction allow system type work to proceed in a separate transaction to the current user transaction and be committed independently of the user transaction (usually before the user transaction). Only one nested top transaction can be active in a context at any one time. After a commit the transaction may be re-used. A nested top transaction conflicts on the logical locks of its "parent" transaction.
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>RawTransaction</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openDroppedContainer</MethodName>
+            <MethodComment>/** 
+ * Open a container that may be dropped - use only by logging and recovery. During recovery redo, a log record may refer to a container that has long been dropped.  This interface is provided so a dropped container may be opened. If the container has been dropped and is known to be committed, then even if we open the dropped container with forUpdate true, the container will be silently opened as read only.  Logging and recovery code always check for committed drop status.  Anybody else wanting to use this interface must keep this in mind.
+ * @exception StandardException  Standard Derby exception policy
+ */
+</MethodComment>
+            <ReturnType>RawContainerHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>locking</ParamName>
+                    <ParamType>LockingPolicy</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reCreateContainerForRedoRecovery</MethodName>
+            <MethodComment>/** 
+ * Recreate a container during redo recovery. Used during redo recovery when processing log records trying to  create a container, but no container is found in the db.
+ * @exception StandardException  Standard Derby exception policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>segmentId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerInfo</ParamName>
+                    <ParamType>ByteArray</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>statusForBeginXactLog</MethodName>
+            <MethodComment>/** 
+ * Status that needs to go into the begin transaction log record, if there is one, to help with recovery
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>statusForEndXactLog</MethodName>
+            <MethodComment>/** 
+ * Status that needs to go into the end transaction log record, if there is one, to help with recovery
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inAbort</MethodName>
+            <MethodComment>/** 
+ * Is the transaction in the middle of an abort.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handlesPostTerminationWork</MethodName>
+            <MethodComment>/** 
+ * Can this transaction handles post termination work
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recoveryTransaction</MethodName>
+            <MethodComment>/** 
+ * Make this transaction aware that it is being used by recovery
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notifyObservers</MethodName>
+            <MethodComment>/** 
+ * Allow my users to notigy my observers.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arg</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inRollForwardRecovery</MethodName>
+            <MethodComment>/** 
+ * Retunrs true if the transaction is part of rollforward recovery
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkpointInRollForwardRecovery</MethodName>
+            <MethodComment>/** 
+ * Redo a checkpoint during rollforward recovery.
+ * @param cinstant The LogInstant of the checkpoint
+ * @param redoLWM  Redo Low Water Mark in the check point record
+ * @param undoLWM Undo Low Water Mark in the checkpoint
+ * @exception StandardException Exception encountered during checkpoint
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cinstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>redoLWM</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoLWM</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>blockBackup</MethodName>
+            <MethodComment>/** 
+ * Make the transaction block the online backup.
+ * @param wait if &lt;tt&gt;true&lt;/tt&gt;, waits until the transactioncan block the backup.
+ * @return     &lt;tt&gt;true&lt;/tt&gt; if the transaction  blocked the  backup.  &lt;tt&gt;false&lt;/tt&gt; otherwise.
+ * @exception StandardException if interrupted while waiting for the backup in progress to complete.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isBlockingBackup</MethodName>
+            <MethodComment>/** 
+ * Check if the transaction is blocking the backup ?
+ * @return &lt;tt&gt; true &lt;/tt&gt; if this transaction is blocking the backup, otherwise &lt;tt&gt; false &lt;/tt&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,717 @@
+<Class>
+    <Id>2089</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>GroupByNode</ClassName>
+    <SuperClass>SingleChildResultSetNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>GroupByNode  /** 
+ * A GroupByNode represents a result set for a grouping operation on a select.  Note that this includes a SELECT with aggregates and no grouping columns (in which case the select list is null) It has the same description as its input result set. &lt;p&gt; For the most part, it simply delegates operations to its bottomPRSet, which is currently expected to be a ProjectRestrictResultSet generated for a SelectNode. &lt;p&gt; NOTE: A GroupByNode extends FromTable since it can exist in a FromList. &lt;p&gt; There is a lot of room for optimizations here: &lt;UL&gt; &lt;LI&gt; agg(distinct x) group by x =&amp;gt; agg(x) group by x (for min and max) &lt;/LI&gt; &lt;LI&gt; min()/max() use index scans if possible, no sort may  be needed. &lt;/LI&gt; &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>groupingList</FieldName>
+            <FieldType>GroupByList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggregates</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggregates</FieldName>
+            <FieldType>AggregateNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggInfo</FieldName>
+            <FieldType>AggregatorInfoList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parent</FieldName>
+            <FieldType>FromTable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>addDistinctAggregate</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>singleInputRowOptimization</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>addDistinctAggregateColumnNum</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isInSortedOrder</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>havingClause</FieldName>
+            <FieldType>ValueNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>havingSubquerys</FieldName>
+            <FieldType>SubqueryList</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>GroupByNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a GroupByNode.
+ * @param bottomPR      The child FromTable
+ * @param groupingList	The groupingList
+ * @param aggregates    The list of aggregates fromthe query block.  Since aggregation is done at the same time as grouping, we need them here.
+ * @param havingClause  The having clause.
+ * @param havingSubquerys subqueries in the having clause.
+ * @param nestingLevel  NestingLevel of this group by node. This is used forerror checking of group by queries with having clause.
+ * @param cm            The context manager
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bottomPR</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupingList</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>havingClause</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>havingSubquerys</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nestingLevel</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [newBottomRCL]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setLevel;[nestingLevel]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[childResult.getResultColumns()]</InnerMethodInvoke>
+                <InnerMethodInvoke>childResult;setResultColumns;[newBottomRCL]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addAggregates;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIsInSortedOrder</MethodName>
+            <MethodComment>/** 
+ * Get whether or not the source is in sorted order.
+ * @return Whether or not the source is in sorted order.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addAggregates</MethodName>
+            <MethodComment>/** 
+ * Add the extra result columns required by the aggregates to the result list.
+ * @exception standard exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addNewPRNode;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addNewColumnsForAggregation;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addDistinctAggregatesToOrderBy;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDistinctAggregatesToOrderBy</MethodName>
+            <MethodComment>/** 
+ * Add any distinct aggregates to the order by list. Asserts that there are 0 or more distincts.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numDistinct=numDistinctAggregates(aggregates)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addNewPRNode</MethodName>
+            <MethodComment>/** 
+ * Add a new PR node for aggregation.  Put the new PR under the sort.
+ * @exception standard exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [rclNew=new ResultColumnList((getContextManager()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rclNew;copyOrderBySelect;[getResultColumns()]</InnerMethodInvoke>
+                <InnerMethodInvoke>childResult;setResultColumns;[new ResultColumnList(getContextManager())]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setResultColumns;[new ResultColumnList((getContextManager()))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addUnAggColumns</MethodName>
+            <MethodComment>/** 
+ * In the query rewrite for group by, add the columns on which we are doing the group by.
+ * @return havingRefsToSubstitute visitors array. Return anyhavingRefsToSubstitute visitors since it is too early to apply them yet; we need the AggregateNodes unmodified until after we add the new columns for aggregation (DERBY-4071).
+ * @see #addNewColumnsForAggregation
+ */
+</MethodComment>
+            <ReturnType>SubstituteExpressionVisitor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [bottomRCL=childResult.getResultColumns()]</InnerVar>
+                <InnerVar>ResultColumnList [groupByRCL=getResultColumns()]</InnerVar>
+                <InnerVar>ArrayList&lt;SubstituteExpressionVisitor&gt; [referencesToSubstitute=new ArrayList&lt;SubstituteExpressionVisitor&gt;()]</InnerVar>
+                <InnerVar>ArrayList&lt;SubstituteExpressionVisitor&gt; [havingRefsToSubstitute=null]</InnerVar>
+                <InnerVar>ExpressionSorter [sorter=new ExpressionSorter()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[referencesToSubstitute, sorter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addNewColumnsForAggregation</MethodName>
+            <MethodComment>/** 
+ * Add a whole slew of columns needed for  aggregation. Basically, for each aggregate we add 3 columns: the aggregate input expression and the aggregator column and a column where the aggregate  result is stored.  The input expression is taken directly from the aggregator node.  The aggregator is the run time aggregator.  We add it to the RC list as a new object coming into the sort node. &lt;P&gt; At this point this is invoked, we have the following tree: &lt;UL&gt; PR - (PARENT): RCL is the original select list | PR - GROUP BY:  RCL is empty | PR - FROM TABLE: RCL is empty &lt;/UL&gt; &lt;P&gt; For each ColumnReference in PR RCL &lt;UL&gt; &lt;LI&gt; clone the ref &lt;/LI&gt; &lt;LI&gt; create a new RC in the bottom RCL and set it  to the col ref &lt;/LI&gt; &lt;LI&gt; create a new RC in the GROUPBY RCL and set it to  point to the bottom RC &lt;/LI&gt; &lt;LI&gt; reset the top PR ref to point to the new GROUPBY RC&lt;/LI&gt;&lt;/UL&gt;	 For each aggregate in  {@code aggregates} &lt;UL&gt;&lt;LI&gt; create RC in FROM TABLE.  Fill it with  aggs Operator. &lt;LI&gt; create RC in FROM TABLE for agg result&lt;/LI&gt; &lt;LI&gt; create RC in FROM TABLE for aggregator&lt;/LI&gt; &lt;LI&gt; create RC in GROUPBY for agg input, set it to point to FROM TABLE RC &lt;/LI&gt; &lt;LI&gt; create RC in GROUPBY for agg result&lt;/LI&gt; &lt;LI&gt; create RC in GROUPBY for aggregator&lt;/LI&gt; &lt;LI&gt; replace Agg with reference to RC for agg result &lt;/LI&gt;&lt;/UL&gt;. &lt;P&gt; For a query like, &lt;pre&gt; select c1, sum(c2), max(c3) from t1  group by c1; &lt;/pre&gt; the query tree ends up looking like this: &lt;pre&gt; ProjectRestrictNode RCL -&amp;gt; (ptr to GBN(column[0]), ptr to GBN(column[1]), ptr to GBN(column[4])) | GroupByNode RCL-&amp;gt;(C1, SUM(C2), &amp;lt;agg-input&amp;gt;, &lt;aggregator&gt;, MAX(C3), &amp;lt;agg-input&amp;gt;, &amp;lt;aggregator&amp;gt;) | ProjectRestrict RCL-&amp;gt;(C1, C2, C3) | FromBaseTable &lt;/pre&gt; The RCL of the GroupByNode contains all the unagg (or grouping columns) followed by 3 RC's for each aggregate in this order: the final computed aggregate value, the aggregate input and the aggregator function. &lt;p&gt; The Aggregator function puts the results in the first of the 3 RC's  and the PR resultset in turn picks up the value from there. &lt;p&gt; The notation (ptr to GBN(column[0])) basically means that it is a pointer to the 0th RC in the RCL of the GroupByNode.  &lt;p&gt; The addition of these unagg and agg columns to the GroupByNode and  to the PRN is performed in addUnAggColumns and addAggregateColumns.  &lt;p&gt; Note that that addition of the GroupByNode is done after the query is optimized (in SelectNode#modifyAccessPaths) which means a  fair amount of patching up is needed to account for generated group by columns.
+ * @exception standard exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;SubstituteExpressionVisitor&gt; [havingRefsToSubstitute=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addAggregateColumns;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addAggregateColumns</MethodName>
+            <MethodComment>/** 
+ * In the query rewrite involving aggregates, add the columns for aggregation.
+ * @see #addNewColumnsForAggregation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataDictionary [dd=getDataDictionary()]</InnerVar>
+                <InnerVar>ColumnReference [newColumnRef]</InnerVar>
+                <InnerVar>ResultColumn [newRC]</InnerVar>
+                <InnerVar>ResultColumn [tmpRC]</InnerVar>
+                <InnerVar>ResultColumn [aggResultRC]</InnerVar>
+                <InnerVar>ResultColumnList [bottomRCL=childResult.getResultColumns()]</InnerVar>
+                <InnerVar>ResultColumnList [groupByRCL=getResultColumns()]</InnerVar>
+                <InnerVar>ResultColumnList [aggRCL]</InnerVar>
+                <InnerVar>int [aggregatorVColId]</InnerVar>
+                <InnerVar>int [aggInputVColId]</InnerVar>
+                <InnerVar>int [aggResultVColId]</InnerVar>
+                <InnerVar>LanguageFactory [lf=getLanguageConnectionContext().getLanguageFactory()]</InnerVar>
+                <InnerVar>ReplaceAggregatesWithCRVisitor [replaceAggsVisitor=new ReplaceAggregatesWithCRVisitor(new ResultColumnList((getContextManager())),((FromTable)childResult).getTableNumber(),ResultSetNode.class)]</InnerVar>
+                <InnerVar>int [alSize=aggregates.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>parent.getResultColumns();accept;[replaceAggsVisitor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParent</MethodName>
+            <MethodComment>/** 
+ * Return the parent node to this one, if there is one.  It will return 'this' if there is no generated node above this one.
+ * @return the parent node
+ */
+</MethodComment>
+            <ReturnType>FromTable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimizeIt</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#optimizeIt
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [retval=super.optimizeIt(optimizer,predList,outerCost,rowOrdering)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>((Optimizable)childResult);optimizeIt;[optimizer, predList, outerCost, rowOrdering]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>estimateCost</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#estimateCost
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [childCost=((Optimizable)childResult).estimateCost(predList,cd,outerCost,optimizer,rowOrdering)]</InnerVar>
+                <InnerVar>CostEstimate [costEst=getCostEstimate(optimizer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>costEst;setCost;[childCost.getEstimatedCost(), childCost.rowCount(), childCost.singleScanRowCount()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOptPredicate</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#pushOptPredicate
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicate</ParamName>
+                    <ParamType>OptimizablePredicate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSubNodes</MethodName>
+            <MethodComment>/** 
+ * Prints the sub-nodes of this object.  See QueryTreeNode.java for how tree printing is supposed to work.
+ * @param depth		The depth of this node in the tree
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>depth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flattenableInFromSubquery</MethodName>
+            <MethodComment>/** 
+ * Evaluate whether or not the subquery in a FromSubquery is flattenable. Currently, a FSqry is flattenable if all of the following are true: o  Subquery is a SelectNode. o  It contains no top level subqueries.  (RESOLVE - we can relax this) o  It does not contain a group by or having clause o  It does not contain aggregates.
+ * @param fromList	The outer from list
+ * @return boolean	Whether or not the FromSubquery is flattenable.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimize</MethodName>
+            <MethodComment>/** 
+ * Optimize this GroupByNode.
+ * @param dataDictionary	The DataDictionary to use for optimization
+ * @param predicates		The PredicateList to optimize.  This shouldbe a join predicate.
+ * @param outerRows			The number of outer joining rows
+ * @return	ResultSetNode	The top of the optimized subtree
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predicates</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerRows</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCostEstimate;[getOptimizerFactory().getCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCostEstimate();setCost;[childResult.getCostEstimate().getEstimatedCost(), childResult.getCostEstimate().rowCount(), childResult.getCostEstimate().singleScanRowCount()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeResultDescriptors</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ResultColumnDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOneRowResultSet</MethodName>
+            <MethodComment>/** 
+ * Return whether or not the underlying ResultSet tree will return a single row, at most. This is important for join nodes where we can save the extra next on the right side if we know that it will return at most 1 row.
+ * @return Whether or not the underlying ResultSet tree will return a single row.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * generate the sort result set operating over the source result set.  Adds distinct aggregates to the sort if necessary.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FormatableArrayHolder [orderingHolder]</InnerVar>
+                <InnerVar>int [orderingItem=acb.addItem(orderingHolder)]</InnerVar>
+                <InnerVar>int [aggInfoItem=acb.addItem(aggInfo)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assignResultSetNumber;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCostEstimate;[childResult.getFinalCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>childResult;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[isInSortedOrder]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[aggInfoItem]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[orderingItem]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[acb.addItem(getResultColumns().buildRowTemplate())]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultColumns().getTotalColumnSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genScalarAggregateResultSet</MethodName>
+            <MethodComment>/** 
+ * Generate the code to evaluate scalar aggregates.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [resultSet=(addDistinctAggregate) ? "getDistinctScalarAggregateResultSet" : "getScalarAggregateResultSet"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mb;push;[singleInputRowOptimization]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, resultSet, ClassName.NoPutResultSet, 10]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genGroupedAggregateResultSet</MethodName>
+            <MethodComment>/** 
+ * Generate the code to evaluate grouped aggregates.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [resultSet=(addDistinctAggregate) ? "getDistinctGroupedAggregateResultSet" : "getGroupedAggregateResultSet"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[groupingList.isRollup()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, resultSet, ClassName.NoPutResultSet, 10]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getColumnReference</MethodName>
+            <MethodComment>/** 
+ * Method for creating a new result column referencing the one passed in.
+ * @param targetRC	the source
+ * @param dd
+ * @return the new result column
+ * @exception StandardException	on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetRC</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dd</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnReference [tmpColumnRef]</InnerVar>
+                <InnerVar>ResultColumn [newRC]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tmpColumnRef;setSource;[targetRC]</InnerMethodInvoke>
+                <InnerMethodInvoke>tmpColumnRef;setNestingLevel;[this.getLevel()]</InnerMethodInvoke>
+                <InnerMethodInvoke>tmpColumnRef;setSourceLevel;[this.getLevel()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newRC;markGenerated;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>newRC;bindResultColumnToExpression;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>considerPostOptimizeOptimizations</MethodName>
+            <MethodComment>/** 
+ * Consider any optimizations after the optimizer has chosen a plan. Optimizations include: o  min optimization for scalar aggregates o  max optimization for scalar aggregates
+ * @param selectHasPredicates true if SELECT containing thisvector/scalar aggregate has a restriction
+ * @exception StandardException	on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>selectHasPredicates</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compare</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o1</ParamName>
+                    <ParamType>SubstituteExpressionVisitor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>o2</ParamName>
+                    <ParamType>SubstituteExpressionVisitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

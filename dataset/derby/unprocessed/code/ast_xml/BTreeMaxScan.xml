@@ -1,0 +1,129 @@
+<Class>
+    <Id>1252</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>BTreeMaxScan</ClassName>
+    <SuperClass>BTreeScan</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BTreeMaxScan  /** 
+ * A BTreeScan implementation that provides the 95% solution to the max on btree problem.  If the row is the last row in the btree it works very efficiently.  This implementation will be removed once backward scan is fully functional. The current implementation only exports to the user the ability to call fetchMax() and get back one row, none of the generic scan ablities are exported.   To return the maximum row this implementation does the following: 1) calls positionAtStartPosition() which returns with the a latch on the rightmost leaf page and a lock on the rightmost leaf row on that page. It will loop until it can get the lock without waiting while holding the latch.  At this point the slot position is just right of the locked row. 2) in fetchMax() it loops backward on the last leaf page, locking rows as it does so, until it finds the first non-deleted, non-NULL row. 3) If it is not successful in this last page search it attempts to latch the left sibling page, without waiting to avoid deadlocks with forward scans, and continue the search on that page. 4) If the sibling page couldn't be latched without waiting, save the current position, release all latches, and restart the scan from the saved position.
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>moveToLeftSibling</MethodName>
+            <MethodComment>/** 
+ * Move the current position to the page to the left of the current page, right after the last slot on that page. If we have to wait for a latch, give up the latch on the current leaf and give up. The caller will have to reposition and retry.
+ * @return true if the position was successfully moved, false if we hadto wait for a latch
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fetchRows</MethodName>
+            <MethodComment>/** 
+ * disallow fetchRows on this scan type, caller should only be able to call fetchMax(). &lt;p&gt;
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row_array</ParamName>
+                    <ParamType>DataValueDescriptor[][]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowloc_array</ParamName>
+                    <ParamType>RowLocation[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hash_table</ParamName>
+                    <ParamType>BackingStoreHashtable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max_rowcnt</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key_column_numbers</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>positionAtStartPosition</MethodName>
+            <MethodComment>/** 
+ * Position scan at "start" position of the MAX scan. &lt;p&gt; Positions the scan to the slot just after the last record on the rightmost leaf of the index.  Returns the rightmost leaf page latched,   the rightmost row on the page locked and  sets "current_slot" to the slot number just right of the last row on the page. &lt;p&gt;
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>BTreeRowPosition</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [exact]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fetchMax</MethodName>
+            <MethodComment>/** 
+ * Fetch the maximum row in the table. Call positionAtStartPosition() to quickly position on rightmost row of rightmost leaf of tree. Search last page for last non deleted row, and if one is found return it as max. If no row found on last page, or could not find row without losing latch then call fetchMaxRowFromBeginning() to search from left to right for maximum value in index.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fetch_row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BTreeRowPosition [pos=scan_position]</InnerVar>
+                <InnerVar>int [ret_row_count=0]</InnerVar>
+                <InnerVar>boolean [max_found=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;positionAtDoneScan;[scan_position]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

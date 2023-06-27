@@ -1,0 +1,196 @@
+<Class>
+    <Id>382</Id>
+    <Package>org.apache.derby.impl.store.raw.xact</Package>
+    <ClassName>RowLocking2</ClassName>
+    <SuperClass>RowLockingRR</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RowLocking2  /** 
+ * A locking policy that implements row level locking with isolation degree 2. The approach is to place all "write" container and row locks on the  transaction group lock list.  Locks on this group will last until end of transaction.  All "read" container and row locks will be placed  on a group list, key'd by the ContainerId of the lock.  Locks on this list will either be released explicitly by the caller, or will be released as a group when the unlockContainer() call is made. Note that write operations extend from the RowLocking3 implementations.
+ * @see org.apache.derby.iapi.store.raw.LockingPolicy
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>NO_LOCK</FieldName>
+            <FieldType>LockingPolicy</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RowLocking2</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lf</ParamName>
+                    <ParamType>LockFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockContainer</MethodName>
+            <MethodComment>/** 
+ * Obtain container level intent lock. &lt;p&gt; This implementation of row locking is 2 level, ie. table and row locking. It will interact correctly with tables opened with ContainerLocking3 locking mode. &lt;p&gt; Updater's will get table level IX locks, and X row locks. &lt;p&gt; Reader's will get table level IS locks, and S row locks. &lt;p&gt; Read locks are put in a separate "group" from the transaction, so that when the container is closed it can release these read locks.
+ * @param t            Transaction to associate lock with.
+ * @param container    Container to lock.
+ * @param waitForLock  Should lock request wait until granted?
+ * @param forUpdate    Should container be locked for update, or read?
+ * @return true if the lock was obtained, false if it wasn't. False should only be returned if the waitForLock policy was set to "false," and the lock was unavailable.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [qualifier=forUpdate ? ContainerLock.CIX : ContainerLock.CIS]</InnerVar>
+                <InnerVar>Object [group=forUpdate ? ((Object)t) : ((Object)container.getUniqueId())]</InnerVar>
+                <InnerVar>boolean [gotLock=lf.lockObject(t.getCompatibilitySpace(),group,container.getId(),qualifier,waitForLock ? C_LockFactory.TIMED_WAIT : C_LockFactory.NO_WAIT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRecordForRead</MethodName>
+            <MethodComment>/** 
+ * Obtain lock on record being read. &lt;p&gt; Assumes that a table level IS has been acquired.  Will acquire a Shared or Update lock on the row, depending on the "forUpdate" parameter. &lt;p&gt; Read lock will be placed on separate group from transaction.
+ * @param t             The transaction to associate the lock with.
+ * @param record        The record to be locked.
+ * @param waitForLock   Should lock request wait until granted?
+ * @param forUpdate     Whether to open for read or write access.
+ * @return true if the lock was granted, false if waitForLock was false and the lock could not be granted.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container_handle</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [qualifier=forUpdate ? RowLock.RU2 : RowLock.RS2]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockRecordAfterRead</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container_handle</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record</ParamName>
+                    <ParamType>RecordHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row_qualified</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [qualifier=forUpdate ? RowLock.RU2 : RowLock.RS2]</InnerVar>
+                <InnerVar>int [count=lf.unlock(t.getCompatibilitySpace(),container_handle.getUniqueId(),record,qualifier)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockContainer</MethodName>
+            <MethodComment>/** 
+ * Unlock read locks. &lt;p&gt; In Cursor stability release all read locks obtained.  unlockContainer() will be called when the container is closed. &lt;p&gt;
+ * @param t                 The transaction to associate the lock with.
+ * @param container_handle  Container to unlock.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container_handle</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>lf;unlockGroup;[t.getCompatibilitySpace(), container_handle.getUniqueId()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

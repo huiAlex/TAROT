@@ -1,0 +1,3285 @@
+<Class>
+    <Id>1018</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>ResultColumnList</ClassName>
+    <SuperClass>QueryTreeNodeVector</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ResultColumnList  /** 
+ * A ResultColumnList is the target list of a SELECT, INSERT, or UPDATE.
+ * @see ResultColumn
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>indexRow</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conglomerateId</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>orderBySelect</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forUpdate</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>countMismatchAllowed</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initialListSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mapArray</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cloneMap</FieldName>
+            <FieldType>boolean[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ResultColumnList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addResultColumn</MethodName>
+            <MethodComment>/** 
+ * Add a ResultColumn (at this point, ResultColumn or AllResultColumn) to the list
+ * @param resultColumn	The ResultColumn to add to the list
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultColumn</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>resultColumn;setVirtualColumnId;[size() + 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addElement;[resultColumn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendResultColumns</MethodName>
+            <MethodComment>/** 
+ * Append a given ResultColumnList to this one, resetting the virtual column ids in the appended portion.
+ * @param resultColumns		The ResultColumnList to be appended
+ * @param destructiveCopy	Whether or not this is a descructive copyfrom resultColumns
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destructiveCopy</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [oldSize=size()]</InnerVar>
+                <InnerVar>int [newID=oldSize + 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn from a column position (1-based) in the list
+ * @param position	The ResultColumn to get from the list (1-based)
+ * @return	the column at that position.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>position</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Take a column position and a ResultSetNode and find the ResultColumn in this RCL whose source result set is the same as the received RSN and whose column position is the same as the received column position.
+ * @param colNum The column position (w.r.t rsn) for which we're searching
+ * @param rsn The result set node for which we're searching.
+ * @return The ResultColumn in this RCL whose source is column colNumin result set rsn.  That ResultColumn's position w.r.t to this RCL is also returned via the whichRC parameter.  If no match is found, return null and leave whichRC untouched.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>colNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rsn</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>whichRC</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [crColNum=new int[]{-1}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderByColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn from a column position (1-based) in the list, null if out of range (for order by).
+ * @param position	The ResultColumn to get from the list (1-based)
+ * @return	the column at that position, null if out of range
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>position</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn that matches the specified columnName and mark the ResultColumn as being referenced.
+ * @param columnName	The ResultColumn to get from the list
+ * @return	the column that matches that name.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn that matches the specified columnName. If requested to, mark the column as referenced.
+ * @param columnName	The ResultColumn to get from the list
+ * @param markIfReferenced True if we should mark this column as referenced.
+ * @return	the column that matches that name.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>markIfReferenced</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Return a result column, if any found, which contains in its expression/&amp;#123;VCN,CR&amp;#125; chain a result column with the given columnNumber from a FromTable with the given tableNumber. &lt;p/&gt; Used by the optimizer preprocess phase when it is flattening queries, which has to use the pair &amp;#123;table number, column number&amp;#125; to uniquely distinguish the column desired in situations where the same table may appear multiple times in the queries with separate correlation names, and/or column names from different tables may be the same (hence looking up by column name will not always work), cf DERBY-4679. &lt;p/&gt; {@code columnName} is used to assert that we find the right column.If we found a match on (tn, cn) but columnName is wrong, return null. Once we trust table numbers and column numbers to always be correct, cf. DERBY-4695, we could remove this parameter.
+ * @param tableNumber the table number to look for
+ * @param columnNumber the column number to look for
+ * @param columnName name of the desired column
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn that matches the specified columnName and mark the ResultColumn as being referenced.
+ * @param columnsTableName	Qualifying name for the column
+ * @param columnName		The ResultColumn to get from the list
+ * @return	the column that matches that name.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnsTableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAtMostOneResultColumn</MethodName>
+            <MethodComment>/** 
+ * Get a ResultColumn that matches the specified columnName and mark the ResultColumn as being referenced. NOTE - this flavor enforces no ambiguity (at most 1 match) Only FromSubquery needs to call this flavor since it can have ambiguous references in its own list.
+ * @param cr					   The ColumnReference to resolve
+ * @param exposedTableName		   Exposed table name for FromTable
+ * @param considerGeneratedColumns Also consider columns that are generated.One example of this is group by where columns are added to the select list if they are referenced in the group by but are not present in the select list.
+ * @return	the column that matches that name.
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cr</ParamName>
+                    <ParamType>ColumnReference</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exposedTableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>considerGeneratedColumns</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [retRC=null]</InnerVar>
+                <InnerVar>String [columnName=cr.getColumnName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>columnsAreUpdatable</MethodName>
+            <MethodComment>/** 
+ * Return true if some columns in this list are updatable.
+ * @return	true if any column in list is updatable, else false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderByColumnToBind</MethodName>
+            <MethodComment>/** 
+ * For order by column bind, get a ResultColumn that matches the specified  columnName. This method is called during bind processing, in the special "bind the order by" call that is made by CursorNode.bindStatement(). The OrderByList has a special set of bind processing routines that analyzes the columns in the ORDER BY list and verifies that each column is one of: - a direct reference to a column explicitly mentioned in the SELECT list - a direct reference to a column implicitly mentioned as "SELECT *" - a direct reference to a column "pulled up" into the result column list - or a valid and fully-bound expression ("c+2", "YEAR(hire_date)", etc.) At this point in the processing, it is possible that we'll find the column present in the RCL twice: once because it was pulled up during statement compilation, and once because it was added when "SELECT *" was expanded into the table's actual column list. If we find such a duplicated column, we can, and do, remove the pulled-up copy of the column and point the OrderByColumn to the actual ResultColumn from the *-expansion. Note that the association of the OrderByColumn with the corresponding ResultColumn in the RCL occurs in OrderByColumn.resolveAddedColumn.
+ * @param columnName	The ResultColumn to get from the list
+ * @param tableName	The table name on the OrderByColumn, if any
+ * @param tableNumber	The tableNumber corresponding to the FromTable with theexposed name of tableName, if tableName != null.
+ * @param obc           The OrderByColumn we're binding.
+ * @return	the column that matches that name.
+ * @exception StandardException thrown on ambiguity
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>obc</ParamName>
+                    <ParamType>OrderByColumn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>ResultColumn [retVal=null, resultColumn]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collapseVirtualColumnIdGap</MethodName>
+            <MethodComment>/** 
+ * Adjust virtualColumnId values due to result column removal This method is called when a duplicate column has been detected and removed from the list. We iterate through each of the other columns in the list and notify them of the column removal so they can adjust their virtual column id if necessary.
+ * @param gap   id of the column which was just removed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>gap</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findResultColumnForOrderBy</MethodName>
+            <MethodComment>/** 
+ * For order by, get a ResultColumn that matches the specified  columnName. This method is called during pull-up processing, at the very start of bind processing, as part of OrderByList.pullUpOrderByColumns. Its job is to figure out whether the provided column (from the ORDER BY list) already exists in the ResultColumnList or not. If the column does not exist in the RCL, we return NULL, which signifies that a new ResultColumn should be generated and added ("pulled up") to the RCL by our caller. Note that at this point in the processing, we should never find this column present in the RCL multiple times; if the column is already present in the RCL, then we don't need to, and won't, pull a new ResultColumn up into the RCL. If the caller specified "SELECT *", then the RCL at this point contains a special AllResultColumn object. This object will later be expanded and replaced by the actual set of columns in the table, but at this point we don't know what those columns are, so we may pull up an OrderByColumn which duplicates a column in the *-expansion; such duplicates will be removed at the end of bind processing by OrderByList.bindOrderByColumns.
+ * @param columnName	The ResultColumn to get from the list
+ * @param tableName	The table name on the OrderByColumn, if any
+ * @return	the column that matches that name, or NULL if pull-up needed
+ * @exception StandardException thrown on ambiguity
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>ResultColumn [retVal=null, resultColumn]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyResultColumnNames</MethodName>
+            <MethodComment>/** 
+ * Copy the result column names from the given ResultColumnList to this ResultColumnList.  This is useful for insert-select, where the columns being inserted into may be different from the columns being selected from.  The result column list for an insert is supposed to have the column names being inserted into.
+ * @param nameList	The ResultColumnList from which to copythe column names
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nameList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=(countMismatchAllowed) ? nameList.visibleSize() : visibleSize()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions in this ResultColumnList.  This means binding the expression under each ResultColumn node.
+ * @param fromList		The FROM list for the query thisexpression is in, for binding columns.
+ * @param subqueryList		The subquery list being built as we find SubqueryNodes
+ * @param aggregates        The aggregate list being built as we find AggregateNodes
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;expandAllsAndNameColumns;[fromList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumnsToExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns to the expressions that live under them. All this does is copy the datatype information to from each expression to each result column.  This is useful for SELECT statements, where the result type of each column is the type of the column's expression.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumnsByName</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns by their names.  This is useful for GRANT and REVOKE statements like "GRANT SELECT ON t(c1,c1,c3) TO george", where the user specified a column list. This method does not check for duplicate column names.
+ * @param targetTableDescriptor	The descriptor for the table
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetTableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumnsByName</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns by their names.  This is useful for update, grant, and revoke statements, and for INSERT statements like "insert into t (a, b, c) values (1, 2, 3)" where the user specified a column list. If the statment is an insert or update verify that the result column list does not contain any duplicates. NOTE: We pass the ResultColumns position in the ResultColumnList so that the VirtualColumnId gets set.
+ * @param targetTableDescriptor	The descriptor for the table beingupdated or inserted into
+ * @param statement			DMLStatementNode containing this list, null if no duplicate checking is to be done
+ * @return A FormatableBitSet representing the set of columns with respect to the table
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>FormatableBitSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetTableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>DMLStatementNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>FormatableBitSet [columnBitSet=new FormatableBitSet(targetTableDescriptor.getNumberOfColumns())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumnsByName</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns by their names.  This is useful for update VTI statements, and for INSERT statements like "insert into new t() (a, b, c) values (1, 2, 3)" where the user specified a column list. Also, verify that the result column list does not contain any duplicates. NOTE: We pass the ResultColumns position in the ResultColumnList so that the VirtualColumnId gets set.
+ * @param fullRCL	The full RCL for the target table
+ * @param statement			DMLStatementNode containing this list
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fullRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetVTI</ParamName>
+                    <ParamType>FromVTI</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>DMLStatementNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>HashSet&lt;String&gt; [seenNames=new HashSet&lt;String&gt;(size + 2,0.999f)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumnsByPosition</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns by ordinal position.  This is useful for INSERT statements like "insert into t values (1, 2, 3)", where the user did not specify a column list.
+ * @param targetTableDescriptor	The descriptor for the table beinginserted into
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetTableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Preprocess the expression trees under the RCL. We do a number of transformations here (including subqueries, IN lists, LIKE and BETWEEN) plus subquery flattening. NOTE: This is done before the outer ResultSetNode is preprocessed.
+ * @param numTables			Number of tables in the DML Statement
+ * @param outerFromList		FromList from outer query block
+ * @param outerSubqueryList	SubqueryList from outer query block
+ * @param outerPredicateList	PredicateList from outer query block
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerFromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerSubqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkStorableExpressions</MethodName>
+            <MethodComment>/** 
+ * Verify that all the result columns have expressions that are storable for them.  Check versus the given ResultColumnList.
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>toStore</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStreamStorableColIds</MethodName>
+            <MethodComment>/** 
+ * Return an array holding the 0 based heap offsets of  the StreamStorable columns in this ResultColumnList. This returns null if this list does not contain any StreamStorableColumns. The list this returns does not contain duplicates. This should only be used for a resultColumnList the refers to a single heap such as the target for an Insert, Update or Delete.
+ * @param heapColCount the number of heap columns
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>heapColCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [ssCount=0]</InnerVar>
+                <InnerVar>boolean[] [isSS=new boolean[heapColCount]]</InnerVar>
+                <InnerVar>int[] [result=new int[ssCount]]</InnerVar>
+                <InnerVar>int [resultOffset=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkStorableExpressions</MethodName>
+            <MethodComment>/** 
+ * Verify that all the result columns have expressions that are storable for them.  Check versus the expressions under the ResultColumns.
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * Generate the code to place the columns' values into a row variable named "r". This wrapper is here rather than in ResultColumn, because that class does not know about the position of the columns in the list.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateCore;[acb, mb, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateNulls</MethodName>
+            <MethodComment>/** 
+ * Generate the code to place the columns' values into a row variable named "r". This wrapper is here rather than in ResultColumn, because that class does not know about the position of the columns in the list.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateCore;[acb, mb, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateCore</MethodName>
+            <MethodComment>/** 
+ * Generate the code to place the columns' values into a row variable named "r". This wrapper is here rather than in ResultColumn, because that class does not know about the position of the columns in the list. This is the method that does the work.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>genNulls</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodBuilder [userExprFun=acb.newUserExprFun()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;generateEvaluatedRow;[acb, userExprFun, genNulls, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushMethodReference;[mb, userExprFun]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateEvaluatedRow</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Generate the code for a method (userExprFun) which creates a row and, column by column, stuffs it with the evaluated expressions of our ResultColumns. The method returns the stuffed row. &lt;/p&gt; This is the method that does the work.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userExprFun</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>genNulls</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forMatchingClause</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LocalField [field=acb.newFieldDeclaration(Modifier.PRIVATE,ClassName.ExecRow)]</InnerVar>
+                <InnerVar>ResultColumn [rc]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>MethodBuilder [cb=acb.getConstructor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;genCreateRow;[acb, field, "getValueRow", ClassName.ExecRow, size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>userExprFun;getField;[field]</InnerMethodInvoke>
+                <InnerMethodInvoke>userExprFun;methodReturn;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>userExprFun;complete;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildEmptyRow</MethodName>
+            <MethodComment>/** 
+ * Build an empty row with the size and shape of the ResultColumnList.
+ * @return	an empty row of the correct size and shape.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [columnCount=size()]</InnerVar>
+                <InnerVar>ExecRow [row=getExecutionFactory().getValueRow(columnCount)]</InnerVar>
+                <InnerVar>int [position=1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildEmptyIndexRow</MethodName>
+            <MethodComment>/** 
+ * Build an empty index row for the given conglomerate.
+ * @return	an empty row of the correct size and shape.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ConglomerateDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scc</ParamName>
+                    <ParamType>StoreCostController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dd</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [rc]</InnerVar>
+                <InnerVar>int[] [baseCols=cd.getIndexDescriptor().baseColumnPositions()]</InnerVar>
+                <InnerVar>ExecRow [row=getExecutionFactory().getValueRow(baseCols.length + 1)]</InnerVar>
+                <InnerVar>RowLocation [rlTemplate=scc.newRowLocationTemplate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>row;setColumn;[baseCols.length + 1, rlTemplate]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildRowTemplate</MethodName>
+            <MethodComment>/** 
+ * Build an  {@code ExecRowBuilder} instance that produces a row of thesame shape as this result column list.
+ * @param referencedCols a bit map that tells which columns in thesource result set that are used, or  {@code null} if all are used
+ * @param skipPropagatedCols whether to skip virtual columns whosesource is the immediate child result set
+ * @return an instance that produces rows of the same shape as thisresult column list
+ */
+</MethodComment>
+            <ReturnType>ExecRowBuilder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>referencedCols</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>skipPropagatedCols</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [columns=(referencedCols == null) ? size() : referencedCols.getNumBitsSet()]</InnerVar>
+                <InnerVar>ExecRowBuilder [builder=new ExecRowBuilder(columns,indexRow)]</InnerVar>
+                <InnerVar>int [colNum=(referencedCols == null) ? 0 : referencedCols.anySetBit()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildRowTemplate</MethodName>
+            <MethodComment>/** 
+ * Shorthand for  {@code buildRowTemplate(null, false)}.
+ */
+</MethodComment>
+            <ReturnType>ExecRowBuilder</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genCreateRow</MethodName>
+            <MethodComment>/** 
+ * Generate the code to create an empty row in the constructor.
+ * @param acb					The ACB.
+ * @param field					The field for the new row.
+ * @param rowAllocatorMethod	The method to call.
+ * @param rowAllocatorType		The row type.
+ * @param numCols				The number of columns in the row.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>field</ParamName>
+                    <ParamType>LocalField</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowAllocatorMethod</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowAllocatorType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numCols</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodBuilder [cb=acb.getConstructor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushGetExecutionFactoryExpression;[cb]</InnerMethodInvoke>
+                <InnerMethodInvoke>cb;push;[numCols]</InnerMethodInvoke>
+                <InnerMethodInvoke>cb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, rowAllocatorMethod, rowAllocatorType, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>cb;setField;[field]</InnerMethodInvoke>
+                <InnerMethodInvoke>cb;statementNumHitLimit;[1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newRowLocationTemplate</MethodName>
+            <MethodComment>/** 
+ * Create a row location template of the right type for the source conglomerate.
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=getLanguageConnectionContext()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>int [isolationLevel=(dd.getCacheMode() == DataDictionary.DDL_MODE) ? TransactionController.ISOLATION_READ_COMMITTED : TransactionController.ISOLATION_NOLOCK]</InnerVar>
+                <InnerVar>ConglomerateController [cc=lcc.getTransactionCompile().openConglomerate(conglomerateId,false,0,TransactionController.MODE_RECORD,isolationLevel)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeResultDescriptors</MethodName>
+            <MethodComment>/** 
+ * Make a ResultDescription for use in a ResultSet. This is useful when generating/executing a NormalizeResultSet, since it can appear anywhere in the tree.
+ * @return	A ResultDescription for this ResultSetNode.
+ */
+</MethodComment>
+            <ReturnType>ResultColumnDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnDescriptor [colDescs[]=new ResultColumnDescriptor[size()]]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandAllsAndNameColumns</MethodName>
+            <MethodComment>/** 
+ * Expand any *'s in the ResultColumnList.  In addition, we will guarantee that each ResultColumn has a name.  (All generated names will be unique across the entire statement.)
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [expanded=false]</InnerVar>
+                <InnerVar>ResultColumnList [allExpansion]</InnerVar>
+                <InnerVar>TableName [fullTableName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nameAllResultColumns</MethodName>
+            <MethodComment>/** 
+ * Generate (unique across the entire statement) column names for those ResultColumns in this list which are not named.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>columnTypesAndLengthsMatch</MethodName>
+            <MethodComment>/** 
+ * Check whether the column lengths and types of the result columns match the expressions under those columns.  This is useful for INSERT and UPDATE statements.  For SELECT statements this method should always return true.  There is no need to call this for a DELETE statement. NOTE: We skip over generated columns since they won't have a column descriptor.
+ * @return	true means all the columns match their expressions,false means at least one column does not match its expression
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>columnTypesAndLengthsMatch</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>otherRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=true]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nopProjection</MethodName>
+            <MethodComment>/** 
+ * Determine whether this RCL is a No-Op projection of the given RCL. It only makes sense to do this if the given RCL is from the child result set of the ProjectRestrict that this RCL is from.
+ * @param childRCL	The ResultColumnList of the child result set.
+ * @return	true if this RCL is a No-Op projection of the given RCL.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>childRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyListAndObjects</MethodName>
+            <MethodComment>/** 
+ * Create a shallow copy of a ResultColumnList and its ResultColumns. (All other pointers are preserved.) Useful for building new ResultSetNodes during preprocessing.
+ * @return None.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [newList=new ResultColumnList(getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newList;copyOrderBySelect;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeOrderByColumns</MethodName>
+            <MethodComment>/** 
+ * Remove any columns that may have been added for an order by clause. In a query like: &lt;pre&gt;select a from t order by b&lt;/pre&gt; b is added to the select list However in the final projection, after the sort is complete, b will have to be removed. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [idx=size() - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genVirtualColumnNodes</MethodName>
+            <MethodComment>/** 
+ * Walk the list and replace ResultColumn.expression with a new  VirtualColumnNode.  This is useful when propagating a ResultColumnList up the query tree. NOTE: This flavor marks all of the underlying RCs as referenced.
+ * @param sourceResultSet		ResultSetNode that is source of value
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceResultSet</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceResultColumnList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;genVirtualColumnNodes;[sourceResultSet, sourceResultColumnList, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>genVirtualColumnNodes</MethodName>
+            <MethodComment>/** 
+ * Walk the list and replace ResultColumn.expression with a new  VirtualColumnNode.  This is useful when propagating a ResultColumnList up the query tree.
+ * @param sourceResultSet		ResultSetNode that is source of value
+ * @param markReferenced		Whether or not to mark the underlying RCsas referenced
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceResultSet</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceResultColumnList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>markReferenced</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustVirtualColumnIds</MethodName>
+            <MethodComment>/** 
+ * Walk the list and adjust the virtualColumnIds in the ResultColumns by the specified amount.  If ResultColumn.expression is a VirtualColumnNode, then we adjust the columnId there as well.
+ * @param adjust		The size of the increment.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>adjust</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doProjection</MethodName>
+            <MethodComment>/** 
+ * Project out any unreferenced ResultColumns from the list and  reset the virtual column ids in the referenced ResultColumns. If all ResultColumns are projected out, then the list is not empty.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numDeleted=0]</InnerVar>
+                <InnerVar>ResultColumnList [deletedRCL=new ResultColumnList(getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyUniqueNames</MethodName>
+            <MethodComment>/** 
+ * Check the uniqueness of the column names within a column list.
+ * @param errForGenCols	Raise an error for any generated column names.
+ * @return String	The first duplicate column name, if any.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>errForGenCols</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HashSet&lt;String&gt; [seenNames=new HashSet&lt;String&gt;(size() + 2,0.999f)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>propagateDCLInfo</MethodName>
+            <MethodComment>/** 
+ * Validate the derived column list (DCL) and propagate the info from the list to the final ResultColumnList.
+ * @param derivedRCL	The derived column list
+ * @param tableName		The table name for the FromTable
+ * @exception StandardException	Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>derivedRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [duplicateColName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;copyResultColumnNames;[derivedRCL]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rejectParameters</MethodName>
+            <MethodComment>/** 
+ * Look for and reject ? parameters under ResultColumns.  This is done for SELECT statements.
+ * @exception StandardException		Thrown if a ? parameter found directlyunder a ResultColumn
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rejectXMLValues</MethodName>
+            <MethodComment>/** 
+ * Check for (and reject) XML values directly under the ResultColumns. This is done for SELECT/VALUES statements.  We reject values in this case because JDBC does not define an XML type/binding and thus there's no standard way to pass such a type back to a JDBC application. Note that we DO allow an XML column in a top-level RCL IF that column was added to the RCL by _us_ instead of by the user.  For example, if we have a table: create table t1 (i int, x xml) and the user query is: select i from t1 order by x the "x" column will be added (internally) to the RCL as part of ORDER BY processing--and so we need to allow that XML column to be bound without throwing an error.  If, as in this case, the XML column reference is invalid (we can't use ORDER BY on an XML column because XML values aren't ordered), a more appropriate error message should be returned to the user in later processing. If we didn't allow for this, the user would get an error saying that XML columns are not valid as part of the result set--but as far as s/he knows, there isn't such a column: only "i" is supposed to be returned (the RC for "x" was added to the RCL by _us_ as part of ORDER BY processing). ASSUMPTION: Any RCs that are generated internally and added to this RCL (before this RCL is bound) are added at the _end_ of the list.  If that's true, then any RC with an index greater than the size of the initial (user-specified) list must have been added internally and will not be returned to the user.
+ * @exception StandardException		Thrown if an XML value founddirectly under a ResultColumn
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [sz=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setResultSetNumber</MethodName>
+            <MethodComment>/** 
+ * Set the resultSetNumber in all of the ResultColumns.
+ * @param resultSetNumber	The resultSetNumber
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRedundant</MethodName>
+            <MethodComment>/** 
+ * Mark all of the ResultColumns as redundant. Useful when chopping a ResultSetNode out of a tree when there are still references to its RCL.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkColumnUpdateability</MethodName>
+            <MethodComment>/** 
+ * Verify that all of the columns in the SET clause of a positioned update appear in the cursor's FOR UPDATE OF list.
+ * @param cursorStmt the statement that owns the cursor
+ * @param cursorName	The cursor's name.
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cursorStmt</ParamName>
+                    <ParamType>ExecPreparedStatement</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cursorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUnionResultExpression</MethodName>
+            <MethodComment>/** 
+ * Set up the result expressions for a UNION, INTERSECT, or EXCEPT: o Verify union type compatiblity o Get dominant type for result (type + max length + nullability) o Create a new ColumnReference with dominant type and name of from this RCL and make that the new expression. o Set the type info for in the ResultColumn to the dominant type NOTE - We are assuming that caller has generated a new RCL for the UNION with the same names as the left side's RCL and copies of the expressions.
+ * @param otherRCL	RCL from other side of the UNION.
+ * @param tableNumber	The tableNumber for the UNION.
+ * @param level		The nesting level for the UNION.
+ * @param operatorName "UNION", "INTERSECT", or "EXCEPT"
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>otherRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operatorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TableName [dummyTN]</InnerVar>
+                <InnerVar>int [size=visibleSize()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unionCompatible</MethodName>
+            <MethodComment>/** 
+ * Return true if the types of two expressions are union compatible. The rules for union compatibility are found in the SQL Standard, part 2, section 7.3 (&lt;query expression&gt;), syntax rule 20.b.ii. That in turn, refers you to section 9.3 (Result of data type combinations). See, for instance, &lt;a href="https://issues.apache.org/jira/browse/DERBY-4692"&gt;DERBY-4692&lt;/a&gt;. This logic may enforce only a weaker set of rules. Here is the original comment on the original logic: "We want to make sure that the types are assignable in either direction and they are comparable." We may need to revisit this code to make it conform to the Standard.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TypeId [leftTypeId=left.getTypeId()]</InnerVar>
+                <InnerVar>TypeId [rightTypeId=right.getTypeId()]</InnerVar>
+                <InnerVar>ClassFactory [cf=getClassFactory()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isExactTypeAndLengthMatch</MethodName>
+            <MethodComment>/** 
+ * Do the 2 RCLs have the same type and length. This is useful for UNIONs when deciding whether a NormalizeResultSet is required.
+ * @param otherRCL	The other RCL.
+ * @return boolean	Whether or not there is an exact UNION type match on the 2 RCLs.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>otherRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=visibleSize()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateOverlaps</MethodName>
+            <MethodComment>/** 
+ * Does the column list contain any of the given column positions that are updated? Implements same named routine in UpdateList.
+ * @param columns	An array of column positions
+ * @return	True if this column list contains any of the given columns
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columns</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortedByPosition</MethodName>
+            <MethodComment>/** 
+ * Return an array that contains references to the columns in this list sorted by position.
+ * @return	The sorted array.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>ResultColumn[] [result]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>java.util.Arrays;sort;[result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sortMe</MethodName>
+            <MethodComment>/** 
+ * Return an array of all my column positions, sorted in ascending order.
+ * @return	a sorted array
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumn[] [sortedResultColumns=getSortedByPosition()]</InnerVar>
+                <InnerVar>int[] [sortedColumnIds=new int[sortedResultColumns.length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandToAll</MethodName>
+            <MethodComment>/** 
+ * Expand this ResultColumnList by adding all columns from the given table that are not in this list.  The result is sorted by column position.
+ * @param td	The TableDescriptor for the table in question
+ * @param tableName	The name of the table as given in the query
+ * @return	A new ResultColumnList expanded to include all columns inthe given table.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [rc]</InnerVar>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+                <InnerVar>ResultColumnList [retval]</InnerVar>
+                <InnerVar>ResultColumn[] [originalRCS]</InnerVar>
+                <InnerVar>int [posn]</InnerVar>
+                <InnerVar>ColumnDescriptorList [cdl=td.getColumnDescriptorList()]</InnerVar>
+                <InnerVar>int [cdlSize=cdl.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindUntypedNullsToResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind any untyped null nodes to the types in the given ResultColumnList. Nodes that don't know their type may pass down nulls to children nodes.  In the case of something like a union, it knows to try its right and left result sets against each other.  But if a null reaches us, it means we have a null type that we don't know how to handle.
+ * @param bindingRCL	The ResultColumnList with the types to bind to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bindingRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUpdated</MethodName>
+            <MethodComment>/** 
+ * Mark all the columns in this list as updated by an update statement.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUpdatableByCursor</MethodName>
+            <MethodComment>/** 
+ * Mark all the (base) columns in this list as updatable by a positioned update statement.  This is necessary for positioned update statements, because we expand the column list to include all the columns in the base table, and we need to be able to tell which ones the user is really trying to update so we can determine correctly whether all the updated columns are in the "for update" list.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyCreateConstraintColumnList</MethodName>
+            <MethodComment>/** 
+ * Verify that all of the column names in this list are contained within the ColumnDefinitionNodes within the TableElementList.
+ * @return String	The 1st column name, if any, that is not in the list.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tel</ParamName>
+                    <ParamType>TableElementList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exportNames</MethodName>
+            <MethodComment>/** 
+ * Export the result column names to the passed in String[].
+ * @param columnNames	String[] to hold the column names.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findParentResultColumn</MethodName>
+            <MethodComment>/** 
+ * Given a ResultColumn at the next deepest level in the tree,  search this RCL for its parent ResultColumn.
+ * @param childRC	The child ResultColumn
+ * @return ResultColumn	The parent ResultColumn
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>childRC</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumn [parentRC=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUpdated</MethodName>
+            <MethodComment>/** 
+ * Mark as updatable all the columns in this result column list that match the columns in the given update column list.
+ * @param updateColumns		A ResultColumnList representing the columnsto be updated.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markColumnsInSelectListUpdatableByCursor</MethodName>
+            <MethodComment>/** 
+ * Mark all the columns in the select sql that this result column list represents as updatable if they match the columns in the given update column list.
+ * @param updateColumns     A list representing the columnsto be updated.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;commonCodeForUpdatableByCursor;[updateColumns, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commonCodeForUpdatableByCursor</MethodName>
+            <MethodComment>/** 
+ * dealingWithSelectResultColumnList true means we are dealing with ResultColumnList for a select sql. When dealing with ResultColumnList for select sql, it is possible that not all the updatable columns are projected in the select column list and hence it is possible that we may not find the column to be updated in the ResultColumnList and that is why special handling is required when dealingWithSelectResultColumnList is true. eg select c11, c13 from t1 for update of c11, c12 In the eg above, we will find updatable column c11 in the select column list but we will not find updatable column c12 in the select column list
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dealingWithSelectResultColumnList</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUpdatableByCursor</MethodName>
+            <MethodComment>/** 
+ * Mark as updatable all the columns in this result column list that match the columns in the given update column list
+ * @param updateColumns     A list representing the columnsto be updated.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;commonCodeForUpdatableByCursor;[updateColumns, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updatableByCursor</MethodName>
+            <MethodComment>/** 
+ * Returns true if the given column position is for a column that will be or could be updated by the positioned update of a cursor.
+ * @param columnPosition	The position of the column in question
+ * @return	true if the column is updatable
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnPosition</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCloneable</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this RCL can be flattened out of a tree. It can only be flattened if the expressions are all cloneable.
+ * @return boolean	Whether or not this RCL can be flattened out of a tree.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [retcode=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remapColumnReferencesToExpressions</MethodName>
+            <MethodComment>/** 
+ * Remap all ColumnReferences in this tree to be clones of the underlying expression.
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndexRow</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cid</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasConsistentTypeInfo</MethodName>
+            <MethodComment>/** 
+ * Verify that all ResultColumns and their expressions have type information and that the type information between the respective RCs and expressions matches.
+ * @return boolean	Whether or not the type information is consistent
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [isConsistent=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsAllResultColumn</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this RCL contains an AllResultColumn. This is useful when dealing with SELECT * views which  reference tables that may have had columns added to them via  ALTER TABLE since the view was created.
+ * @return Whether or not this RCL contains an AllResultColumn.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [containsAllResultColumn=false]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>countReferencedColumns</MethodName>
+            <MethodComment>/** 
+ * Count the number of RCs in the list that are referenced.
+ * @return	The number of RCs in the list that are referenced.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numReferenced=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recordColumnReferences</MethodName>
+            <MethodComment>/** 
+ * Record the column ids of the referenced columns in the specified array.
+ * @param idArray	int[] for column ids
+ * @param basis		0 (for 0-based ids) or 1 (for 1-based ids)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>idArray</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>basis</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [currArrayElement=0]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPosition</MethodName>
+            <MethodComment>/** 
+ * Get the position of first result column with the given name.
+ * @param name       Name of the column
+ * @param basis		0 (for 0-based ids) or 1 (for 1-based ids)
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>basis</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recordColumnReferences</MethodName>
+            <MethodComment>/** 
+ * Record the top level ColumnReferences in the specified array and table map This is useful when checking for uniqueness conditions. NOTE: All top level CRs assumed to be from the same table. The size of the array is expected to be the # of columns in the table of interest + 1, so we use 1-base column #s.
+ * @param colArray1	boolean[] for columns
+ * @param tableColMap	JBitSet[] for tables
+ * @param tableNumber	Table number of column references
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>colArray1</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableColMap</ParamName>
+                    <ParamType>JBitSet[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allTopCRsFromSameTable</MethodName>
+            <MethodComment>/** 
+ * Return whether or not all of the RCs in the list whose expressions are ColumnReferences are  from the same table.  One place this is useful for distinct elimination based on the existence of a uniqueness condition.
+ * @return	-1 if all of the top level CRs in the RCLare not ColumnReferences from the same table, else the tableNumber
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [tableNumber=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearColumnReferences</MethodName>
+            <MethodComment>/** 
+ * Clear the column references from the RCL. (Restore RCL back to a state where none of the RCs are marked as referenced.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyReferencedColumnsToNewList</MethodName>
+            <MethodComment>/** 
+ * Copy the referenced RCs from this list to the supplied target list.
+ * @param targetList	The list to copy to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyColumnsToNewList</MethodName>
+            <MethodComment>/** 
+ * Copy the RCs from this list to the supplied target list.
+ * @param targetList	The list to copy to,
+ * @param copyList      1 based bitMap we copy columns associated with set bits.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>copyList</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getColumnReferenceMap</MethodName>
+            <MethodComment>/** 
+ * Get a FormatableBitSet of the columns referenced in this rcl
+ * @return the FormatableBitSet
+ */
+</MethodComment>
+            <ReturnType>FormatableBitSet</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>FormatableBitSet [colMap=new FormatableBitSet(size())]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pullVirtualIsReferenced</MethodName>
+            <MethodComment>/** 
+ * Or in any isReferenced booleans from the virtual column chain. That is the isReferenced bits on each ResultColumn on the list will be set if the ResultColumn is referenced or if any VirtualColumnNode in its expression chain refers to a referenced column.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearTableNames</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCountMismatchAllowed</MethodName>
+            <MethodComment>/** 
+ * Set the value of whether or not a count mismatch is allowed between this RCL, as a derived column list, and an underlying RCL.  This is allowed for SELECT * views when an underlying table has had columns added to it via ALTER TABLE.
+ * @param allowed	Whether or not a mismatch is allowed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>allowed</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCountMismatchAllowed</MethodName>
+            <MethodComment>/** 
+ * Return whether or not a count mismatch is allowed between this RCL, as a derived column list, and an underlying RCL.  This is allowed for SELECT * views when an underlying table has had columns added to it via ALTER TABLE. return Whether or not a mismatch is allowed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTotalColumnSize</MethodName>
+            <MethodComment>/** 
+ * Get the size of all the columns added together.  Does &lt;B&gt;NOT&lt;/B&gt; include the column overhead that the store requires. Also, will be a very rough estimate for user types.
+ * @return the size
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [colSize=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createListFromResultSetMetaData</MethodName>
+            <MethodComment>/** 
+ * Generate an RCL to match the contents of a ResultSetMetaData. This is useful when dealing with VTIs.
+ * @param rsmd			The ResultSetMetaData.
+ * @param tableName		The TableName for the BCNs.
+ * @param javaClassName	The name of the VTI
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rsmd</ParamName>
+                    <ParamType>ResultSetMetaData</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>javaClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addColumn</MethodName>
+            <MethodComment>/** 
+ * Add a column to the list given a table name, column name, and data type. Return the just-added column.
+ */
+</MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dts</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ValueNode [bcn=new BaseColumnNode(columnName,tableName,dts,getContextManager())]</InnerVar>
+                <InnerVar>ResultColumn [rc=new ResultColumn(columnName,bcn,getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rc;setType;[dts]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addResultColumn;[rc]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addRCForRID</MethodName>
+            <MethodComment>/** 
+ * Add an RC to the end of the list for the RID from an index. NOTE: RC.expression is a CurrentRowLocationNode.  This was previously only used for non-select DML.  We test for this node when generating the holder above and generate the expected code.  (We really should create yet another new node type with its own code generation.)
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumn [rowLocationColumn]</InnerVar>
+                <InnerVar>CurrentRowLocationNode [rowLocationNode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rowLocationColumn;markGenerated;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addResultColumn;[rowLocationColumn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markAllUnreferenced</MethodName>
+            <MethodComment>/** 
+ * Walk the list and mark all RCs as unreferenced.  This is useful when recalculating which RCs are referenced at what level like when deciding which columns need to be returned from a non-matching index scan (as opposed to those returned from the base table).
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allExpressionsAreColumns</MethodName>
+            <MethodComment>/** 
+ * Determine if all of the RC.expressions are columns in the source result set. This is useful for determining if we need to do reflection at execution time.
+ * @param sourceRS	The source ResultSet.
+ * @return Whether or not all of the RC.expressions are columns in the source result set.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceRS</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapSourceColumns</MethodName>
+            <MethodComment>/** 
+ * Map the source columns to these columns.  Build an array to represent the mapping. For each RC, if the expression is simply a VCN or a CR then set the array element to be the virtual column number of the source RC.  Otherwise, set the array element to -1. This is useful for determining if we need to do reflection at execution time. &lt;p/&gt; Also build an array of boolean for columns that point to the same virtual column and have types that are streamable to be able to determine if cloning is needed at execution time.
+ * @return	Array representiong mapping of RCs to source RCs.
+ */
+</MethodComment>
+            <ReturnType>ColumnMapping</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int[] [mapArray=new int[size()]]</InnerVar>
+                <InnerVar>boolean[] [cloneMap=new boolean[size()]]</InnerVar>
+                <InnerVar>ResultColumn [resultColumn]</InnerVar>
+                <InnerVar>Map&lt;Integer,Integer&gt; [seenMap=new HashMap&lt;Integer,Integer&gt;()]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>ColumnMapping [result=new ColumnMapping(mapArray,cloneMap)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNullability</MethodName>
+            <MethodComment>/** 
+ * Set the nullability of every ResultColumn in this list 
+ * @throws StandardException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nullability</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReferencedFormatableBitSet</MethodName>
+            <MethodComment>/** 
+ * Generate a FormatableBitSet representing the columns that are referenced in this RCL. The caller decides if they want this FormatableBitSet if every RC is referenced.
+ * @param positionedUpdate Whether or not the scan that the RCL belongs to is for update w/o a column list
+ * @param always		Whether or not caller always wants a non-null FormatableBitSet ifall RCs are referenced.
+ * @param onlyBCNs		If true, only set bit if expression is a BaseColumnNode,otherwise set bit for all referenced RCs.
+ * @return The FormatableBitSet representing the referenced RCs.
+ */
+</MethodComment>
+            <ReturnType>FormatableBitSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>positionedUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>always</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>onlyBCNs</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index]</InnerVar>
+                <InnerVar>int [colsAdded=0]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>FormatableBitSet [newReferencedCols=new FormatableBitSet(size)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compactColumns</MethodName>
+            <MethodComment>/** 
+ * Create a new, compacted RCL based on the referenced RCs in this list.  If the RCL being compacted is for an updatable scan, then we simply return this. The caller tells us whether or not they want a new list if there is no compaction because all RCs are referenced. This is useful in the case where the caller needs a new RCL for existing RCs so that it can augment the new list.
+ * @param positionedUpdate Whether or not the scan that the RCL belongs to is for update w/o a column list
+ * @param always		Whether or not caller always wants a new RCL
+ * @return The compacted RCL if compaction occurred, otherwise return this RCL.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>positionedUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>always</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index]</InnerVar>
+                <InnerVar>int [colsAdded=0]</InnerVar>
+                <InnerVar>ResultColumnList [newCols=new ResultColumnList(getContextManager())]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeJoinColumns</MethodName>
+            <MethodComment>/** 
+ * Remove the columns which are join columns (in the joinColumns RCL) from this list.  This is useful for a JOIN with a USING clause.
+ * @param joinColumns	The list of join columns
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>joinColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getJoinColumns</MethodName>
+            <MethodComment>/** 
+ * Get the join columns from this list. This is useful for a join with a USING clause.   (ANSI specifies that the join columns appear 1st.) 
+ * @param joinColumns	A list of the join columns.
+ * @return A list of the join columns from this list
+ */
+</MethodComment>
+            <ReturnType>ResultColumnList</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>joinColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [newRCL=new ResultColumnList(getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetVirtualColumnIds</MethodName>
+            <MethodComment>/** 
+ * Reset the virtual column ids for all of the underlying RCs.  (Virtual column ids are 1-based.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reusableResult</MethodName>
+            <MethodComment>/** 
+ * Return whether or not the same result row can be used for all rows returned by the associated ResultSet.  This is possible if all entries in the list are constants or AggregateNodes.
+ * @return Whether or not the same result row can be used for allrows returned by the associated ResultSet. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getColumnPositions</MethodName>
+            <MethodComment>/** 
+ * Get an array of column positions (1-based) for all the columns in this RCL. Assumes that all the columns are in the passed-in table
+ * @return the array of strings
+ * @exception	throws StandardException on error
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+                <InnerVar>int[] [myPositions=new int[size]]</InnerVar>
+                <InnerVar>String [columnName]</InnerVar>
+                <InnerVar>ColumnDescriptor [cd]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getColumnNames</MethodName>
+            <MethodComment>/** 
+ * Get an array of strings for all the columns in this RCL.
+ * @return the array of strings
+ */
+</MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [strings[]=new String[size()]]</InnerVar>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceOrForbidDefaults</MethodName>
+            <MethodComment>/** 
+ * Replace any DEFAULTs with the associated tree for the default if allowed, or flag.
+ * @param ttd	The TableDescriptor for the target table.
+ * @param tcl	The RCL for the target table.
+ * @param allowDefaults true if allowed
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ttd</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>allowDefaults</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDefault</MethodName>
+            <MethodComment>/** 
+ * Set the default in a ResultColumn 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cd</ParamName>
+                    <ParamType>ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultInfo</ParamName>
+                    <ParamType>DefaultInfoImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DefaultDescriptor [defaultDescriptor=cd.getDefaultDescriptor(getDataDictionary())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getCompilerContext();createDependency;[defaultDescriptor]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;setExpression;[DefaultNode.parseDefault(defaultInfo.getDefaultText(),getLanguageConnectionContext(),getCompilerContext())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkForInvalidDefaults</MethodName>
+            <MethodComment>/** 
+ * Walk the RCL and check for DEFAULTs.  DEFAULTs are invalid at the time that this method is called, so we throw an exception if found. NOTE: The grammar allows: VALUES DEFAULT;
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyAllOrderable</MethodName>
+            <MethodComment>/** 
+ * Verify that all of the RCs in this list are comparable.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populate</MethodName>
+            <MethodComment>/** 
+ * Build this ResultColumnList from a table description and an array of column IDs.
+ * @param table		describes the table
+ * @param columnIDs	column positions in that table (1-based)
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIDs</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [count=columnIDs.length]</InnerVar>
+                <InnerVar>String [columnName]</InnerVar>
+                <InnerVar>int [columnPosition]</InnerVar>
+                <InnerVar>ResultColumn [rc]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeColumnFromName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeColumnReferenceFromName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ResultColumn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>TableName</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ContextManager [cm=getContextManager()]</InnerVar>
+                <InnerVar>ResultColumn [rc=new ResultColumn(columnName,new ColumnReference(columnName,tableName,cm),cm)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forbidOverrides</MethodName>
+            <MethodComment>/** 
+ * check if any autoincrement or generated columns exist in the result column list. called from insert or update where you cannot insert/update the value of a generated or autoincrement column.
+ * @exception StandardException		If the column is an ai column
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceRSRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidOverrides;[sourceRSRCL, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forbidOverrides</MethodName>
+            <MethodComment>/** 
+ * check if any autoincrement or generated columns exist in the result column list. called from insert or update where you cannot insert/update the value of a generated or autoincrement column.
+ * @exception StandardException		If the column is an ai column
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceRSRCL</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>defaultsWereReplaced</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>incOrderBySelect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decOrderBySelect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderBySelect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyOrderBySelect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>src</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markInitialSize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>numGeneratedColumns</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numGenerated=0]</InnerVar>
+                <InnerVar>int [sz=size()]</InnerVar>
+                <InnerVar>boolean [inVisibleRange=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>numGeneratedColumnsForGroupBy</MethodName>
+            <MethodComment>/** 
+ * @return the number of generated columns in this RCL.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numGenerated=0]</InnerVar>
+                <InnerVar>int [sz=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeGeneratedGroupingColumns</MethodName>
+            <MethodComment>/** 
+ * Remove any generated columns from this RCL.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [sz=size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visibleSize</MethodName>
+            <MethodComment>/** 
+ * @return the number of columns that will be visible during execution. During compilation we can add columns for a group by/order by but these to an RCL but these are projected out during query execution. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>streamableType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataTypeDescriptor [dtd=rc.getType()]</InnerVar>
+                <InnerVar>TypeId [s=TypeId.getBuiltInTypeId(dtd.getTypeName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateArrays</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapArray</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cloneMap</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>seenMap</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>ResultColumn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [vcId=rc.getVirtualColumnId()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ColumnMapping</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapArray</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cloneMap</ParamName>
+                    <ParamType>boolean[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

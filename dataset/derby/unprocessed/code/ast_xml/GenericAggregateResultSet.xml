@@ -1,0 +1,220 @@
+<Class>
+    <Id>138</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>GenericAggregateResultSet</ClassName>
+    <SuperClass>NoPutResultSetImpl</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>GenericAggregateResultSet  /** 
+ * Generic aggregation utilities.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>aggregates</FieldName>
+            <FieldType>GenericAggregator[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggInfoList</FieldName>
+            <FieldType>AggregatorInfoList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>source</FieldName>
+            <FieldType>NoPutResultSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>originalSource</FieldName>
+            <FieldType>NoPutResultSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowTemplate</FieldName>
+            <FieldType>ExecIndexRow</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>GenericAggregateResultSet</MethodName>
+            <MethodComment>/** 
+ * Constructor
+ * @param a activation
+ * @param ra reference to a saved row allocator instance
+ * @param resultSetNumber result set number
+ * @param optimizerEstimatedRowCount optimizer estimated row count
+ * @param optimizerEstimatedCost optimizer estimated cost
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>NoPutResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregateItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ra</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ExecPreparedStatement [ps=a.getPreparedStatement()]</InnerVar>
+                <InnerVar>ExecutionFactory [ef=a.getExecutionFactory()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowTemplate</MethodName>
+            <MethodComment>/** 
+ * Get a template row of the right shape for sorting or returning results. The template is cached, so it may need to be cloned if callers use it for multiple purposes at the same time.
+ * @return a row template of the right shape for this result set
+ */
+</MethodComment>
+            <ReturnType>ExecIndexRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortAggregators</MethodName>
+            <MethodComment>/** 
+ * For each AggregatorInfo in the list, generate a GenericAggregator and stick it in an array of GenericAggregators.
+ * @param list 	the list of aggregators to set up	
+ * @param eliminateDistincts	should distincts be ignored.  Used to toss out distinct aggregates for a prelim sort.
+ * @param lcc the lcc
+ * @param inputResultSet the incoming result set
+ * @return the array of GenericAggregators
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>GenericAggregator[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>AggregatorInfoList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>eliminateDistincts</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputResultSet</ParamName>
+                    <ParamType>NoPutResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GenericAggregator [aggregators[]]</InnerVar>
+                <InnerVar>Vector&lt;GenericAggregator&gt; [tmpAggregators=new Vector&lt;GenericAggregator&gt;()]</InnerVar>
+                <InnerVar>ClassFactory [cf=lcc.getLanguageConnectionFactory().getClassFactory()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tmpAggregators;copyInto;[aggregators]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finishAggregation</MethodName>
+            <MethodComment>/** 
+ * Finish the aggregation for the current row.   Basically call finish() on each aggregator on this row.  Called once per grouping on a vector aggregate or once per table on a scalar aggregate. If the input row is null, then rowAllocator is invoked to create a new row.  That row is then initialized and used for the output of the aggregation.
+ * @param row	the row to finish aggregation
+ * @return	the result row.  If the input row != null, thenthe result row == input row
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ExecIndexRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>ExecIndexRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=aggregates.length]</InnerVar>
+                <InnerVar>boolean [eliminatedNulls=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCurrentRow;[row]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finish</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source;finish;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toXML</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Element</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentNode</ParamName>
+                    <ParamType>Element</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tag</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Element [result=super.toXML(parentNode,tag)]</InnerVar>
+                <InnerVar>NodeList [children=result.getChildNodes()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

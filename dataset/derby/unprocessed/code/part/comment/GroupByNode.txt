@@ -1,0 +1,232 @@
+/**
+ * A GroupByNode represents a result set for a grouping operation
+ * on a select.  Note that this includes a SELECT with aggregates
+ * and no grouping columns (in which case the select list is null)
+ * It has the same description as its input result set.
+ * 
+ * For the most part, it simply delegates operations to its bottomPRSet,
+ * which is currently expected to be a ProjectRestrictResultSet generated
+ * for a SelectNode.
+ * 
+ * NOTE: A GroupByNode extends FromTable since it can exist in a FromList.
+ * 
+ * There is a lot of room for optimizations here: 
+ *  agg(distinct x) group by x =&gt; agg(x) group by x (for min and max) 
+ *  min()/max() use index scans if possible, no sort may 
+ *		be needed. 
+ * 
+ *
+ *
+ */
+
+/**
+	 * The GROUP BY list
+	 */
+
+/**
+	 * The list of all aggregates in the query block
+	 * that contains this group by.
+	 */
+
+/**
+	 * Information that is used at execution time to
+	 * process aggregates.
+	 */
+
+/**
+	 * The parent to the GroupByNode.  If we need to
+	 * generate a ProjectRestrict over the group by
+	 * then this is set to that node.  Otherwise it
+	 * is null.
+	 */
+
+/**
+     * Constructor for a GroupByNode.
+	 *
+     * @param bottomPR      The child FromTable
+	 * @param groupingList	The groupingList
+     * @param aggregates    The list of aggregates from
+	 *		the query block.  Since aggregation is done
+	 *		at the same time as grouping, we need them
+	 *		here.
+     * @param havingClause  The having clause.
+	 * @param havingSubquerys subqueries in the having clause.
+     * @param nestingLevel  NestingLevel of this group by node. This is used for
+	 *     error checking of group by queries with having clause.
+     * @param cm            The context manager
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Get whether or not the source is in sorted order.
+	 *
+	 * @return Whether or not the source is in sorted order.
+	 */
+
+/**
+	 * Add the extra result columns required by the aggregates
+	 * to the result list.
+	 * 
+	 * @exception standard exception
+	 */
+
+/**
+	 * Add any distinct aggregates to the order by list.
+	 * Asserts that there are 0 or more distincts.
+	 */
+
+/**
+	 * Add a new PR node for aggregation.  Put the
+	 * new PR under the sort.
+	 *		
+	 * @exception standard exception
+	 */
+
+/**
+	 * In the query rewrite for group by, add the columns on which we are doing
+	 * the group by.
+	 *
+	 * @return havingRefsToSubstitute visitors array. Return any
+	 *         havingRefsToSubstitute visitors since it is too early to apply
+	 *         them yet; we need the AggregateNodes unmodified until after
+	 *         we add the new columns for aggregation (DERBY-4071).
+	 *
+	 * 	 */
+
+/**
+	 * In the query rewrite involving aggregates, add the columns for
+	 * aggregation.
+	 *
+	 * 	 */
+
+/**
+	 * Return the parent node to this one, if there is
+	 * one.  It will return 'this' if there is no generated
+	 * node above this one.
+	 *
+	 * @return the parent node
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Convert this object to a String.  See comments in QueryTreeNode.java
+	 * for how this should be done for tree printing.
+	 *
+	 * @return	This object as a String
+	 */
+
+/**
+	 * Prints the sub-nodes of this object.  See QueryTreeNode.java for
+	 * how tree printing is supposed to work.
+	 *
+	 * @param depth		The depth of this node in the tree
+	 */
+
+/**
+	 * Evaluate whether or not the subquery in a FromSubquery is flattenable.
+	 * Currently, a FSqry is flattenable if all of the following are true:
+	 *		o  Subquery is a SelectNode.
+	 *		o  It contains no top level subqueries.  (RESOLVE - we can relax this)
+	 *		o  It does not contain a group by or having clause
+	 *		o  It does not contain aggregates.
+	 *
+	 * @param fromList	The outer from list
+	 *
+	 * @return boolean	Whether or not the FromSubquery is flattenable.
+	 */
+
+/**
+	 * Optimize this GroupByNode.
+	 *
+	 * @param dataDictionary	The DataDictionary to use for optimization
+	 * @param predicates		The PredicateList to optimize.  This should
+	 *							be a join predicate.
+	 * @param outerRows			The number of outer joining rows
+	 *
+	 * @return	ResultSetNode	The top of the optimized subtree
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Return whether or not the underlying ResultSet tree will return
+	 * a single row, at most.
+	 * This is important for join nodes where we can save the extra next
+	 * on the right side if we know that it will return at most 1 row.
+	 *
+	 * @return Whether or not the underlying ResultSet tree will return a single row.
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * generate the sort result set operating over the source
+     * result set.  Adds distinct aggregates to the sort if
+	 * necessary.
+     *
+	 * @exception StandardException		Thrown on error
+     */
+
+/**
+	 * Generate the code to evaluate scalar aggregates.
+	 *
+	 */
+
+/**
+	 * Generate the code to evaluate grouped aggregates.
+	 *
+	 */
+
+/**
+	 * Method for creating a new result column referencing
+	 * the one passed in.
+	 *
+	 * @param	targetRC	the source
+	 * @param	dd
+	 *
+	 * @return the new result column
+	 *
+	 * @exception StandardException	on error
+	 */
+
+/**
+	 * Consider any optimizations after the optimizer has chosen a plan.
+	 * Optimizations include:
+	 *	o  min optimization for scalar aggregates
+	 *	o  max optimization for scalar aggregates
+	 *
+	 * @param selectHasPredicates true if SELECT containing this
+	 *		vector/scalar aggregate has a restriction
+	 *
+	 * @exception StandardException	on error
+	 */
+
+/**
+	 * Comparator class for GROUP BY expression substitution.
+	 *
+	 * This class enables the sorting of a collection of
+	 * SubstituteExpressionVisitor instances. We sort the visitors
+	 * during the tree manipulation processing in order to process
+	 * expressions of higher complexity prior to expressions of
+	 * lower complexity. Processing the expressions in this order ensures
+	 * that we choose the best match for an expression, and thus avoids
+	 * problems where we substitute a sub-expression instead of the
+	 * full expression. For example, if the statement is:
+	 *   ... GROUP BY a+b, a, a*(a+b), a+b+c
+	 * we'll process those expressions in the order: a*(a+b),
+	 * a+b+c, a+b, then a.
+	 */
+

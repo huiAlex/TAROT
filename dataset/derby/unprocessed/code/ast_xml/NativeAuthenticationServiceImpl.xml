@@ -1,0 +1,470 @@
+<Class>
+    <Id>429</Id>
+    <Package>org.apache.derby.impl.jdbc.authentication</Package>
+    <ClassName>NativeAuthenticationServiceImpl</ClassName>
+    <SuperClass>AuthenticationServiceBase</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>UserAuthenticator</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>NativeAuthenticationServiceImpl  /** 
+ * &lt;p&gt; This authentication service supports Derby NATIVE authentication. &lt;/p&gt; &lt;p&gt; To activate this service, set the derby.authentication.provider database or system property to a value beginning with the token "NATIVE:". &lt;/p&gt; &lt;p&gt; This service instantiates and calls the basic User authentication scheme at runtime. &lt;/p&gt; &lt;p&gt; User credentials are defined in the SYSUSERS table. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>_creatingCredentialsDB</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_credentialsDB</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_authenticateDatabaseOperationsLocally</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_passwordLifetimeMillis</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_passwordExpirationThreshold</FieldName>
+            <FieldType>double</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_badlyFormattedPasswordProperty</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>canSupport</MethodName>
+            <MethodComment>/** 
+ * Check if we should activate this authentication service.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseNativeSpecification</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Parse the specification of NATIVE authentication. It can take 3 forms: &lt;/p&gt; &lt;ul&gt; &lt;li&gt;&lt;i&gt;NATIVE:$credentialsDB&lt;/i&gt; - Here $credentialsDB is the name of a Derby database. This means that all authentication should take place in $credentialsDB.&lt;/li&gt; &lt;li&gt;&lt;i&gt;NATIVE:$credentialsDB:LOCAL&lt;/i&gt;- This means that system-wide operations (like engine shutdown) are authenticated in $credentialsDB but connections to existing databases are authenticated in those databases.&lt;/li&gt; &lt;li&gt;&lt;i&gt;NATIVE::LOCAL&lt;/i&gt; - This means that connections to a given database are authenticated in that database.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [authenticationProvider=PropertyUtil.getPropertyFromSet(properties,Property.AUTHENTICATION_PROVIDER_PARAMETER)]</InnerVar>
+                <InnerVar>int [dbNameStartIdx=authenticationProvider.indexOf(":") + 1]</InnerVar>
+                <InnerVar>int [dbNameEndIdx=_authenticateDatabaseOperationsLocally ? authenticationProvider.lastIndexOf(":") : authenticationProvider.length()]</InnerVar>
+                <InnerVar>String [passwordLifetimeString=PropertyUtil.getPropertyFromSet(properties,Property.AUTHENTICATION_NATIVE_PASSWORD_LIFETIME)]</InnerVar>
+                <InnerVar>String [expirationThresholdString=PropertyUtil.getPropertyFromSet(properties,Property.AUTHENTICATION_PASSWORD_EXPIRATION_THRESHOLD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>validAuthenticationProvider</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Return true if AUTHENTICATION_PROVIDER_PARAMETER was well formatted. The property must have designated some database as the authentication authority. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [systemWideAuthentication=(getServiceName() == null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>boot</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.services.monitor.ModuleControl#boot
+ * @exception StandardException upon failure to load/boot the expectedauthentication service.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;setAuthenticationService;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemCredentialsDatabaseName</MethodName>
+            <MethodComment>/** 
+ * Override behavior in superclass 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>authenticateUser</MethodName>
+            <MethodComment>/** 
+ * Authenticate the passed-in user's credentials.
+ * @param userName		The user's name used to connect to JBMS system
+ * @param userPassword	The user's password used to connect to JBMS system
+ * @param databaseName	The database which the user wants to connect to.
+ * @param info			Additional jdbc connection info.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userPassword</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>databaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>info</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>authenticatingInThisDatabase</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Return true if we are authenticating in this database. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>userVisibleDatabaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>authenticatingInThisService</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Return true if we are authenticating in this service. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>canonicalDatabaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCredentialsService</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Return true if the passed in service is the credentials database. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>canonicalDatabaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [canonicalCredentialsDBName=getCanonicalServiceName(_credentialsDB)]</InnerVar>
+                <InnerVar>String [canonicalDB=getMonitor().getCanonicalServiceName(canonicalDatabaseName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCanonicalServiceName</MethodName>
+            <MethodComment>/** 
+ * Get the canonical name of the current database service 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCanonicalServiceName</MethodName>
+            <MethodComment>/** 
+ * Turn a service name into its normalized, standard form 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>authenticateRemotely</MethodName>
+            <MethodComment>/** 
+ * Authenticate the passed-in credentials against another Derby database. This is done by getting a connection to the credentials database using the supplied username and password. If the connection attempts succeeds, then authentication succeeds.
+ * @param userName		The user's name used to connect to JBMS system
+ * @param userPassword	The user's password used to connect to JBMS system
+ * @param databaseName	The database which the user wants to connect to.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userPassword</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>databaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SQLWarning [warnings=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>SQLWarning</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StandardException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>authenticateLocally</MethodName>
+            <MethodComment>/** 
+ * Authenticate the passed-in credentials against the local database.
+ * @param userName		The user's name used to connect to JBMS system
+ * @param userPassword	The user's password used to connect to JBMS system
+ * @param databaseName	The database which the user wants to connect to.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userPassword</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>databaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataDictionary [dd=(DataDictionary)AuthenticationServiceBase.getServiceModule(this,DataDictionary.MODULE)]</InnerVar>
+                <InnerVar>UserDescriptor [userDescriptor=dd.getUser(userName)]</InnerVar>
+                <InnerVar>PasswordHasher [hasher=new PasswordHasher(userDescriptor.getHashingScheme())]</InnerVar>
+                <InnerVar>char[] [candidatePassword=hasher.hashPasswordIntoString(userName,userPassword).toCharArray()]</InnerVar>
+                <InnerVar>char[] [actualPassword=userDescriptor.getAndZeroPassword()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServiceName</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

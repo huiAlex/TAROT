@@ -1,0 +1,433 @@
+<Class>
+    <Id>1353</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>UnionNode</ClassName>
+    <SuperClass>SetOperatorNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>UnionNode  /** 
+ * A UnionNode represents a UNION in a DML statement.  It contains a boolean telling whether the union operation should eliminate duplicate rows.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>addNewNodesCalled</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableConstructor</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>topTableConstructor</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>UnionNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a UnionNode.
+ * @param leftResult		The ResultSetNode on the left side of this union
+ * @param rightResult		The ResultSetNode on the right side of this union
+ * @param all				Whether or not this is a UNION ALL.
+ * @param tableConstructor	Whether or not this is from a table constructor.
+ * @param tableProperties	Properties list associated with the table
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>all</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableConstructor</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markTopTableConstructor</MethodName>
+            <MethodComment>/** 
+ * Mark this as the top node of a table constructor.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tableConstructor</MethodName>
+            <MethodComment>/** 
+ * Tell whether this is a UNION for a table constructor.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rejectParameters</MethodName>
+            <MethodComment>/** 
+ * Check for (and reject) ? parameters directly under the ResultColumns. This is done for SELECT statements.  Don't reject parameters that are in a table constructor - these are allowed, as long as the table constructor is in an INSERT statement or each column of the table constructor has at least one non-? column.  The latter case is checked below, in bindExpressions().
+ * @exception StandardException		Thrown if a ? parameter founddirectly under a ResultColumn
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTableConstructorTypes</MethodName>
+            <MethodComment>/** 
+ * Set the type of column in the result column lists of each source of this union tree to the type in the given result column list (which represents the result columns for an insert). This is only for table constructors that appear in insert statements.
+ * @param typeColumns	The ResultColumnList containing the desired resulttypes.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>typeColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [rsn]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>enhanceRCLForInsert</MethodName>
+            <MethodComment>/** 
+ * Make the RCL of this node match the target node for the insert. If this node represents a table constructor (a VALUES clause), we replace the RCL with an enhanced one if necessary, and recursively enhance the RCL of each child node. For table constructors, we also need to check that we don't attempt to override auto-increment columns in each child node (checking the top-level RCL isn't sufficient since a table constructor may contain the DEFAULT keyword, which makes it possible to specify a column without overriding its value). If this node represents a regular UNION, put a ProjectRestrictNode on top of this node and enhance the RCL in that node.
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>target</ParamName>
+                    <ParamType>InsertNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inOrder</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colMap</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimizeIt</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#optimizeIt
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizer</ParamName>
+                    <ParamType>Optimizer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerCost</ParamName>
+                    <ParamType>CostEstimate</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowOrdering</ParamName>
+                    <ParamType>RowOrdering</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [costEst=getCostEstimate(optimizer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;updateBestPlanMap;[ADD_PLAN, this]</InnerMethodInvoke>
+                <InnerMethodInvoke>costEst;setCost;[leftResultSet.getCostEstimate().getEstimatedCost(), leftResultSet.getCostEstimate().rowCount(), leftResultSet.getCostEstimate().singleScanRowCount() + rightResultSet.getCostEstimate().singleScanRowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>costEst;add;[rightResultSet.getCostEstimate(), costEst]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCurrentAccessPath().getJoinStrategy();estimateCost;[this, predList, (ConglomerateDescriptor)null, outerCost, optimizer, costEst]</InnerMethodInvoke>
+                <InnerMethodInvoke>optimizer;considerCost;[this, predList, costEst, outerCost]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushExpressions</MethodName>
+            <MethodComment>/** 
+ * DERBY-649: Handle pushing predicates into UnionNodes. It is possible to push single table predicates that are binaryOperations or inListOperations.  Predicates of the form &lt;columnReference&gt; &lt;RELOP&gt; &lt;constant&gt; or &lt;columnReference&gt; IN &lt;constantList&gt; are currently handled. Since these predicates would allow optimizer to pick available indices, pushing them provides maximum benifit. It should be possible to expand this logic to cover more cases. Even pushing expressions (like a+b = 10) into SELECTs would improve performance, even if they don't allow use of index. It would mean evaluating expressions closer to data and hence could avoid sorting or other overheads that UNION may require. Note that the predicates are not removed after pushing. This is to ensure if pushing is not possible or only partially feasible.
+ * @param predicateList		List of single table predicates to push
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPath</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#modifyAccessPath
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>Optimizable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerTables</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Optimizable [retOptimizable]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPaths</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#modifyAccessPaths
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [retRSN]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addNewNodes</MethodName>
+            <MethodComment>/** 
+ * Add any new ResultSetNodes that are necessary to the tree. We wait until after optimization to do this in order to make it easier on the optimizer.
+ * @return (Potentially new) head of the ResultSetNode tree.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [treeTop=this]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions under this TableOperatorNode.  This means binding the sub-expressions, as well as figuring out what the return type is for each expression.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * Generate the code for this UnionNode.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mb</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assignResultSetNumber;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setCostEstimate;[getFinalCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>leftResultSet;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getResultSetNumber()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[getCostEstimate().getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getUnionResultSet", ClassName.NoPutResultSet, 5]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFinalCostEstimate</MethodName>
+            <MethodComment>/** 
+ * @see ResultSetNode#getFinalCostEstimate Get the final CostEstimate for this UnionNode.
+ * @return	The final CostEstimate for this UnionNode, which isthe sum of the two child costs.
+ */
+</MethodComment>
+            <ReturnType>CostEstimate</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>CostEstimate [leftCE=leftResultSet.getFinalCostEstimate()]</InnerVar>
+                <InnerVar>CostEstimate [rightCE=rightResultSet.getFinalCostEstimate()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setCandidateFinalCostEstimate;[getNewCostEstimate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCandidateFinalCostEstimate();setCost;[leftCE.getEstimatedCost(), leftCE.rowCount(), leftCE.singleScanRowCount() + rightCE.singleScanRowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getCandidateFinalCostEstimate();add;[rightCE, getCandidateFinalCostEstimate()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOperatorName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

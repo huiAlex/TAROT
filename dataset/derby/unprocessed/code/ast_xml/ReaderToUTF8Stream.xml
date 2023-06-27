@@ -1,0 +1,412 @@
+<Class>
+    <Id>1422</Id>
+    <Package>org.apache.derby.iapi.types</Package>
+    <ClassName>ReaderToUTF8Stream</ClassName>
+    <SuperClass>InputStream</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ReaderToUTF8Stream  /** 
+ * Converts the characters served by a  {@code java.io.Reader} to a streamreturning the data in the on-disk modified UTF-8 encoded representation used by Derby. &lt;p&gt; Length validation is performed. If required and allowed by the target column type, truncation of blanks will also be performed.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>reader</FieldName>
+            <FieldType>LimitReader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FIRST_READ</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>READ_BUFFER_RESERVATION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MARK_UNSET_OR_EXCEEDED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>boff</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>blen</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mark</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readAheadLimit</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>eof</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>multipleBuffer</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hdrGen</FieldName>
+            <FieldType>StreamHeaderGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>headerLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>charsToTruncate</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPACE</FieldName>
+            <FieldType>char</FieldType>
+        </Field>
+        <Field>
+            <FieldName>valueLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>typeName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>charCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ReaderToUTF8Stream</MethodName>
+            <MethodComment>/** 
+ * Create a stream that will truncate trailing blanks if required/allowed. If the stream must be truncated, the number of blanks to truncate is specified to allow the stream to be checked for exact length, as required by JDBC 3.0. If the stream is shorter or longer than specified, an exception is thrown during read.
+ * @param appReader application reader
+ * @param valueLength the expected length of the reader in characters(positive), or the inverse (maxColWidth * -1) of the maximum column width if the expected stream length is unknown
+ * @param numCharsToTruncate the number of trailing blanks to truncate
+ * @param typeName type name of the column data is inserted into
+ * @param headerGenerator the stream header generator
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>appReader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>valueLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numCharsToTruncate</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>typeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>headerGenerator</ParamName>
+                    <ParamType>StreamHeaderGenerator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [absValueLength=Math.abs(valueLength)]</InnerVar>
+                <InnerVar>int [bz=32 * 1024]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>reader;setLimit;[absValueLength]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReaderToUTF8Stream</MethodName>
+            <MethodComment>/** 
+ * Creates a UTF-8 stream for an application reader whose length isn't known at insertion time. &lt;p&gt; The application reader is coming in through one of the "lengthless overrides" added in JDBC 4.0, for instance java.sql.PreparedStatement.setCharacterStream(int,Reader). A limit is placed on the length of the application reader. If the reader exceeds the maximum length, truncation of trailing blanks is attempted. If truncation fails, an exception is thrown.
+ * @param appReader application reader
+ * @param maximumLength maximum allowed length in number of characters forthe reader, typically the maximum field size
+ * @param typeName type name of the column data is inserted into
+ * @param headerGenerator the stream header generator
+ * @throws IllegalArgumentException if maximum length is negative
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>appReader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maximumLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>typeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>headerGenerator</ParamName>
+                    <ParamType>StreamHeaderGenerator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>read</MethodName>
+            <MethodComment>/** 
+ * Reads a byte from the stream. &lt;p&gt; Characters read from the source stream are converted to the UTF-8 Derby specific encoding.
+ * @return The byte read, or {@code -1} if the end-of-stream is reached.
+ * @throws EOFException if the end-of-stream has already been reached orthe stream has been closed
+ * @throws IOException if reading from the source stream fails
+ * @see java.io.InputStream#read()
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>read</MethodName>
+            <MethodComment>/** 
+ * Reads up to  {@code len} bytes from the stream.&lt;p&gt; Characters read from the source stream are converted to the UTF-8 Derby specific encoding.
+ * @return The number of bytes read, or {@code -1} if the end-of-stream isreached.
+ * @throws EOFException if the end-of-stream has already been reached orthe stream has been closed
+ * @throws IOException if reading from the source stream fails
+ * @see java.io.InputStream#read(byte[],int,int)
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [readCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fillBuffer</MethodName>
+            <MethodComment>/** 
+ * Fills the internal buffer with data read from the source stream. &lt;p&gt; The characters read from the source are converted to the modified UTF-8 encoding, used as the on-disk format by Derby.
+ * @param startingOffset offset at which to start filling the buffer, usedto avoid overwriting the stream header data on the first iteration
+ * @throws DerbyIOException if the source stream has an invalid length(different than specified), or if truncation of blanks fails
+ * @throws IOException if reading from the source stream fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startingOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [off=startingOffset]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkSufficientData</MethodName>
+            <MethodComment>/** 
+ * Validate the length of the stream, take corrective action if allowed. JDBC 3.0 (from tutorial book) requires that an input stream has the correct number of bytes in the stream. If the stream is too long, trailing blank truncation is attempted if allowed. If truncation fails, or is disallowed, an exception is thrown.
+ * @throws IOException if an errors occurs in the application stream
+ * @throws DerbyIOException if Derby finds a problem with the stream;stream is too long and cannot be truncated, or the stream length does not match the specified length
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [remainingBytes=reader.clearLimit()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canTruncate</MethodName>
+            <MethodComment>/** 
+ * Determine if trailing blank truncation is allowed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>truncate</MethodName>
+            <MethodComment>/** 
+ * Attempt to truncate the stream by removing trailing blanks.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [c=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * return resources 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>available</MethodName>
+            <MethodComment>/** 
+ * Return an optimized version of bytes available to read from  the stream. &lt;p&gt; Note, it is not exactly per  {@code java.io.InputStream#available()}.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [remainingBytes=reader.getLimit()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mark</MethodName>
+            <MethodComment>/** 
+ * Marks the current position in the stream. &lt;p&gt; Note that this stream is not marked at position zero by default (i.e. in the constructor).
+ * @param readAheadLimit the maximum limit of bytes that can be read beforethe mark position becomes invalid
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>readAheadLimit</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reset</MethodName>
+            <MethodComment>/** 
+ * Repositions this stream to the position at the time the mark method was last called on this input stream.
+ * @throws EOFException if the stream has been closed
+ * @throws IOException if no mark has been set, or the read ahead limit ofthe mark has been exceeded
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markSupported</MethodName>
+            <MethodComment>/** 
+ * Tests if this stream supports mark/reset. &lt;p&gt; The  {@code markSupported} method of {@code ByteArrayInputStream} alwaysreturns  {@code true}.
+ * @return {@code true}, mark/reset is always supported.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,285 @@
+<Class>
+    <Id>2167</Id>
+    <Package>org.apache.derby.impl.store.raw.data</Package>
+    <ClassName>ContainerOperation</ClassName>
+    <SuperClass>ContainerBasicOperation</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Undoable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ContainerOperation  /** 
+ * Log operation to create, drop or remove a container. Both the doMe or the undoMe of a create actually caused the container header to be modified and flushed before the log record is flushed.  This is necessary for 2 reasons, one is that of ensuring enough disk space, and the other is because unlike any other operation, the log record create container is in the log stream before the container is in the container cache.  What this mean is that if a checkpoint started after the container operation but before the container is kept or is dirtied in the container cache, then checkpoint will not know to wait for the container to be kept or cleaned.  The checkpoint will erroneous assume that the operation does not need to be redone since its log instant is before the checkpoint but in fact the change has not been flushed to disk. A drop or remove container does not have this problem.  The container exist and is in kept state when the operation is logged so the checkpoint will not overlook it and it doesn't need to flush the container header.  In the case of remove, the stub is flushed for a different reason - that of ensuring disk space.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>operation</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasCreateByteArray</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>createByteArray</FieldName>
+            <FieldType>ByteArray</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CREATE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DROP</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REMOVE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ContainerOperation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>hdl</ParamName>
+                    <ParamType>RawContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ContainerOperation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;writeByte;[operation]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment>/** 
+ * @exception IOException cannot read log record from log stream
+ * @exception ClassNotFoundException cannot read ByteArray object
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Return my format identifier.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findContainerForRedoRecovery</MethodName>
+            <MethodComment>/** 
+ * Find container for load tran. &lt;p&gt; If we are in load tran, and the operation is a create, the container may not (should not?) exist yet.  We need to recreate it.
+ * @exception StandardException Standard Derby error policy.
+ */
+</MethodComment>
+            <ReturnType>RawContainerHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [sid=containerId.getSegmentId()]</InnerVar>
+                <InnerVar>long [cid=containerId.getContainerId()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>xact;reCreateContainerForRedoRecovery;[sid, cid, createByteArray]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doMe</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>instant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;releaseResource;[tran]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>undoMe</MethodName>
+            <MethodComment>/** 
+ * Undo of create, drop or remove
+ * @param tran the transaction that is undoing this operation
+ * @param hdl the container handle.  This is found here during runtimeundo - in which case we made the CLR and passed in the containerHdl found in generateUndo and it is passed back to this; or it is found in the CLR's needsRedo and is passed in and this operation never found the container.  Either case, release resource at the end is safe
+ * @param CLRInstant the log instant of the CLR
+ * @param in optional data
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hdl</ParamName>
+                    <ParamType>RawContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>CLRInstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;releaseResource;[tran]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateUndo</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.store.raw.Undoable
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>Compensation</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * debug 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

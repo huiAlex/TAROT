@@ -1,0 +1,648 @@
+<Class>
+    <Id>459</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>BTree</ClassName>
+    <SuperClass>GenericConglomerate</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BTree  /** 
+ * A b-tree object corresponds to an instance of a b-tree conglomerate.  It  contains the static information about a conglomerate which is built at  create conglomerate time. &lt;p&gt; This generic implementation is expected to be extended by the concreate implementations. &lt;P&gt; The fields are set when the conglomerate is created and never changed  thereafter.  When alter table is supported then it will change under the control of a table level lock. &lt;p&gt; They have package scope because they're read by the scans and controllers. &lt;p&gt; A table of all conglomerates in the system is maintained by the accessmanager. A cache of conglomerates is maintained in the accessmanager, and references to the read only objects are handed out.  A copy of the Conglomerate object is kept in the control row of the root page, so that during logical undo this information can be read without needing to access the possibly corrupt table maintained by the access manager.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>ROOTPAGEID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_MAX_ROWS_PER_PAGE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_ALLOWDUPLICATES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_NKEYFIELDS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_NUNIQUECOLUMNS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_PARENTLINKS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTY_UNIQUE_WITH_DUPLICATE_NULLS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>id</FieldName>
+            <FieldType>ContainerKey</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nKeyFields</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nUniqueColumns</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>allowDuplicates</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maintainParentLinks</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uniqueWithDuplicateNulls</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxRowsPerPage</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conglom_format_id</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>format_ids</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ascDescInfo</FieldName>
+            <FieldType>boolean[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>collation_ids</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasCollatedTypes</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getBtreeLockingPolicy</MethodName>
+            <MethodComment>/** 
+ * Create a new btree locking policy from scratch.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>BTreeLockingPolicy</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isolation_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>base_cc</ParamName>
+                    <ParamType>ConglomerateController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockTable</MethodName>
+            <MethodComment>/** 
+ * Lock the base table. &lt;p&gt; Assumes that segment of the base container is the same as the segment of the btree segment. &lt;p&gt; RESOLVE - we really want to get the lock without opening the container. raw store will be providing this.
+ * @param xact_manager Transaction to associate the lock with.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ConglomerateController</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_mode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isolation_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createBranchTemplate</MethodName>
+            <MethodComment>/** 
+ * Create a branch row template for this conglomerate. &lt;p&gt; Reads the format id's of each of the columns and manufactures object of the given type for each.  It then uses these "empty" objects to create a template row.  The object passed in is then added to the last column of the row.
+ * @return The new template.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page_ptr</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createTemplate</MethodName>
+            <MethodComment>/** 
+ * Create a template for this conglomerate. &lt;p&gt; Reads the format id's of each of the columns and manufactures object of the given type for each.  It then uses these "empty" objects to create a template row. &lt;p&gt; This method is public so that B2IUndo() can call it.
+ * @return The new template.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isUnique</MethodName>
+            <MethodComment>/** 
+ * Is this a "unique" index?
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUniqueWithDuplicateNulls</MethodName>
+            <MethodComment>/** 
+ * Set if the index is unique only for non null keys
+ * @param uniqueWithDuplicateNulls true if the index will be unique only fornon null keys
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uniqueWithDuplicateNulls</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isUniqueWithDuplicateNulls</MethodName>
+            <MethodComment>/** 
+ * Returns if the index type is uniqueWithDuplicateNulls.
+ * @return is index type is uniqueWithDuplicateNulls
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addColumn</MethodName>
+            <MethodComment>/** 
+ * Add a column to the conglomerate. &lt;p&gt; Currently B2I does not support this operation. input template column.  
+ * @param xact_manager      Transaction to associate the lock with.
+ * @param column_id        The column number to add this column at.
+ * @param template_column  An instance of the column to be added to table.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>column_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template_column</ParamName>
+                    <ParamType>Storable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>collation_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getId</MethodName>
+            <MethodComment>/** 
+ * Get the id of the container of the conglomerate. &lt;p&gt; Will have to change when a conglomerate could have more than one  container.  The ContainerKey is a combination of the container id and segment id.
+ * @return The ContainerKey.
+ */
+</MethodComment>
+            <ReturnType>ContainerKey</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>create</MethodName>
+            <MethodComment>/** 
+ * Do the generic part of creating a b-tree conglomerate.  This method  is called from the concrete subclass (which may also read some properties). &lt;p&gt; This method processes all properties which are generic to all BTree's.  It creates the container for the btree. &lt;p&gt; The following properties are generic to a b-tree conglomerate.  : &lt;UL&gt; &lt;LI&gt;"allowDuplicates" (boolean).  If set to true the table will allow  rows which are duplicate in key column's 0 through (nUniqueColumns - 1). Currently only supports "false". This property is optional, defaults to false. &lt;LI&gt;"nKeyFields"  (integer) Columns 0 through (nKeyFields - 1) will be  included in key of the conglomerate. This implementation requires that "nKeyFields" must be the same as the number of fields in the conglomerate, including the rowLocationColumn. Other implementations may relax this restriction to allow non-key fields in the index. This property is required. &lt;LI&gt;"nUniqueColumns" (integer) Columns 0 through "nUniqueColumns" will be  used to check for uniqueness.  So for a standard SQL non-unique index  implementation set "nUniqueColumns" to the same value as "nKeyFields"; and for a unique index set "nUniqueColumns" to "nKeyFields" - 1 (ie. don't  include the rowLocationColumn in the uniqueness check). This property is required. &lt;LI&gt;"maintainParentLinks" (boolean) Whether the b-tree pages maintain the page number of their parent.  Only used for consistency checking.  It takes a certain amount more effort to maintain these links, but they're really handy for ensuring that the index is consistent. This property is optional, defaults to true. &lt;/UL&gt;
+ * @exception StandardException Thrown by underlying raw store, or thrown bythis routine on an invalid containerid.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segmentId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>input_containerid</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conglom_format_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tmpFlag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [result_string]</InnerVar>
+                <InnerVar>long [containerid=rawtran.addContainer(segmentId,input_containerid,ContainerHandle.MODE_DEFAULT,properties,tmpFlag)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>properties;put;[RawStoreFactory.PAGE_RESERVED_SPACE_PARAMETER, "0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>properties;put;[RawStoreFactory.MINIMUM_RECORD_SIZE_PARAMETER, "1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>properties;put;[RawStoreFactory.PAGE_REUSABLE_RECORD_ID, "true"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>drop</MethodName>
+            <MethodComment>/** 
+ * Drop this btree. This must be done by a concrete implementation.
+ * @see org.apache.derby.iapi.store.access.conglomerate.Conglomerate#drop
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>load</MethodName>
+            <MethodComment>/** 
+ * Load a b-tree.  This must be done by a concrete implementation.
+ * @see org.apache.derby.iapi.store.access.conglomerate.Conglomerate#load
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>createConglom</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowSource</ParamName>
+                    <ParamType>RowLocationRetRowSource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContainerid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDynamicCompiledConglomInfo</MethodName>
+            <MethodComment>/** 
+ * Return dynamic information about the conglomerate to be dynamically  reused in repeated execution of a statement. &lt;p&gt; The dynamic info is a set of variables to be used in a given  ScanController or ConglomerateController.  It can only be used in one  controller at a time.  It is up to the caller to insure the correct  thread access to this info.  The type of info in this is a scratch  template for btree traversal, other scratch variables for qualifier  evaluation, ... &lt;p&gt;
+ * @return The dynamic information.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>DynamicCompiledOpenConglomInfo</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isTemporary</MethodName>
+            <MethodComment>/** 
+ * Is this conglomerate temporary? &lt;p&gt;
+ * @return whether conglomerate is temporary or not.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>open</MethodName>
+            <MethodComment>/** 
+ * Open a b-tree controller. This must be done by a concrete implementation.
+ * @see org.apache.derby.iapi.store.access.conglomerate.Conglomerate#open
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>ConglomerateController</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hold</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_mode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>locking_policy</ParamName>
+                    <ParamType>LockingPolicy</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>static_info</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dynamic_info</ParamName>
+                    <ParamType>DynamicCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNull</MethodName>
+            <MethodComment>/** 
+ * Return whether the value is null or not. The containerid being zero is what determines nullness;  subclasses are not expected to override this method.
+ * @see org.apache.derby.iapi.services.io.Storable#isNull
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreToNull</MethodName>
+            <MethodComment>/** 
+ * Restore the in-memory representation to the null value. The containerid being zero is what determines nullness;  subclasses are not expected to override this method.
+ * @see org.apache.derby.iapi.services.io.Storable#restoreToNull
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment>/** 
+ * Restore the in-memory representation from the stream.
+ * @exception ClassNotFoundException Thrown if the stored representation isserialized and a class named in the stream could not be found.
+ * @exception IOException thrown by readObject()
+ * @see java.io.Externalizable#readExternal
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [containerid=in.readLong()]</InnerVar>
+                <InnerVar>int [segmentid=in.readInt()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment>/** 
+ * Store the stored representation of the column value in the stream. It might be easier to simply store the properties - which would certainly make upgrading easier.
+ * @exception IOException thrown by writeObject()
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>FormatIdUtil;writeFormatIdInteger;[out, conglom_format_id]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeLong;[id.getContainerId()]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeInt;[(int)id.getSegmentId()]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeInt;[(nKeyFields)]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeInt;[(nUniqueColumns)]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeBoolean;[(allowDuplicates)]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;writeBoolean;[(maintainParentLinks)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ConglomerateUtil;writeFormatIdArray;[format_ids, out]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Public toString() Method:
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

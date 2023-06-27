@@ -1,0 +1,297 @@
+/**
+	BaseContainer is an abstract class that provides the locking bahaviour
+	for an object representing an active container, that is the actual
+	storage container, not the ContainerHandle interface. This class is designed
+	so that it can change the container it represents to avoid creating
+	a new object for every container.
+	
+	This object implements lockable to provide an object to lock while a page is being
+	allocated.
+	 MT - Mutable - mutable identity : 
+*/
+
+/**
+		Identity of the container.
+
+		 MT - Mutable
+	*/
+
+/**
+		Dropped state of the container.
+
+		 MT - mutable : single thread required. Either the container must be exclusive
+		locked by this thread, or the container must have no identity (ie. it is being created
+		or opened).
+	*/
+
+/**
+		Committed Drop state of the container.  If a post commit action
+		determined that the drop container operation is committed, the whole
+		container may be removed and space reclaimed.
+
+		 MT - mutable : single thread required. Either the container must be exclusive
+		locked by this thread, or the container must have no identity (ie. it is being created
+		or opened).
+	*/
+
+/**
+		Is reusable recordId.  By default, record Ids are not reusable when a
+		page is reused.  However, under special circumstances, clients to raw
+		store may decide that record Ids may be reused after the page is
+		reused.   When this flag is set, pages that are reused will have its
+		next recordId set to RecordHandle.FIRST_RECORD_ID
+	*/
+
+/**
+		Release free space to the OS.
+		
+        As is possible release any free space to the operating system.  This
+        will usually mean releasing any free pages located at the end of the
+        file using the java truncate() interface.
+
+		@exception StandardException	Standard Derby error policy
+	*/
+
+/**
+	 * Get the reusable RecordId sequence number for the
+	 * container. This sequence number should be incremented every time
+	 * there is an operation which may cause RecorIds to be reused.
+	 * This method can be used by clients to check if a RecordId they 
+	 * obtained is still guaranteed to be valid.
+	 * If the sequence number has changed, the RecordId may have been
+	 * reused for another row.
+	 * @return sequence number for reusable RecordId
+	 */
+
+/**
+	 * Increment the reusable RecordId sequence number.
+	 */
+
+/**
+		Add a page to this container.
+
+		 MT - thread aware - 
+
+		The add page operation involves 2 transactions, one is the user
+		transaction (the transaction which owns the passed in handle), the
+		other one is a NestedTopTransaction created by this BaseContainer.
+
+		The nestedTopTransaction is used by the underlying container to change
+		high contention structures, such as link list anchor or bit map pages.
+		The nestedTopTransaction commits or aborts before this routine returns.
+
+		The user transaction is used to latch the newly created page.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Remove a page from this container.  The page will be unlatched by this
+		routine before it returns.
+
+		Unlike addPage, this method done as part of the user transaction.  
+		The removed page is not usable by anyone until the user transaction 
+        comits.
+		If the user transaction rolls back, the removed page is un-removed.
+
+		 MT - thread aware -
+
+		@param handle the container handle that has opened the container and latched the page
+		@param page the latched page that is to be deallocated
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get the special dealloc lock on the page - the lock is gotten by the
+		transaction that owns the container handle
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get an allocation page and latch it.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get any page and latch it .
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get the first valid page. Result is latched.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get the next valid page and latch it
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Lock the container and mark the container as in-use by this container handle.
+
+		@param droppedOK if true, use this container even if it is dropped.,
+		@return true if the container can be used, false if it has been dropped
+		since the lock was requested and droppedOK is not true.
+
+		@exception StandardException I cannot be opened for update.
+	*/
+
+/**
+		Discontinue use of this container. Note that the unlockContainer
+		call made from this method may not release any locks. The container
+		lock may be held until the end of the transaction.
+
+	*/
+
+/**
+    Get information about space used by the container.
+    **/
+
+/**
+		Can the container be updated.
+
+		@return true if the container can be updated, false otherwise.
+	*/
+
+/**
+		The container is about to be modified.
+		Loggable actions use this to make sure the container gets cleaned if a
+		checkpoint is taken after any log record is sent to the log stream but
+		before the container is actually dirtied.
+	 */
+
+/**
+		Return a BasePage that represents the given page number in this container.
+        The resulting page is latched.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Return a BasePage that represents the given alloc page number in this container.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Return a BasePage that represents any page - alloc page, valid page, free page,
+		dealloced page etc.  The only requirement is that the page is initialized...
+
+		@exception StandardException Derby Standard error policy
+	*/
+
+/**
+		Log all information on the container creation necessary to recreate teh
+		container during a load tran.
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Get only a valid, non-overflow page.  If page number is either invalid
+		or overflow, returns null
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Get the first page in the container.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get the next page in the container.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get a potentially suitable page for insert and latch it.
+		@exception StandardException Standard Derby error policy
+	 */
+
+/**
+		Create a new page in the container.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Deallocate a page from the container.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Mark the container as drop or not drop depending on the input value.
+
+	*/
+
+/**
+		Remove the container and reclaim its space.  Once executed, this
+		operation cannot be undone - as opposed to dropContainer which only
+		marks the container as dropped and can be rolled back.
+		 This operation should only be called by post commit clean up 
+
+		@param leaveStub if true, leave a stub.  If false, remove everything
+		
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Get the logged container version.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Flush all outstanding changes in this container to persistent storage.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		The container will be grown vastly, prepare for it.
+	*/
+
+/**
+		The container will have no pre-allocate threshold, i.e., if the
+		implementation supports it, page preallocation will happen
+		the next time a new page is allocated.
+	*/
+
+/**
+				@exception StandardException Standard Derby error policy
+	 */
+
+/**
+				@exception StandardException Standard Derby error policy
+	 */
+
+/**
+				@exception StandardException Standard Derby error policy
+	 */
+
+/**
+     * Backup the container to the specified path.
+     * 
+     * @param handle the container handle.
+     * @param backupContainerPath  location of the backup container. 
+     * @exception StandardException Standard Derby error policy 
+     */
+
+/**
+     * Creates encrypted or decrypted version of the container.
+     *
+     * @param handle the container handle
+     * @param newFilePath file to store the new version of the container
+     * @param doEncrypt tells whether to encrypt or decrypt
+     * @exception StandardException Standard Derby error policy 
+     */
+
+/**
+		Set the container's dropped state
+	*/
+

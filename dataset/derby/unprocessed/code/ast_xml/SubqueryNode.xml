@@ -1,0 +1,1509 @@
+<Class>
+    <Id>2124</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>SubqueryNode</ClassName>
+    <SuperClass>ValueNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SubqueryNode  /** 
+ * A SubqueryNode represents a subquery.  Subqueries return values to their outer queries. An quantified subquery is one that appears under a quantified operator (like IN or EXISTS) - quantified subqueries can return more than one value per invocation. An expression subquery is one that is not directly under a quantified operator - expression subqueries are allowed to return at most one value per invocation (returning no value is considered to be equivalent to returning NULL). There are a large number of subquery types.  Because of the large number of types, and the large amount of shared code, we have decided to have 1 SubqueryNode without any subclasses.  The subquery type (and operator) is encoded in the subqueryType field. The query optimizer is responsible for optimizing subqueries, and also for transforming them so that code can be generated for them. The optimizer may eliminate some subqueries by transforming them into joins, or it may change the internal form of a subquery (for example, transforming 'where x in (select y from z where ...)' into 'where (select true from z where x = y and ...)'). Note that aggregates present some additional issues.  A transformation such as: &lt;UL&gt; where x in (SELECT &lt;I&gt;expression&lt;/I&gt; FROM z) &lt;/UL&gt; has to be treated specially if &lt;I&gt;expression&lt;/I&gt; has an aggregate. We change it to: &lt;UL&gt; where x = (SELECT true FROM (SELECT MAX(x) FROM z) WHERE SQLCOL1 = y) &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>resultSet</FieldName>
+            <FieldType>ResultSetNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>subqueryType</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>underTopAndNode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>preprocessed</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distinctExpression</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>whereSubquery</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftOperand</FieldName>
+            <FieldType>ValueNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pushedNewPredicate</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>havingSubquery</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parentComparisonOperator</FieldName>
+            <FieldType>BinaryComparisonOperatorNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>trueNode</FieldName>
+            <FieldType>BooleanConstantNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>subqueryNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pointOfAttachment</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foundCorrelation</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doneCorrelationCheck</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foundVariant</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doneInvariantCheck</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>orderByList</FieldName>
+            <FieldType>OrderByList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>offset</FieldName>
+            <FieldType>ValueNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fetchFirst</FieldName>
+            <FieldType>ValueNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasJDBClimitClause</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NOTIMPLEMENTED_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FROM_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IN_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NOT_IN_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EQ_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EQ_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NE_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NE_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GT_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GT_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GE_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GE_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LT_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LT_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LE_ANY_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LE_ALL_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EXISTS_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NOT_EXISTS_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EXPRESSION_SUBQUERY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SubqueryNode</MethodName>
+            <MethodComment>/** 
+ * Constructor.
+ * @param resultSet		The ResultSetNode for the subquery
+ * @param subqueryType	The type of the subquery
+ * @param leftOperand	The left operand, if any, of the subquery
+ * @param orderCols     ORDER BY list
+ * @param offset        OFFSET n ROWS
+ * @param fetchFirst    FETCH FIRST n ROWS ONLY
+ * @param hasJDBClimitClause True if the offset/fetchFirst clauses come from JDBC limit/offset escape syntax
+ * @param cm            Context Manager
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSet</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leftOperand</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>orderCols</ParamName>
+                    <ParamType>OrderByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fetchFirst</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hasJDBClimitClause</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSubNodes</MethodName>
+            <MethodComment>/** 
+ * Prints the sub-nodes of this object.  See QueryTreeNode.java for how tree printing is supposed to work.
+ * @param depth		The depth of this node in the tree
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>depth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultSet</MethodName>
+            <MethodComment>/** 
+ * Return the resultSet for this SubqueryNode.
+ * @return ResultSetNode underlying this SubqueryNode.
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSubqueryType</MethodName>
+            <MethodComment>/** 
+ * Return the type of this subquery.
+ * @return int	Type of this subquery.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSubqueryType</MethodName>
+            <MethodComment>/** 
+ * Set the type of this subquery.
+ * @param subqueryType of this subquery.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>subqueryType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setPointOfAttachment</MethodName>
+            <MethodComment>/** 
+ * Set the point of attachment of this subquery.
+ * @param pointOfAttachment	The point of attachment of this subquery.
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pointOfAttachment</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUnderTopAndNode</MethodName>
+            <MethodComment>/** 
+ * Return whether or not this subquery is immediately under a top level AndNode.
+ * @return boolean	Whether or not this subquery is immediately under atop level AndNode.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPointOfAttachment</MethodName>
+            <MethodComment>/** 
+ * Get the ResultSet # for the point of attachment for this SubqueryNode.
+ * @return int		The ResultSet # for the point of attachment
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPreprocessed</MethodName>
+            <MethodComment>/** 
+ * Get whether or not this SubqueryNode has already been preprocessed.
+ * @return	Whether or not this SubqueryNode has already beenpreprocessed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParentComparisonOperator</MethodName>
+            <MethodComment>/** 
+ * Set the parent BCON.  Useful when considering flattening expression subqueries.
+ * @param parent	The parent BCON.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>BinaryComparisonOperatorNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>referencesSessionSchema</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remapColumnReferencesToExpressions</MethodName>
+            <MethodComment>/** 
+ * Remap all ColumnReferences in this tree to be clones of the underlying expression.
+ * @return ValueNode			The remapped expression tree.
+ * @exception StandardException			Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpression</MethodName>
+            <MethodComment>/** 
+ * Bind this expression.  This means binding the sub-expressions, as well as figuring out what the return type is for this expression.
+ * @param fromList			The FROM list for the query thisexpression is in, for binding columns. NOTE: fromList will be null if the subquery appears in a VALUES clause.
+ * @param subqueryList		The subquery list being built as we find SubqueryNodes
+ * @param aggregates        The aggregate list being built as we find AggregateNodes
+ * @return	The new top of the expression tree.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggregates</ParamName>
+                    <ParamType>AggregateNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [resultColumns]</InnerVar>
+                <InnerVar>CompilerContext [cc=getCompilerContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkReliability;[CompilerContext.SUBQUERY_ILLEGAL, SQLState.LANG_SUBQUERY]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;verifySelectStarSubquery;[fromList, subqueryType]</InnerMethodInvoke>
+                <InnerMethodInvoke>cc;pushCurrentPrivType;[Authorizer.SELECT_PRIV]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;rejectParameters;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;bindExpressions;[fromList]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;bindResultColumns;[fromList]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;bindOffsetFetch;[offset, fetchFirst]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;bindUntypedNullsToResultColumns;[null]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setDataTypeServices;[resultColumns]</InnerMethodInvoke>
+                <InnerMethodInvoke>subqueryList;addSubqueryNode;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>cc;popCurrentPrivType;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Preprocess an expression tree.  We do a number of transformations here (including subqueries, IN lists, LIKE and BETWEEN) plus subquery flattening. NOTE: This is done before the outer ResultSetNode is preprocessed.
+ * @param numTables			Number of tables in the DML Statement
+ * @param outerFromList		FromList from outer query block
+ * @param outerSubqueryList	SubqueryList from outer query block
+ * @param outerPredicateList	PredicateList from outer query block
+ * @return		The modified expression
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerFromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerSubqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [flattenable]</InnerVar>
+                <InnerVar>ValueNode [topNode=this]</InnerVar>
+                <InnerVar>boolean [haveOrderBy]</InnerVar>
+                <InnerVar>boolean [flattenableNotExists=(isNOT_EXISTS() || canAllBeFlattened())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>resultSet;pushQueryExpressionSuffix;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;pushOffsetFetchFirst;[offset, fetchFirst, hasJDBClimitClause]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;isInvariant;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;hasCorrelatedCRs;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>singleFromBaseTable</MethodName>
+            <MethodComment>/** 
+ * Does the from list from the subquery contain a single entry which is a FBT or a PRN/FBT.
+ * @param fromList	The from list from the subquery
+ * @return the {@code FromBaseTable} if the from list from the subquerycontains a single entry which is a FBT or a PRN/FBT, or  {@code null}if the subquery does not contain a single FBT
+ */
+</MethodComment>
+            <ReturnType>FromBaseTable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromBaseTable [fbt=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rightOperandFlattenableToNotExists</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Check if the right operand is on a form that makes it possible to flatten this query to a NOT EXISTS join. We don't allow flattening if the right operand doesn't reference the base table of the subquery. (Requirement added as part of DERBY-4001.) &lt;/p&gt; &lt;p&gt; The problem with the right operand not referencing the base table of the subquery, is that the join condition may then be used to filter rows from the right side (outer) table in the NOT EXISTS join. In a NOT EXISTS join, the join condition can only safely be applied to the left side (inner) table of the join. Otherwise, it will filter out all the interesting rows too early. &lt;/p&gt; &lt;p&gt;Take the query below as an example:&lt;/p&gt; &lt;pre&gt;&lt;code&gt; SELECT * FROM T1 WHERE X NOT IN (SELECT 1 FROM T2) &lt;/code&gt;&lt;/pre&gt; &lt;p&gt; Here, the right operand is 1, and the join condition is  {@code T1.X=1}. If flattened, the join condition will be used directly on the outer table, and hide all rows with  {@code X&lt;&gt;1}, although those are the only rows we're interested in. If the join condition had only been used on the inner table, the NOT EXISTS join logic would do the correct thing. &lt;/p&gt; &lt;p&gt; If the join condition references the inner table, the condition cannot be used directly on the outer table, so it is safe to flatten the query. &lt;/p&gt;
+ * @param numTables the number of tables in this statement
+ * @param fbt the only {@code FromBaseTable} in this subquery
+ * @return {@code true} if it is OK to flatten this query to a NOT EXISTSjoin,  {@code false} otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fbt</ParamName>
+                    <ParamType>FromBaseTable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [flattenable=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>canAllBeFlattened</MethodName>
+            <MethodComment>/** 
+ * Can NOT IN, ALL be falttened to NOT EXISTS join?  We can't or the flattening doesn't easily make sense if either side of the comparison is nullable. (beetle 5173)
+ * @return Whether or not the NOT IN or ALL subquery can be flattened.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [result=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flattenToNormalJoin</MethodName>
+            <MethodComment>/** 
+ * Flatten this subquery into the outer query block.   At this point we are only flattening based on a uniqueness condition and only flattening non-aggregate subqueries. So, we promote the subquery's from list, as is, into  the outer from list.  For EXISTS subquerys, we return a  TRUE.  Otherwise we return a new comparison between the leftOperand and the expression in the subquery's SELECT list. RESOLVE - we will need to modify this logic to account for exists joins and aggregates as we support flattening for them. Anyway, here's what we do: o We remove ourself from the outer subquery list. o We decrement the nesting level for all tables in the subquery tree. o We append the subquery's from list to the outer from list. o We add the subquery's predicate list to the outer predicate list.  (The subquery has already been preprocessed.) o We add the subquery's subquery list to the outer subquery list. o For EXISTS, we return a true. o Otherwise, we return a new comparison between the leftOperand and the expression in the inner select's RCL.
+ * @param numTables			Number of tables in the DML Statement
+ * @param outerFromList		FromList from outer query block
+ * @param outerSubqueryList	SubqueryList from outer query block
+ * @param outerPredicateList	PredicateList from outer query block
+ * @return	The modified expression
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerFromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerSubqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SelectNode [select=(SelectNode)resultSet]</InnerVar>
+                <InnerVar>FromList [fl=select.getFromList()]</InnerVar>
+                <InnerVar>int[] [tableNumbers=fl.getTableNumbers()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>outerSubqueryList;removeElement;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>select;decrementLevel;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>outerFromList;destructiveAppend;[fl]</InnerMethodInvoke>
+                <InnerMethodInvoke>outerPredicateList;destructiveAppend;[select.getWherePredicates()]</InnerMethodInvoke>
+                <InnerMethodInvoke>outerSubqueryList;destructiveAppend;[select.getWhereSubquerys()]</InnerMethodInvoke>
+                <InnerMethodInvoke>outerSubqueryList;destructiveAppend;[select.getSelectSubquerys()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flattenToExistsJoin</MethodName>
+            <MethodComment>/** 
+ * Flatten this subquery into the outer query block as an exists join.   At this point we are only flattening non-aggregate subqueries with a single FBT in the from list. So, we transform all FBTs in the from list into ExistBaseTables, update the dependency lists for each of the tables and then flatten the subquery. RESOLVE - we will need to modify this logic to account for aggregates as we support flattening for them.
+ * @param numTables			Number of tables in the DML Statement
+ * @param outerFromList		FromList from outer query block
+ * @param outerSubqueryList	SubqueryList from outer query block
+ * @param outerPredicateList	PredicateList from outer query block
+ * @param flattenableNotExists Is it a flattening into a NOT EXISTS join
+ * @return	The modified expression
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerFromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerSubqueryList</ParamName>
+                    <ParamType>SubqueryList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerPredicateList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flattenableNotExists</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SelectNode [select=(SelectNode)resultSet]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>select.getFromList();genExistsBaseTables;[resultSet.getReferencedTableMap(), outerFromList, flattenableNotExists]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightOperand</MethodName>
+            <MethodComment>/** 
+ * Get the node that will be the right operand in the join condition if this ALL/ANY/SOME/(NOT) IN subquery is flattened to a join.
+ * @return the right operand
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultColumn [firstRC=resultSet.getResultColumns().elementAt(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInvariant</MethodName>
+            <MethodComment>/** 
+ * Check to see if we have a Variant value below us. If so, return true.  Caches the result so multiple calls are ok.
+ * @return boolean whether we have 
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HasVariantValueNodeVisitor [visitor=new HasVariantValueNodeVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>resultSet;accept;[visitor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasCorrelatedCRs</MethodName>
+            <MethodComment>/** 
+ * Check to see if this subquery has correlated column references.  Only useful results if called AFTER binding (after CRs have been bound).
+ * @return whether the subquery has correlated columnreferences.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [realSubquery=resultSet]</InnerVar>
+                <InnerVar>ResultColumnList [oldRCL=null]</InnerVar>
+                <InnerVar>HasCorrelatedCRsVisitor [visitor=new HasCorrelatedCRsVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>realSubquery;accept;[visitor]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushNewPredicate</MethodName>
+            <MethodComment>/** 
+ * Transform: expression QuantifiedOperator (select x from ...) into (select true from .. where expression &lt;BinaryComparisonOperator&gt; x ...) IS [NOT] NULL or, if we have an aggregate: (select true from  (select AGG(x) from ...) where expression &lt;BinaryComparisonOperator&gt; x ...) IS [NOT] NULL For ANY and IN subqueries: o  We generate an IS NULL above the SubqueryNode and return the top of the new tree to the caller. o  The operator in the new predicate that is added to the subquery will correspond to the operator that modifies the ANY. (eg, = for = ANY, with = for IN.) For ALL and NOT IN subqueries: o  We generate an IS NOT NULL above the SubqueryNode and return the top of the new tree to the caller. o  The operator in the new predicate that is added to the subquery will be a BinaryAllOperatorNode whose bcoNodeType corresponds to  the negation of the operator that modifies the ALL. (eg, &amp;lt;&amp;gt; for = ALL, with &amp;lt;&amp;gt; for NOT IN.) NOTE: This method is called after the underlying subquery has been preprocessed, so we build a new Predicate, not just a new expression.
+ * @param numTables			Number of tables in DML Statement
+ * @return UnaryComparisonOperatorNode	An IS [NOT] NULL above the transformed subquery.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>UnaryComparisonOperatorNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AndNode [andNode]</InnerVar>
+                <InnerVar>JBitSet [tableMap]</InnerVar>
+                <InnerVar>Predicate [predicate]</InnerVar>
+                <InnerVar>ResultColumn [firstRC]</InnerVar>
+                <InnerVar>ResultColumnList [resultColumns]</InnerVar>
+                <InnerVar>UnaryComparisonOperatorNode [ucoNode=null]</InnerVar>
+                <InnerVar>ValueNode [rightOperand]</InnerVar>
+                <InnerVar>ContextManager [cm=getContextManager()]</InnerVar>
+                <InnerVar>ResultColumnList [newRCL=resultColumns.copyListAndObjects()]</InnerVar>
+                <InnerVar>BinaryComparisonOperatorNode [bcoNode=getNewJoinCondition(leftOperand,rightOperand)]</InnerVar>
+                <InnerVar>ValueNode [andLeft=bcoNode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newRCL;genVirtualColumnNodes;[resultSet, resultColumns]</InnerMethodInvoke>
+                <InnerMethodInvoke>andNode;postBindFixup;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>predicate;categorize;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>firstRC;setType;[getTypeServices()]</InnerMethodInvoke>
+                <InnerMethodInvoke>firstRC;setExpression;[getTrueNode()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ucoNode;bindComparisonOperator;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewJoinCondition</MethodName>
+            <MethodComment>/** 
+ * Build a new join condition between the leftOperand and the rightOperand.  The comparison operator is dependent on the subquery type.
+ * @param leftOperand	The left operand for the new condition.
+ * @param rightOperand	The right operand for the new condition.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BinaryComparisonOperatorNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftOperand</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightOperand</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [operatorType=subqueryType]</InnerVar>
+                <InnerVar>int [bcoType=0]</InnerVar>
+                <InnerVar>int [kind=-1]</InnerVar>
+                <InnerVar>BinaryComparisonOperatorNode [bcoNode=new BinaryRelationalOperatorNode(kind,leftOperand,rightOperand,false,getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bcoNode;bindComparisonOperator;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eliminateNots</MethodName>
+            <MethodComment>/** 
+ * Eliminate NotNodes in the current query block.  We traverse the tree,  inverting ANDs and ORs and eliminating NOTs as we go.  We stop at  ComparisonOperators and boolean expressions.  We invert  ComparisonOperators and replace boolean expressions with  boolean expression = false. NOTE: Since we do not recurse under ComparisonOperators, there still could be NotNodes left in the tree.
+ * @param underNotNode		Whether or not we are under a NotNode.
+ * @return		The modified expression
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>underNotNode</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ValueNode [result=this]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeToCNF</MethodName>
+            <MethodComment>/** 
+ * Finish putting an expression into conjunctive normal form.  An expression tree in conjunctive normal form meets the following criteria: o  If the expression tree is not null, the top level will be a chain of AndNodes terminating in a true BooleanConstantNode. o  The left child of an AndNode will never be an AndNode. o  Any right-linked chain that includes an AndNode will be entirely composed of AndNodes terminated by a true BooleanConstantNode. o  The left child of an OrNode will never be an OrNode. o  Any right-linked chain that includes an OrNode will be entirely composed of OrNodes terminated by a false BooleanConstantNode. o  ValueNodes other than AndNodes and OrNodes are considered leaf nodes for purposes of expression normalization. In other words, we won't do any normalization under those nodes. In addition, we track whether or not we are under a top level AndNode.   SubqueryNodes need to know this for subquery flattening.
+ * @param underTopAndNode		Whether or not we are under a top level AndNode.
+ * @return		The modified expression
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>underTopAndNode</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>categorize</MethodName>
+            <MethodComment>/** 
+ * Categorize this predicate.  Initially, this means building a bit map of the referenced tables for each predicate. If the source of this ColumnReference (at the next underlying level)  is not a ColumnReference or a VirtualColumnNode then this predicate will not be pushed down. For example, in: select * from (select 1 from s) a (x) where x = 1 we will not push down x = 1. NOTE: It would be easy to handle the case of a constant, but if the inner SELECT returns an arbitrary expression, then we would have to copy that tree into the pushed predicate, and that tree could contain subqueries and method calls. RESOLVE - revisit this issue once we have views.
+ * @param referencedTabs	JBitSet with bit map of referenced FromTables
+ * @return boolean		Whether or not source.expression is a ColumnReferenceor a VirtualColumnNode.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>referencedTabs</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>simplePredsOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isMaterializable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [retval=(subqueryType == EXPRESSION_SUBQUERY) &amp;&amp; !hasCorrelatedCRs() &amp;&amp; isInvariant()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimize</MethodName>
+            <MethodComment>/** 
+ * Optimize this SubqueryNode.  
+ * @param dataDictionary	The DataDictionary to use for optimization
+ * @param outerRows			The optimizer's estimate of the number oftimes this subquery will be executed.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataDictionary</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outerRows</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPaths</MethodName>
+            <MethodComment>/** 
+ * Make any changes to the access paths, as decided by the optimizer.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderableVariantType</MethodName>
+            <MethodComment>/** 
+ * Return the variant type for the underlying expression. The variant type can be: VARIANT				- variant within a scan (method calls and non-static field access) SCAN_INVARIANT		- invariant within a scan (column references from outer tables) QUERY_INVARIANT		- invariant within the life of a query (constant expressions)
+ * @return	The variant type for the underlying expression.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateExpression</MethodName>
+            <MethodComment>/** 
+ * Do code generation for this subquery.
+ * @param expressionBuilder	The ExpressionClassBuilder for the class being built
+ * @param mbex	The method the expression will go into
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expressionBuilder</ParamName>
+                    <ParamType>ExpressionClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mbex</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CompilerContext [cc=getCompilerContext()]</InnerVar>
+                <InnerVar>String [resultSetString]</InnerVar>
+                <InnerVar>ActivationClassBuilder [acb=(ActivationClassBuilder)expressionBuilder]</InnerVar>
+                <InnerVar>CostEstimate [costEstimate=resultSet.getFinalCostEstimate()]</InnerVar>
+                <InnerVar>String [subqueryTypeString=getTypeCompiler().interfaceName()]</InnerVar>
+                <InnerVar>MethodBuilder [mb=acb.newGeneratedFun(subqueryTypeString,Modifier.PROTECTED)]</InnerVar>
+                <InnerVar>LocalField [rsFieldLF=acb.newFieldDeclaration(Modifier.PRIVATE,ClassName.NoPutResultSet)]</InnerVar>
+                <InnerVar>ResultSetNode [subNode=null]</InnerVar>
+                <InnerVar>int [nargs]</InnerVar>
+                <InnerVar>int [subqResultSetNumber=cc.getNextResultSetNumber()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>acb;pushGetResultSetFactoryExpression;[mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet;generate;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet.getResultColumns();setResultSetNumber;[subqResultSetNumber]</InnerMethodInvoke>
+                <InnerMethodInvoke>resultSet.getResultColumns();generateNulls;[acb, mb]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[subqResultSetNumber]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[subqueryNumber]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[pointOfAttachment]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEstimate.rowCount()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[costEstimate.getEstimatedCost()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, resultSetString, ClassName.NoPutResultSet, nargs]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;setField;[rsFieldLF]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;getField;[rsFieldLF]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "openCore", "void", 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;getField;[rsFieldLF]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, (String)null, "getNextRowCore", ClassName.ExecRow, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;push;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEINTERFACE, ClassName.Row, "getColumn", ClassName.DataValueDescriptor, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;cast;[subqueryTypeString]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;methodReturn;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;complete;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateMaterialization</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LocalField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>acb</ParamName>
+                    <ParamType>ActivationClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mbsq</ParamName>
+                    <ParamType>MethodBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodBuilder [mb=acb.getExecuteMethod()]</InnerVar>
+                <InnerVar>LocalField [field=acb.newFieldDeclaration(Modifier.PRIVATE,type)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mb;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;callMethod;[VMOpcode.INVOKEVIRTUAL, (String)null, mbsq.getName(), type, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mb;setField;[field]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTrueNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BooleanConstantNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptChildren</MethodName>
+            <MethodComment>/** 
+ * Accept the visitor for all visitable children of this node.
+ * @param v the visitor
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>Visitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isIN</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNOT_IN</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isANY</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isALL</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEXISTS</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNOT_EXISTS</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeToCorrespondingExpressionType</MethodName>
+            <MethodComment>/** 
+ * Convert this IN/ANY subquery, which is known to return at most 1 row, to an equivalent expression subquery.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [nodeType=-1]</InnerVar>
+                <InnerVar>BinaryRelationalOperatorNode [bcon=new BinaryRelationalOperatorNode(nodeType,leftOperand,this,false,getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setDataTypeServices;[resultSet.getResultColumns()]</InnerMethodInvoke>
+                <InnerMethodInvoke>parentComparisonOperator;bindComparisonOperator;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDataTypeServices</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultColumns</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataTypeDescriptor [dts]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setType;[dts.getNullabilityType(true)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEquivalent</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isHavingSubquery</MethodName>
+            <MethodComment>/** 
+ * Is this subquery part of a having clause?
+ * @return true if it is part of a having clause, otherwise false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setHavingSubquery</MethodName>
+            <MethodComment>/** 
+ * Mark this subquery as being part of a having clause.
+ * @param havingSubquery
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>havingSubquery</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isWhereSubquery</MethodName>
+            <MethodComment>/** 
+ * Is this subquery part of a whereclause?
+ * @return true if it is part of a where clause, otherwise false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setWhereSubquery</MethodName>
+            <MethodComment>/** 
+ * Mark this subquery as being part of a where clause.
+ * @param whereSubquery
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>whereSubquery</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isWhereExistsAnyInWithWhereSubquery</MethodName>
+            <MethodComment>/** 
+ * Check whether this is a WHERE EXISTS | ANY | IN subquery with a subquery in its own WHERE clause. Used in flattening decision making. DERBY-3301 reported wrong results from a nested WHERE EXISTS, but  according to the derby optimizer docs this applies to a broader range of  WHERE clauses in a WHERE EXISTS subquery. No WHERE EXISTS subquery with  anohter subquery in it own WHERE clause can be flattened. 
+ * @return true if this subquery is a WHERE EXISTS | ANY | IN subquery with a subquery in its own WHERE clause
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderByList</MethodName>
+            <MethodComment>/** 
+ * Get ORDER BY list (used to construct FROM_SUBQUERY only), cf. FromSubquery, for which this node is transient.
+ * @return order by list if specified, else null.
+ */
+</MethodComment>
+            <ReturnType>OrderByList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOffset</MethodName>
+            <MethodComment>/** 
+ * Get OFFSET  (used to construct FROM_SUBQUERY only), cf. FromSubquery, for which this node is transient.
+ * @return offset if specified, else null.
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFetchFirst</MethodName>
+            <MethodComment>/** 
+ * Get FETCH FIRST (used to construct FROM_SUBQUERY only), cf. FromSubquery, for which this node is transient.
+ * @return fetch first if specified, else null.
+ */
+</MethodComment>
+            <ReturnType>ValueNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasJDBClimitClause</MethodName>
+            <MethodComment>/** 
+ * Return true if the offset/fetchFirst clauses were added by JDBC LIMIT escape syntax. This method is used to construct a FROM_SUBQUERY only, cf. FromSubquery, for which this node is transient.
+ * @return true if the JDBC limit/offset semantics (rather than the SQL Standard OFFSET/FETCH NEXT) semantics apply
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

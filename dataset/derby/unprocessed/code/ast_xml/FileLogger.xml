@@ -1,0 +1,395 @@
+<Class>
+    <Id>675</Id>
+    <Package>org.apache.derby.impl.store.raw.log</Package>
+    <ClassName>FileLogger</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Logger</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FileLogger  /** 
+ * Write log records to a log file as a stream (ie. log records added to the end of the file, no concept of pages). &lt;P&gt; The format of a log record that is not a compensation operation is &lt;PRE&gt;
+ * @derby.formatId	no formatId, format is implied by the log file format and thelog record content.
+ * @derby.purpose	the log record and optional data
+ * @derby.upgrade
+ * @derby.diskLayout Log Record (see org.apache.derby.impl.store.raw.log.LogRecord) length(int)	length of optional data optionalData(byte[length]) optional data written by the log record
+ * @derby.endFormat &lt;/PRE&gt; &lt;HR WIDTH="100%"&gt;  &lt;P&gt;	The form of a log record that is a compensation operation is &lt;PRE&gt;
+ * @derby.formatId	no formatId, format is implied by the log file format and thelog record content.
+ * @derby.purpose	undo a previous log record
+ * @derby.upgrade
+ * @derby.diskLayout Log Record that contains the compenstation operation (see org.apache.derby.impl.store.raw.log.LogRecord) undoInstant(long) the log instant of the operation that is to be rolled back The undo instant is logically part of the LogRecord but is written by the logger because it is used and controlled by the rollback code but not by the log operation. There is no optional data in a compensation operation, all data necessary for the rollback must be stored in the operation being undone.
+ * @derby.endFormat &lt;/PRE&gt; &lt;BR&gt; &lt;P&gt;Multithreading considerations:&lt;BR&gt; Logger must be MT-safe.	Each RawTransaction has its own private FileLogger object. Each logger has a logOutputBuffer and a log input buffer which are used to read and write to the log.  Since multiple threads can be in the same transaction, fileLogger must be synchronized.
+ * @see LogRecord
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>logRecord</FieldName>
+            <FieldType>LogRecord</FieldType>
+        </Field>
+        <Field>
+            <FieldName>encryptionBuffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logOutputBuffer</FieldName>
+            <FieldType>DynamicByteArrayOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logicalOut</FieldName>
+            <FieldType>FormatIdOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logIn</FieldName>
+            <FieldType>ArrayInputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logFactory</FieldName>
+            <FieldType>LogToFile</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>FileLogger</MethodName>
+            <MethodComment>/** 
+ * Make a new Logger with its own log record buffers MT - not needed for constructor
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logFactory</ParamName>
+                    <ParamType>LogToFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close the logger. MT - caller provide synchronization (RESOLVE: not called by anyone ??)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logAndDo</MethodName>
+            <MethodComment>/** 
+ * Writes out a log record to the log stream, and call its doMe method to apply the change to the rawStore. &lt;BR&gt;Any optional data the doMe method need is first written to the log stream using operation.writeOptionalData, then whatever is written to the log stream is passed back to the operation for the doMe method. &lt;P&gt;MT - there could be multiple threads running in the same raw transactions and they can be calling the same logger to log different log operations.  This whole method is synchronized to make sure log records are logged one at a time.
+ * @param xact the transaction logging the change
+ * @param operation the log operation
+ * @return the instant in the log that can be used to identify the logrecord
+ * @exception StandardException Derby Standard error policy
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>Loggable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isLogPrepared=false]</InnerVar>
+                <InnerVar>boolean [inUserCode=false]</InnerVar>
+                <InnerVar>byte[] [preparedLog]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logAndUndo</MethodName>
+            <MethodComment>/** 
+ * Writes out a compensation log record to the log stream, and call its doMe method to undo the change of a previous log operation. &lt;P&gt;MT - Not needed. A transaction must be single threaded thru undo, each RawTransaction has its own logger, therefore no need to synchronize. The RawTransaction must handle synchronizing with multiple threads during rollback.
+ * @param xact the transaction logging the change
+ * @param compensation the compensation log operation
+ * @param undoInstant the log instant of the operation that is to berolled back
+ * @param in optional data input for the compenastion doMe method
+ * @return the instant in the log that can be used to identify the logrecord
+ * @exception StandardException Derby Standard error policy
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compensation</ParamName>
+                    <ParamType>Compensation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoInstant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>LimitObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [inUserCode=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flush</MethodName>
+            <MethodComment>/** 
+ * Flush the log up to the given log instant. &lt;P&gt;MT - not needed, wrapper method
+ * @exception StandardException cannot sync log file
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>where</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logFactory;flush;[where]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushAll</MethodName>
+            <MethodComment>/** 
+ * Flush all outstanding log to disk. &lt;P&gt;MT - not needed, wrapper method
+ * @exception StandardException cannot sync log file
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logFactory;flushAll;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reprepare</MethodName>
+            <MethodComment>/** 
+ * During recovery re-prepare a transaction. &lt;p&gt; After redo() and undo(), this routine is called on all outstanding  in-doubt (prepared) transactions.  This routine re-acquires all  logical write locks for operations in the xact, and then modifies the transaction table entry to make the transaction look as if it had just been prepared following startup after recovery. &lt;p&gt;
+ * @param t                 is the transaction performing the re-prepare
+ * @param prepareId         is the transaction ID to be re-prepared
+ * @param prepareStopAt     is where the log instant (inclusive) where the re-prepare should stop.
+ * @param prepareStartAt    is the log instant (inclusive) where re-prepare should begin, this is normally the log instant  of the last log record of the transaction that  is to be re-prepare.  If null, then re-prepare  starts from the end of the log.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prepareId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prepareStopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prepareStartAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [clrskipped=0]</InnerVar>
+                <InnerVar>int [logrecordseen=0]</InnerVar>
+                <InnerVar>RePreparable [lop=null]</InnerVar>
+                <InnerVar>ArrayInputStream [rawInput=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>undo</MethodName>
+            <MethodComment>/** 
+ * Undo a part of or the entire transaction.  Begin rolling back the log record at undoStartAt and stopping at (inclusive) the log record at undoStopAt. &lt;P&gt;MT - Not needed. A transaction must be single threaded thru undo,  each RawTransaction has its own logger, therefore no need to  synchronize.  The RawTransaction must handle synchronizing with  multiple threads during rollback.
+ * @param t 			the transaction that needs to be rolled back
+ * @param undoId 		the transaction ID
+ * @param undoStopAt	the last log record that should be rolled back
+ * @param undoStartAt	the first log record that should be rolled back
+ * @exception StandardException	Standard Derby error policy
+ * @see Logger#undo
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoStopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undoStartAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [clrgenerated=0]</InnerVar>
+                <InnerVar>int [clrskipped=0]</InnerVar>
+                <InnerVar>int [logrecordseen=0]</InnerVar>
+                <InnerVar>StreamLogScan [scanLog]</InnerVar>
+                <InnerVar>Compensation [compensation=null]</InnerVar>
+                <InnerVar>Undoable [lop=null]</InnerVar>
+                <InnerVar>ArrayInputStream [rawInput=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>redo</MethodName>
+            <MethodComment>/** 
+ * Recovery Redo loop. &lt;P&gt; The log stream is scanned from the beginning (or from the undo low water mark of a checkpoint) forward until the end. The purpose of the redo pass is to repeat history, i.e, to repeat exactly the same set of changes the rawStore went thru right before it stopped.   With each log record that is encountered in the redo pass: &lt;OL&gt; &lt;LI&gt;if it isFirst(), then the transaction factory is called upon to create a new transaction object. &lt;LI&gt;if it needsRedo(), its doMe() is called (if it is a compensation operation, then the undoable operation needs to be created first before the doMe is called). &lt;LI&gt;if it isComplete(), then the transaction object is closed. &lt;/OL&gt; &lt;P&gt; MT - caller provides synchronization
+ * @param transFactory     - the transaction factory
+ * @param redoLWM          - if checkpoint seen, starting from this pointon, apply redo if necessary
+ * @return the log instant of the next log record (or the instant justafter the last log record).  This is used to determine where the log truly ends
+ * @exception StandardException Standard Derby error policy
+ * @exception IOException error reading log file
+ * @exception ClassNotFoundException log file corrupted
+ * @see LogToFile#recover
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>recoveryTransaction</ParamName>
+                    <ParamType>RawTransaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transFactory</ParamName>
+                    <ParamType>TransactionFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>redoScan</ParamName>
+                    <ParamType>StreamLogScan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>redoLWM</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ttabInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [scanCount=0]</InnerVar>
+                <InnerVar>int [redoCount=0]</InnerVar>
+                <InnerVar>int [prepareCount=0]</InnerVar>
+                <InnerVar>int [clrCount=0]</InnerVar>
+                <InnerVar>int [btranCount=0]</InnerVar>
+                <InnerVar>int [etranCount=0]</InnerVar>
+                <InnerVar>TransactionId [tranId=null]</InnerVar>
+                <InnerVar>long [instant=LogCounter.INVALID_LOG_INSTANT]</InnerVar>
+                <InnerVar>StreamLogScan [undoScan=null]</InnerVar>
+                <InnerVar>Loggable [op=null]</InnerVar>
+                <InnerVar>long [logEnd=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logIn;setData;[logOutputBuffer.getByteArray()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLogRecord</MethodName>
+            <MethodComment>/** 
+ * Read the next log record from the scan. &lt;P&gt;MT - caller must provide synchronization (right now, it is only called in recovery to find the checkpoint log record.  When this method is called by a more general audience, MT must be revisited).
+ * @param scan an opened log scan
+ * @param size estimated size of the log record
+ * @return the log operation that is the next in the scan, or null if nomore log operation in the log scan
+ * @exception IOException	Error reading the log file
+ * @exception StandardException Standard Derby error policy
+ * @exception ClassNotFoundException log corrupted
+ */
+</MethodComment>
+            <ReturnType>Loggable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scan</ParamName>
+                    <ParamType>StreamLogScan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Loggable [lop=null]</InnerVar>
+                <InnerVar>ArrayInputStream [logInputBuffer=new ArrayInputStream(new byte[size])]</InnerVar>
+                <InnerVar>LogRecord [record=scan.getNextRecord(logInputBuffer,null,0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

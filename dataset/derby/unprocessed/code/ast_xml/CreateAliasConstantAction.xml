@@ -1,0 +1,166 @@
+<Class>
+    <Id>949</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>CreateAliasConstantAction</ClassName>
+    <SuperClass>DDLConstantAction</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CreateAliasConstantAction  /** 
+ * This class performs actions that are ALWAYS performed for a CREATE FUNCTION, PROCEDURE or SYNONYM Statement at execution time. These SQL objects are stored in the SYS.SYSALIASES table and represented as AliasDescriptors.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>aliasName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemaName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>javaClassName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aliasType</FieldName>
+            <FieldType>char</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nameSpace</FieldName>
+            <FieldType>char</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aliasInfo</FieldName>
+            <FieldType>AliasInfo</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CreateAliasConstantAction</MethodName>
+            <MethodComment>/** 
+ * Make the ConstantAction for a CREATE alias statement.
+ * @param aliasName		Name of alias.
+ * @param schemaName		Name of alias's schema.
+ * @param javaClassName	Name of java class.
+ * @param aliasInfo		AliasInfo
+ * @param aliasType		The type of the alias
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>aliasName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>javaClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aliasInfo</ParamName>
+                    <ParamType>AliasInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aliasType</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [type=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>executeConstantAction</MethodName>
+            <MethodComment>/** 
+ * This is the guts of the Execution-time logic for CREATE FUNCTION, PROCEDURE, SYNONYM, and TYPE. &lt;P&gt; A function, procedure, or udt is represented as: &lt;UL&gt; &lt;LI&gt; AliasDescriptor &lt;/UL&gt; Routine dependencies are created as: &lt;UL&gt; &lt;LI&gt; None &lt;/UL&gt; &lt;P&gt; A synonym is represented as: &lt;UL&gt; &lt;LI&gt; AliasDescriptor &lt;LI&gt; TableDescriptor &lt;/UL&gt; Synonym dependencies are created as: &lt;UL&gt; &lt;LI&gt; None &lt;/UL&gt; In both cases a SchemaDescriptor will be created if needed. No dependency is created on the SchemaDescriptor.
+ * @see ConstantAction#executeConstantAction
+ * @see AliasDescriptor
+ * @see TableDescriptor
+ * @see SchemaDescriptor
+ * @exception StandardException		Thrown on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=activation.getLanguageConnectionContext()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>SchemaDescriptor [sd=DDLConstantAction.getSchemaDescriptorForCreate(dd,activation,schemaName)]</InnerVar>
+                <InnerVar>UUID [aliasID=dd.getUUIDFactory().createUUID()]</InnerVar>
+                <InnerVar>AliasDescriptor [ads=new AliasDescriptor(dd,aliasID,aliasName,sd.getUUID(),javaClassName,aliasType,nameSpace,false,aliasInfo,null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dd;startWriting;[lcc]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;addDescriptor;[ads, null, DataDictionary.SYSALIASES_CATALOG_NUM, false, tc]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;adjustUDTDependencies;[lcc, dd, ads, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vetRoutine</MethodName>
+            <MethodComment>/** 
+ * Common checks to be performed for functions and procedures 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dd</ParamName>
+                    <ParamType>DataDictionary</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sd</ParamName>
+                    <ParamType>SchemaDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ads</ParamName>
+                    <ParamType>AliasDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;AliasDescriptor&gt; [list=dd.getRoutineList(sd.getUUID().toString(),aliasName,aliasType)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

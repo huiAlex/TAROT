@@ -1,0 +1,803 @@
+<Class>
+    <Id>273</Id>
+    <Package>org.apache.derbyBuild</Package>
+    <ClassName>ODBCMetadataGenerator</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ODBCMetadataGenerator  /** 
+ * This class is used at COMPILE TIME ONLY.  It is responsible for generating ODBC metadata queries based on existing JDBC queries.  In a word, this class reads from the org/apache/derby/impl/jdbc/metadata.properties file (which is where the JDBC queries are stored), and for each query, performs the changes/additions required to make it comply with ODBC standards.  The generated ODBC queries are written to an output file that is then used, at build time, to create a full set of both JDBC and ODBC queries, all of which are then loaded into the database system tables at creation time. For more on the ODBC specification of the metadata methods in question, see: "http://msdn.microsoft.com/library/default.asp?url=/library/en-us/odbc/ htm/odbcsqlprocedures.asp" For more on how the generated queries are used at execution time, see EmbedDatabaseMetadata.java and SystemProcedures.java in the codeline.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>COL_RENAME_CHANGE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TYPE_VALUE_CHANGE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ADD_COLUMN_CHANGE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WHERE_CLAUSE_CHANGE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ODBC_QUERY_NOTICE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ODBC_QUERY_PREFIX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SUBQUERY_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NEW_COL_PLACEHOLDER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FOLLOWING</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PRECEDING</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BOOLEAN_COLUMNS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>changeMap</FieldName>
+            <FieldType>HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>changeMap</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>odbcFragments</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+        <Field>
+            <FieldName>odbcMetaFile</FieldName>
+            <FieldType>FileWriter</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ODBCMetadataGenerator</MethodName>
+            <MethodComment>/** 
+ * Constructor. Initializes SQL fragments used for generation, and then opens the output file,
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>odbcFragments;load;[this.getClass().getResourceAsStream("odbcgen_fragments.properties")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ODBCMetadataGenerator [odbcGen=new ODBCMetadataGenerator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>odbcGen;initChanges;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcGen;generateODBCQueries;[odbcGen.getClass().getResourceAsStream("/org/apache/derby/impl/jdbc/metadata.properties")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initChanges</MethodName>
+            <MethodComment>/** 
+ * initChanges Create a listing of the types of changes that need to be made for each metadata query to be ODBC-compliant. If a metadata query has no entry in this map, then it is left unchanged and no ODBC-version will be created. Having this mapping allows us to skip over String parsing (which can be slow) when it's not required. For details on the changes, see the appropriate methods below.
+ * @return Map holding the list of changes to be made foreach metadata query has been initialized.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>changeMap;put;["getProcedures", COL_RENAME_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getProcedureColumns", (byte)(COL_RENAME_CHANGE | TYPE_VALUE_CHANGE | ADD_COLUMN_CHANGE)]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getVersionColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getBestRowIdentifierPrimaryKeyColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getBestRowIdentifierUniqueKeyColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getBestRowIdentifierUniqueIndexColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getBestRowIdentifierAllColumns", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getTypeInfo", (byte)(COL_RENAME_CHANGE | TYPE_VALUE_CHANGE | ADD_COLUMN_CHANGE)]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getIndexInfo", TYPE_VALUE_CHANGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>changeMap;put;["getCrossReference", WHERE_CLAUSE_CHANGE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateODBCQueries</MethodName>
+            <MethodComment>/** 
+ * generateODBCQueries: Reads the existing (JDBC) metadata queries from metadata.properties and, for each one, makes a call to generate an ODBC-compliant version.
+ * @param is InputStream for reading metadata.properties.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>is</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [query=new StringBuffer()]</InnerVar>
+                <InnerVar>LineNumberReader [reader=new LineNumberReader(new InputStreamReader(is,"ISO-8859-1"))]</InnerVar>
+                <InnerVar>String [line=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>odbcMetaFile;flush;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateODBCQuery</MethodName>
+            <MethodComment>/** 
+ * generateODBCQuery Takes a specific JDBC query, writes it to the output file, and then creates an ODBC-compliant version of that query (if needed) and writes that to the output file, as well.
+ * @param queryText SQL text from a JDBC metadata querythat was read from metadata.properties.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [queryAsString=queryText.toString().trim()]</InnerVar>
+                <InnerVar>int [pos=queryAsString.indexOf("=")]</InnerVar>
+                <InnerVar>String [queryName=queryText.substring(0,pos)]</InnerVar>
+                <InnerVar>String [orderBy=""]</InnerVar>
+                <InnerVar>int [orderByPos=queryAsString.lastIndexOf("ORDER BY")]</InnerVar>
+                <InnerVar>StringBuffer [outerQueryText=new StringBuffer()]</InnerVar>
+                <InnerVar>boolean [haveODBCChanges=renameColsForODBC(queryName,queryText)]</InnerVar>
+                <InnerVar>ArrayList&lt;String&gt; [colDefs=new ArrayList&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>odbcMetaFile;write;[queryAsString, 0, queryAsString.length()]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;["\n\n"]</InnerMethodInvoke>
+                <InnerMethodInvoke>queryText;delete;[0, pos + 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addHelperColsToSubquery;[queryName, queryText, pos]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;markNewColPosition;[queryName, colDefs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;generateSELECTClause;[queryName, colDefs, outerQueryText]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;changeValuesForODBC;[queryName, outerQueryText]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addNewColumnsForODBC;[queryName, outerQueryText]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[ODBC_QUERY_NOTICE]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[ODBC_QUERY_PREFIX]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[queryName]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;["="]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[outerQueryText.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[queryAsString]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;[SUBQUERY_NAME]</InnerMethodInvoke>
+                <InnerMethodInvoke>odbcMetaFile;write;["\n\n"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>renameColsForODBC</MethodName>
+            <MethodComment>/** 
+ * renameColsForODBC Renames any columns in the received query so that they are ODBC-compliant.
+ * @param queryName Name of the query being processed.
+ * @param queryText Text of the query being processed.
+ * @return All columns requiring renaming have been renamed INPLACE in the received StringBuffer.  True is returned if at least one column was renamed; false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>renameColForODBC</MethodName>
+            <MethodComment>/** 
+ * renameColForODBC Searches for the old column name in the received String buffer and replaces it with the new column name.  Note that we only replace the old column name where it is preceded by "AS", because this is the instance that determines the column name in the final result set.
+ * @param queryText The query text in which we're doing therename operation.
+ * @param oldVal The old column name.
+ * @param newVal The new column name.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldVal</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newVal</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [queryString=queryText.toString()]</InnerVar>
+                <InnerVar>int [pos=queryString.indexOf(oldVal)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>queryText;replace;[pos, pos + oldVal.length(), newVal]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateSELECTClause</MethodName>
+            <MethodComment>/** 
+ * generateSELECTClause Generates an outer SELECT clause that is then wrapped around a JDBC query to change the types and/or values of the JDBC result set.  The JDBC query thus becomes a subquery. Ex. if we have a JDBC query "SELECT A, B FROM T1" and ODBC requires that "A" be a smallint, this method will generate a select clause "SELECT CAST (T2.A AS SMALLINT), T2.B FROM" that is then used to wrap the JDBC query, as follows: SELECT CAST (T2.A AS SMALLINT), T2.B FROM (SELECT A, B FROM T1) T2
+ * @param queryName Name of the query being processed.
+ * @param selectColDefs Array list of the SELECT columns thatexist for the JDBC version of the query.  For the above example, this would be an array list with two String elements, "A" and "B".
+ * @param newQueryText StringBuffer to which the generatedouter SELECT will be appended. On return, an outer SELECT clause has been generated and appended to the received buffer.  The "FROM" keyword has been appended, but the subquery itself is NOT added here.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectColDefs</ParamName>
+                    <ParamType>ArrayList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newQueryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [colName]</InnerVar>
+                <InnerVar>String [castInfo]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newQueryText;append;["SELECT \\\n\\\n"]</InnerMethodInvoke>
+                <InnerMethodInvoke>newQueryText;append;["\nFROM ( "]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeValuesForODBC</MethodName>
+            <MethodComment>/** 
+ * changeValuesForODBC Searches for a JDBC column name in the received String buffer and replaces the first occurrence with an ODBC- compliant value.  This method determines what specific columns need updated values for a given query, and then makes the appropriate call for each column.
+ * @param queryName Name of the query being processed.
+ * @param newQueryText The query text in which we're doing thechange-value operation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newQueryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeColValueToODBC</MethodName>
+            <MethodComment>/** 
+ * changeColValueToODBC Searches for the received column name in the received String buffer and replaces it with an ODBC-compliant value.
+ * @param queryName Name of the query being processed.
+ * @param colName Name of the specific column to update.
+ * @param newQueryText The query text in which we're doingthe change-value operation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newQueryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [pos=newQueryText.toString().indexOf(colName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSelectColDefinitions</MethodName>
+            <MethodComment>/** 
+ * getSelectColDefinitions Parses the SELECT clause of a JDBC metadata SQL query and returns a list of the columns being selected.  For example, if the received statement was "SELECT A, B AS C, D * 2 FROM T1", this method will return an ArrayList with three string elements: 1) "A", 2) "B AS C", and 3) "D * 2".
+ * @param queryText The query from which we are extractingthe SELECT columns.
+ * @param colDefList ArrayList in which we want tostore the column definitions that we find.
+ * @return Received ArrayList has one string value foreach of the columns found in the received query. Also, an integer is returned indicating the index in the received query of the start of the FROM clause, for later use by the calling method.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colDefList</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [query=queryText.toString().trim()]</InnerVar>
+                <InnerVar>char[] [queryChars=query.toCharArray()]</InnerVar>
+                <InnerVar>int [start=query.indexOf("SELECT")]</InnerVar>
+                <InnerVar>int [fromClauseIndex=-1]</InnerVar>
+                <InnerVar>int [parenDepth=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addHelperColsToSubquery</MethodName>
+            <MethodComment>/** 
+ * addHelperColsToSubquery For some of the metadata queries, the ODBC version needs to access values that are only available in the JDBC subquery.  In such cases, we want to add those values as additional "helper" columns to the subquery result set, so that they can be referenced from the new ODBC outer query (without requiring a join).  For example, assume we have 2 tables T1(int i, int j) and T2 (int a), and a subquery "SELECT T1.i, T1.j + T2.a from T1, T2)". Then we have an outer query that, instead of returning "T1.j + T2.a", needs to return the value of "2 * T2.a": SELECT VT.i, 2 * T2.a FROM (SELECT T1.i, T1.j + T2.a FROM T1, T2) VT The above statement WON'T work, because the outer query can't see the value "T2.a".  So in such a a case, this method will add "T2.a" to the list of columns returned by the subquery, so that the outer query can then access it: SELECT VT.i, 2 * VT.a FROM (SELECT T1.i, T1.j + T2.a, T2.a FROM T1, T2) VT Which specific columns are added to the subquery depends on the query in question.
+ * @param queryName Name of the query in question.
+ * @param subqueryText text of the subquery in question.
+ * @param insertPos Index into the received buffermarking the position where the helper columns should be inserted.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>insertPos</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractColName</MethodName>
+            <MethodComment>/** 
+ * extractColName Takes a single column definition from a SELECT clause and returns only the unqualified name of the column. Assumption here is that any column definition we see here will either 1) end with an "AS &lt;COLUMN_NAME&gt;" clause, or 2) consist of ONLY a column name, such as "A" or "A.B".  At the time of writing, these assumptions were true for all relevant metadata queries. Ex. If colDef is "A", this method will return "A". If colDef is "A.B", this method will return "B". If colDef is "&lt;bunch of SQL&gt; AS C", this method will return "C".
+ * @param colDef Column definition from which we'retrying to extract the name.
+ * @return Name of the column that is referenced inthe received column definition.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>colDef</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [pos=colDef.lastIndexOf("AS ")]</InnerVar>
+                <InnerVar>int [pos2=colDef.indexOf(".",pos)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCastInfoForCol</MethodName>
+            <MethodComment>/** 
+ * getCastInfoForCol Returns the target type for a result set column that needs to be cast into an ODBC type.  This is usually for casting integers to "SMALLINT".
+ * @param queryName Name of query being processed.
+ * @param colName Name of the specific column for whichwe are trying to find the target type.
+ * @return The target type if one exists, or else nullif the received column in the received query has no known target type.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markNewColPosition</MethodName>
+            <MethodComment>/** 
+ * markNewColPosition In effect, "marks" the position at which additional columns are to be added for ODBC compliance.  This is accomplished by adding a dummy column name to the list of SELECT columns.  Later, in the method that actually adds the columns, we'll do a find- replace on this dummy value.
+ * @param queryName Name of the query.
+ * @param selectColDefs Array list of the SELECTcolumns that exist in the ODBC version of the query thus far. On return, a dummy column name has been added to the received list of columns at the position at which new ODBC columns should be added. If a query doesn't require additional columns to be ODBC compliant, this method leaves the received column list unchanged.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectColDefs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addNewColumnsForODBC</MethodName>
+            <MethodComment>/** 
+ * addNewColumnsForODBC Adds new columns to the ODBC version of a metadata query (the ODBC version is at this point being built up in newQueryText).  Before this method was called, a dummy placeholder should have been placed in the newQueryText buffer (by a call to "markNewColPosition").  This method simply replaces that dummy placeholder with the SQL text for the new columns.
+ * @param queryName Name of query being processed.
+ * @param newQueryText The buffer in which we want toadd the new column. On return, the dummy placeholder in the received buffer has been replaced with any ODBC columns that need to be added to the query in question for ODBC compliance.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newQueryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;changeColValueToODBC;[queryName, NEW_COL_PLACEHOLDER, newQueryText]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fragSubstitution</MethodName>
+            <MethodComment>/** 
+ * fragSubstitution Replaces a single occurrence of the received fragment key with the text corresponding to that key.
+ * @param fragKey The fragment key for which we aregoing to do the substitution.
+ * @param queryText The buffer in which we are going to dothe substitution. On return, fragKey has been substituted (IN PLACE) with the fragment corresponding to it in the received buffer.  If the fragment key could not be found, the buffer remains unchanged.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fragKey</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [pos=queryText.toString().indexOf(fragKey)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeWhereClause</MethodName>
+            <MethodComment>/** 
+ * changeWhereClause Substitutes patterns in the WHERE clause
+ * @param queryName The name of the JDBC query; found inmetadata.properties
+ * @param queryText The buffer in which we are going to dothe substitution.
+ * @return the substitution is performed IN PLACE. If no changesare needed on this query, the queryText buffer remains unchanged.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>substitutePatternWhere</MethodName>
+            <MethodComment>/** 
+ * Replaces a single occurrence of the received old pattern with the text in the new pattern
+ * @param oldPattern the text we want to remove
+ * @param newPattern the text we want to replace the oldPatternwith
+ * @param queryText The buffer in which we are going to do thesubstitution. On return, the old pattern is substituted with the new pattern (IN PLACE). If the old pattern could not be found, the queryText buffer remains unchanged.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldPattern</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newPattern</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [queryTextString=queryText.toString()]</InnerVar>
+                <InnerVar>int [queryLength=queryTextString.length()]</InnerVar>
+                <InnerVar>int [wherePos=queryTextString.indexOf("WHERE")]</InnerVar>
+                <InnerVar>int [posSubString=queryTextString.substring(wherePos,queryLength).indexOf(oldPattern)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trimIgnorable</MethodName>
+            <MethodComment>/** 
+ * trimIgnorable Removes all 'ignorable' chars that immediately precede or follow (depending on the direction) the character at the received index.  "Ignorable" here means whitespace OR a single backslash ("\"), which is used in the metadata.properties file to indicate line continuation.
+ * @param direction +1 if we want to trim following, -1if we want to trim preceding.
+ * @param chars The character array being processed.
+ * @param index The point before/after which to starttrimming.
+ * @return The index into the received char array of the"last" ignorable character w.r.t the received index and direction.  In other words, if we're trimming the chars FOLLOWING, the returned index will be of the last (reading left-to-right) ignorable char; if we're trimming the chars PRECEDING, the returned index will be of the first (reading left-to-right) ignorable character.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>direction</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>chars</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trimIgnorable</MethodName>
+            <MethodComment>/** 
+ * trimIgnorable Same as trimIgnorable above, except with String argument instead of char[].
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>direction</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isBoolean</MethodName>
+            <MethodComment>/** 
+ * Return true if the column is a BOOLEAN column which should be coerced to an INTEGER.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>colName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [count=BOOLEAN_COLUMNS.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stmtNeedsChange</MethodName>
+            <MethodComment>/** 
+ * stmtNeedsChange Returns whether or not a specific metadata statement requires the received type of change.  This is determined based on the info stored in the "changeMaps" mapping.
+ * @param queryName Name of the query in question.
+ * @param changeType The type of change in question.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>changeType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Byte [changeByte=changeMap.get(queryName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFragment</MethodName>
+            <MethodComment>/** 
+ * getFragment Looks up an SQL fragment and returns the value as a String.
+ * @param String fragId id of the fragment to look up.
+ * @return The string fragment corresponding to the receivedfragment id.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fragId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

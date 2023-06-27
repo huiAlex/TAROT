@@ -1,0 +1,838 @@
+<Class>
+    <Id>841</Id>
+    <Package>org.apache.derby.impl.sql.compile</Package>
+    <ClassName>SetOperatorNode</ClassName>
+    <SuperClass>TableOperatorNode</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SetOperatorNode  /** 
+ * A SetOperatorNode represents a UNION, INTERSECT, or EXCEPT in a DML statement. Binding and optimization preprocessing is the same for all of these operations, so they share bind methods in this abstract class. The class contains a boolean telling whether the operation should eliminate duplicate rows.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>all</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>qec</FieldName>
+            <FieldType>QueryExpressionClauses</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftOptPredicates</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rightOptPredicates</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pushedPredicates</FieldName>
+            <FieldType>PredicateList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftScopedPreds</FieldName>
+            <FieldType>HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leftScopedPreds</FieldName>
+            <FieldType>Predicate</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rightScopedPreds</FieldName>
+            <FieldType>HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rightScopedPreds</FieldName>
+            <FieldType>Predicate</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SetOperatorNode</MethodName>
+            <MethodComment>/** 
+ * Constructor for a SetOperatorNode.
+ * @param leftResult		The ResultSetNode on the left side of this union
+ * @param rightResult		The ResultSetNode on the right side of this union
+ * @param all				Whether or not this is an ALL.
+ * @param tableProperties	Properties list associated with the table
+ * @param cm                The context manager
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightResult</ParamName>
+                    <ParamType>ResultSetNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>all</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableProperties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[leftResultSet.getResultColumns().copyListAndObjects()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>modifyAccessPath</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#modifyAccessPath
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>Optimizable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerTables</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predList</ParamName>
+                    <ParamType>PredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CostEstimate [ce=getFinalCostEstimate()]</InnerVar>
+                <InnerVar>ResultSetNode [topNode=(ResultSetNode)modifyAccessPath(outerTables)]</InnerVar>
+                <InnerVar>CollectNodesVisitor&lt;UnionNode&gt; [cnv=new CollectNodesVisitor&lt;UnionNode&gt;(UnionNode.class)]</InnerVar>
+                <InnerVar>boolean [genPRN=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;accept;[cnv]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOptPredicate</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.sql.compile.Optimizable#pushOptPredicate Take a predicate and push it down to both the left AND right result sets.  Return "true" if we successfully pushed it to both sides, and "false" otherwise.  The assumption is that if we return "true", the caller will take the predicate and remove it from its own list of predicates to evaluate; if we return false, then the predicate will be evaluated at the level of the caller.  So returning "false" means that the left and right result sets for this node will be fully returned, and then the predicate will be evaluated against the &lt;set-operator&gt; of those result sets (as of DERBY-805, the only set operator calling this method is UnionNode).  If we can push the predicate down to both children, though, we can evaluate it closer to store, which means that each child result set returns only the correctly qualified rows, and thus the calling set operator will have a smaller result set on which to operate, which can boost performance. That said, if we can't push the predicate to _both_ sides, we don't push it at all.  The reason is that if we push to one side but not to the other, we would have to ask the question of whether we should return "true" (meaning that the predicate would be removed from the caller's list and thus would _not_ be evaluated at the &lt;set-operator&gt; level) or "false" (meaning that the caller would keep the predicate and evaluate it at the &lt;set-operator&gt; level).  Depending on the query in question, both answers could end up returning incorrect results. For example, if we push it to the right but not to the left, then leave it in the caller's list, the optimizer for the caller might decide to use the predicate to do a hash join with some outer result set (if the predicate is an equijoin predicate).  That would result in materialization of the calling node and of its children--but since we pushed a predicate that depends on the outer table down into the right child, materialization of the right child will only return the rows that join with the _first_ row of the outer result set, which  is wrong. If, on the other hand, we push the predicate to one side and then tell the caller to remove it from its list, the side to which we did _not_ push the predicate could return rows that aren't qualified.  Then, since the caller removed the predicate from its list, it (the caller) will not evaluate the predicate on its own result set--and thus we can end up returning rows that we weren't supposed to return. So all of that said, only push (and return "true") if we think we can push the predicate to both sides.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicate</ParamName>
+                    <ParamType>OptimizablePredicate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Predicate [pred=(Predicate)optimizablePredicate]</InnerVar>
+                <InnerVar>JBitSet [tableNums=new JBitSet(getReferencedTableMap().size())]</InnerVar>
+                <InnerVar>BaseTableNumbersVisitor [btnVis=new BaseTableNumbersVisitor(tableNums)]</InnerVar>
+                <InnerVar>boolean [canPush=(tableNums.getFirstSetBit() != -1)]</InnerVar>
+                <InnerVar>int[] [whichRC=new int[]{-1}]</InnerVar>
+                <InnerVar>Predicate [scopedPred=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;accept;[btnVis]</InnerMethodInvoke>
+                <InnerMethodInvoke>tableNums;clearAll;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;accept;[btnVis]</InnerMethodInvoke>
+                <InnerMethodInvoke>tableNums;clearAll;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;accept;[btnVis]</InnerMethodInvoke>
+                <InnerMethodInvoke>getLeftOptPredicateList();addOptPredicate;[scopedPred]</InnerMethodInvoke>
+                <InnerMethodInvoke>getRightOptPredicateList();addOptPredicate;[scopedPred]</InnerMethodInvoke>
+                <InnerMethodInvoke>pushedPredicates;addOptPredicate;[pred]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pullOptPredicates</MethodName>
+            <MethodComment>/** 
+ * @see Optimizable#pullOptPredicates
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optimizablePredicates</ParamName>
+                    <ParamType>OptimizablePredicateList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemapCRsVisitor [rcrv=new RemapCRsVisitor(false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pushedPredicates;removeAllElements;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasUnPushedPredicates</MethodName>
+            <MethodComment>/** 
+ * It's possible that we tried to push predicates to this node's children but failed to do so. This can happen if this node's children both satisfy the criteria for pushing a predicate (namely, they reference base tables) but the children's children do not (see modifyAccessPaths() above for an example of how that can happen).  So this method determines whether or not this particular SetOperatorNode has predicates which were *not* successfully pushed to both of its children (note: this currently only applies to UnionNodes).
+ * @return True if this SetOperatorNode has unpushed predicates;false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Convert this object to a String.  See comments in QueryTreeNode.java for how this should be done for tree printing.
+ * @return	This object as a String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSubNodes</MethodName>
+            <MethodComment>/** 
+ * Prints the sub-nodes of this object.  See QueryTreeNode.java for how tree printing is supposed to work.
+ * @param depth		The depth of this node in the tree
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>depth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns of this ResultSetNode when there is no base table to bind them to.  This is useful for SELECT statements, where the result columns get their types from the expressions that live under them.
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;buildRCL;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns for this ResultSetNode to a base table. This is useful for INSERT and UPDATE statements, where the result columns get their types from the table being updated or inserted into. If a result column list is specified, then the verification that the  result column list does not contain any duplicates will be done when binding them by name.
+ * @param targetTableDescriptor	The TableDescriptor for the table beingupdated or inserted into
+ * @param targetColumnList	For INSERT statements, the userdoes not have to supply column names (for example, "insert into t values (1,2,3)".  When this parameter is null, it means that the user did not supply column names, and so the binding should be done based on order.  When it is not null, it means do the binding by name, not position.
+ * @param statement			Calling DMLStatementNode (Insert or Update)
+ * @param fromListParam		FromList to use/append to.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetTableDescriptor</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetVTI</ParamName>
+                    <ParamType>FromVTI</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetColumnList</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>DMLStatementNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;buildRCL;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildRCL</MethodName>
+            <MethodComment>/** 
+ * Build the RCL for this node.  We propagate the RCL up from the left child to form this node's RCL.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setResultColumns;[leftResultSet.getResultColumns().copyListAndObjects()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();removeGeneratedGroupingColumns;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();removeOrderByColumns;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>getResultColumns();setUnionResultExpression;[rightResultSet.getResultColumns(), tableNumber, level, getOperatorName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindUntypedNullsToResultColumns</MethodName>
+            <MethodComment>/** 
+ * Bind the result columns of a table constructor to the types in the given ResultColumnList.  Use when inserting from a table constructor, and there are nulls in the values clauses.
+ * @param rcl	The ResultColumnList with the types to bind to
+ * @exception StandardException		Thrown on error.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceOrForbidDefaults</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ttd</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tcl</ParamName>
+                    <ParamType>ResultColumnList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>allowDefaults</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;replaceOrForbidDefaults;[ttd, tcl, allowDefaults]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;replaceOrForbidDefaults;[ttd, tcl, allowDefaults]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParamColumnTypes</MethodName>
+            <MethodComment>/** 
+ * Get the parameter types from the given RowResultSetNode into the given array of types.  If an array position is already filled in, don't clobber it.
+ * @param types	The array of types to fill in
+ * @param rrsn	The RowResultSetNode from which to take the param types
+ * @return	The number of new types found in the RowResultSetNode
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>types</ParamName>
+                    <ParamType>DataTypeDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rrsn</ParamName>
+                    <ParamType>RowResultSetNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [numTypes=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParamColumnTypes</MethodName>
+            <MethodComment>/** 
+ * Set the type of each ? parameter in the given RowResultSetNode according to its ordinal position in the given array of types.
+ * @param types	An array of types containing the proper type for each? parameter, by ordinal position.
+ * @param rrsn	A RowResultSetNode that could contain ? parameters whosetypes need to be set.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>types</ParamName>
+                    <ParamType>DataTypeDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rrsn</ParamName>
+                    <ParamType>RowResultSetNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultColumnList [rrcl=rrsn.getResultColumns()]</InnerVar>
+                <InnerVar>int [rrclSize=rrcl.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindExpressions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bindTargetExpressions</MethodName>
+            <MethodComment>/** 
+ * Bind the expressions in the target list.  This means binding the sub-expressions, as well as figuring out what the return type is for each expression.  This is useful for EXISTS subqueries, where we need to validate the target list before blowing it away and replacing it with a SELECT true.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromListParam</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;bindTargetExpressions;[fromListParam]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;bindTargetExpressions;[fromListParam]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushQueryExpressionSuffix</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>qec;push;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOrderByList</MethodName>
+            <MethodComment>/** 
+ * Push the order by list down from the cursor node into its child result set so that the optimizer has all of the information that it needs to  consider sort avoidance.
+ * @param orderByList	The order by list
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>orderByList</ParamName>
+                    <ParamType>OrderByList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>qec;setOrderByList;[orderByList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushOffsetFetchFirst</MethodName>
+            <MethodComment>/** 
+ * Push down the offset and fetch first parameters, if any, to this node.
+ * @param offset    the OFFSET, if any
+ * @param fetchFirst the OFFSET FIRST, if any
+ * @param hasJDBClimitClause true if the clauses were added by (and have the semantics of) a JDBC limit clause
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fetchFirst</ParamName>
+                    <ParamType>ValueNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hasJDBClimitClause</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>qec;setOffset;[offset]</InnerMethodInvoke>
+                <InnerMethodInvoke>qec;setFetchFirst;[fetchFirst]</InnerMethodInvoke>
+                <InnerMethodInvoke>qec;setHasJDBCLimitClause;[hasJDBClimitClause]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>preprocess</MethodName>
+            <MethodComment>/** 
+ * Put a ProjectRestrictNode on top of each FromTable in the FromList. ColumnReferences must continue to point to the same ResultColumn, so that ResultColumn must percolate up to the new PRN.  However, that ResultColumn will point to a new expression, a VirtualColumnNode,  which points to the FromTable and the ResultColumn that is the source for the ColumnReference.   (The new PRN will have the original of the ResultColumnList and the ResultColumns from that list.  The FromTable will get shallow copies of the ResultColumnList and its ResultColumns.  ResultColumn.expression will remain at the FromTable, with the PRN getting a new  VirtualColumnNode for each ResultColumn.expression.) We then project out the non-referenced columns.  If there are no referenced columns, then the PRN's ResultColumnList will consist of a single ResultColumn whose expression is 1.
+ * @param numTables			Number of tables in the DML Statement
+ * @param gbl				The group by list, if any
+ * @param fromList			The from list, if any
+ * @return The preprocessed ResultSetNode that can be optimized
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gbl</ParamName>
+                    <ParamType>GroupByList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSetNode [newTop=this]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setReferencedTableMap;[(JBitSet)leftResultSet.getReferencedTableMap().clone()]</InnerMethodInvoke>
+                <InnerMethodInvoke>getReferencedTableMap();or;[rightResultSet.getReferencedTableMap()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensurePredicateList</MethodName>
+            <MethodComment>/** 
+ * Ensure that the top of the RSN tree has a PredicateList.
+ * @param numTables			The number of tables in the query.
+ * @return ResultSetNode	A RSN tree with a node which has a PredicateList on top.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numTables</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifySelectStarSubquery</MethodName>
+            <MethodComment>/** 
+ * Verify that a SELECT * is valid for this type of subquery.
+ * @param outerFromList	The FromList from the outer query block(s)
+ * @param subqueryType	The subquery type
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerFromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subqueryType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leftResultSet;verifySelectStarSubquery;[outerFromList, subqueryType]</InnerMethodInvoke>
+                <InnerMethodInvoke>rightResultSet;verifySelectStarSubquery;[outerFromList, subqueryType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFromTableByName</MethodName>
+            <MethodComment>/** 
+ * Determine whether or not the specified name is an exposed name in the current query block.
+ * @param name	The specified name to search for as an exposed name.
+ * @param schemaName	Schema name, if non-null.
+ * @param exactMatch	Whether or not we need an exact match on specified schema and tablenames or match on table id.
+ * @return The FromTable, if any, with the exposed name.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>FromTable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exactMatch</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setResultToBooleanTrueNode</MethodName>
+            <MethodComment>/** 
+ * Set the result column for the subquery to a boolean true, Useful for transformations such as changing: where exists (select ... from ...)  to: where (select true from ...) NOTE: No transformation is performed if the ResultColumn.expression is already the correct boolean constant. This method is used during binding of EXISTS predicates to map a subquery's result column list into a single TRUE node.  For SELECT and VALUES subqueries this transformation is pretty straightforward.  But for set operators (ex. INTERSECT) we have to do some extra work.  To see why, assume we have the following query: select * from ( values 'BAD' ) as T where exists ((values 1) intersect (values 2)) If we treated the INTERSECT in this query the same way that we treat SELECT/VALUES subqueries then the above query would get transformed into: select * from ( values 'BAD' ) as T where ((values TRUE) intersect (values TRUE)) Since both children of the INTERSECT would then have the same value, the result of set operation would be a single value (TRUE), which means the WHERE clause would evaluate to TRUE and thus the query would return one row with value 'BAD'.  That would be wrong. To avoid this problem, we internally wrap this SetOperatorNode inside a "SELECT *" subquery and then we change the new SelectNode's result column list (as opposed to *this* nodes' result column list) to a singe boolean true node: select * from ( values 'BAD' ) as T where SELECT TRUE FROM ((values 1) intersect (values 2)) In this case the left and right children of the INTERSECT retain their values, which ensures that the result of the intersect operation will be correct.  Since (1 intersect 2) is an empty result set, the internally generated SELECT node will return zero rows, which in turn means the WHERE predicate will return NULL (an empty result set from a SubqueryNode is treated as NULL at execution time; see impl/sql/execute/AnyResultSet). Since NULL is not the same as TRUE the query will correctly return zero rows.  DERBY-2370.
+ * @param onlyConvertAlls	Boolean, whether or not to just convert *'s
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ResultSetNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>onlyConvertAlls</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FromList [fromList=new FromList(getOptimizerFactory().doJoinOrderOptimization(),getContextManager())]</InnerVar>
+                <InnerVar>ResultColumnList [rcl=new ResultColumnList(getContextManager())]</InnerVar>
+                <InnerVar>ResultColumn [allResultColumn=new AllResultColumn(null,getContextManager())]</InnerVar>
+                <InnerVar>ResultSetNode [result=new SelectNode(rcl,fromList,null,null,null,null,null,getContextManager())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fromList;addFromTable;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>fromList;markAsTransparent;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcl;addResultColumn;[allResultColumn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flattenableInFromSubquery</MethodName>
+            <MethodComment>/** 
+ * Evaluate whether or not the subquery in a FromSubquery is flattenable.   Currently, a FSqry is flattenable if all of the following are true: o  Subquery is a SelectNode. (ie, not a RowResultSetNode or a UnionNode) o  It contains no top level subqueries.  (RESOLVE - we can relax this) o  It does not contain a group by or having clause o  It does not contain aggregates.
+ * @param fromList	The outer from list
+ * @return boolean	Whether or not the FromSubquery is flattenable.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fromList</ParamName>
+                    <ParamType>FromList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>performMaterialization</MethodName>
+            <MethodComment>/** 
+ * Return whether or not to materialize this ResultSet tree.
+ * @return Whether or not to materialize this ResultSet tree.would return valid results.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outerTables</ParamName>
+                    <ParamType>JBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOperatorName</MethodName>
+            <MethodComment>/** 
+ * @return the operator name: "UNION", "INTERSECT", or "EXCEPT"
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLeftOptPredicateList</MethodName>
+            <MethodComment>/** 
+ * Retrieve the list of optimizable predicates that are targeted for the left child.  Create a new (empty) list if the list is null.
+ */
+</MethodComment>
+            <ReturnType>PredicateList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRightOptPredicateList</MethodName>
+            <MethodComment>/** 
+ * Retrieve the list of optimizable predicates that are targeted for the right child.  Create a new (empty) list if the list is null.
+ */
+</MethodComment>
+            <ReturnType>PredicateList</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

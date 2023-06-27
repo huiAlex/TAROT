@@ -1,0 +1,213 @@
+/**
+     * The minimum number of items to check before we decide to give up
+     * looking for evictable entries when rotating the clock.
+     */
+
+/**
+     * How large part of the clock to look at before giving up in
+     * {@code rotateClock()}.
+     */
+
+/**
+     * How large part of the clock to look at before giving up finding
+     * an evictable entry in {@code shrinkMe()}.
+     */
+
+/** The cache manager for which this replacement policy is used. */
+
+/**
+     * The maximum size of the cache. When this size is exceeded, entries must
+     * be evicted before new ones are inserted.
+     */
+
+/**
+     * The circular clock buffer which holds all the entries in the
+     * cache. Accesses to clock and hand must be
+     * synchronized on clock.
+     */
+
+/** The current position of the clock hand. */
+
+/**
+     * The number of free entries. This is the number of objects that have been
+     * removed from the cache and whose entries are free to be reused without
+     * eviction.
+     */
+
+/**
+     * Tells whether there currently is a thread in the {@code doShrink()}
+     * method. If this variable is {@code true} a call to {@code doShrink()}
+     * will be a no-op.
+     */
+
+/**
+     * Create a new ClockPolicy instance.
+     *
+     * @param cacheManager the cache manager that requests this policy
+     * @param initialSize the initial capacity of the cache
+     * @param maxSize the maximum size of the cache
+     */
+
+/**
+     * Insert an entry into the cache. If the maximum size is exceeded, evict a
+     * not recently used object from the cache. If there are no
+     * entries available for reuse, increase the size of the cache.
+     *
+     * @param entry the entry to insert (must be locked)
+     * @exception StandardException if an error occurs when inserting the entry
+     */
+
+/**
+     * Holder class which represents an entry in the cache. It maintains a
+     * recentlyUsed required by the clock algorithm. The class
+     * also implements the Callback interface, so that
+     * ConcurrentCache can notify the clock policy about events
+     * relevant to the clock algorithm.
+     */
+
+/**
+     * Get the holder under the clock hand, and move the hand to the next
+     * holder.
+     *
+     * @return the holder under the clock hand, or {@code null} if the clock is
+     * empty
+     */
+
+/**
+     * Rotate the clock in order to find a free space for a new entry. If
+     * allowEvictions is true, an not recently used
+     * object might be evicted to make room for the new entry. Otherwise, only
+     * unused entries are searched for. When evictions are allowed, entries are
+     * marked as not recently used when the clock hand sweeps over them. The
+     * search stops when a reusable entry is found, or when more than a certain
+     * percentage of the entries have been visited. If there are
+     * free (unused) entries, the search will continue until a reusable entry
+     * is found, regardless of how many entries that need to be checked.
+     *
+     * @param entry the entry to insert
+     * @param allowEvictions tells whether evictions are allowed (normally
+     * true if the cache is full and false otherwise)
+     * @return a holder that we can reuse, or null if we didn't
+     * find one
+     */
+
+/**
+     * Check if an entry can be evicted. Only entries that still are present in
+     * the cache, are not kept and not recently used, can be evicted. This
+     * method does not check whether the {@code Cacheable} contained in the
+     * entry is dirty, so it may be necessary to clean it before an eviction
+     * can take place even if the method returns {@code true}. The caller must
+     * hold the lock on the entry before calling this method.
+     *
+     * @param e the entry to check
+     * @param h the holder which holds the entry
+     * @param clearRecentlyUsedFlag tells whether or not the recently used flag
+     * should be cleared on the entry ({@code true} only when called as part of
+     * a normal clock rotation)
+     * @return whether or not this entry can be evicted (provided that its
+     * {@code Cacheable} is cleaned first)
+     */
+
+/**
+     * Remove the holder at the given clock position.
+     *
+     * @param pos position of the holder
+     * @param h the holder to remove
+     */
+
+/**
+     * Try to shrink the clock if it's larger than its maximum size.
+     */
+
+/**
+     * Perform the shrinking of the clock. This method should only be called
+     * by a single thread at a time.
+     */
+
+/**
+         * Flag indicating whether or not this entry has been accessed
+         * recently. Should only be accessed/modified when the current thread
+         * has locked the CacheEntry object stored in the
+         * entry field.
+         */
+
+/**
+         * Reference to the CacheEntry object held by this
+         * object. The reference should only be accessed when the thread owns
+         * the monitor on this holder. A thread is only allowed to change the
+         * reference if it also has locked the entry that the reference points
+         * to (if the reference is non-null). This ensures that no other thread
+         * can disassociate a holder from its entry while the entry is locked,
+         * even though the monitor on the holder has been released.
+         */
+
+/**
+         * Cacheable object from a removed object. If this object is non-null,
+         * entry must be null (which means that the
+         * holder is not associated with any object in the cache).
+         */
+
+/**
+         * Flag which tells whether this holder has been evicted from the
+         * clock. If it has been evicted, it can't be reused when a new entry
+         * is inserted. Only the owner of this holder's monitor is allowed to
+         * access this variable.
+         */
+
+/**
+         * Mark this entry as recently used. Caller must have locked
+         * entry.
+         */
+
+/**
+         * Mark this object as free and reusable. Caller must have locked
+         * entry.
+         */
+
+/**
+         * Associate this holder with the specified entry if the holder is free
+         * (that is, not associated with any other entry).
+         *
+         * @param e the entry to associate the holder with (it must be locked
+         * by the current thread)
+         * @return true if the holder has been associated with the
+         * specified entry, false if someone else has taken it or
+         * the holder has been evicted from the clock
+         */
+
+/**
+         * Returns the entry that is currently associated with this holder.
+         *
+         * @return the associated entry
+         */
+
+/**
+         * Switch which entry the holder is associated with. Will be called
+         * when we evict an entry to make room for a new one. When this method
+         * is called, the current thread must have locked both the entry that
+         * is evicted and the entry that is inserted.
+         *
+         * @param e the entry to associate this holder with
+         */
+
+/**
+         * Evict this holder from the clock if it is not associated with an
+         * entry.
+         *
+         * @return true if the holder was successfully evicted,
+         * false otherwise
+         */
+
+/**
+         * Mark this holder as evicted from the clock, effectively preventing
+         * reuse of the holder. Calling thread must have locked the holder's
+         * entry.
+         */
+
+/**
+         * Check whether this holder has been evicted from the clock.
+         *
+         * @return true if it has been evicted, false
+         * otherwise
+         */
+

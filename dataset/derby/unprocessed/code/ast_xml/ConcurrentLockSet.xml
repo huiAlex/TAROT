@@ -1,0 +1,625 @@
+<Class>
+    <Id>930</Id>
+    <Package>org.apache.derby.impl.services.locks</Package>
+    <ClassName>ConcurrentLockSet</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>LockTable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ConcurrentLockSet  /** 
+ * A ConcurrentLockSet is a complete lock table which maps &lt;code&gt;Lockable&lt;/code&gt;s to &lt;code&gt;LockControl&lt;/code&gt; objects. &lt;P&gt; A LockControl contains information about the locks held on a Lockable. &lt;BR&gt; MT - Mutable : All public methods of this class, except addWaiters, are thread safe. addWaiters can only be called from the thread which performs deadlock detection. Only one thread can perform deadlock detection at a time. &lt;BR&gt; The class creates ActiveLock and LockControl objects. LockControl objects are never passed out of this class, All the methods of  LockControl are called while holding a ReentrantLock associated with the Lockable controlled by the LockControl, thus providing the single threading that LockControl required. Methods of Lockables are only called by this class or LockControl, and  always while holding the corresponding ReentrantLock, thus providing the single threading that Lockable requires.
+ * @see LockControl
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>factory</FieldName>
+            <FieldType>AbstractPool</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>ConcurrentHashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>Lockable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>seenByDeadlockDetection</FieldName>
+            <FieldType>ArrayList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>seenByDeadlockDetection</FieldName>
+            <FieldType>Entry</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deadlockTimeout</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>waitTimeout</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deadlockTrace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>blockCount</FieldName>
+            <FieldType>AtomicInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>control</FieldName>
+            <FieldType>Control</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mutex</FieldName>
+            <FieldType>ReentrantLock</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deadlockDetection</FieldName>
+            <FieldType>Condition</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ConcurrentLockSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>AbstractPool</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lock</MethodName>
+            <MethodComment>/** 
+ * Lock the entry, ensuring exclusive access to the contained &lt;code&gt;Control&lt;/code&gt; object. The call will block until the entry can be locked. If the entry is unlocked and &lt;code&gt;deadlockDetection&lt;/code&gt; is not &lt;code&gt;null&lt;/code&gt;, the entry belongs to a thread which waits for deadlock detection to be initiated, and the call will block until that thread has finished its deadlock detection.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlock</MethodName>
+            <MethodComment>/** 
+ * Unlock the entry, allowing other threads to lock and access the contained &lt;code&gt;Control&lt;/code&gt; object.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;unlock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockForDeadlockDetection</MethodName>
+            <MethodComment>/** 
+ * Lock the entry while performing deadlock detection. This method will lock the entry even when &lt;code&gt;deadlockDetection&lt;/code&gt; is not &lt;code&gt;null&lt;/code&gt;. If &lt;code&gt;deadlockDetection&lt;/code&gt; is not &lt;code&gt;null&lt;/code&gt;, we know the entry and its &lt;code&gt;Control&lt;/code&gt; will not be accessed by others until we have finished the deadlock detection, so it's OK for us to access it.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>enterDeadlockDetection</MethodName>
+            <MethodComment>/** 
+ * Notify that the lock request that is currently accessing the entry will be entering deadlock detection. Unlock the entry to allow the current thread or other threads to lock the entry for deadlock detection, but set the condition variable to prevent regular locking of the entry.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;unlock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exitDeadlockDetection</MethodName>
+            <MethodComment>/** 
+ * Notify that the deadlock detection triggered by the current thread has finished. Re-lock the entry and notify any waiters that the deadlock detection has completed.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutex;lock;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>deadlockDetection;signalAll;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEntry</MethodName>
+            <MethodComment>/** 
+ * Get an entry from the lock table. If no entry exists for the &lt;code&gt;Lockable&lt;/code&gt;, insert an entry. The returned entry will be locked and is guaranteed to still be present in the table.
+ * @param ref the &lt;code&gt;Lockable&lt;/code&gt; whose entry to return
+ * @return the entry for the &lt;code&gt;Lockable&lt;/code&gt;, locked for exclusiveaccess
+ */
+</MethodComment>
+            <ReturnType>Entry</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ref</ParamName>
+                    <ParamType>Lockable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Entry [e=locks.get(ref)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkDeadlock</MethodName>
+            <MethodComment>/** 
+ * Check whether there is a deadlock. Make sure that only one thread enters deadlock detection at a time.
+ * @param entry the entry in the lock table for the lock request thattriggered deadlock detection
+ * @param waitingLock the waiting lock
+ * @param wakeupReason the reason for waking up the waiter
+ * @return an object describing the deadlock
+ */
+</MethodComment>
+            <ReturnType>Object[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>Entry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitingLock</ParamName>
+                    <ParamType>ActiveLock</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wakeupReason</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LockControl [control=(LockControl)entry.control]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;enterDeadlockDetection;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockObject</MethodName>
+            <MethodComment>/** 
+ * Lock an object within a specific compatibility space.
+ * @param compatibilitySpace Compatibility space.
+ * @param ref Lockable reference.
+ * @param qualifier Qualifier.
+ * @param timeout Timeout in milli-seconds
+ * @return	Object that represents the lock.
+ * @exception StandardException Standard Derby policy.
+ */
+</MethodComment>
+            <ReturnType>Lock</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>compatibilitySpace</ParamName>
+                    <ParamType>CompatibilitySpace</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ref</ParamName>
+                    <ParamType>Lockable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>qualifier</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LockControl [control]</InnerVar>
+                <InnerVar>Lock [lockItem]</InnerVar>
+                <InnerVar>String [lockDebug=null]</InnerVar>
+                <InnerVar>boolean [blockedByParent=false]</InnerVar>
+                <InnerVar>Entry [entry=getEntry(ref)]</InnerVar>
+                <InnerVar>boolean [deadlockWait=false]</InnerVar>
+                <InnerVar>int [actualTimeout]</InnerVar>
+                <InnerVar>ActiveLock [waitingLock=(ActiveLock)lockItem]</InnerVar>
+                <InnerVar>int [earlyWakeupCount=0]</InnerVar>
+                <InnerVar>long [startWaitTime=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlock</MethodName>
+            <MethodComment>/** 
+ * Unlock an object, previously locked by lockObject().  If unlockCOunt is not zero then the lock will be unlocked that many times, otherwise the unlock count is taken from item.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Latch</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unlockCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Entry [entry=locks.get(item.getLockable())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlock</MethodName>
+            <MethodComment>/** 
+ * Unlock an object, previously locked by lockObject().
+ * @param entry the entry in which the lock is contained (the currentthread must have locked the entry)
+ * @param item the item to unlock
+ * @param unlockCount the number of times to unlock the item (if zero, takethe unlock count from item)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>Entry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Latch</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unlockCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [tryGrant=false]</InnerVar>
+                <InnerVar>ActiveLock [nextGrant=null]</InnerVar>
+                <InnerVar>Control [control=entry.control]</InnerVar>
+                <InnerVar>boolean [mayBeEmpty=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockReference</MethodName>
+            <MethodComment>/** 
+ * Unlock an object once if it is present in the specified group. Also remove the object from the group.
+ * @param space the compatibility space
+ * @param ref a reference to the locked object
+ * @param qualifier qualifier of the lock
+ * @param group a map representing the locks in a group
+ * @return the corresponding lock in the group map, or &lt;code&gt;null&lt;/code&gt; ifthe object was not unlocked
+ */
+</MethodComment>
+            <ReturnType>Lock</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>space</ParamName>
+                    <ParamType>CompatibilitySpace</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ref</ParamName>
+                    <ParamType>Lockable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>qualifier</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>group</ParamName>
+                    <ParamType>Map</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Entry [entry=locks.get(ref)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>zeroDurationLockObject</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>space</ParamName>
+                    <ParamType>CompatibilitySpace</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ref</ParamName>
+                    <ParamType>Lockable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>qualifier</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Entry [entry=locks.get(ref)]</InnerVar>
+                <InnerVar>Lock [lock=lockObject(space,ref,qualifier,timeout)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;unlock;[lock, 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDeadlockTimeout</MethodName>
+            <MethodComment>/** 
+ * Set the deadlock timeout.
+ * @param timeout deadlock timeout in milliseconds
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setWaitTimeout</MethodName>
+            <MethodComment>/** 
+ * Set the wait timeout.
+ * @param timeout wait timeout in milliseconds
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWaitTimeout</MethodName>
+            <MethodComment>/** 
+ * Get the wait timeout in milliseconds.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDeadlockTrace</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toDebugString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addWaiters</MethodName>
+            <MethodComment>/** 
+ * Add all waiters in this lock table to a &lt;code&gt;Map&lt;/code&gt; object. This method can only be called by the thread that is currently performing deadlock detection. All entries that are visited in the lock table will be locked when this method returns. The entries that have been seen and locked will be unlocked after the deadlock detection has finished.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>waiters</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shallowClone</MethodName>
+            <MethodComment>/** 
+ * make a shallow clone of myself and my lock controls
+ */
+</MethodComment>
+            <ReturnType>Lockable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HashMap&lt;Lockable,Control&gt; [clone=new HashMap&lt;Lockable,Control&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>oneMoreWaiter</MethodName>
+            <MethodComment>/** 
+ * Increase blockCount by one.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>blockCount;incrementAndGet;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>oneLessWaiter</MethodName>
+            <MethodComment>/** 
+ * Decrease blockCount by one.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>blockCount;decrementAndGet;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>anyoneBlocked</MethodName>
+            <MethodComment>/** 
+ * Check whether anyone is blocked.
+ * @return &lt;code&gt;true&lt;/code&gt; if someone is blocked, &lt;code&gt;false&lt;/code&gt;otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [blocked=blockCount.get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

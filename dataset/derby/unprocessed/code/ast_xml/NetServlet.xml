@@ -1,0 +1,1113 @@
+<Class>
+    <Id>126</Id>
+    <Package>org.apache.derby.drda</Package>
+    <ClassName>NetServlet</ClassName>
+    <SuperClass>HttpServlet</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>NetServlet  /** 
+ * This servlet can be used to start Derby Network Server from a remote location. &lt;P&gt; These servlet configuration parameters are understood by this servlet. &lt;UL&gt; &lt;LI&gt;&lt;PRE&gt;portNumber&lt;/PRE&gt; - Port number to use. The default is 1527.&lt;/LI&gt; &lt;LI&gt;&lt;PRE&gt;startNetworkServerOnInit&lt;/PRE&gt; - Starts the Derby Network Server at servlet  initialization if 'true'.&lt;/LI&gt; &lt;LI&gt;&lt;PRE&gt;tracingDirectory&lt;/PRE&gt; - Directory for trace files&lt;/LI&gt; &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MAX_CONNECT_TRYS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SERVLET_PROP_MESSAGES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SERVLET_ADDRESS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>knownLang</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>host</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>portNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tracingDirectory</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logStatus</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>traceStatus</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NOT_GIVEN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INVALID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>NetworkServerControl</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>init</MethodName>
+            <MethodComment>/** 
+ * Initialize the servlet. Configuration parameters: &lt;UL&gt; &lt;LI&gt;&lt;PRE&gt;portNumber&lt;/PRE&gt; - Port number&lt;/LI&gt; &lt;LI&gt;&lt;PRE&gt;host&lt;/PRE&gt; - Host name&lt;/LI&gt; &lt;LI&gt;&lt;PRE&gt;traceDirectory&lt;/PRE&gt; - location of trace directory&lt;/LI&gt; &lt;LI&gt;&lt;PRE&gt;startNetworkServerOnInit&lt;/PRE&gt; - start the server on initialization&lt;/LI&gt; &lt;/UL&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>config</ParamName>
+                    <ParamType>ServletConfig</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [port=config.getInitParameter("portNumber")]</InnerVar>
+                <InnerVar>String [hostName=config.getInitParameter("host")]</InnerVar>
+                <InnerVar>String [startup=config.getInitParameter("startNetworkServerOnInit")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ServletException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doGet</MethodName>
+            <MethodComment>/** 
+ * Get the form of NetServlet. Provides buttons and forms to control the Network server.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>response</ParamName>
+                    <ParamType>HttpServletResponse</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [logOnMessage]</InnerVar>
+                <InnerVar>String [logOffMessage]</InnerVar>
+                <InnerVar>String [traceOnMessage]</InnerVar>
+                <InnerVar>String [traceOffMessage]</InnerVar>
+                <InnerVar>String [traceOnOffMessage]</InnerVar>
+                <InnerVar>String [startMessage]</InnerVar>
+                <InnerVar>String [stopMessage]</InnerVar>
+                <InnerVar>String [returnMessage]</InnerVar>
+                <InnerVar>String [traceSessionMessage]</InnerVar>
+                <InnerVar>String [traceDirMessage]</InnerVar>
+                <InnerVar>String [netParamMessage]</InnerVar>
+                <InnerVar>LocalizedResource [langUtil]</InnerVar>
+                <InnerVar>String [locale[]=new String[1]]</InnerVar>
+                <InnerVar>String [formTarget=request.getContextPath() + request.getServletPath()]</InnerVar>
+                <InnerVar>String [formHeader="&lt;form enctype='multipart/form-data; charset=UTF-8'" + " action='" + formTarget + "'&gt;"]</InnerVar>
+                <InnerVar>PrintWriter [out=new PrintWriter(new OutputStreamWriter(response.getOutputStream(),"UTF8"),true)]</InnerVar>
+                <InnerVar>String [form=getForm(request)]</InnerVar>
+                <InnerVar>String [doAction=getDoAction(request)]</InnerVar>
+                <InnerVar>boolean [serverStatus=getServerStatus()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>response;setContentType;["text/html; charset=UTF-8"]</InnerMethodInvoke>
+                <InnerMethodInvoke>response;setHeader;["Cache-Control", "no-cache,no-store"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printBanner;[langUtil, out]</InnerMethodInvoke>
+                <InnerMethodInvoke>server;setClientLocale;[locale[0]]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;[formHeader]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/body&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/html&gt;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ServletException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doPost</MethodName>
+            <MethodComment>/** 
+ * Get the form of NetServlet. Provides a buttons and form to control the Network server
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>response</ParamName>
+                    <ParamType>HttpServletResponse</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doGet;[request, response]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ServletException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForm</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDoAction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogging</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTrace</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParam</MethodName>
+            <MethodComment>/** 
+ * get UTF8 parameter value and decode international characters
+ * @param request   HttpServletRequest
+ * @param paramName  Parameter name
+ * @return decoded String
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>paramName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=request.getParameter(paramName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runServer</MethodName>
+            <MethodComment>/** 
+ * Start the network server and attempt to connect to it before returning
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @exception ServletException throws an exception if error in starting the Network Server during initialization
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Runnable [service=new Runnable(){
+  public void run(){
+    try {
+      NetworkServerControl runserver=new NetworkServerControl(InetAddress.getByName(host),portNumber);
+      runserver.start(null);
+    }
+ catch (    Exception e) {
+      throw new RuntimeException(e.getMessage());
+    }
+  }
+}
+]</InnerVar>
+                <InnerVar>Thread [servThread=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>servThread;start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ServletException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Thread</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printErrorForm</MethodName>
+            <MethodComment>/** 
+ * Display an error form
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param e     Exception to be displayed
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>Exception</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;printAsContentHeader;[localUtil.getTextMessage("SRV_NetworkServerError"), out]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;h4&gt;" + localUtil.getTextMessage("SRV_Message",escapeHTML(e.getMessage())) + "&lt;/h4&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;INPUT type=submit name=form value='" + returnMessage + "'&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/body&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/html&gt;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printErrorForm</MethodName>
+            <MethodComment>/** 
+ * Display an error form
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param msg   String to be displayed
+ * @param out Form PrintWriter
+ * @param returnMessage localized continue message for continue button on error form
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;printAsContentHeader;[localUtil.getTextMessage("SRV_NetworkServerError"), out]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;h4&gt;" + localUtil.getTextMessage("SRV_Message",escapeHTML(msg)) + "&lt;/h4&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;INPUT type=submit name=form value='" + returnMessage + "'&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/body&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/html&gt;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>displayCurrentStatus</MethodName>
+            <MethodComment>/** 
+ * Display the current Network server status
+ * @param localUtil     LocalizedResource to use for localizing messages
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServerStatus</MethodName>
+            <MethodComment>/** 
+ * Get the currrent server status by using test connection
+ * @return true if server is up and reachable; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shutdownServer</MethodName>
+            <MethodComment>/** 
+ * Shutdown the network server
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logging</MethodName>
+            <MethodComment>/** 
+ * Turn logging of connections on
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>traceAll</MethodName>
+            <MethodComment>/** 
+ * Change tracing for all sessions
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param val   if true, turn tracing on, if false turn it off
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>traceSession</MethodName>
+            <MethodComment>/** 
+ * Change tracing for a given session
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param val   if true, turn tracing on, if false turn it off
+ * @param session   session to trace
+ * @param returnMessage localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>session</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>traceDirectory</MethodName>
+            <MethodComment>/** 
+ * Set trace directory
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param traceDirectory    directory for trace files
+ * @param returnMessage     localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>traceDirectory</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNetParam</MethodName>
+            <MethodComment>/** 
+ * Set Network server parameters
+ * @param localUtil LocalizedResource to use to translate messages
+ * @param max               maximum number of threads
+ * @param slice             time slice for each connection
+ * @param returnMessage     localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ * @return true if succeeded; false; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slice</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [retval=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDefaults</MethodName>
+            <MethodComment>/** 
+ * Set defaults for logging and tracing (both off)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIntParameter</MethodName>
+            <MethodComment>/** 
+ * Get an integer parameter
+ * @param request           HttpServetRequest for  forms
+ * @param name              parameter name
+ * @param fieldKey          Key for the name of the field we're reading.
+ * @param localUtil             LocalizedResource to use in localizing messages
+ * @param returnMessage     localized continue message for continue button on error form
+ * @param out Form PrintWriter
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldKey</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnMessage</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [val=request.getParameter(name)]</InnerVar>
+                <InnerVar>int [retval]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printBanner</MethodName>
+            <MethodComment>/** 
+ * Print Derby Network Server banner
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;println;["&lt;!DOCTYPE html&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;html&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;head&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;title&gt;" + localUtil.getTextMessage("SRV_Banner") + "&lt;/title&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;/head&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;body&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;a href=\"#navskip\"&gt;[ " + localUtil.getTextMessage("SRV_SkipToContent") + " ]&lt;/a&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["  -  &lt;a href=\"" + SERVLET_ADDRESS + "\"&gt;[ "+ localUtil.getTextMessage("SRV_BackToMain")+ " ]&lt;/a&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;hr&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;h1&gt;" + localUtil.getTextMessage("SRV_Banner") + "&lt;/h1&gt;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;println;["&lt;hr&gt;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentAppUI</MethodName>
+            <MethodComment>/** 
+ * Determine the locale file needed for this browsers preferences Defaults to the settings for derby.locale and derby.codeset if set English otherwise if browsers preferences can't be found
+ * @param request           HttpServetRequest for forms
+ * @param locale                Name of locale (return arg)
+ * @return the appUI which fits the browsers preferences
+ */
+</MethodComment>
+            <ReturnType>LocalizedResource</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>locale</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LocalizedResource [localUtil]</InnerVar>
+                <InnerVar>String [acceptLanguage=request.getHeader("Accept-Language")]</InnerVar>
+                <InnerVar>StringTokenizer [tokenizer=new StringTokenizer(acceptLanguage,",")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocStringFromLanguage</MethodName>
+            <MethodComment>/** 
+ * Get locale string from language which may have qvalue set
+ * @param lang  language string to parse
+ * @return stripped language string to use in matching
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lang</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [semi]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>translationAvailable</MethodName>
+            <MethodComment>/** 
+ * Check if the required translation is available
+ * @param lang  language we are looking for
+ * @return index into language array if found, -1 otherwise;
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lang</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixLanguageCode</MethodName>
+            <MethodComment>/** 
+ * Fix the language code, as some browsers send then in a bad format (for instance,  Firefox sends en-us instead of en_US).
+ * @param lang  language to be fixed
+ * @return fixed version of the language, with _ separating parts and country in upper case
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lang</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index=lang.indexOf('-')]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixLanguageCode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lang</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHtmlLabelledMessageInstance</MethodName>
+            <MethodComment>/** 
+ * get an HTML labelled message from the resource bundle file, according to the given key.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localUtil</ParamName>
+                    <ParamType>LocalizedResource</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printAsContentHeader</MethodName>
+            <MethodComment>/** 
+ * Print the received string as a header.
+ * @param str The string to be printed as a header.
+ * @param out Form PrintWriter
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>PrintWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;println;["&lt;a name=\"navskip\"&gt;&lt;/a&gt;&lt;h2&gt;" + str + "&lt;/h2&gt;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>escapeSingleQuotes</MethodName>
+            <MethodComment>/** 
+ * If the received string has one or more single quotes in it, replace each one with the HTML escape-code for a single quote (apostrophe) so that the string  can be properly displayed on a submit button.
+ * @param str The string in which we want to escapesingle quotes.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>char[] [cA=str.toCharArray()]</InnerVar>
+                <InnerVar>char[] [result=new char[5 * cA.length]]</InnerVar>
+                <InnerVar>int [j=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>escapeHTML</MethodName>
+            <MethodComment>/** 
+ * Escapes potentially dangerous characters in data written to the browser. &lt;p&gt; &lt;em&gt;NOTE&lt;/em&gt;: This is a poor mans implementation - it doesn't protect against all kinds of attacks, and it cannot be used in all contexts.
+ * @param str the string to escape
+ * @return A sanitized string.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>char[] [cA=str.toCharArray()]</InnerVar>
+                <InnerVar>char[] [result=new char[5 * cA.length]]</InnerVar>
+                <InnerVar>int [j=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isServerStarted</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>NetworkServerControl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ntries</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

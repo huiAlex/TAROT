@@ -1,0 +1,940 @@
+<Class>
+    <Id>1167</Id>
+    <Package>org.apache.derby.iapi.store.raw</Package>
+    <ClassName>RawStoreFactory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Corruptable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RawStoreFactory  /** 
+ * RawStoreFactory implements a single unit of transactional storage. A RawStoreFactory contains Segments and Segments contain Containers. &lt;P&gt; Segments are identified by integer identifiers that are unique within a RawStoreFactory. &lt;P&gt; Containers are also identified by unique integer identifiers within a RawStoreFactory, but will overlap with segment identifiers. &lt;P&gt;&lt;B&gt;LIMITS&lt;/B&gt;&lt;BR&gt; This is a list of (hopefully) all limits within the raw store. Where a size  has more than one limit all are documented (rather than just the most  restrictive) so that the correct limit can be found if the most restictive  is every removed. &lt;UL&gt; &lt;LI&gt;Field -  &lt;UL&gt; &lt;LI&gt;Max length 2^31 - 1  (2147483647) -  &lt;/UL&gt; &lt;LI&gt;Record -  &lt;UL&gt; &lt;LI&gt;Max number of fields 2^31 - 1  (2147483647) - from use of Object[]  array to represent row, which can "only" have int sized number of array members. &lt;/UL&gt; &lt;LI&gt;Page - &lt;LI&gt;Container - &lt;LI&gt;Segment - &lt;LI&gt;Raw Store - &lt;/UL&gt; &lt;P&gt; Access and RawStore work together to provide the ACID properties of transactions. On a high level, RawStore deals with anything that directly impacts persistency. On a more detailed level, RawStore provides logging, rollback and recovery, data management on page, page allocation and deallocation, container allocation and deallocation.   &lt;P&gt; RawStore is organized as 3 branches, transaction, data, and logging.  These branches each have its own "factory", the transaction factory hands out transactions, the data factory hands out containers, and the log factory hands out logger (or log buffers) for transactions to write on.  For a more detailed description on these factories, please see their corresponding javadocs. MT - Thread Safe
+ * @see ContainerHandle 
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DERBY_STORE_MINOR_VERSION_1</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_STORE_MINOR_VERSION_2</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_STORE_MINOR_VERSION_3</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_STORE_MINOR_VERSION_4</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_STORE_MINOR_VERSION_10</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_STORE_MAJOR_VERSION_10</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_SIZE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_SIZE_MINIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_SIZE_STRING</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_CACHE_SIZE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_CACHE_SIZE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_CACHE_SIZE_MINIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_CACHE_SIZE_MAXIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_CACHE_SIZE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_CACHE_SIZE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_CACHE_SIZE_MINIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_CACHE_SIZE_MAXIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_CONTAINER_INITIAL_PAGES</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MINIMUM_RECORD_SIZE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MINIMUM_RECORD_SIZE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MINIMUM_RECORD_SIZE_MINIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_RESERVED_SPACE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_RESERVED_ZERO_SPACE_STRING</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PRE_ALLOCATE_PAGE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PAGE_REUSABLE_RECORD_ID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STREAM_FILE_BUFFER_SIZE_PARAMETER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STREAM_FILE_BUFFER_SIZE_DEFAULT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STREAM_FILE_BUFFER_SIZE_MINIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STREAM_FILE_BUFFER_SIZE_MAXIMUM</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_INITIAL_PAGES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ENCRYPTION_ALIGNMENT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_ENCRYPTION_BLOCKSIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ENCRYPTION_BLOCKSIZE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DATA_ENCRYPT_ALGORITHM_VERSION</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG_ENCRYPT_ALGORITHM_VERSION</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ENCRYPTED_KEY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OLD_ENCRYPTED_KEY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DB_ENCRYPTION_STATUS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DB_ENCRYPTION_IN_PROGRESS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DB_ENCRYPTION_IN_UNDO</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DB_ENCRYPTION_IN_CLEANUP</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CRYPTO_OLD_EXTERNAL_KEY_VERIFY_FILE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEEP_TRANSACTION_LOG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PATCH_INITPAGE_RECOVER_ERROR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MODULE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>isReadOnly</MethodName>
+            <MethodComment>/** 
+ * Is the store read-only.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLockFactory</MethodName>
+            <MethodComment>/** 
+ * Get the LockFactory to use with this store.
+ */
+</MethodComment>
+            <ReturnType>LockFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUndoInsertEventHandler</MethodName>
+            <MethodComment>/** 
+ * Register a handler class for insert undo events. &lt;P&gt; Register a class to be called when an undo of an insert  is executed.  When an undo of an event is executed by the raw store UndoHandler.insertUndoNotify() will be called, allowing upper level callers to execute code as necessary.  The initial need is for the access layer to be able to queue post commit reclaim space in the case of inserts which are aborted (including the normal case of inserts failed for duplicate key violations) (see DERBY-4057)
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>undo_handle</ParamName>
+                    <ParamType>UndoHandler</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startTransaction</MethodName>
+            <MethodComment>/** 
+ * Create a user transaction, almost all work within the raw store is performed in the context of a transaction. &lt;P&gt; Starting a transaction always performs the following steps. &lt;OL&gt; &lt;LI&gt;Create an raw store transaction context &lt;LI&gt;Create a new idle transaction and then link it to the context. &lt;/UL&gt; Only one user transaction and one nested user transaction can be active in a context at any one time. After a commit the transaction may be re-used. &lt;P&gt; &lt;B&gt;Raw Store Transaction Context Behaviour&lt;/B&gt; &lt;BR&gt; The cleanupOnError() method of this context behaves as follows: &lt;UL&gt; &lt;LI&gt; If error is an instance of StandardException that has a severity less than ExceptionSeverity.TRANSACTION_SEVERITY then no action is taken. &lt;LI&gt; If error is an instance of StandardException that has a severity equal to ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, and the transaction returned to the idle state. &lt;LI&gt; If error is an instance of StandardException that has a severity greater than  ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;LI&gt; If error is not an instance of StandardException then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;/UL&gt;
+ * @param contextMgr is the context manager to use.  An exception will bethrown if context is not the current context.
+ * @param transName is the name of the transaction. Thsi name will be displayedby the transactiontable VTI.
+ * @exception StandardException Standard Derby error policy
+ * @see Transaction
+ * @see org.apache.derby.iapi.services.context.Context
+ * @see StandardException
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startGlobalTransaction</MethodName>
+            <MethodComment>/** 
+ * Create a global user transaction, almost all work within the raw store is performed in the context of a transaction. &lt;P&gt; The (format_id, global_id, branch_id) triplet is meant to come exactly from a javax.transaction.xa.Xid.  We don't use Xid so that the system can be delivered on a non-1.2 vm system and not require the javax  classes in the path.   &lt;P&gt; Starting a transaction always performs the following steps. &lt;OL&gt; &lt;LI&gt;Create an raw store transaction context &lt;LI&gt;Create a new idle transaction and then link it to the context. &lt;/UL&gt; Only one user transaction can be active in a context at any one time. After a commit the transaction may be re-used. &lt;P&gt; &lt;B&gt;Raw Store Transaction Context Behaviour&lt;/B&gt; &lt;BR&gt; The cleanupOnError() method of this context behaves as follows: &lt;UL&gt; &lt;LI&gt; If error is an instance of StandardException that has a severity less than ExceptionSeverity.TRANSACTION_SEVERITY then  no action is taken. &lt;LI&gt; If error is an instance of StandardException that has a severity equal to ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, and the transaction returned to  the idle state. &lt;LI&gt; If error is an instance of StandardException that has a severity greater than  ExceptionSeverity.TRANSACTION_SEVERITY  then the context's transaction is aborted, the transaction closed, and  the context is popped off the stack. &lt;LI&gt; If error is not an instance of StandardException then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;/UL&gt;
+ * @param contextMgr is the context manager to use.  An exception will bethrown if context is not the current context.
+ * @param format_id  the format id part of the Xid - ie. Xid.getFormatId().
+ * @param global_id  the global transaction identifier part of XID - ie.Xid.getGlobalTransactionId().
+ * @param local_id   The branch qualifier of the Xid - ie. Xid.getBranchQaulifier()
+ * @exception StandardException Standard Derby error policy
+ * @see Transaction
+ * @see org.apache.derby.iapi.services.context.Context
+ * @see StandardException
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>format_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>global_id</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>local_id</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findUserTransaction</MethodName>
+            <MethodComment>/** 
+ * Find a user transaction in the context manager, which must be the current context manager.  If a user transaction does not already exist, then create one @see #startTransaction
+ * @param contextMgr the context manager to use.  An exception will be thrown if context is not the current context.
+ * @param transName  If a new transaction is started, it will be given this name. The name is displayed in the transactiontable VTI.
+ * @exception StandardException Standard Derby error policy
+ * @see #startTransaction
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startInternalTransaction</MethodName>
+            <MethodComment>/** 
+ * Create an internal transaction. &lt;P&gt; Starting an internal transaction always performs the following steps. &lt;OL&gt; &lt;LI&gt;Create an raw store internal transaction context &lt;LI&gt;Create a new idle internal transaction and then link it to the  context. &lt;/UL&gt; &lt;P&gt; AN internal transaction is identical to a user transaction with the  exception that &lt;UL&gt; &lt;LI&gt; Logical operations are not supported &lt;LI&gt; Savepoints are not supported &lt;LI&gt; Containers are not closed when commit() is called. &lt;LI&gt; Pages are not unlatched (since containers are not closed) when  commit() is called. &lt;LI&gt; During recovery time internal transactions are rolled back before  user transactions. &lt;/UL&gt; Only one internal transaction can be active in a context at any one time. After a commit the transaction may be re-used. &lt;P&gt; &lt;B&gt;Raw Store Internal Transaction Context Behaviour&lt;/B&gt; &lt;BR&gt; The cleanupOnError() method of this context behaves as follows: &lt;UL&gt; &lt;LI&gt; If error is an instance of StandardException that has a severity less than ExceptionSeverity.TRANSACTION_SEVERITY then the internal transaction is aborted, the internal transaction is closed,        the context is popped off the stack, and an exception of severity  Transaction exception is re-thrown. &lt;LI&gt; If error is an instance of StandardException that has a severity  greater than or equal to ExceptionSeverity.TRANSACTION_SEVERITY then the context's internal transaction is aborted, the internal  transaction is closed and the context is popped off the stack. &lt;LI&gt; If error is not an instance of StandardException then the context's internal transaction is aborted, the internal transaction is closed  and the context is popped off the stack. &lt;/UL&gt;
+ * @exception StandardException Standard Derby error policy
+ * @see Transaction
+ * @see org.apache.derby.iapi.services.context.Context
+ * @see StandardException
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNestedReadOnlyUserTransaction</MethodName>
+            <MethodComment>/** 
+ * Create a nested user transaction, almost all work within the raw store  is performed in the context of a transaction. &lt;P&gt; A nested user transaction is exactly the same as a user transaction, except that one can specify a compatibility space to associate with the transaction. Starting a transaction always performs the following steps. &lt;OL&gt; &lt;LI&gt;Create an raw store transaction context &lt;LI&gt;Create a new idle transaction and then link it to the context. &lt;/UL&gt; Only one user transaction and one nested user transaction can be active in a context at any one time. After a commit the transaction may be re-used. &lt;P&gt; &lt;B&gt;Raw Store Transaction Context Behaviour&lt;/B&gt; &lt;BR&gt; The cleanupOnError() method of this context behaves as follows: &lt;UL&gt; &lt;LI&gt; If error is an instance of StandardException that has a severity less than ExceptionSeverity.TRANSACTION_SEVERITY then no action is taken. &lt;LI&gt; If error is an instance of StandardException that has a severity equal to ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, and the transaction returned to the idle state.  If a user transaction exists on the context stack then that transaction is aborted also. &lt;LI&gt; If error is an instance of StandardException that has a severity greater than  ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;LI&gt; If error is not an instance of StandardException then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;/UL&gt;
+ * @param parentTransaction parent transaction
+ * @param compatibilitySpace compatibility space to use for locks.
+ * @param contextMgr is the context manager to use.  An exception will bethrown if context is not the current context.
+ * @param transName is the name of the transaction. This name will be displayed by the transactiontable VTI.
+ * @exception StandardException Standard Derby error policy
+ * @see Transaction
+ * @see org.apache.derby.iapi.services.context.Context
+ * @see StandardException
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentTransaction</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compatibilitySpace</ParamName>
+                    <ParamType>CompatibilitySpace</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNestedUpdateUserTransaction</MethodName>
+            <MethodComment>/** 
+ * Create a nested user transaction, almost all work within the raw store  is performed in the context of a transaction. &lt;P&gt; A nested user transaction is exactly the same as a user transaction, except that one can specify a compatibility space to associate with the transaction. Starting a transaction always performs the following steps. &lt;OL&gt; &lt;LI&gt;Create an raw store transaction context &lt;LI&gt;Create a new idle transaction and then link it to the context. &lt;/UL&gt; Only one user transaction and one nested user transaction can be active in a context at any one time. After a commit the transaction may be re-used. &lt;P&gt; &lt;B&gt;Raw Store Transaction Context Behaviour&lt;/B&gt; &lt;BR&gt; The cleanupOnError() method of this context behaves as follows: &lt;UL&gt; &lt;LI&gt; If error is an instance of StandardException that has a severity less than ExceptionSeverity.TRANSACTION_SEVERITY then no action is taken. &lt;LI&gt; If error is an instance of StandardException that has a severity equal to ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, and the transaction returned to the idle state.  If a user transaction exists on the context stack then that transaction is aborted also. &lt;LI&gt; If error is an instance of StandardException that has a severity greater than  ExceptionSeverity.TRANSACTION_SEVERITY then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;LI&gt; If error is not an instance of StandardException then the context's transaction is aborted, the transaction closed, and the context is popped off the stack. &lt;/UL&gt;
+ * @param parentTransaction parent transaction
+ * @param contextMgr is the context manager to use.  An exception will bethrown if context is not the current context.
+ * @param transName is the name of the transaction. This name will be displayed by the transactiontable VTI.
+ * @param flush_log_on_xact_end    By default should the transaction commit and abort be synced to the log.  Normal usage should pick true,  unless there is specific performance need and usage works correctly if  a commit can be lost on system crash.
+ * @exception StandardException Standard Derby error policy
+ * @see Transaction
+ * @see org.apache.derby.iapi.services.context.Context
+ * @see StandardException
+ */
+</MethodComment>
+            <ReturnType>Transaction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentTransaction</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>contextMgr</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flush_log_on_xact_end</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionInfo</MethodName>
+            <MethodComment>/** 
+ * @see org.apache.derby.iapi.store.access.AccessFactory#getTransactionInfo
+ */
+</MethodComment>
+            <ReturnType>TransactionInfo[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startReplicationMaster</MethodName>
+            <MethodComment>/** 
+ * Start the replication master role for this database
+ * @param dbmaster The master database that is being replicated.
+ * @param host The hostname for the slave
+ * @param port The port the slave is listening on
+ * @param replicationMode The type of replication contract.Currently only asynchronous replication is supported, but 1-safe/2-safe/very-safe modes may be added later.
+ * @exception StandardException Standard Derby exception policy,thrown on error.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbmaster</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>host</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>port</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>replicationMode</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopReplicationMaster</MethodName>
+            <MethodComment>/** 
+ * Stop the replication master role for this database.
+ * @exception StandardException Standard Derby exception policy,thrown on error.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>failover</MethodName>
+            <MethodComment>/** 
+ * Start failover for this database.
+ * @param dbname the replication database that is being failed over.
+ * @exception StandardException Standard Derby exception policy,1) If the failover succeeds, an exception is thrown to indicate that the master database was shutdown after a successful failover 2) If a failure occurs during network  communication with slave.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>freeze</MethodName>
+            <MethodComment>/** 
+ * Freeze the database temporarily so a backup can be taken. &lt;P&gt;Please see Derby on line documentation on backup and restore.
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unfreeze</MethodName>
+            <MethodComment>/** 
+ * Unfreeze the database after a backup has been taken. &lt;P&gt;Please see Derby on line documentation on backup and restore.
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backup</MethodName>
+            <MethodComment>/** 
+ * Backup the database to backupDir.   &lt;P&gt;Please see Derby on line documentation on backup and restore.
+ * @param backupDir the name of the directory where the backup should bestored.
+ * @param wait      if &lt;tt&gt;true&lt;/tt&gt;, waits for  all the backup blocking operations in progress to finish.
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>backupDir</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backupAndEnableLogArchiveMode</MethodName>
+            <MethodComment>/** 
+ * Backup the database to a backup directory and enable the log archive mode that will keep the archived log files required for roll-forward from this version backup.
+ * @param backupDir                     the directory name where the database backup should go.  This  directory will be created if not it does not exist.
+ * @param deleteOnlineArchivedLogFiles  If true deletes online archived logfiles that exist before this backup, delete will occur only after backup is complete.
+ * @param wait if &lt;tt&gt;true&lt;/tt&gt;, waits for  all the backup blocking operations in progress to finish.
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>backupDir</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deleteOnlineArchivedLogFiles</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>disableLogArchiveMode</MethodName>
+            <MethodComment>/** 
+ * disables the log archival process, i.e No old log files will be kept around for a roll-forward recovery.
+ * @param deleteOnlineArchivedLogFiles  If true deletes all online archivedlog files that exist before this  call immediately; Only restore that can be performed after disabling  log archive mode is version  recovery.
+ * @exception StandardException Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>deleteOnlineArchivedLogFiles</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkpoint</MethodName>
+            <MethodComment>/** 
+ * Checkpoint the database. The raw store will wait for any current checkpoints to complete.  It will start a new checkpoint and not return until that checkpoint  completes.
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>idle</MethodName>
+            <MethodComment>/** 
+ * Idle the raw store as much as possible. 
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openFlushedScan</MethodName>
+            <MethodComment>/** 
+ * Get a flushed scan.
+ * @param start The instant for the beginning of the scan.
+ * @param groupsIWant log record groups the caller wants to scan.
+ * @exception StandardException StandardDerby error policy
+ */
+</MethodComment>
+            <ReturnType>ScanHandle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>DatabaseInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupsIWant</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDaemon</MethodName>
+            <MethodComment>/** 
+ * If this raw store has a daemon that services its need, return the daemon.  If not, return null
+ */
+</MethodComment>
+            <ReturnType>DaemonService</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionFactoryModule</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataFactoryModule</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogFactoryModule</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getXAResourceManager</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createFinished</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRawStoreProperties</MethodName>
+            <MethodComment>/** 
+ * Get JBMS properties relevant to raw store
+ * @exception StandardException Standard Derby exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>PersistentSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>freezePersistentStore</MethodName>
+            <MethodComment>/** 
+ * Freeze the database from altering any persistent storage.
+ * @exception StandardException Standard Derby exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unfreezePersistentStore</MethodName>
+            <MethodComment>/** 
+ * Unfreeze the database, persistent storage can now be altered.
+ * @exception StandardException Standard Derby exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encrypt</MethodName>
+            <MethodComment>/** 
+ * Encrypt cleartext into ciphertext.
+ * @see org.apache.derby.iapi.services.crypto.CipherProvider#encrypt
+ * @exception StandardException Standard Derby Error Policy
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cleartext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ciphertext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newEngine</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decrypt</MethodName>
+            <MethodComment>/** 
+ * Decrypt cleartext from ciphertext.
+ * @see org.apache.derby.iapi.services.crypto.CipherProvider#decrypt
+ * @exception StandardException Standard Derby Error Policy
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ciphertext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cleartext</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEncryptionBlockSize</MethodName>
+            <MethodComment>/** 
+ * Returns the encryption block size used during creation of the encrypted database
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>random</MethodName>
+            <MethodComment>/** 
+ * Returns a secure random number for this raw store - if database is not encrypted, returns 0.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeBootPassword</MethodName>
+            <MethodComment>/** 
+ * Change the boot password.  Return the encrypted form of the secret key. The new value must be a String of the form: oldBootPassword, newBootPassword
+ * @exception StandardException Standard Derby Error Policy
+ */
+</MethodComment>
+            <ReturnType>Serializable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>changePassword</ParamName>
+                    <ParamType>Serializable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxContainerId</MethodName>
+            <MethodComment>/** 
+ * Return an id which can be used to create a container. &lt;p&gt; Return an id number with is greater than any existing container in the current database.  Caller will use this to allocate future container numbers - most likely caching the value and then incrementing it as it is used. &lt;p&gt;
+ * @return The an id which can be used to create a container.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getXactFactory</MethodName>
+            <MethodComment>/** 
+ * Get the Transaction Factory to use with this store.
+ */
+</MethodComment>
+            <ReturnType>TransactionFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkVersion</MethodName>
+            <MethodComment>/** 
+ * Check to see if a database has been upgraded to the required level in order to use a store feature.
+ * @param requiredMajorVersion  required database Engine major version
+ * @param requiredMinorVersion  required database Engine minor version
+ * @param feature               Non-null to throw an exception, null to return the state of the version match.
+ * @return &lt;code&gt; true &lt;/code&gt; if the database has been upgraded to the required level, &lt;code&gt; false &lt;/code&gt; otherwise.
+ * @exception StandardException if the database is not at the require version  when &lt;code&gt;feature&lt;/code&gt; feature is  not &lt;code&gt; null &lt;/code&gt;. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requiredMajorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>requiredMinorVersion</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>feature</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDataWarningFile</MethodName>
+            <MethodComment>/** 
+ * Use the available storage factory handle to create a readme file in "seg0" directory warning users to not edit/delete any files in the directory to avoid database corruption.
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

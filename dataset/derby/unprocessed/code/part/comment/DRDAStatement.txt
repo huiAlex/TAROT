@@ -1,0 +1,530 @@
+/**
+    DRDAStatement stores information about the statement being executed
+*/
+
+/** Hashtable with resultsets. */
+
+/** Ordered list of hash keys. */
+
+/**
+     * A chain of warnings indicating whether some of the data values returned
+     * by this statement had to be truncated before being sent to the client.
+     */
+
+/** This class is used to keep track of the statement's parameters
+     * as they are received from the client. It uses arrays to track
+     * the DRDA type, the length in bytes and the externalness of each
+     * parameter. Arrays of int/byte are used rather than ArrayLists
+     * of Integer/Byte in order to re-use the same storage each time
+     * the statement is executed. */
+
+/**
+     * If this changes, we need to re-send result set metadata to client, since
+     * a change indicates the engine has recompiled the prepared statement.
+     */
+
+/**
+     * Saved value returned from {@link DRDAConnThread#parsePRPSQLSTT}.
+     * Used to determine if the statement is such that we may
+     * need to re-send metadata at execute time, see {@link #versionCounter}.
+     */
+
+/**
+     * DRDAStatement constructor
+     *
+     * @param database
+     * 
+     */
+
+/**
+     * set TypDef values
+     *
+     */
+
+/**
+     * Set database
+     *
+     * @param database
+     */
+
+/**
+     * Set statement
+     *
+     * @param conn  Connection
+     * @exception SQLException
+     */
+
+/**
+     * Get the statement
+     *
+     * @return statement
+     * @exception SQLException
+     */
+
+/**
+     * Add a warning about data having been truncated.
+     * @param w the warning to add
+     */
+
+/**
+     * Get the chain of truncation warnings added to this statement.
+     * @return chain of truncation warnings, possibly {@code null}
+     */
+
+/**
+     * Clear the chain of truncation warnings for this statement.
+     */
+
+/**Set resultSet defaults to match 
+     * the statement defaults sent on EXCSQLSTT
+     * This might be overridden on OPNQRY or CNTQRY
+     **/
+
+/**
+     * Get the extData Objects
+     *
+     *  @return ArrayList with extdta
+     */
+
+/**
+     * Add extDtaObject
+     * @param o - object to  add
+     * @param jdbcIndex - jdbc index for parameter
+     */
+
+/**
+     * Clear externalized lob objects in current result set
+     */
+
+/**
+     * Set query options sent on OPNQRY and pass options down to the
+     * current DRDAResultSet object.
+     *
+     * @param blksize QRYBLKSZ (Query Block Size)
+     * @param qryblkctl QRYPRCTYP (Query Protocol Type)
+     * @param maxblkext MAXBLKEXT (Maximum Number of Extra Blocks)
+     * @param outovropt OUTOVROPT (Output Override Option)
+     * @param qryrowset QRYROWSET (Query Rowset Size)
+     * @param qryclsimpl QRYCLSIMP (Query Close Implicit)
+     *      */
+
+/** 
+     * is this a scrollable cursor?
+     * return true if this is not a forward only cursor
+     */
+
+/**
+     * This method is used to initialize the default statement of the database
+     * for re-use. It is different from reset() method since default statements
+     * get initialized differently. e.g: stmt variable used in default statement
+     * is created only once in Database.makeConnection. 
+     * The default statement will be initialized to have the same byte order 
+     * etc as the server. This may be changed when a TYPEDEFNAM is received 
+     * from the client in DRDAConnThread.setStmtOrDbByteOrder()
+     * 
+     */
+
+/**
+     * Create a prepared statement
+     *
+     * @param sqlStmt - SQL statement
+     *
+     * @exception SQLException
+     */
+
+/**
+     * Get prepared statement
+     *
+     * @return prepared statement
+     */
+
+/**
+     * Executes the prepared statement and populates the resultSetTable.
+     * Access to the various resultSets is then possible by using
+     * setCurrentDrdaResultSet(String pkgnamcsn)  to set the current
+     * resultSet and then calling getResultSet() or the other access 
+     * methods to get resultset data.
+     *
+     * @return true if the execution has resultSets
+     */
+
+/**
+     * clear out type data for parameters.
+     * Unfortunately we currently overload the resultSet type info
+     * rsDRDATypes et al with parameter info.
+     * RESOLVE: Need to separate this
+     */
+
+/**
+     * get the isolation level for a static package.
+     * @param pkgid - Package identifier string (e.g. SYSSTAT)
+     * @return isolation
+     */
+
+/**
+     * Get pkgnamcsn
+     *
+     * @return pkgnamcsn
+     */
+
+/**
+     * Get result set
+     *
+     * @return result set
+     */
+
+/**
+     * Gets the current DRDA ResultSet
+     * 
+     * @return DRDAResultSet
+     */
+
+/**
+     * Set currentDrdaResultSet
+     *
+     * @param rsNum   The result set number starting with 0
+     *                 
+     */
+
+/**
+     * Set currentDrdaResultSet
+     *
+     * @param pkgnamcsn  The pkgid section number and unique resultset
+     *                    consistency token
+     *                 
+     */
+
+/** Add a new resultSet to this statement.
+     * Set as the current result set if  there is not an 
+     * existing current resultset.
+     * @param value - ResultSet to add
+     * @param holdValue - Holdability of the ResultSet 
+     * @return    Consistency token  for this resultSet
+     *            For a single resultSet that is the same as the statement's 
+     *            For multiple resultSets just the consistency token is changed 
+     */
+
+/**
+     *
+     * @return  number of result sets
+     */
+
+/**
+     * @param rsNum result set starting with 0
+     * @return  consistency token (key) for the result set
+     */
+
+/**
+     *@return ResultSet DRDA DataTypes
+     **/
+
+/**
+     *  Close the current resultSet
+     */
+
+/**
+     * Explicitly close the result set by CLSQRY
+     * needed to check for double close.
+     */
+
+/**
+     * This method closes the JDBC objects and frees up all references held by
+     * this object.
+     * 
+     *      */
+
+/**
+     * This method resets the state of this DRDAStatement object so that it can
+     * be re-used. This method should reset all variables of this class except 
+     * the following:
+     * 1. database - This variable gets initialized in the constructor and by
+     * call to setDatabase.
+     * 2. members which get initialized in setPkgnamcsn (pkgnamcsn, pkgcnstkn, 
+     * pkgid, pkgsn, isolationLevel, cursorName). pkgnamcsn is the key used to 
+     * find if the DRDAStatement can be re-used. Hence its value will not change 
+     * when the object is re-used.
+     * 
+     */
+
+/**
+     * is Statement closed
+     * @return whether the statement is closed
+     */
+
+/**
+     * Set state to SUSPENDED (result set is opened)
+     */
+
+/**
+     * set resultset/out parameter precision
+     *
+     * @param index - starting with 1
+     * @param precision
+     */
+
+/**
+     * get resultset /out parameter precision
+     * @param index -starting with 1
+     * @return precision of column
+     */
+
+/**
+     * set resultset/out parameter scale
+     *
+     * @param index - starting with 1
+     * @param scale
+     */
+
+/**
+     * get resultset /out parameter scale
+     * @param index -starting with 1
+     * @return scale of column
+     */
+
+/**
+     * set result  DRDAType
+     *
+     * @param index - starting with 1
+     * @param type
+     */
+
+/** Clears the parameter state (type, length and ext information)
+     * stored in this statement, but does not release any
+     * storage. This reduces the cost of re-executing the statement
+     * since no new storage needs to be allocated. */
+
+/** Get the number of external parameters in this
+     * statement. External means parameters that are transmitted in a
+     * separate DSS in the DRDA protocol.
+     * @return the number of external parameters
+     */
+
+/** Get the parameter position of the i'th external parameter
+     * @param i - zero-based index into list of external parameters
+     * @return the parameter position of the i'th external parameter
+     */
+
+/** Mark the pos'th parameter as external
+     * @param pos - zero-based index into list of external parameters
+     */
+
+/** Get the number of parameters, internal and external, that has
+     * been added to this statement.
+     * @return the number of parameters
+     */
+
+/** Add another parameter to this statement.
+     * @param t - type of the parameter
+     * @param l - length in bytes of the parameter
+     */
+
+/**
+     * get parameter DRDAType
+     *
+     * @param index - starting with 1
+     * @return  DRDA Type of column
+     */
+
+/**
+     * returns drda length of parameter as sent by client.
+     * @param index - starting with 1
+     * @return data length
+
+     */
+
+/**
+     *  get parameter precision or DB2 max (31)
+     *
+     *  @param index parameter index starting with 1
+     *
+     *  @return  precision
+     */
+
+/**
+     *  get parameter scale or DB2 max (31)
+     *
+     *  @param index parameter index starting with 1
+     *
+     *  @return  scale
+     */
+
+/** 
+     * get the number of result set columns for the current resultSet
+     * 
+     * @return number of columns
+     */
+
+/**
+     * get  resultset/out parameter DRDAType
+     *
+     * @param index - starting with 1
+     * @return  DRDA Type of column
+     */
+
+/**
+     * get resultset/out parameter DRDALen
+     * @param index starting with 1
+     * 
+     * @return length of drda data
+     */
+
+/**
+     * @param rsNum  - result set # starting with 0 
+     */
+
+/**  For a single result set, just echo the consistency token that the client sent us.
+     * For subsequent resultSets, just subtract the resultset number from
+     * the consistency token and that will differentiate the result sets.
+     * This seems to be what DB2 does
+     * @param rsNum  - result set # starting with 0
+     * 
+     * @return  Consistency token for result set
+     */
+
+/** 
+        Given an object class  name get the paramameter type if the 
+        parameter mode is unknown.
+        
+        Arrays except for byte arrrays are assumed to be output parameters
+        TINYINT output parameters are going to be broken because there
+        is no way to differentiate them from binary input parameters.
+        @param objectName Class name of object being evaluated.
+        indicating if this an output parameter
+        @return type from java.sql.Types
+    **/
+
+/**
+     * is  parameter an ouput parameter
+     * @param paramNum parameter number starting with 1.
+     * return true if this is an output parameter.
+     */
+
+/** 
+     * get type for output parameter. 
+     *
+     * @param paramNum - parameter number starting with 1
+     * @return jdbcType or NOT_OUTPUT_PARAM if this is not an output parameter
+     */
+
+/** 
+         * get scale for output parameter. 
+         *
+         * @param paramNum - parameter number starting with 1
+         * @return scale or NOT_OUTPUT_PARAM if this is not an output parameter
+         */
+
+/** 
+         * get precision  for output parameter. 
+         *
+         * @param paramNum - parameter number starting with 1
+         * @return precision or NOT_OUTPUT_PARAM if this is not an output parameter
+         */
+
+/** 
+     * Retrieve the ParameterMetaData for the prepared statement. 
+     * @return ParameterMetaData for the prepared statement. 
+     * Note: there is no separate BrokeredParameterSetMetaData.
+     */
+
+/**
+     * get more results using reflection.
+     * @param current - flag to pass to Statement.getMoreResults(current)
+     * @return true if there are more results.
+     *      *      *
+     */
+
+/**
+     * Use reflection to retrieve SQL Text for EmbedPreparedStatement  
+     * or BrokeredPreparedStatement.
+     * @return SQL text
+     */
+
+/**
+     * Method to decide whether the ResultSet should be closed
+     * implicitly based on the QRYCLSIMP value sent from the
+     * client. Only forward-only result sets should be implicitly
+     * closed. Some clients do not expect result sets to be closed
+     * implicitly if the protocol is LMTBLKPRC.
+     *
+     * @param lmtblkprcOK true if the client expects
+     * QRYCLSIMP to be respected for the LMTBLKPRC protocol
+     * @return implicit close boolean
+     * @exception SQLException
+     */
+
+/**
+         * clear resets the arrays so that new parameters
+         * will be added at the beginning. No initialization or
+         * releasing of storage takes place unless the trim argument
+         * is true.
+         *
+         * @param trim - if true; release excess storage
+         */
+
+/**
+         * addDrdaParam adds a new parameter with its
+         * DRDA type and byte length. The arrays are automatically
+         * grown if needed.
+         *
+         * @param t a byte value, the DRDA type of the
+         * parameter being added
+         * @param s an int value, the length in bytes of
+         * the parameter being added
+         */
+
+/**
+         * getDrdaParamCount return the number of
+         * parameters added so far (since last clear).
+         *
+         * @return an int value, the number of parameters
+         */
+
+/**
+         * getDrdaType returns a byte that represents the
+         * DRDA type of the ith parameter.
+         *
+         * @param i an int value, a parameter position
+         * (zero-based)
+         * @return a byte value, the DRDA type
+         */
+
+/**
+         * getDrdaLen returns the length in bytes of the
+         * ith parameter.
+         *
+         * @param i an int value, a parameter position
+         * (zero-based)
+         * @return an int value
+         */
+
+/**
+         * addExtPos marks parameter i as external. The
+         * array is grown as needed.
+         *
+         * @param p an int value, a parameter position
+         * (zero-based)
+         */
+
+/**
+         * getExtPosCount returns the number of
+         * parameters marked as external so far (since last clear).
+         *
+         * @return an int value, the number of external
+         * parameters.
+         */
+
+/**
+         * getExtPos returns the actual parameter position
+         * of the ith external parameter.
+         *
+         * @param i an int value, index into the list of
+         * external parameters, zero-based
+         * @return an int value, the parameter position
+         * of the ith external parameter (zero-based)
+         */
+
+/**
+         * Read the rest of the streamed parameter if not consumed
+         * by the executing statement.  DERBY-3085
+         *          */
+

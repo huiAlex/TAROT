@@ -1,0 +1,249 @@
+<Class>
+    <Id>1380</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.storetests</Package>
+    <ClassName>st_reclaim_longcol</ClassName>
+    <SuperClass>BaseJDBCTestCase</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>st_reclaim_longcol  /** 
+ * The purpose of this test space reclamation of long rows and long columns. This addresses DERBY-670. The main issue is that previous to fixes for DERBY-670, space reclamation was only automatically queued when the last row on a page was deleted.  In the case of long columns, the actual row on the main page can be quite small as the long data is streamed onto other pages.  So the table can grow  unexpectedly quite large before the default space reclamation kicks in.  The change queues space reclamation in the case of long columns (blob/clob), immediately post commit of the single delete. The testing strategy is to loop doing insert, delete, commit of a blob for a number of iterations and check that the actual size of the table is  reasonable.  A sleep will be added to allow time for post commit to catch up as the test may be run in a number of environments with varying performance of background activities.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>verbose</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>st_reclaim_longcol</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>suite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Test</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>test1</MethodName>
+            <MethodComment>/** 
+ * Test reclaim of a single deleted blob on a page with non-deleted rows. &lt;p&gt; loops through inserting alternating long and short column rows resulting in pages with 1 short and one long.  Deletes the long column row and tests that space from the long column row is reclaimed even though there are non-deleted rows on the page.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>blob_size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>num_rows</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [long_byteVal=new byte[blob_size]]</InnerVar>
+                <InnerVar>byte[] [short_byteVal=new byte[10]]</InnerVar>
+                <InnerVar>Statement [s=createStatement()]</InnerVar>
+                <InnerVar>PreparedStatement [ins_stmt=prepareStatement("insert into longcol values (?, ?)")]</InnerVar>
+                <InnerVar>PreparedStatement [del_stmt=prepareStatement("delete from longcol where id = ?")]</InnerVar>
+                <InnerVar>int [worst_case_max_allocated=5]</InnerVar>
+                <InnerVar>ResultSet [rs=getSpaceTable("LONGCOL")]</InnerVar>
+                <InnerVar>int [allocated=rs.getInt("NUMALLOCATEDPAGES")]</InnerVar>
+                <InnerVar>int [free=rs.getInt("NUMFREEPAGES")]</InnerVar>
+                <InnerVar>int [total_pages=allocated + free]</InnerVar>
+                <InnerVar>int [total_expected_page_max=12 + num_rows]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;println;["test1:insert/delete of " + num_rows + " rows with blob("+ blob_size+ ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;fill;[long_byteVal, (byte)'L']</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;fill;[short_byteVal, (byte)'S']</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["LONGCOL"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;execute;["create table longcol (id int primary key not null, val blob(" + blob_size + "))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Space table was empty", rs.next()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;println;["Space information after " + num_rows + "insert/delete pairs of rows in longcol table containing "+ blob_size+ "blobs:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printCurrentRow;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertEmpty;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>test2</MethodName>
+            <MethodComment>/** 
+ * DERBY-1913 &lt;p&gt; test2 is too sensitive to machine speed and background thread processing.  It would be better suited as a long running stress test if someone has the inclination.  Disabling this test for now.  test1 covers the original intent to test that blobs are immediately marked for post commit on individual delete, rather than waiting for all rows on a page to be deleted.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>blob_size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>work_size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>total_work</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [long_byteVal=new byte[blob_size]]</InnerVar>
+                <InnerVar>byte[] [short_byteVal=new byte[10]]</InnerVar>
+                <InnerVar>Statement [s=createStatement()]</InnerVar>
+                <InnerVar>PreparedStatement [ins_stmt=prepareStatement("insert into longcol values (?, ?)")]</InnerVar>
+                <InnerVar>PreparedStatement [del_stmt=prepareStatement("delete from longcol where id = ?")]</InnerVar>
+                <InnerVar>ResultSet [rs=getSpaceTable("LONGCOL")]</InnerVar>
+                <InnerVar>int [total_pages=rs.getInt("NUMALLOCATEDPAGES") + rs.getInt("NUMFREEPAGES")]</InnerVar>
+                <InnerVar>int [second_total_pages=rs.getInt("NUMALLOCATEDPAGES") + rs.getInt("NUMFREEPAGES")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;println;["test2:queue of " + work_size + " rows with blob("+ blob_size+ "), total_work = "+ total_work]</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;fill;[long_byteVal, (byte)'L']</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;fill;[short_byteVal, (byte)'S']</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropTable;["LONGCOL"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;execute;["create table longcol (id int primary key not null, val blob(" + blob_size + "))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;wait_for_max_allocated;["test2", (10 * work_size) + 5]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Space table was empty", rs.next()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;println;["Space information:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printCurrentRow;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertEmpty;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;wait_for_max_allocated;["test2_2", (10 * work_size) + 5]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Space table was empty", rs.next()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;println;["Space information:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printCurrentRow;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertEmpty;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSpaceTable</MethodName>
+            <MethodComment>/** 
+ * Invoke SYSCS_DIAG.SPACE_TABLE on the specified table in the current schema.
+ */
+</MethodComment>
+            <ReturnType>ResultSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=prepareStatement("select * from table(syscs_diag.space_table(?)) t " + "where isindex = 0")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setString;[1, table]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printCurrentRow</MethodName>
+            <MethodComment>/** 
+ * Print the value of all columns in the current row of the specified result set, if debugging is enabled.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wait_for_max_allocated</MethodName>
+            <MethodComment>/** 
+ * wait for background thread to convert allocated pages to free pages &lt;p&gt; Wait until the total number of allocated pages is &amp;lt;= alloc_wait_count. The expectation is that the test has performed some deletes and  committed allowing the background task converted empty allocated pages with only deleted rows into free pages. On an machine with some idle processors only a short wait should be necessary.  But on machines with lots of load, possibly other tests running just sleeping does not guarantee background thread an immediate chance to run.  Without this extra wait some nightly's were seeing failures, see DERBY-1913.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>test_name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>alloc_wait_count</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Integer [save_total_alloc=null]</InnerVar>
+                <InnerVar>int [max_wait_for_bg_thread=10000]</InnerVar>
+                <InnerVar>int [ms_waited=100]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;sleep;[100]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setAutoCommit;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;test1;[250000, 20]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

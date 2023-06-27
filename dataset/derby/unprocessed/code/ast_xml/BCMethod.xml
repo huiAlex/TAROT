@@ -1,0 +1,1472 @@
+<Class>
+    <Id>513</Id>
+    <Package>org.apache.derby.impl.services.bytecode</Package>
+    <ClassName>BCMethod</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>MethodBuilder</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BCMethod  /** 
+ * MethodBuilder is used to piece together a method when building a java class definition. &lt;p&gt; When a method is first created, it has: &lt;ul&gt; &lt;li&gt; a return type &lt;li&gt; modifiers &lt;li&gt; a name &lt;li&gt; an empty parameter list &lt;li&gt; an empty throws list &lt;li&gt; an empty statement block &lt;/ul&gt; &lt;p&gt; MethodBuilder implementations are required to supply a way for Statements and Expressions to give them code.  Most typically, they may have a stream to which their contents writes the code that is of the type to satisfy what the contents represent. MethodBuilder implementations also have to have a way to supply ClassBuilders with their code, that satisfies the type of class builder they are implemented with.  This is implementation-dependent, so ClassBuilders, MethodBuilders, Statements, and Expressions all have to be of the same implementation in order to interact to generate a class. &lt;p&gt; Method Builder implementation for generating bytecode.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>CODE_SPLIT_LENGTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cb</FieldName>
+            <FieldType>BCClass</FieldType>
+        </Field>
+        <Field>
+            <FieldName>modClass</FieldName>
+            <FieldType>ClassHolder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myReturnType</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parameters</FieldName>
+            <FieldType>BCLocalField[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parameterTypes</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>thrownExceptions</FieldName>
+            <FieldType>Vector</FieldType>
+        </Field>
+        <Field>
+            <FieldName>thrownExceptions</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myCode</FieldName>
+            <FieldType>CodeChunk</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myEntry</FieldName>
+            <FieldType>ClassMember</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentVarNum</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>statementNum</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>handlingOverflow</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>subMethodCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stackTypes</FieldName>
+            <FieldType>Type[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stackTypeOffset</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxStack</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stackDepth</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>condition</FieldName>
+            <FieldType>Conditional</FieldType>
+        </Field>
+        <Field>
+            <FieldName>newArrayElementTypeMap</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>T_BOOLEAN</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>BCMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cb</ParamName>
+                    <ParamType>ClassBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>modifiers</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parms</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factory</ParamName>
+                    <ParamType>BCJava</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [vmParamterTypes]</InnerVar>
+                <InnerVar>String [sig=BCMethodDescriptor.get(vmParamterTypes,factory.type(returnType).vmName(),factory)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getName</MethodName>
+            <MethodComment>/** 
+ * Return the logical name of the method. The current myEntry refers to the sub method we are currently overflowing to. Those sub-methods are hidden from any caller.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParameter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [num=parameters[id].cpi]</InnerVar>
+                <InnerVar>short [typ=parameters[id].type.vmType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[parameters[id].type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addThrownException</MethodName>
+            <MethodComment>/** 
+ * a throwable can be added to the end of the list of thrownExceptions.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exceptionClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>thrownExceptions;add;[exceptionClass]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>complete</MethodName>
+            <MethodComment>/** 
+ * when the method has had all of its parameters and thrown exceptions defined, and its statement block has been completed, it can be completed and its class file information generated. &lt;p&gt; further alterations of the method will not be reflected in the code generated for it.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;writeExceptions;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;complete;[this, modClass, myEntry, maxStack, currentVarNum]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>splitMethod</MethodName>
+            <MethodComment>/** 
+ * Attempt to split a large method by pushing code out to several sub-methods. Performs a number of steps. &lt;OL&gt; &lt;LI&gt; Split at zero stack depth. &lt;LI&gt; Split at non-zero stack depth (FUTURE) &lt;/OL&gt; If the class has already exceeded some limit in building the class file format structures then don't attempt to split. Most likely the number of constant pool entries has been exceeded and thus the built class file no longer has integrity. The split code relies on being able to read the in-memory version of the class file in order to determine descriptors for methods and fields.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [split_pc=0]</InnerVar>
+                <InnerVar>boolean [splittingZeroStack=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>constantPool</MethodName>
+            <MethodComment>/** 
+ * In their giveCode methods, the parts of the method body will want to get to the constant pool to add their constants. We really only want them treating it like a constant pool inclusion mechanism, we could write a wrapper to limit it to that.
+ */
+</MethodComment>
+            <ReturnType>ClassHolder</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExceptions</MethodName>
+            <MethodComment>/** 
+ * sets exceptionBytes to the attribute_info needed for a method's Exceptions attribute. The ClassUtilities take care of the header 6 bytes for us, so they are not included here. See The Java Virtual Machine Specification Section 4.7.5, Exceptions attribute.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [numExc=thrownExceptions.size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>growStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>Type</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>growStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>Type</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[type.width(), type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>popStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Type</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type [topType=stackTypes[stackTypeOffset]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Type[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type[] [stack=new Type[stackTypeOffset]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[stackTypes, 0, stack, 0, stackTypeOffset]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushThis</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[VMOpcode.ALOAD_0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, cb.classType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[value, Type.BYTE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[value ? 1 : 0, Type.BOOLEAN]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[value, Type.SHORT]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[value, Type.INT]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type [dup=popStack()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[dup.width() == 2 ? VMOpcode.DUP2 : VMOpcode.DUP]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[dup]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[dup]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>swap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type [wB=popStack()]</InnerVar>
+                <InnerVar>Type [wA=popStack()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[wB]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[wA]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[wB]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment>/** 
+ * Push an integer value. Uses the special integer opcodes for the constants -1 to 5, BIPUSH for values that fit in a byte and SIPUSH for values that fit in a short. Otherwise uses LDC with a constant pool entry.
+ * @param value Value to be pushed
+ * @param type Final type of the value.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>Type</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CodeChunk [chunk=myCode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[type.width(), type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment>/** 
+ * Push a long value onto the stack. For the values zero and one the LCONST_0 and LCONST_1 instructions are used. For values betwee Short.MIN_VALUE and Short.MAX_VALUE inclusive an byte/short/int value is pushed using push(int, Type) followed by an I2L instruction. This saves using a constant pool entry for such values. All other values use a constant pool entry. For values in the range of an Integer an integer constant pool entry is created to allow sharing with integer constants and to reduce constant pool slot entries.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CodeChunk [chunk=myCode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[2, Type.LONG]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>float</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CodeChunk [chunk=myCode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[1, Type.FLOAT]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CodeChunk [chunk=myCode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;growStack;[2, Type.DOUBLE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>push</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [cpe=modClass.addConstant(value)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addInstrCPE;[VMOpcode.LDC, cpe]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, Type.STRING]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>methodReturn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>short [opcode]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[opcode]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>describeMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>opcode</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [rt=cb.factory.type(returnType)]</InnerVar>
+                <InnerVar>String [methodDescriptor=BCMethodDescriptor.get(BCMethodDescriptor.EMPTY,rt.vmName(),cb.factory)]</InnerVar>
+                <InnerVar>int [cpi=modClass.addMethodReference(declaringClass,methodName,methodDescriptor,opcode == VMOpcode.INVOKEINTERFACE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>methodDescriptor</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BCMethodCaller [mc=(BCMethodCaller)methodDescriptor]</InnerVar>
+                <InnerVar>int [cpi=mc.cpi]</InnerVar>
+                <InnerVar>short [opcode=mc.opcode]</InnerVar>
+                <InnerVar>Type [rt=mc.type]</InnerVar>
+                <InnerVar>int [rw=rt.width()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>opcode</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numArgs</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [rt=cb.factory.type(returnType)]</InnerVar>
+                <InnerVar>int [initialStackDepth=stackDepth]</InnerVar>
+                <InnerVar>String[] [debugParameterTypes=null]</InnerVar>
+                <InnerVar>String[] [vmParameterTypes]</InnerVar>
+                <InnerVar>String [methodDescriptor=BCMethodDescriptor.get(vmParameterTypes,rt.vmName(),cb.factory)]</InnerVar>
+                <InnerVar>Type [dt=null]</InnerVar>
+                <InnerVar>Type [dtu=vmNameDeclaringClass(declaringClass)]</InnerVar>
+                <InnerVar>int [cpi=modClass.addMethodReference(dt.vmNameSimple,methodName,methodDescriptor,opcode == VMOpcode.INVOKEINTERFACE)]</InnerVar>
+                <InnerVar>int [rw=rt.width()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vmNameDeclaringClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Type</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callSuper</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;callMethod;[VMOpcode.INVOKESPECIAL, cb.getSuperClassName(), "&lt;init&gt;", "void", 0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushNewStart</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [cpi=modClass.addClassReference(className)]</InnerVar>
+                <InnerVar>Type [nt=cb.factory.type(className)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstrU2;[VMOpcode.NEW, cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstr;[VMOpcode.DUP]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, nt]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, nt]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushNewComplete</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numArgs</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;callMethod;[VMOpcode.INVOKESPECIAL, (String)null, "&lt;init&gt;", "void", numArgs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>upCast</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [uct=cb.factory.type(className)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cast</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [tbc=stackTypes[stackTypeOffset - 1]]</InnerVar>
+                <InnerVar>short [sourceType=tbc.vmType()]</InnerVar>
+                <InnerVar>Type [ct=cb.factory.type(className)]</InnerVar>
+                <InnerVar>short [targetType=ct.vmType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[ct]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInstanceOf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [cpi=modClass.addClassReference(className)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstrU2;[VMOpcode.INSTANCEOF, cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, Type.BOOLEAN]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushNull</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[VMOpcode.ACONST_NULL]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, cb.factory.type(type)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>field</ParamName>
+                    <ParamType>LocalField</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BCLocalField [lf=(BCLocalField)field]</InnerVar>
+                <InnerVar>Type [lt=lf.type]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstrU2;[VMOpcode.GETFIELD, lf.cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[lt]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [dt=popStack()]</InnerVar>
+                <InnerVar>Type [dtu=vmNameDeclaringClass(declaringClass)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getField;[VMOpcode.GETFIELD, dt.vmNameSimple, fieldName, fieldType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStaticField</MethodName>
+            <MethodComment>/** 
+ * Push the contents of the described static field onto the stack.		
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getField;[VMOpcode.GETSTATIC, declaringClass, fieldName, fieldType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>opcode</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [ft=cb.factory.type(fieldType)]</InnerVar>
+                <InnerVar>int [cpi=modClass.addFieldReference(vmNameDeclaringClass(declaringClass).vmNameSimple,fieldName,ft.vmName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstrU2;[opcode, cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[ft]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setField</MethodName>
+            <MethodComment>/** 
+ * Set the field but don't duplicate its value so nothing is left on the stack after this call.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>field</ParamName>
+                    <ParamType>LocalField</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BCLocalField [lf=(BCLocalField)field]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;putField;[lf.type, lf.cpi, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;overflowMethodCheck;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putField</MethodName>
+            <MethodComment>/** 
+ * Upon entry the top word(s) on the stack is the value to be put into the field. Ie. we have &lt;PRE&gt; word &lt;/PRE&gt; Before the call we need  &lt;PRE&gt; word this word &lt;/PRE&gt; word2,word1 -&amp;gt; word2, word1, word2 So that we are left with word after the put.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>field</ParamName>
+                    <ParamType>LocalField</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BCLocalField [lf=(BCLocalField)field]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;putField;[lf.type, lf.cpi, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putField</MethodName>
+            <MethodComment>/** 
+ * Pop the top stack value and store it in the instance field of this class.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [ft=cb.factory.type(fieldType)]</InnerVar>
+                <InnerVar>int [cpi=modClass.addFieldReference(cb.classType.vmNameSimple,fieldName,ft.vmName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;putField;[ft, cpi, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>Type</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cpi</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dup</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;pushThis;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;swap;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstrU2;[VMOpcode.PUTFIELD, cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putField</MethodName>
+            <MethodComment>/** 
+ * Pop the top stack value and store it in the field. This call requires the instance to be pushed by the caller.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [vt=popStack()]</InnerVar>
+                <InnerVar>Type [dt=popStack()]</InnerVar>
+                <InnerVar>Type [dtu=vmNameDeclaringClass(declaringClass)]</InnerVar>
+                <InnerVar>Type [ft=cb.factory.type(fieldType)]</InnerVar>
+                <InnerVar>int [cpi=modClass.addFieldReference(dt.vmNameSimple,fieldName,ft.vmName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[vt.width() == 2 ? VMOpcode.DUP2_X1 : VMOpcode.DUP_X1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[vt]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[dt]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[vt]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstrU2;[VMOpcode.PUTFIELD, cpi]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>conditionalIfNull</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;conditionalIf;[VMOpcode.IFNONNULL]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>conditionalIf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;conditionalIf;[VMOpcode.IFEQ]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>conditionalIf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>opcode</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startElseCode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type[] [entryStack=condition.startElse(this,myCode,copyStack())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>completeConditional</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Type [toPop=popStack()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstr;[toPop.width() == 2 ? VMOpcode.POP2 : VMOpcode.POP]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;overflowMethodCheck;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>endStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getArrayElement</MethodName>
+            <MethodComment>/** 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>element</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [arrayType=popStack()]</InnerVar>
+                <InnerVar>String [arrayJava=arrayType.javaName()]</InnerVar>
+                <InnerVar>String [componentString=arrayJava.substring(0,arrayJava.length() - 2)]</InnerVar>
+                <InnerVar>Type [componentType=cb.factory.type(componentString)]</InnerVar>
+                <InnerVar>short [typ=componentType.vmType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[element]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstr;[CodeChunk.ARRAY_ACCESS[typ]]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[componentType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setArrayElement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>element</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [componentType=popStack()]</InnerVar>
+                <InnerVar>short [typ=componentType.vmType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[element]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;swap;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>myCode;addInstr;[CodeChunk.ARRAY_STORE[typ]]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushNewArray</MethodName>
+            <MethodComment>/** 
+ * Create an array instance Stack ... =&amp;gt; ...,arrayref
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [elementType=cb.factory.type(className)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[size]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popStack;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;growStack;[1, cb.factory.type(className.concat("[]"))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addInstrCPE</MethodName>
+            <MethodComment>/** 
+ * Write a instruction that uses a constant pool entry as an operand, add a limit exceeded message if the number of constant pool entries has exceeded the limit.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>opcode</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cpe</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myCode;addInstrCPE;[opcode, cpe]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>statementNumHitLimit</MethodName>
+            <MethodComment>/** 
+ * Tell if statement number in this method builder hits limit.  This method builder keeps a counter of how many statements are added to it. Caller should call this function every time it tries to add a statement to this method builder (counter is increased by 1), then the function returns whether the accumulated statement number hits a limit. The reason of doing this is that Java compiler has a limit of 64K code size for each method.  We might hit this limit if an extremely long insert statement is issued, for example (see beetle 4293).  Counting statement number is an approximation without too much overhead.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>noStatementsAdded</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>overflowMethodCheck</MethodName>
+            <MethodComment>/** 
+ * Check to see if the current method byte code is nearing the limit of 65535. If it is start overflowing to a new method. &lt;P&gt; Overflow is handled for a method named e23 as: &lt;CODE&gt; public Object e23() { ... existing code // split point return e23_0(); } private Object e23_0() { ... first set overflowed code // split point return e23_1();  } private Object e23_1() { ... second set overflowed code // method complete return result;  } &lt;/CODE&gt; &lt;P&gt; These overflow methods are hidden from the code using this MethodBuilder, it continues to think that it is building a single method with the original name. &lt;BR&gt; Restrictions: &lt;UL&gt; &lt;LI&gt; Only handles methods with no arguments &lt;LI&gt; Stack depth must be zero &lt;/UL&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [currentCodeSize=myCode.getPC()]</InnerVar>
+                <InnerVar>BCMethod [subMethod=getNewSubMethod(myReturnType,false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;callSubMethod;[subMethod]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;methodReturn;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;complete;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewSubMethod</MethodName>
+            <MethodComment>/** 
+ * Create a sub-method from this method to allow the code builder to split a single logical method into multiple methods to avoid the 64k per-method code size limit. The sub method with inherit the thrown exceptions of this method.
+ * @param returnType Return type of the new method
+ * @param withParameters True to define the method with matching parameters false to define it with no parameters.
+ * @return A valid empty sub method.
+ */
+</MethodComment>
+            <ReturnType>BCMethod</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>returnType</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>withParameters</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [modifiers=myEntry.getModifier()]</InnerVar>
+                <InnerVar>String [subMethodName=myName + "_s" + Integer.toString(subMethodCount++)]</InnerVar>
+                <InnerVar>BCMethod [subMethod=(BCMethod)cb.newMethodBuilder(modifiers,returnType,subMethodName,withParameters ? parameterTypes : null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callSubMethod</MethodName>
+            <MethodComment>/** 
+ * Call a sub-method created by getNewSubMethod handling parameters correctly.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>subMethod</ParamName>
+                    <ParamType>BCMethod</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>short [op]</InnerVar>
+                <InnerVar>int [parameterCount=subMethod.parameters == null ? 0 : subMethod.parameters.length]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;callMethod;[op, modClass.getName(), subMethod.getName(), subMethod.myReturnType, parameterCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

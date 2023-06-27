@@ -1,0 +1,210 @@
+<Class>
+    <Id>1207</Id>
+    <Package>org.apache.derby.impl.tools.dblook</Package>
+    <ClassName>DB_Key</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>getReferenceCols</FieldName>
+            <FieldType>PreparedStatement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>printedHeader</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>doKeys</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [stmt=conn.createStatement()]</InnerVar>
+                <InnerVar>ResultSet [rs=stmt.executeQuery("SELECT CS.CONSTRAINTNAME, CS.TYPE, " + "CS.TABLEID, CS.CONSTRAINTID, CS.SCHEMAID, CS.STATE, CG.DESCRIPTOR, CG.ISCONSTRAINT " + "FROM SYS.SYSCONSTRAINTS CS, SYS.SYSCONGLOMERATES CG, SYS.SYSKEYS K "+ "WHERE CS.STATE != 'D' AND CS.CONSTRAINTID = K.CONSTRAINTID AND "+ "CG.CONGLOMERATEID = K.CONGLOMERATEID ORDER BY CS.TABLEID")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;createKeysFrom;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createKeysFrom;[rs]</InnerMethodInvoke>
+                <InnerMethodInvoke>getReferenceCols;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>stmt;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createKeysFrom</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [firstTime=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createKeyString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>StringBuffer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aKey</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer("ALTER TABLE ")]</InnerVar>
+                <InnerVar>String [constraintName=dblook.addQuotes(dblook.expandDoubleQuotes(aKey.getString(1)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[tableName]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" ADD"]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" CONSTRAINT "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[constraintName]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[expandKeyType(aKey.getString(2).charAt(0))]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;["("]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[dblook.getColumnListFromDescription(tableId,aKey.getString(7))]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandKeyType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeFKReferenceClause</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deleteChar</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>updateChar</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [refClause=new StringBuffer()]</InnerVar>
+                <InnerVar>ResultSet [colsRS=getReferenceCols.executeQuery()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getReferenceCols;setString;[1, constraintId]</InnerMethodInvoke>
+                <InnerMethodInvoke>colsRS;next;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[" REFERENCES "]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[dblook.lookupTableId(colsRS.getString(1))]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[" ("]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[dblook.getColumnListFromDescription(colsRS.getString(1),colsRS.getString(2))]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[" ON DELETE "]</InnerMethodInvoke>
+                <InnerMethodInvoke>refClause;append;[" ON UPDATE "]</InnerMethodInvoke>
+                <InnerMethodInvoke>colsRS;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeDeferredClauses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraint</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stateColumn</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [state=constraint.getString(stateColumn)]</InnerVar>
+                <InnerVar>String [constraintName=dblook.addQuotes(dblook.expandDoubleQuotes(constraint.getString(1)))]</InnerVar>
+                <InnerVar>boolean [deferrable=false]</InnerVar>
+                <InnerVar>boolean [initiallyDeferred=false]</InnerVar>
+                <InnerVar>boolean [enforced=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printHeader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Logs;reportString;["----------------------------------------------"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Logs;reportMessage;["DBLOOK_KeysHeader"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Logs;reportString;["----------------------------------------------\n"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

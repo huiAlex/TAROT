@@ -1,0 +1,188 @@
+/**
+	A base page that is cached.
+
+	Since there are multiple page formats, use this abstract class to implement
+	cacheable interface.
+
+*/
+
+/**
+		The page cache I live in.
+
+		 MT - Immutable
+	*/
+
+/**
+		The container cache my container lives in.
+
+		 MT - Immutable
+	*/
+
+/**
+		My factory class.
+
+		 MT - Immutable - 
+	*/
+
+/**
+        Initialize a CachedPage.
+        
+		Initialize the object, ie. perform work normally perfomed in 
+        constructor.  Called by setIdentity() and createIdentity().
+	*/
+
+/**
+     * Find the container and then read the page from that container.
+     * 
+     * This is the way new pages enter the page cache.
+     * 
+     *
+	 * @return always true, higher levels have already checked the page number 
+     *         is valid for an open.
+     *
+     * @exception StandardException Standard Derby policy.
+     *
+     *      **/
+
+/**
+     * Find the container and then create the page in that container.
+     * 
+     * This is the process of creating a new page in a container, in that
+     * case no need to read the page from disk - just need to initialize it
+     * in the cache.
+     * 
+     *
+	 * @return new page, higher levels have already checked the page number is 
+     *         valid for an open.
+     *
+     * @param key               Which page is this?
+     * @param createParameter   details needed to create page like size, 
+     *                          format id, ...
+     *
+	 * @exception  StandardException  Standard exception policy.
+     *
+     *      **/
+
+/**
+     * Convert this page to requested type, as defined by input format id.
+     * 
+     * The current cache entry is a different format id than the requested
+     * type, change it.  This object is instantiated to the wrong subtype of 
+     * cachedPage, this routine will create an object with the correct subtype,
+     * and transfer all pertinent information from this to the new correct 
+     * object.
+     * 
+     *
+	 * @return The new object created with the input fid and transfered info.
+     *
+     * @param fid          The format id of the new page.
+     * @param newIdentity  The key of the new page.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is the page dirty?
+     * 
+     * The isDirty flag indicates if the pageData or pageHeader has been
+     * modified.  The preDirty flag indicates that the pageData or the
+     * pageHeader is about to be modified.  The reason for these 2 flags
+     * instead of just one is to accomodate checkpoint.  After a clean
+     * (latched) page sends a log record to the log stream but before that page
+     * is dirtied by the log operation, a checkpoint could be taken.  If so,
+     * then the redoLWM will be after the log record but, without preDirty, the
+     * cache cleaning will not have waited for the change.  So the preDirty bit
+     * is to stop the cache cleaning from skipping over this (latched) page
+     * even though it has not really been modified yet.  
+     *
+	 * @return true if the page is dirty.
+     *
+     *      **/
+
+/**
+     * Has the page or its header been modified.
+     * 
+     * See comment on class header on meaning of isDirty and preDirty bits.
+     * 
+     *
+	 * @return true if changes have actually been made to the page in memory.
+     **/
+
+/**
+     * Set state to indicate the page or its header is about to be modified.
+     * 
+     * See comment on class header on meaning of isDirty and preDirty bits.
+     **/
+
+/**
+     * Set state to indicate the page or its header has been modified.
+     * 
+     * See comment on class header on meaning of isDirty and preDirty bits.
+     * 
+     **/
+
+/**
+     * exclusive latch on page is being released.
+     * 
+     * The only work done in CachedPage is to update the row count on the
+     * container if it is too out of sync.
+     **/
+
+/**
+     * Write the page to disk.
+     * 
+     * MP - In a simple world we would just not allow clean until it held the
+     *      latch on the page.  But in order to fit into the cache system, we 
+     *      don't have enough state around to just make clean() latch the page 
+     *      while doing the I/O - but we still need someway to insure that no
+     *      changes happen to the page while the I/O is taking place.  
+     *      Also someday it would be fine to allow reads of this page
+     *      while the I/O was taking place.  
+     *
+     *
+	 * @exception  StandardException  Error writing the page.
+     *
+     *      **/
+
+/**
+     * read the page from disk into this CachedPage object.
+     * 
+     * A page is read in from disk into the pageData array of this object,
+     * and then put in the cache.
+     * 
+     *
+     * @param myContainer the container to read the page from.
+     * @param newIdentity indentity (ie. page number) of the page to read
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * write the page from this CachedPage object to disk.
+     * 
+     *
+     * @param identity indentity (ie. page number) of the page to read
+     * @param syncMe      does the write of this single page have to be sync'd?
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+	** if the page size is different from the page buffer, then make a
+	** new page buffer and make subclass use the new page buffer
+	*/
+
+/**
+	 * Returns the page data array used to write on disk version.
+     *
+     * 
+	 * returns the page data array, that is actually written to the disk,
+	 * when the page is cleaned from the page cache.  Takes care of flushing
+     * in-memory information to the array (like page header and format id info).
+     * 
+     *
+	 * @return The array of bytes that is the on disk version of page.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+

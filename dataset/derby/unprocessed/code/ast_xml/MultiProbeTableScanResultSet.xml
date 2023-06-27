@@ -1,0 +1,363 @@
+<Class>
+    <Id>2076</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>MultiProbeTableScanResultSet</ClassName>
+    <SuperClass>TableScanResultSet</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CursorResultSet</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MultiProbeTableScanResultSet  /** 
+ * Result set that fetches rows from a scan by "probing" the underlying table with a given list of values.  Repeated calls to getNextRowCore() will first return all rows matching probeValues[0], then all rows matching probeValues[1], and so on (duplicate probe values are ignored).  Once all matching rows for all values in probeValues have been returned, the call to getNextRowCore() will return null, thereby ending the scan. The expectation is that this kind of result set only ever appears beneath some other top-level result set (esp. IndexRowToBaseRowResultSet), in which case all result sets higher up in the result set tree will just see a stream of rows satisfying the list of probe values. Currently this type of result is used for evaluation of IN lists, where the user wants to retrieve all rows for which some target column has a value that equals one of values in the IN list.  In that case the IN list values are represented by the probeValues array. Most of the work for this class is inherited from TableScanResultSet.  This class overrides four public methods and two protected methods from TableScanResultSet.  In all cases the methods here set probing state and then call the corresponding methods on "super".
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>probeValues</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>origProbeValues</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>probeValIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortRequired</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>skipNextScan</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>MultiProbeTableScanResultSet</MethodName>
+            <MethodComment>/** 
+ * Constructor.  Just save off the relevant probing state and pass everything else up to TableScanResultSet.
+ * @see ResultSetFactory#getMultiProbeTableScanResultSet
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conglomId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scoci</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>activation</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultRowTemplate</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startKeyGetter</ParamName>
+                    <ParamType>GeneratedMethod</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startSearchOperator</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopKeyGetter</ParamName>
+                    <ParamType>GeneratedMethod</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopSearchOperator</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sameStartStopPosition</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>qualifiers</ParamName>
+                    <ParamType>Qualifier[][]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>probingVals</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sortRequired</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userSuppliedOptimizerOverrides</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isConstraint</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colRefItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexColItem</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockMode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableLocked</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isolationLevel</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oneRowScan</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedRowCount</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>optimizerEstimatedCost</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openCore</MethodName>
+            <MethodComment>/** 
+ * @see NoPutResultSet#openCore
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reopenCore</MethodName>
+            <MethodComment>/** 
+ * @see NoPutResultSet#reopenCore
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;reopenCore;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reopenCore</MethodName>
+            <MethodComment>/** 
+ * There are two scenarios for which we reopen this kind of scan: A - The first is for join processing.  In this case we have a(nother) row from some outer table and we want to reopen this scan to look for rows matching the new outer row. B - The second is for multi-probing.  Here we want to reopen the scan on this table to look for rows matching the next value in the probe list. If we are reopening the scan for scenario A (join processing) then we need to reset our position within the probe list.  If we are reopening the scan for scenario B then we do *not want to reset our position within the probe list because that position tells us where to find the next probe value. That said, this method does the work of reopenCore() using the received boolean to determine which of the two scenarios we are in.  Note that if our current position (i.e. the value of probeValIndex) is beyond the length of the probe list then we know that we are reopening the scan for scenario A.  Or put another away, we should never get here for scenario B if probeValIndex is greater than or equal to the length of the probe list.  The reason is that the call to reopenCore() for scenario B will only ever happen when moreInListVals() returns true--and in that case we know that probeValIndex will be less than the length of the probeValues.  But the opposite is not true: i.e. it is *not* safe to say that a probeValIndex which is less than the length of probe list is always for scenario B.  That's not true because it's possible that the join to which this scan belongs is a "oneRowRightSide" join, meaning that this, the "right" side scan, will be "interrupted" after we return a single row for the current outer row.  If we then come back with a new outer row we need to reset our position-- even though probeValIndex will be less than probeValues.length in that case.  DERBY-3603.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forNextProbe</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reopenScanController</MethodName>
+            <MethodComment>/** 
+ * Reopen the scan controller
+ * @exception StandardException thrown on failure to open
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [rows=rowsThisScan]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initStartAndStopKey</MethodName>
+            <MethodComment>/** 
+ * Initialize the start key and the stop key used in the scan. Both keys will be set to the probe value. If no new probe value was found (the probe list was exhausted), the flag skipNextScan will be  {@code true}when the method returns to prevent a new scan from being reopened with a missing or incorrect probe value.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [startPositionRow=startPosition.getRowArray()]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [stopPositionRow=stopPosition.getRowArray()]</InnerVar>
+                <InnerVar>DataValueDescriptor [probeValue=getNextProbeValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>skipScan</MethodName>
+            <MethodComment>/** 
+ * Check if the scan should be skipped. It should be skipped if (1) {@link #initStartAndStopKey()} exhausted the probe list, or (2) the scanshould return no results because of nulls in the start key or stop key. See  {@link NoPutResultSetImpl#skipScan(ExecIndexRow,ExecIndexRow)} fordetails about (2).
+ * @param startPosition the key on which to start the scan
+ * @param stopPosition the key on which to stop the scan
+ * @return {@code true} if scan should be skipped, {@code false} otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startPosition</ParamName>
+                    <ParamType>ExecIndexRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopPosition</ParamName>
+                    <ParamType>ExecIndexRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRowCore</MethodName>
+            <MethodComment>/** 
+ * Return the next row (if any) from the scan (if open). More specifically we do the following: 1 - See if we have a row to read from the current scan position. If so, return that row (done). 2 - If there are no more rows to read from the current scan position AND if there are more probe values to look at, then a) reposition the scan using the next probe value as the start/stop key and b) go back to step 1.  Otherwise proceed to step 3. 3 - Return null (no more rows). Note that step 1 is important for cases where multiple rows in this table match a single probe value.  In such a scenario we have to be sure that we do *not* move on to the next probe value until we have returned all of the rows for the _current_ probe value.
+ * @exception StandardException thrown on failure to get next row
+ */
+</MethodComment>
+            <ReturnType>ExecRow</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ExecRow [result=super.getNextRowCore()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkCancellationFlag;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * @see NoPutResultSet#close
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>moreInListVals</MethodName>
+            <MethodComment>/** 
+ * Figure out whether or not we can (re-)position the scan controller based on the next value in probeValues.  This will return false when we have exhausted the probe list (i.e. when we've gone through all of the values).
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextProbeValue</MethodName>
+            <MethodComment>/** 
+ * Return the next non-duplicate value from the probe list. Assumption is that the list is sorted so that duplicates appear next to each other, and that probeValIndex is the index of the next value. If we've exhausted the probe list then just return null.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [ctr=probeValIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

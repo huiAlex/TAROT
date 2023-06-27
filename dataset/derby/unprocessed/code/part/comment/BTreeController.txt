@@ -1,0 +1,215 @@
+/**
+
+  A b-tree controller corresponds to an instance of an open b-tree conglomerate.
+  
+  Concurrency Notes
+  
+  The concurrency rules are derived from OpenBTree.
+  
+  
+**/
+
+/**
+     * Whether to get lock on the row being inserted, usually this lock
+     * has already been gotten when the row was inserted into the base table.
+     **/
+
+/**
+     * Start an internal transaction and do the split.
+     * 
+     * This routine starts a new transaction, and handles any errors that
+     * may come during the transaction.  This transation must not obtain any
+     * locks as they are likely to conflict with the current user transaction.
+     * 
+     * If attempt_to_reclaim_deleted_rows is true this routine will 
+     * attempt to reclaim space on the leaf page input, by purging 
+     * committed deleted rows from the leaf.  If it succeeds in purging at
+     * least one row, then it will commit the internal transaction and return
+     * without actually performing a split.  
+     *
+     * @param scratch_template  A scratch template used to search a page.
+     * @param rowToInsert       The row to insert, make sure during split to
+     *                          make room for this row.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Compares the oldrow with the one at 'slot' or the one left to it. 
+     * If the slot is first slot it will move to the left sibiling of 
+     * the 'leaf' and will compare with the record from the last slot.
+     * @param slot slot number to start with
+     * @param leaf LeafControlRow of the current page
+     * @param rows DataValueDescriptot array to fill it with fetched values
+     * @return  0 if no duplicate
+     *          1 if duplicate 
+     *          2 if rescan required
+     *      */
+
+/**
+     * Compares the new record with the one at slot or the one 
+     * right to it. If the slot is last slot in the page it will move to 
+     * the right to sibling of the leaf and will compare with the record 
+     * from the last slot. 
+     * @param slot slot number to start with
+     * @param leaf LeafControlRow of the current page
+     * @param rows DataValueDescriptot array to fill it with fetched values
+     * @return  0 if no duplicate
+     *          1 if duplicate 
+     *          2 if rescan required
+     *      */
+
+/**
+     * Compares immidiate left and right records to check for duplicates.
+     * This methods compares new record (being inserted) with the record 
+     * in immidate left and right postion to see if its duplicate (only for
+     * almost unique index and for non null keys)
+     * @param rowToInsert row being inserted
+     * @param insert_slot slot where rowToInsert is being inserted
+     * @param targetleaf page where rowToInsert
+     * @return  0 if no duplicate
+     *          1 if duplicate 
+     *          2 if rescan required
+     *      */
+
+/**
+    Insert a row into the conglomerate.
+
+    @param rowToInsert The row to insert into the conglomerate.  The stored
+	representations of the row's columns are copied into a new row
+	somewhere in the conglomerate.
+
+	@return Returns 0 if insert succeeded.  Returns 
+    ConglomerateController.ROWISDUPLICATE if conglomerate supports uniqueness
+    checks and has been created to disallow duplicates, and the row inserted
+    had key columns which were duplicate of a row already in the table.  Other
+    insert failures will raise StandardException's.
+
+	@exception StandardException Standard exception policy.
+    **/
+
+/**
+     * Just insert the row on the current page/slot if it fits.
+     * 
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Create room to insert a row to the right of the largest key in table.
+     * 
+     * Perform a split pass on the tree which will move the largest key in
+     * leaf right to a new leaf, splitting parent branch pages as necessary.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+	Initialize the controller for use.
+	
+	Any changes to this method will probably have to be reflected in close as 
+    well.
+	
+	Currently delegates to OpenBTree.  If the btree controller ends up not 
+    having any state of its own, we can remove this method (the VM will 
+    dispatch to OpenBTree), gaining some small efficiency.  For now, this 
+    method remains for clarity.  
+
+    @exception StandardException Standard exception policy.
+	**/
+
+/**
+    Close the conglomerate controller.
+	
+	Any changes to this method will probably have to be reflected in close as 
+    well.
+	
+	Currently delegates to OpenBTree.  If the btree controller ends up not 
+    having any state of its own, we can remove this method (the VM will 
+    dispatch to OpenBTree), gaining some small efficiency.  For now, this 
+    method remains for clarity.  
+
+	    **/
+
+/**
+    Insert a row into the conglomerate.
+	
+    @param row The row to insert into the conglomerate.  The stored
+	representations of the row's columns are copied into a new row
+	somewhere in the conglomerate.
+
+	@return Returns 0 if insert succeeded.  Returns 
+    ConglomerateController.ROWISDUPLICATE if conglomerate supports uniqueness
+    checks and has been created to disallow duplicates, and the row inserted
+    had key columns which were duplicate of a row already in the table.  Other
+    insert failures will raise StandardException's.
+
+	@exception StandardException Standard exception policy.
+    **/
+
+/**
+	Return whether this is a keyed conglomerate.
+	
+	All b-trees are keyed.
+		**/
+
+/**
+    Delete a row from the conglomerate.  
+	
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+    Fetch the row at the given location.
+	
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+    Fetch the row at the given location.
+	
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+	Insert a row into the conglomerate, and store its location in the
+	provided template row location.
+
+    Unimplemented by btree.
+
+	
+    @exception StandardException Standard exception policy.
+	**/
+
+/**
+	Return a row location object of the correct type to be
+	used in calls to insertAndFetchLocation.
+
+	
+    @exception StandardException Standard exception policy.
+	**/
+
+/**
+     * Lock the given row location.
+     * 
+     * Should only be called by access.
+     * 
+     * This call can be made on a ConglomerateController that was opened
+     * for locking only.
+     * 
+     * RESOLVE (mikem) - move this call to ConglomerateManager so it is
+     * obvious that non-access clients should not call this.
+     *
+	 * @return true if lock was granted, only can be false if wait was false.
+     *
+	 * @param loc    The "RowLocation" which describes the exact row to lock.
+     * @param wait   Should the lock call wait to be granted?
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+    Replace the entire row at the given location.  
+	
+    @exception StandardException Standard exception policy.
+    **/
+

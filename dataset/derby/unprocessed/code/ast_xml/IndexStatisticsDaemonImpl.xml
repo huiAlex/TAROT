@@ -1,0 +1,1070 @@
+<Class>
+    <Id>588</Id>
+    <Package>org.apache.derby.impl.services.daemon</Package>
+    <ClassName>IndexStatisticsDaemonImpl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>IndexStatisticsDaemon</SuperInterface>
+        <SuperInterface>Runnable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>IndexStatisticsDaemonImpl  /** 
+ * Daemon acting as a coordinator for creating and updating index cardinality statistics. &lt;p&gt; The need for updated statistics is currently determined when compiling a SELECT query. The unit of work is then scheduled with this daemon, and the work itself will be carried out in a separate thread. If the worker thread doesn't exist it is created, if it is idle the unit of work will be processed immediately, and if it is busy the unit of work has to wait in the queue. &lt;p&gt; The daemon code has a notion of a background task. If the update is run as a background task, it will try to affect other activity in the Derby database as little as possible. As far as possible, it will not set locks on the conglomerates it scans, and if it needs to take locks it will give up immediately if the locks cannot be obtained. In some cases it will also roll back to release locks already taken, ad then retry. Since we are accessing shared structures the background work may still interfere with the user activity in the database due to locking, but all such operations carried out by the daemon are of short duration. &lt;p&gt; The high level flow of an update to index statistics is: &lt;ol&gt; &lt;li&gt;schedule update (the only action carried out by the user thread)&lt;li&gt; &lt;li&gt;for each index:&lt;/li&gt; &lt;ol&gt; &lt;li&gt;scan index&lt;/li&gt; &lt;li&gt;invalidate statements dependent on current statistics&lt;/li&gt; &lt;li&gt;drop existing statistics&lt;/li&gt; &lt;li&gt;add new statistics&lt;/li&gt; &lt;/ol&gt; &lt;/ol&gt; &lt;p&gt; List of possible improvements: &lt;ol&gt; &lt;li&gt;Reduce potential impact of multiple invalidations (per table), probably by finding a way to invalidate only once after all indexes for a table have had their statistics updated. So far invalidation has proven to be the most difficult piece of the puzzle due to the interaction with the data dictionary and sensitivity to concurrent activity for the table.&lt;/li&gt; &lt;/ol&gt; &lt;p&gt; &lt;em&gt;Implementation notes:&lt;/em&gt; List of potential cleanups before going into a release: &lt;ol&gt; &lt;li&gt;Consider removing all tracing code. May involve improving logging if parts of the trace output is valuable enough.&lt;/li&gt; &lt;/ol&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>AS_BACKGROUND_TASK</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>AS_EXPLICIT_TASK</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_QUEUE_LENGTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logStream</FieldName>
+            <FieldType>HeaderPrintWriter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doLog</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doTrace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>traceToDerbyLog</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>traceToStdOut</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>daemonDisabled</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ctxMgr</FieldName>
+            <FieldType>ContextManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>skipDisposableStats</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>daemonLCC</FieldName>
+            <FieldType>LanguageConnectionContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>db</FieldName>
+            <FieldType>Database</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dbOwner</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>databaseName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>queue</FieldName>
+            <FieldType>ArrayList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>queue</FieldName>
+            <FieldType>TableDescriptor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>runningThread</FieldName>
+            <FieldType>Thread</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errorsConsecutive</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errorsUnknown</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errorsKnown</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wuProcessed</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wuScheduled</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wuRejectedDup</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wuRejectedFQ</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wuRejectedOther</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeOfCreation</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>runTime</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tsb</FieldName>
+            <FieldType>StringBuffer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FETCH_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowBufferArray</FieldName>
+            <FieldType>DataValueDescriptor[][]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastUniqueKey</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>curr</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>prev</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rowsReadLastRead</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numRows</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>IndexStatisticsDaemonImpl</MethodName>
+            <MethodComment>/** 
+ * Creates a new daemon.
+ * @param log the log to write to
+ * @param doLog whether to log activity information
+ * @param traceLevel whether, and to where, trace information should bewritten ("off|log|stdout|both")
+ * @param db the database ("off|log|stdout|both")
+ * @param userName the name of the database owner
+ * @param databaseName the name of the database (not stored in the db obj)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>HeaderPrintWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>doLog</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>traceLevel</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>db</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>databaseName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [keepDisposableStats=PropertyUtil.getSystemBoolean(Property.STORAGE_AUTO_INDEX_STATS_DEBUG_KEEP_DISPOSABLE_STATS)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;trace;[0, "created{log=" + doLog + ", traceLog="+ traceToDerbyLog+ ", traceOut="+ traceToStdOut+ ", createThreshold="+ TableDescriptor.ISTATS_CREATE_THRESHOLD+ ", absdiffThreshold="+ TableDescriptor.ISTATS_ABSDIFF_THRESHOLD+ ", lndiffThreshold="+ TableDescriptor.ISTATS_LNDIFF_THRESHOLD+ ", queueLength="+ MAX_QUEUE_LENGTH+ "}) -&gt; "+ databaseName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dbAtLeast10_9</MethodName>
+            <MethodComment>/** 
+ * Tells if the database is 10.9 or newer. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>db</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>schedule</MethodName>
+            <MethodComment>/** 
+ * Schedules an update of the index statistics for the specified table. &lt;p&gt; Assume the descriptor will be valid until we get around to generate the statistics. If it turns out to be invalid, it will be discarded.
+ * @param td base table descriptor to update index statistics for
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [schedulingReason=td.getIndexStatsUpdateReason()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>acceptWork</MethodName>
+            <MethodComment>/** 
+ * Determines if the given work can be accepted.
+ * @param td the table descriptor to check
+ * @return {@code true} if work can be accepted, {@code false} if not.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [accept=!(daemonDisabled || queue.size() &gt;= MAX_QUEUE_LENGTH)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateStatistics</MethodName>
+            <MethodComment>/** 
+ * Generates index statistics for all indexes associated with the given table descriptor. &lt;p&gt; This method is run as a background task.
+ * @param lcc connection context to use to perform the work
+ * @param td target base table descriptor
+ * @throws StandardException if accessing the conglomerates fail
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [lockConflictSeen=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;trace;[1, "processing " + td.getQualifiedName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isShuttingDown</MethodName>
+            <MethodComment>/** 
+ * Return true if we are being shutdown 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateIndexStatsMinion</MethodName>
+            <MethodComment>/** 
+ * Updates the index statistics for the given table and the specified indexes. &lt;p&gt; &lt;strong&gt;API note&lt;/strong&gt;: Using  {@code null} to update the statisticsfor all conglomerates is preferred over explicitly passing an array with all the conglomerates for the table. Doing so allows for some optimizations, and will cause a disposable statistics check to be performed.
+ * @param lcc language connection context used to perform the work
+ * @param td the table to update index stats for
+ * @param cds the conglomerates to update statistics for (non-indexconglomerates will be ignored),  {@code null} means all indexes
+ * @param asBackgroundTask whether the updates are done automatically aspart of a background task or if explicitly invoked by the user
+ * @throws StandardException if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cds</ParamName>
+                    <ParamType>ConglomerateDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>asBackgroundTask</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [identifyDisposableStats=(cds == null)]</InnerVar>
+                <InnerVar>long[] [conglomerateNumber=new long[cds.length]]</InnerVar>
+                <InnerVar>ExecIndexRow[] [indexRow=new ExecIndexRow[cds.length]]</InnerVar>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>ConglomerateController [heapCC=tc.openConglomerate(td.getHeapConglomerateId(),false,0,TransactionController.MODE_RECORD,asBackgroundTask ? TransactionController.ISOLATION_READ_UNCOMMITTED : TransactionController.ISOLATION_REPEATABLE_READ)]</InnerVar>
+                <InnerVar>UUID[] [non_disposable_objectUUID=new UUID[cds.length]]</InnerVar>
+                <InnerVar>long[][] [scanTimes=new long[conglomerateNumber.length][3]]</InnerVar>
+                <InnerVar>int [sci=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;log;[asBackgroundTask, td, fmtScanTimes(scanTimes)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeUpdatedStats</MethodName>
+            <MethodComment>/** 
+ * Writes updated statistics for the specified index to the data dictionary.
+ * @param lcc connection context to use to perform the work
+ * @param td the base table
+ * @param index the index of the base table
+ * @param numRows number of rows in the base table
+ * @param cardinality the number of unique values in the index (per numberof leading columns)
+ * @param asBackgroundTask whether the update is done automatically aspart of a background task or if explicitly invoked by the user
+ * @throws StandardException if updating the data dictionary fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numRows</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cardinality</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>asBackgroundTask</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionController [tc=lcc.getTransactionExecute()]</InnerVar>
+                <InnerVar>UUID [table=td.getUUID()]</InnerVar>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>UUIDFactory [uf=dd.getUUIDFactory()]</InnerVar>
+                <InnerVar>boolean [conglomerateGone=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;trace;[1, "writing new stats (xid=" + tc.getTransactionIdString() + ")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setHeapRowEstimate;[tc, td.getHeapConglomerateId(), numRows]</InnerMethodInvoke>
+                <InnerMethodInvoke>dd;dropStatisticsDescriptors;[table, index, tc]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>invalidateStatements</MethodName>
+            <MethodComment>/** 
+ * Performs an invalidation action for the given table (the event being statistics update).
+ * @param lcc connection context to use to perform the work
+ * @param td the table to invalidate for
+ * @param asBackgroundTask whether the update is done automatically aspart of a background task or if explicitly invoked by the user
+ * @throws StandardException if the invalidation request fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>asBackgroundTask</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataDictionary [dd=lcc.getDataDictionary()]</InnerVar>
+                <InnerVar>DependencyManager [dm=dd.getDependencyManager()]</InnerVar>
+                <InnerVar>int [retries=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setHeapRowEstimate</MethodName>
+            <MethodComment>/** 
+ * Sets the row estimate for the heap conglomerate.
+ * @param tc transaction to use
+ * @param tableId the heap table
+ * @param rowEstimate estimate of number of rows in the table
+ * @throws StandardException if accessing the table fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowEstimate</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScanController [sc=tc.openScan(tableId,false,0,TransactionController.MODE_RECORD,TransactionController.ISOLATION_READ_UNCOMMITTED,null,null,0,null,null,0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment>/** 
+ * Drives the statistics generation. &lt;p&gt; This method will be run in a separate thread, and it will keep working as long as there is work to do. When the queue is exhausted, the method will exit (the thread dies).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [runStart=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>ContextService [ctxService=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processingLoop</MethodName>
+            <MethodComment>/** 
+ * Main processing loop which will compute statistics until the queue of scheduled work units has been drained.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TransactionController [tc=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runExplicitly</MethodName>
+            <MethodComment>/** 
+ * Runs the statistics update sequence explicitly as requested by the user.
+ * @param lcc connection context to use to perform the work
+ * @param td the base table
+ * @param cds the indexes to update (non-index conglomerates are ignored)
+ * @param runContext the context in which the operation is run (i.e.'ALTER TABLE', may be  {@code null})
+ * @throws StandardException if updating the index statistics fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cds</ParamName>
+                    <ParamType>ConglomerateDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>runContext</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;updateIndexStatsMinion;[lcc, td, cds, AS_EXPLICIT_TASK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;trace;[0, "explicit run completed" + (runContext != null ? " (" + runContext + "): " : ": ") + td.getQualifiedName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment>/** 
+ * Stops the daemon. &lt;p&gt; Will also clear the queue and print runtime statistics to the log the first time the method is invoked.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Thread [threadToWaitFor=null]</InnerVar>
+                <InnerVar>boolean [clearContext=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleFatalErrors</MethodName>
+            <MethodComment>/** 
+ * Handles fatal errors that will cause the daemon to be shut down.
+ * @param cm context manager
+ * @param se the exception to handle
+ * @return {@code true} if the error was handled, {@code false} otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [disable=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleExpectedErrors</MethodName>
+            <MethodComment>/** 
+ * Handles expected errors. &lt;p&gt; The logging of expected errors is for observability purposes only. The daemon is capable of dealing with these errors, and no interaction from the user is expected.
+ * @param se the exception to handle
+ * @return {@code true} if the error was handled, {@code false} otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [state=se.getMessageId()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleUnexpectedErrors</MethodName>
+            <MethodComment>/** 
+ * Handles unexpected errors. &lt;p&gt; Unexpected errors are error conditions the daemon isn't set up to handle specifically. For this reason the stack trace will be logged to allow for later investigation. &lt;p&gt; In general it is expected that the daemon will be able to recover by dropping the current unit of work and move on to the next one (if any).
+ * @param se the exception to handle
+ * @return {@code true} if the error was handled, {@code false} otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>se</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;log;[AS_BACKGROUND_TASK, td, se, "generation failed"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sleep</MethodName>
+            <MethodComment>/** 
+ * Puts the current thread to sleep for maximum  {@code ms} milliseconds.&lt;p&gt; No guarantee is provided for the minimum amount of time slept. If interrupted, the interrupt flag will be set again.
+ * @param ms target sleep time
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ms</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fmtScanTimes</MethodName>
+            <MethodComment>/** 
+ * Format array of scan durations as a string. 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timings</ParamName>
+                    <ParamType>long[][]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer("scan durations (")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb.deleteCharAt(sb.length() - 1);append;[")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>log</MethodName>
+            <MethodComment>/** 
+ * @see #log(boolean,TableDescriptor,Throwable,String)  
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>asBackgroundTask</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;log;[asBackgroundTask, td, null, msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>log</MethodName>
+            <MethodComment>/** 
+ * Logs the information given. &lt;p&gt; Note that if  {@code asBackgroundTask} is false, nothing will be loggedcurrently.
+ * @param asBackgroundTask {@code true} if logging for the backgrounddaemon automatically updating stats,  {@code false} if not
+ * @param td current table descriptor being worked on, may be {@code null}
+ * @param t raised error, may be {@code null}
+ * @param msg the message to log
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>asBackgroundTask</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>logAlways</MethodName>
+            <MethodComment>/** 
+ * Logs the information given.
+ * @param td current table descriptor being worked on, may be {@code null}
+ * @param t raised error, may be {@code null}
+ * @param msg the message to log
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PrintWriter [pw]</InnerVar>
+                <InnerVar>String [hdrMsg="{istat} " + (td == null ? "" : td.getQualifiedName() + ": ") + msg]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trace</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indentLevel</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendRunStats</MethodName>
+            <MethodComment>/** 
+ * Appends runtime statistics to the given string buffer.
+ * @param sb the string buffer to append to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sb</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb.append("[q/p/s=").append(queue.size()).append('/').append(wuProcessed).append('/').append(wuScheduled).append(",err:k/u/c=").append(errorsKnown).append('/').append(errorsUnknown).append('/').append(errorsConsecutive).append(",rej:f/d/o=").append(wuRejectedFQ).append('/').append(wuRejectedDup).append('/').append(wuRejectedOther);append;[']']</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cardToStr</MethodName>
+            <MethodComment>/** 
+ * Produces a textual representation of the cardinality numbers.
+ * @param cardinality index cardinality
+ * @return A string.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cardinality</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractIstatInfo</MethodName>
+            <MethodComment>/** 
+ * Purely for debugging, to avoid printing too much info. 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [istatClass=IndexStatisticsDaemonImpl.class.getName()]</InnerVar>
+                <InnerVar>StackTraceElement[] [stack=t.getStackTrace()]</InnerVar>
+                <InnerVar>String [trace="&lt;no stacktrace&gt;"]</InnerVar>
+                <InnerVar>String [sqlState=""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextService</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of the ContextService. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ContextService</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>KeyComparator</MethodName>
+            <MethodComment>/** 
+ * Creates a key comparator for the given index.
+ * @param ir index row (template)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ir</ParamName>
+                    <ParamType>ExecIndexRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fetchRows</MethodName>
+            <MethodComment>/** 
+ * Fetches rows from the scan controller.
+ * @param gsc the scan controller
+ * @return Number of rows fetched.
+ * @throws StandardException if fetching rows fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>gsc</ParamName>
+                    <ParamType>GroupFetchScanController</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareWithPrevKey</MethodName>
+            <MethodComment>/** 
+ * Compares the key at the specified index with the previous key.
+ * @param index row index
+ * @return {@code -1} if the current and previous key are identical,the index of the changed part of the key otherwise ([0, key length&amp;gt;)
+ * @throws StandardException if comparing the two keys fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor [dvd]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowCount</MethodName>
+            <MethodComment>/** 
+ * Returns the number of rows fetched.
+ * @return Number of rows fetched.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

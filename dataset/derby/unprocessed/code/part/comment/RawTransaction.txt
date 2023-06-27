@@ -1,0 +1,231 @@
+/**
+	RawTransaction is the form of Transaction used within the raw store. This
+	allows the break down of RawStore functionality into (at least) three modules
+	(Transactions, Data, Log) without exposing internal information on the
+	external interface.
+
+	
+	The transaction will notify any Observer's just before the transaction
+	is committed, aborted or a rollback to savepoint occurs. The argument passed
+	to the update() method of the Observer's will be one of
+	
+	 RawTransaction.COMMIT - transaction is committing
+	 RawTransaction.ABORT - transaction is aborting
+	 RawTransaction.SAVEPOINTROLLBACK - transaction is being rolled back to a savepoint
+	
+	The observer's must perform a value equality check (equals()) on the 
+    update arg to see why it is being notified.
+
+	*/
+
+/**	
+		Get the lock factory to be used during this transaction.
+	*/
+
+/**	
+		Get the data factory to be used during this transaction.
+	*/
+
+/**	
+		Get the log factory to be used during this transaction.
+	*/
+
+/**
+		Get the log buffer to be used during this transaction.
+	*/
+
+/**
+		Log a compensation operation and then action it in the context of this 
+        transaction.
+		The CompensationOperation is logged in the transaction log file and 
+        then its doMe method is called to perform the required change.  This 
+        compensation operation will rollback the change that was done by the 
+        Loggable Operation at undoInstant. 
+
+		@param compensation	the Compensation Operation
+		@param undoInstant	the LogInstant of the Loggable Operation this 
+							compensation operation is going to roll back
+		@param in			optional data for the rollback operation
+
+		
+		@exception StandardException  Standard Derby exception policy
+	*/
+
+/** Methods to help logging and recovery */
+
+/**
+		Set the transactionId (Global and internal) of this transaction using a
+		log record that contains the Global id
+	*/
+
+/**
+		Get the shortId of this transaction.  May return null if transactio
+		has no ID.
+	*/
+
+/**
+		Get the shortId of this transaction.  May return null if transactio
+		has no ID.
+	*/
+
+/**
+		Add this raw transaction on to the list of update transaction
+	*/
+
+/**
+		Remove this raw transaction from the list of update transaction
+	*/
+
+/**
+		Change the state of transaction in table to prepare.
+	*/
+
+/**
+		Set the log instant for the first log record written by this 
+        transaction.
+	*/
+
+/**
+		Get the log instant for the first log record written by this 
+        transaction.
+	*/
+
+/**
+		Set the log instant for the last log record written by this transaction. 
+	*/
+
+/**
+		Get the log instant for the last log record written by this transaction. 
+		If the transaction is unclear what its last log instant is, 
+		than it may return null.
+	*/
+
+/**
+		Check to see if a logical operation is allowed by this transaction, 
+        throws a TransactionExceotion if it isn't. This implementation allows
+		logical operations. Transactions that need to disallow logical 
+        operations should hide this method.
+
+		@exception StandardException Standard Derby error policy,
+	*/
+
+/**
+		Return true if this transaction should be rolled back first
+		in recovery. This implementation returns false. Transactions that
+		need to rollback first during recovery should hide this method.
+	*/
+
+/**
+     * During recovery re-prepare a transaction.
+     * 
+     * After redo() and undo(), this routine is called on all outstanding 
+     * in-doubt (prepared) transactions.  This routine re-acquires all 
+     * logical write locks for operations in the xact, and then modifies
+     * the transaction table entry to make the transaction look as if it
+     * had just been prepared following startup after recovery.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+		Allow an Observer to indicate an exception to the transaction that
+		is raised in its update() method.
+	*/
+
+/**
+		Start a nested top transaction. A nested top transaction behaves exactly
+		like a user transaction. Nested top transaction allow system type work
+		to proceed in a separate transaction to the current user transaction
+		and be committed independently of the user transaction (usually before
+		the user transaction).
+		Only one nested top transaction can be active in a context at any one
+        time.
+		After a commit the transaction may be re-used.
+
+		A nested top transaction conflicts on the logical locks of its "parent"
+        transaction.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Open a container that may be dropped - use only by logging and recovery.
+		During recovery redo, a log record may refer to a container that has
+		long been dropped.  This interface is provided so a dropped container
+		may be opened.
+
+		If the container has been dropped and is known to be committed, then
+		even if we open the dropped container with forUpdate true, the
+		container will be silently opened as read only.  Logging and recovery
+		code always check for committed drop status.  Anybody else wanting to
+		use this interface must keep this in mind.
+
+		@exception StandardException  Standard Derby exception policy
+	*/
+
+/**
+		Recreate a container during redo recovery.
+
+        Used during redo recovery when processing log records trying to 
+        create a container, but no container is found in the db.
+
+		@exception StandardException  Standard Derby exception policy
+	 */
+
+/**
+		Status that needs to go into the begin transaction log record, if there
+		is one, to help with recovery
+	*/
+
+/**
+		Status that needs to go into the end transaction log record, if there
+		is one, to help with recovery
+	*/
+
+/**	
+		Is the transaction in the middle of an abort.
+	*/
+
+/**
+		Can this transaction handles post termination work
+	*/
+
+/**
+		Make this transaction aware that it is being used by recovery
+	 */
+
+/**
+		Allow my users to notigy my observers.
+	*/
+
+/**	
+	 *Retunrs true if the transaction is part of rollforward recovery
+	 */
+
+/**	
+     * Redo a checkpoint during rollforward recovery.
+     *
+     * @param cinstant The LogInstant of the checkpoint
+     * @param redoLWM  Redo Low Water Mark in the check point record
+     * @param undoLWM Undo Low Water Mark in the checkpoint
+     * @exception StandardException Exception encountered during checkpoint
+	 */
+
+/**
+     * Make the transaction block the online backup.
+     *
+     * @param wait if true, waits until the transaction
+     *             can block the backup.
+     * @return     true if the transaction  blocked the  
+     *             backup.  false otherwise.
+     * @exception StandardException if interrupted while waiting 
+     *            for the backup in progress to complete.
+     */
+
+/**
+     * Check if the transaction is blocking the backup ?
+     * @return  true  if this transaction is 
+     *         blocking the backup, otherwise  false 
+     */
+

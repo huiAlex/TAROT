@@ -1,0 +1,356 @@
+<Class>
+    <Id>1219</Id>
+    <Package>org.apache.derby.iapi.types</Package>
+    <ClassName>SqlXmlUtil</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SqlXmlUtil  /** 
+ * This class contains "utility" methods that work with XML-specific objects that are only available if JAXP and/or Xalan are in the classpath. NOTE: This class is only compiled with JDK 1.4 and higher since the XML-related classes that it uses (JAXP and Xalan) are not part of earlier JDKs. Having a separate class for this functionality is beneficial for two reasons: 1. Allows us to allocate XML objects and compile an XML query expression a single time per statement, instead of having to do it for every row against which the query is evaluated.  An instance of this class is created at compile time and then passed to the appropriate operator implementation method in XML.java. 2. By keeping all XML-specific references in this one class,  we have a single "point of entry" to the XML objects--namely, the constructor for this class.  Thus, if we always make sure to check for the required XML classes _before_ calling this class's constructor, we can detect early on whether some classes (ex. Xalan) are missing, and can throw a friendly error up front, instead of a ClassNotFoundException somewhere deeper in the execution codepath.  The initial check for the required XML classes can be found in XML.checkXMLRequirements(). Note that we don't want to put references to XML-specific objects directly into XML.java because that class (XML.java) is instantiated anytime a table with an XML column is referenced. That would mean that if a user tried to select a non-XML column (ex. integer) from a table that had at least one XML column in it, the user would have to have JAXP and Xalan classes in his/her classpath--which we don't want.  Instead, by keeping all XML-specific objects in this one class, and then only instantiating this class when an XML operator is used (either implicitly or explicitly), we make it so that the user is only required to have XML-specific classes in his/her classpath _if_ s/he is trying to access or operate on XML values.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>dBuilder</FieldName>
+            <FieldType>DocumentBuilder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>serializer</FieldName>
+            <FieldType>Transformer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>query</FieldName>
+            <FieldType>XPathExpression</FieldType>
+        </Field>
+        <Field>
+            <FieldName>returnType</FieldName>
+            <FieldType>QName</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SINGLETON</FieldName>
+            <FieldType>NullNamespaceContext</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SqlXmlUtil</MethodName>
+            <MethodComment>/** 
+ * Constructor: Initializes objects required for parsing and serializing XML values.  Since most XML operations that require XML-specific classes perform both parsing and serialization at some point, we just initialize the objects up front.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compileXQExpr</MethodName>
+            <MethodComment>/** 
+ * Take the received string, which is an XML query expression, compile it, and store the compiled query locally.  Note that for now, we only support XPath because that's what Xalan supports.
+ * @param queryExpr The XPath expression to compile
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryExpr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>opName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serializeToString</MethodName>
+            <MethodComment>/** 
+ * Take a string representing an XML value and serialize it according SQL/XML serialization rules.  Right now, we perform this serialization by first parsing the string into a JAXP Document object, and then applying the serialization semantics to that Document.  That seems a bit inefficient, but neither Xalan nor JAXP provides a more direct way to do this.
+ * @param xmlAsText String version of XML on which to performserialization.
+ * @return A properly serialized version of xmlAsText.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xmlAsText</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Document [doc]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Document</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SAXException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serializeToString</MethodName>
+            <MethodComment>/** 
+ * Take an array list (sequence) of XML nodes and/or string values and serialize that entire list according to SQL/XML serialization rules, which ultimately point to XML serialization rules as defined by w3c.  As part of that serialization process we have to first "normalize" the sequence.  We do that by iterating through the list and performing the steps for "sequence normalization" as defined here: http://www.w3.org/TR/xslt-xquery-serialization/#serdm This method primarily focuses on taking the steps for normalization; for the rest of the serialization work, we just make calls on the DOMSerializer class provided by Xalan.
+ * @param items List of items to serialize. It should either bea list of a single string value (in case it's the result of an XMLQUERY operation that returns an atomic value), or a list of zero or more Node objects.
+ * @param xmlVal XMLDataValue into which the serialized stringreturned by this method is ultimately going to be stored. This is used for keeping track of XML values that represent sequences having top-level (parentless) attribute nodes.
+ * @return Single string holding the serialized version of thenormalized sequence created from the items in the received list.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>items</ParamName>
+                    <ParamType>List</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>xmlVal</ParamName>
+                    <ParamType>XMLDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringWriter [sWriter=new StringWriter()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sWriter;flush;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>TransformerException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalXQExpression</MethodName>
+            <MethodComment>/** 
+ * Evaluate this object's compiled XML query expression against the received xmlContext.  Then if returnResults is false, return an empty sequence (ArrayList) if evaluation yields at least one item and return null if evaluation yields zero items (the caller can then just check for null to see if the query returned any items).  If returnResults is true, then return return a sequence (ArrayList) containing all items returned from evaluation of the expression.  This array list can contain any combination of atomic values and XML nodes; it may also be empty. Assumption here is that the query expression has already been compiled and is stored in this.query.
+ * @param xmlContext The XML value against which to evaluatethe stored (compiled) query expression
+ * @param returnResults Whether or not to return the actualresults of the query
+ * @param resultXType The qualified XML type of the resultof evaluating the expression, if returnResults is true. If the result is a sequence of exactly one Document node then this will be XML(DOCUMENT(ANY)); else it will be XML(SEQUENCE).  If returnResults is false, this value is ignored.
+ * @return If returnResults is false then return an emptyArrayList if evaluation returned at least one item and return null otherwise.  If returnResults is true then return an array list containing all of the result items and return the qualified XML type via the resultXType parameter.
+ * @exception Exception thrown on error (and turned into aStandardException by the caller).
+ */
+</MethodComment>
+            <ReturnType>List</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xmlContext</ParamName>
+                    <ParamType>XMLDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>returnResults</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultXType</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Document [docNode=dBuilder.parse(new InputSource(new StringReader(xmlContext.getString())))]</InnerVar>
+                <InnerVar>Object [result=evaluate(docNode)]</InnerVar>
+                <InnerVar>List [itemRefs]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evaluate</MethodName>
+            <MethodComment>/** 
+ * Evaluate the XPath query on the specified document.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>doc</ParamName>
+                    <ParamType>Document</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>XPathExpressionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadSerializer</MethodName>
+            <MethodComment>/** 
+ * Create an instance of Xalan serializer for the sake of serializing an XML value according the SQL/XML specification for serialization.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Properties [props=new Properties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>props;setProperty;[OutputKeys.METHOD, "xml"]</InnerMethodInvoke>
+                <InnerMethodInvoke>props;setProperty;[OutputKeys.OMIT_XML_DECLARATION, "yes"]</InnerMethodInvoke>
+                <InnerMethodInvoke>props;setProperty;[OutputKeys.ENCODING, "UTF-8"]</InnerMethodInvoke>
+                <InnerMethodInvoke>serializer;setOutputProperties;[props]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>TransformerConfigurationException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>error</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exception</ParamName>
+                    <ParamType>SAXParseException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SAXException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fatalError</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exception</ParamName>
+                    <ParamType>SAXParseException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SAXException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>warning</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exception</ParamName>
+                    <ParamType>SAXParseException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SAXException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNamespaceURI</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prefix</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPrefix</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>namespaceURI</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPrefixes</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Iterator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>namespaceURI</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

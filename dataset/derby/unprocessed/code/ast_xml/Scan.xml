@@ -1,0 +1,332 @@
+<Class>
+    <Id>363</Id>
+    <Package>org.apache.derby.impl.store.raw.log</Package>
+    <ClassName>Scan</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>StreamLogScan</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Scan  /** 
+ * Scan the the log which is implemented by a series of log files.n This log scan knows how to move across log file if it is positioned at the boundary of a log file and needs to getNextRecord. &lt;PRE&gt; 4 bytes - length of user data, i.e. N 8 bytes - long representing log instant N bytes of supplied data 4 bytes - length of user data, i.e. N &lt;/PRE&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>FORWARD</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BACKWARD</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BACKWARD_FROM_LOG_END</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scan</FieldName>
+            <FieldType>StorageRandomAccessFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logFactory</FieldName>
+            <FieldType>LogToFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentLogFileNumber</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentLogFileLength</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>knownGoodLogEnd</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentInstant</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stopAt</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scanDirection</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fuzzyLogEnd</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>Scan</MethodName>
+            <MethodComment>/** 
+ * For backward scan, we expect a scan positioned at the end of the next log record. For forward scan, we expect a scan positioned at the beginning of the next log record. For forward flushed scan, we expect stopAt to be the instant for the first not-flushed log record. Like any forward scan, we expect a scan positioned at the beginning of the next log record.
+ * @exception StandardException Standard Derby error policy
+ * @exception IOException cannot access the log at the new position.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logFactory</ParamName>
+                    <ParamType>LogToFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startAt</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>stopAt</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>direction</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRecord</MethodName>
+            <MethodComment>/** 
+ * Read the next log record. Switching log to a previous log file if necessary,  Resize the input stream byte array if necessary.  
+ * @see StreamLogScan#getNextRecord
+ * @return the next LogRecord, or null if the end of thescan has been reached.
+ * @exception StandardException Standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>LogRecord</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ArrayInputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tranId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupmask</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogRecord [lr=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRecordBackward</MethodName>
+            <MethodComment>/** 
+ * Read the previous log record. Switching log to a previous log file if necessary,  Resize the input stream byte array if necessary.  
+ * @see StreamLogScan#getNextRecord Side effects include:  on a successful read, setting currentInstant. on a log file switch, setting currentLogFileNumber.
+ * @return the previous LogRecord, or null if the end of thescan has been reached.
+ */
+</MethodComment>
+            <ReturnType>LogRecord</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ArrayInputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tranId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupmask</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [candidate]</InnerVar>
+                <InnerVar>int [peekAmount=LogRecord.formatOverhead() + LogRecord.maxGroupStoredSize()]</InnerVar>
+                <InnerVar>int [readAmount]</InnerVar>
+                <InnerVar>LogRecord [lr]</InnerVar>
+                <InnerVar>long [curpos=scan.getFilePointer()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRecordForward</MethodName>
+            <MethodComment>/** 
+ * Read the next log record. Switching log to a previous log file if necessary,  Resize the input stream byte array if necessary.  
+ * @see StreamLogScan#getNextRecord Side effects include:  on a successful read, setting currentInstant, knownGoodLogEnd on a log file switch, setting currentLogFileNumber, currentLogFileLength. on detecting a fuzzy log end that needs clearing, it will call logFactory to clear the fuzzy log end.
+ * @return the next LogRecord, or null if the end of thescan has been reached.
+ */
+</MethodComment>
+            <ReturnType>LogRecord</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ArrayInputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tranId</ParamName>
+                    <ParamType>TransactionId</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>groupmask</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [recordStartPosition=scan.getFilePointer()]</InnerVar>
+                <InnerVar>boolean [candidate]</InnerVar>
+                <InnerVar>int [peekAmount=LogRecord.formatOverhead() + LogRecord.maxGroupStoredSize()]</InnerVar>
+                <InnerVar>int [readAmount]</InnerVar>
+                <InnerVar>LogRecord [lr]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetPosition</MethodName>
+            <MethodComment>/** 
+ * Reset the scan to the given LogInstant.
+ * @param instant the position to reset to
+ * @exception IOException scan cannot access the log at the new position.
+ * @exception StandardException standard Derby error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>instant</ParamName>
+                    <ParamType>LogInstant</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [instant_long=((LogCounter)instant).getValueAsLong()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInstant</MethodName>
+            <MethodComment>/** 
+ * Return the log instant (as an integer) the scan is currently on - this is the log instant of the log record that was returned by getNextRecord.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogRecordEnd</MethodName>
+            <MethodComment>/** 
+ * Return the log instant at the end of the log record on the current LogFile in the form of a log instant. After the scan has been closed, the end of the last log record will be returned except when the scan ended in an empty log file.  In that case, the start of this empty log file will be returned.  (This is done to make sure new log records are inserted into the newest log file.)
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isLogEndFuzzy</MethodName>
+            <MethodComment>/** 
+ * returns true if there is partially writen log records before the crash  in the last log file. Partiall wrires are identified during forward  redo scans for log recovery.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLogInstant</MethodName>
+            <MethodComment>/** 
+ * Return the log instant the scan is currently on - this is the log instant of the log record that was returned by getNextRecord.
+ */
+</MethodComment>
+            <ReturnType>LogInstant</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close the scan.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,232 @@
+<Class>
+    <Id>1909</Id>
+    <Package>org.apache.derbyTesting.junit</Package>
+    <ClassName>ReleaseRepository</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ReleaseRepository  /** 
+ * A repository for Derby releases. &lt;p&gt; The releases are used by tests, for instance by the upgrade and compatibility tests, to verify characteristics and behavior across Derby releases. &lt;p&gt; This particular repository is rather dumb - it is up to the user to keep the repository content updated. The repository layout is based on the layout of the SVN repository for releases at {@code https://svn.apache.org/repos/asf/db/derby/jars}. This means there will be a directory for each release, where the directory name is the release version. Inside this directory, all the distribution JARs can be found. &lt;p&gt; The repository location defaults to  {@code $HOME/.derbyTestingReleases} onUNIX-like systems, and to  {@code %UserProfile%\.derbyTestingReleases} onWindows (in Java, both of these maps to the system property 'user.home'). The location can be overridden by specifying the system property {@code derbyTesting.oldReleasePath}. &lt;p&gt; If the default location doesn't exist, and the system property {@code derbyTesting.oldReleasePath} is unspecified, it is up to the testsusing the release repository to decide if this condition fails the test or not. If the system property is set to a non-existing directory an exception will be thrown when instantiating the repository. &lt;p&gt; The repository is lazily initialized, as there's no reason to incur the initialization cost when running tests that don't require the repository. The disk is inspected only when the repository is instantiated, any updates to the on-disk repository after the repository has been instantiated will not take effect. &lt;p&gt; &lt;em&gt;Implementation note&lt;/em&gt;: This code should be runnable with J2ME, which means that it needs to be compatible with J2SE 1.4 for the time being.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>OVERRIDE_HOME_PROP</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_HOME</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>repos</FieldName>
+            <FieldType>ReleaseRepository</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reposLocation</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dists</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dists</FieldName>
+            <FieldType>DerbyDistribution</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getInstance</MethodName>
+            <MethodComment>/** 
+ * Returns the release repository object. &lt;p&gt; The release repository will be built from a default directory, or from the directory specified by the system property {@code derbyTesting.oldReleasePath}.
+ * @return The release repository object.
+ */
+</MethodComment>
+            <ReturnType>ReleaseRepository</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReleaseRepository</MethodName>
+            <MethodComment>/** 
+ * Creates a new, empty repository.
+ * @param reposLocation the location of the repository contents
+ * @see #buildDistributionList()
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reposLocation</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDistributions</MethodName>
+            <MethodComment>/** 
+ * Returns the list of distributions in the repository.
+ * @return A sorted list of Derby distributions, with the newestdistribution at index zero, or an empty list if there are no distributions in the repository.
+ */
+</MethodComment>
+            <ReturnType>DerbyDistribution[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DerbyDistribution[] [clone=new DerbyDistribution[dists.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dists;toArray;[clone]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildDistributionList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>File[] [tmpCandDists=reposLocation.listFiles(new FileFilter(){
+  public boolean accept(  File pathname){
+    if (!pathname.isDirectory()) {
+      return false;
+    }
+    String name=pathname.getName();
+    int dots=0;
+    for (int i=0; i &lt; name.length(); i++) {
+      char ch=name.charAt(i);
+      if (ch == '.') {
+        dots++;
+      }
+ else       if (!Character.isDigit(ch)) {
+        return false;
+      }
+    }
+    return dots == 3;
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;traceit;["{ReleaseRepository} " + tmpCandDists.length + " candidate releases at "+ reposLocation]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;filterDistributions;[dists]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;sort;[dists]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>accept</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pathname</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [name=pathname.getName()]</InnerVar>
+                <InnerVar>int [dots=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterDistributions</MethodName>
+            <MethodComment>/** 
+ * Filters out distributions that cannot be run in the current environment for some reason. &lt;p&gt; The reason for getting filtered out is typically due to lacking functionality or a bug in a specific Derby distribution.
+ * @param dists the list of distributions to filter (modified in-place)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dists</ParamName>
+                    <ParamType>List</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DerbyVersion [jsr169Support=DerbyVersion._10_1]</InnerVar>
+                <InnerVar>DerbyVersion [noPhoneMEBoot=DerbyVersion._10_3_1_4]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>traceit</MethodName>
+            <MethodComment>/** 
+ * Prints a trace message if tracing is enabled. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>BaseTestCase;traceit;[msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>println</MethodName>
+            <MethodComment>/** 
+ * Prints a debug message if debugging is enabled. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>BaseTestCase;println;[msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

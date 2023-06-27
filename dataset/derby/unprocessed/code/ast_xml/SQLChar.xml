@@ -1,0 +1,2866 @@
+<Class>
+    <Id>1304</Id>
+    <Package>org.apache.derby.iapi.types</Package>
+    <ClassName>SQLChar</ClassName>
+    <SuperClass>DataType</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>StringDataValue</SuperInterface>
+        <SuperInterface>StreamStorable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SQLChar  /** 
+ * The SQLChar represents a CHAR value with UCS_BASIC collation. SQLChar may be used directly by any code when it is guaranteed that the required collation is UCS_BASIC, e.g. system columns. &lt;p&gt; The state may be in char[], a String, a Clob, or an unread stream, depending on how the datatype was created.   &lt;p&gt; Stream notes: &lt;p&gt; When the datatype comes from the database layer and the length of the bytes necessary to store the datatype on disk exceeds the size of a page of the container holding the data then the store returns a stream rather than reading all the bytes into a char[] or String.  The hope is that the usual usage case is that data never need be expanded in the derby layer, and that client can just be given a stream that can be read a char at a time through the jdbc layer.  Even though SQLchar's can't ever be this big, this code is shared by all the various character datatypes including SQLClob which is expected to usually larger than a page. &lt;p&gt; The state can also be a stream in the case of insert/update where the client has used a jdbc interface to set the value as a stream rather than char[].   In this case the hope is that the usual usage case is that stream never need be read until it is passed to store, read once, and inserted into the database.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>PAD</FieldName>
+            <FieldType>char</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RETURN_SPACE_THRESHOLD</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROWBY_FOR_CHAR</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BASE_MEMORY_USAGE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BLANKS</FieldName>
+            <FieldType>char[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CHAR_HEADER_GENERATOR</FieldName>
+            <FieldType>StreamHeaderGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>value</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rawData</FieldName>
+            <FieldType>char[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rawLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cKey</FieldName>
+            <FieldType>CollationKey</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_clobValue</FieldName>
+            <FieldType>Clob</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stream</FieldName>
+            <FieldType>InputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>localeFinder</FieldName>
+            <FieldType>LocaleFinder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>arg_passer</FieldName>
+            <FieldType>char[][]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SQLChar</MethodName>
+            <MethodComment>/** 
+ * no-arg constructor, required by Formattable.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SQLChar</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SQLChar</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>Clob</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[val]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SQLChar</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; This is a special constructor used when we need to represent a password as a VARCHAR (see DERBY-866). If you need a general-purpose constructor for char[] values and you want to re-use this constructor, make sure to keep track of the following: &lt;/p&gt; &lt;ul&gt; &lt;li&gt;A password should never be turned into a String. This is because Java garbage collection makes it easy to sniff memory for String passwords. For more information, see &lt;a href="http://securesoftware.blogspot.com/2009/01/java-security-why-not-to-use-string.html"&gt;this blog&lt;/a&gt;.&lt;/li&gt; &lt;li&gt;It must be possible to 0 out the char[] array wrapped inside this SQLChar. This reduces the vulnerability that someone could sniff the char[] password after Derby has processed it.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>val</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendBlanks</MethodName>
+            <MethodComment>/** 
+ * Private/Protected methods of This class:
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ca</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>howMany</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRawDataAndZeroIt</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; This is a special accessor used when we wrap passwords in VARCHARs. This accessor copies the wrapped char[] and then fills it with 0s so that the password can't be memory-sniffed. For more information, see the comment on the SQLChar( char[] ) constructor. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>char[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [length=rawData.length]</InnerVar>
+                <InnerVar>char[] [retval=new char[length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[rawData, 0, retval, 0, length]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;zeroRawData;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>zeroRawData</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Zero out the wrapped char[] so that it can't be memory-sniffed. This helps us protect passwords. See the comment on the SQLChar( char[] ) constructor. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;fill;[rawData, (char)0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBoolean</MethodName>
+            <MethodComment>/** 
+ * Get Boolean from a SQLChar. &lt;p&gt; Return false for only "0" or "false" for false. No case insensitivity.  Everything else is true. &lt;p&gt; The above matches JCC and the client driver.
+ * @see DataValueDescriptor#getBoolean
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [cleanedValue=getString().trim()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getByte</MethodName>
+            <MethodComment>/** 
+ * Get Byte from a SQLChar. &lt;p&gt; Uses java standard Byte.parseByte() to perform coercion.
+ * @see DataValueDescriptor#getByte
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>byte</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getShort</MethodName>
+            <MethodComment>/** 
+ * Get Short from a SQLChar. &lt;p&gt; Uses java standard Short.parseShort() to perform coercion.
+ * @see DataValueDescriptor#getShort
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>short</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInt</MethodName>
+            <MethodComment>/** 
+ * Get int from a SQLChar. &lt;p&gt; Uses java standard Short.parseInt() to perform coercion.
+ * @see DataValueDescriptor#getInt
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLong</MethodName>
+            <MethodComment>/** 
+ * Get long from a SQLChar. &lt;p&gt; Uses java standard Short.parseLong() to perform coercion.
+ * @see DataValueDescriptor#getLong
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFloat</MethodName>
+            <MethodComment>/** 
+ * Get float from a SQLChar. &lt;p&gt; Uses java standard Float.floatValue() to perform coercion.
+ * @see DataValueDescriptor#getFloat
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>float</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDouble</MethodName>
+            <MethodComment>/** 
+ * Get double from a SQLChar. &lt;p&gt; Uses java standard Double.doubleValue() to perform coercion.
+ * @see DataValueDescriptor#getDouble
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDate</MethodName>
+            <MethodComment>/** 
+ * Get date from a SQLChar.
+ * @see DataValueDescriptor#getDate
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Date</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDate</MethodName>
+            <MethodComment>/** 
+ * Static function to Get date from a string.
+ * @see DataValueDescriptor#getDate
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Date</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>java.util.Calendar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>localeFinder</ParamName>
+                    <ParamType>LocaleFinder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SQLDate [internalDate=new SQLDate(str,false,localeFinder)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTime</MethodName>
+            <MethodComment>/** 
+ * Get time from a SQLChar.
+ * @see DataValueDescriptor#getTime
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Time</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTime</MethodName>
+            <MethodComment>/** 
+ * Static function to Get Time from a string.
+ * @see DataValueDescriptor#getTime
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Time</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>localeFinder</ParamName>
+                    <ParamType>LocaleFinder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SQLTime [internalTime=new SQLTime(str,false,localeFinder,cal)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimestamp</MethodName>
+            <MethodComment>/** 
+ * Get Timestamp from a SQLChar.
+ * @see DataValueDescriptor#getTimestamp
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Timestamp</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimestamp</MethodName>
+            <MethodComment>/** 
+ * Static function to Get Timestamp from a string.
+ * @see DataValueDescriptor#getTimestamp
+ * @exception StandardException thrown on failure to convert
+ */
+</MethodComment>
+            <ReturnType>Timestamp</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>java.util.Calendar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>localeFinder</ParamName>
+                    <ParamType>LocaleFinder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SQLTimestamp [internalTimestamp=new SQLTimestamp(str,false,localeFinder,cal)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>returnStream</MethodName>
+            <MethodComment>/** 
+ * Public Methods of StreamStorable interface:
+ */
+</MethodComment>
+            <ReturnType>InputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setStream</MethodName>
+            <MethodComment>/** 
+ * Set this value to the on-disk format stream.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newStream</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadStream</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getString;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getObject</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStream</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>InputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStreamWithDescriptor</MethodName>
+            <MethodComment>/** 
+ * Returns a descriptor for the input stream for this character data value.
+ * @return Nothing, throws exception.
+ * @throws StandardException if the value isn't represented by a stream
+ * @see SQLClob#getStreamWithDescriptor()
+ */
+</MethodComment>
+            <ReturnType>CharacterStreamDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>typeToBigDecimal</MethodName>
+            <MethodComment>/** 
+ * CHAR/VARCHAR/LONG VARCHAR implementation.  Convert to a BigDecimal using getString.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLength</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [tmpString=getString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>throwStreamingIOException</MethodName>
+            <MethodComment>/** 
+ * Wraps an  {@code IOException} in a {@code StandardException} then throwsthe wrapping exception.
+ * @param ioe the {@code IOException} to wrap
+ * @throws StandardException the wrapping exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ioe</ParamName>
+                    <ParamType>IOException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getString</MethodName>
+            <MethodComment>/** 
+ * If possible, use getCharArray() if you don't really need a string.  getString() will cause an extra  char array to be allocated when it calls the the String()  constructor (the first time through), so may be cheaper to use getCharArray().
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCharArray</MethodName>
+            <MethodComment>/** 
+ * Get a char array.  Typically, this is a simple getter that is cheaper than getString() because we always need to create a char array when doing I/O.  Use this instead of getString() where reasonable. &lt;p&gt; &lt;b&gt;WARNING&lt;/b&gt;: may return a character array that has spare characters at the end.  MUST be used in conjunction with getLength() to be safe.
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>char[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeFormatId</MethodName>
+            <MethodComment>/** 
+ * Return my format identifier.
+ * @see org.apache.derby.iapi.services.io.TypedFormat#getTypeFormatId
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNull</MethodName>
+            <MethodComment>/** 
+ * see if the String value is null.
+ * @see Storable#isNull
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeExternal</MethodName>
+            <MethodComment>/** 
+ * Writes a non-Clob data value to the modified UTF-8 format used by Derby. The maximum stored size is based upon the UTF format used to stored the String. The format consists of a two byte length field and a maximum number of three bytes for each character. &lt;BR&gt; This puts an upper limit on the length of a stored String. The maximum stored length is 65535, these leads to the worse case of a maximum string length of 21844 ((65535 - 2) / 3). &lt;BR&gt; Strings with stored length longer than 64K is handled with the following format: (1) 2 byte length: will be assigned 0. (2) UTF formated string data. (3) terminate the string with the following 3 bytes: first byte is: +---+---+---+---+---+---+---+---+ | 1 | 1 | 1 | 0 | 0 | 0 | 0 | 0 | +---+---+---+---+---+---+---+---+ second byte is: +---+---+---+---+---+---+---+---+ | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | +---+---+---+---+---+---+---+---+ third byte is: +---+---+---+---+---+---+---+---+ | 0 | 0 | 0 | 0 | 0 | 0 | 0 | 0 | +---+---+---+---+---+---+---+---+ The UTF format: Writes a string to the underlying output stream using UTF-8  encoding in a machine-independent manner.  &lt;p&gt; First, two bytes are written to the output stream as if by the  &lt;code&gt;writeShort&lt;/code&gt; method giving the number of bytes to  follow. This value is the number of bytes actually written out,  not the length of the string. Following the length, each character  of the string is output, in sequence, using the UTF-8 encoding  for the character. 
+ * @exception IOException  if an I/O error occurs.
+ * @since      JDK1.0
+ * @see java.io.DataInputStream
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [lvalue=null]</InnerVar>
+                <InnerVar>char[] [data=null]</InnerVar>
+                <InnerVar>int [strlen=rawLength]</InnerVar>
+                <InnerVar>boolean [isRaw]</InnerVar>
+                <InnerVar>int [utflen=strlen]</InnerVar>
+                <InnerVar>StreamHeaderGenerator [header=getStreamHeaderGenerator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>header;generateInto;[out, utflen]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writeUTF;[out, strlen, isRaw, null]</InnerMethodInvoke>
+                <InnerMethodInvoke>header;writeEOF;[out, utflen]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeUTF</MethodName>
+            <MethodComment>/** 
+ * Writes the user data value to a stream in the modified UTF-8 format.
+ * @param out destination stream
+ * @param strLen string length of the value
+ * @param isRaw {@code true} if the source is {@code rawData},  {@code false}if the source is  {@code value}
+ * @param characterReader Reader from _clobValue if it exists
+ * @throws IOException if writing to the destination stream fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>strLen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRaw</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>characterReader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>char[] [data=isRaw ? rawData : null]</InnerVar>
+                <InnerVar>String [lvalue=isRaw ? null : value]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeUTF</MethodName>
+            <MethodComment>/** 
+ * Write a single character to a stream in the modified UTF-8 format.
+ * @param out the destination stream
+ * @param c the character to write
+ * @throws IOException if writing to the destination stream fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>c</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeClobUTF</MethodName>
+            <MethodComment>/** 
+ * Writes the header and the user data for a CLOB to the destination stream.
+ * @param out destination stream
+ * @throws IOException if writing to the destination stream fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isUserClob=(_clobValue != null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternalFromArray</MethodName>
+            <MethodComment>/** 
+ * Reads in a string from the specified data input stream. The  string has been encoded using a modified UTF-8 format.  &lt;p&gt; The first two bytes are read as if by  &lt;code&gt;readUnsignedShort&lt;/code&gt;. This value gives the number of  following bytes that are in the encoded string, not the length of the resulting string. The following bytes are then  interpreted as bytes encoding characters in the UTF-8 format  and are converted into characters.  &lt;p&gt; This method blocks until all the bytes are read, the end of the  stream is detected, or an exception is thrown. 
+ * @param in   a data input stream.
+ * @exception EOFException            if the input stream reaches the endbefore all the bytes.
+ * @exception IOException             if an I/O error occurs.
+ * @exception UTFDataFormatException  if the bytes do not represent avalid UTF-8 encoding of a Unicode string.
+ * @see java.io.DataInputStream#readUnsignedShort()
+ * @see java.io.Externalizable#readExternal
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ArrayInputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [utfLen=(((in.read() &amp; 0xFF) &lt;&lt; 8) | (in.read() &amp; 0xFF))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;resetForMaterialization;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternalClobFromArray</MethodName>
+            <MethodComment>/** 
+ * Reads a CLOB from the source stream and materializes the value in a character array.
+ * @param in source stream
+ * @param charLen the char length of the value, or {@code 0} if unknown
+ * @throws IOException if reading from the source fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ArrayInputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>charLen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;resetForMaterialization;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetForMaterialization</MethodName>
+            <MethodComment>/** 
+ * Resets state after materializing value from an array.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [utflen=in.readUnsignedShort()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;readExternal;[in, utflen, 0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readExternal</MethodName>
+            <MethodComment>/** 
+ * Restores the data value from the source stream, materializing the value in memory.
+ * @param in the source stream
+ * @param utflen the byte length, or {@code 0} if unknown
+ * @param knownStrLen the char length, or {@code 0} if unknown
+ * @throws UTFDataFormatException if an encoding error is detected
+ * @throws IOException if reading the stream fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>utflen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>knownStrLen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [requiredLength]</InnerVar>
+                <InnerVar>int [minGrowBy=growBy()]</InnerVar>
+                <InnerVar>char [str[]]</InnerVar>
+                <InnerVar>int [arrayLength=str.length]</InnerVar>
+                <InnerVar>int [count=0]</InnerVar>
+                <InnerVar>int [strlen=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;resetForMaterialization;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>growBy</MethodName>
+            <MethodComment>/** 
+ * returns the reasonable minimum amount by  which the array can grow . See readExternal.  when we know that the array needs to grow by at least one byte, it is not performant to grow by just one byte instead this amount is used to provide a resonable growby size.
+ * @return minimum reasonable growby size
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreToNull</MethodName>
+            <MethodComment>/** 
+ * @see Storable#restoreToNull
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compare</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException thrown on error
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>orderedNulls</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unknownRV</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compare</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cloneHolder</MethodName>
+            <MethodComment>/** 
+ * Shallow clone a StreamStorable without objectifying.  This is used to  avoid unnecessary objectifying of a stream object.  The only  difference of this method from cloneValue is this method does not objectify a stream.
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SQLChar [self=(SQLChar)getNewNull()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>self;copyState;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cloneValue</MethodName>
+            <MethodComment>/** 
+ * @see DataValueDescriptor#cloneValue 
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forceMaterialization</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewNull</MethodName>
+            <MethodComment>/** 
+ * @see DataValueDescriptor#getNewNull
+ */
+</MethodComment>
+            <ReturnType>DataValueDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getValue</MethodName>
+            <MethodComment>/** 
+ * @see StringDataValue#getValue(RuleBasedCollator) 
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>collatorForComparison</ParamName>
+                    <ParamType>RuleBasedCollator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValueFromResultSet</MethodName>
+            <MethodComment>/** 
+ * @see DataValueDescriptor#setValueFromResultSet 
+ * @exception SQLException      Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSet</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isNullable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[resultSet.getString(colNumber)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setInto</MethodName>
+            <MethodComment>/** 
+ * Set the value into a PreparedStatement.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>PreparedStatement</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>position</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setString;[position, getString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>Clob</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Boolean.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Integer.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Double.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>float</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Float.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Short.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Long.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[Byte.toString(theValue)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [mod=(theValue.length % 2)]</InnerVar>
+                <InnerVar>int [len=(theValue.length / 2) + mod]</InnerVar>
+                <InnerVar>char[] [carray=new char[len]]</InnerVar>
+                <InnerVar>int [cindex=0]</InnerVar>
+                <InnerVar>int [bindex=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[new String(carray)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setBigDecimal</MethodName>
+            <MethodComment>/** 
+ * Only to be called when an application through JDBC is setting a SQLChar to a java.math.BigDecimal.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bigDecimal</ParamName>
+                    <ParamType>BigDecimal</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException        Thrown on error 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>Date</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [strValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[strValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException        Thrown on error 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>Time</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [strValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[strValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException        Thrown on error 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>Timestamp</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [strValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[strValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>formatJDBCDate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sb</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SQLDate;dateToString;[cal.get(Calendar.YEAR), cal.get(Calendar.MONTH) - Calendar.JANUARY + 1, cal.get(Calendar.DAY_OF_MONTH), sb]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>formatJDBCTime</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cal</ParamName>
+                    <ParamType>Calendar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sb</ParamName>
+                    <ParamType>StringBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SQLTime;timeToString;[cal.get(Calendar.HOUR_OF_DAY), cal.get(Calendar.MINUTE), cal.get(Calendar.SECOND), sb]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setValue</MethodName>
+            <MethodComment>/** 
+ * Set the value from the stream which is in the on-disk format.
+ * @param theStream On disk format of the stream
+ * @param valueLength length of the logical value in characters, or&lt;code&gt;DataValueDescriptor.UNKNOWN_LOGICAL_LENGTH&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theStream</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>valueLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setStream;[theStream]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setObjectForCast</MethodName>
+            <MethodComment>/** 
+ * Allow any Java type to be cast to a character type using Object.toString.
+ * @see DataValueDescriptor#setObjectForCast
+ * @exception StandardException thrown on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>instanceOfResultType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultTypeClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setFrom</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theValue</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setValue;[theValue.getString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>normalize</MethodName>
+            <MethodComment>/** 
+ * Normalization method - this method may be called when putting a value into a SQLChar, for example, when inserting into a SQLChar column.  See NormalizeResultSet in execution.
+ * @param desiredType   The type to normalize the source column to
+ * @param source        The value to normalize
+ * @exception StandardException             Thrown for null intonon-nullable column, and for truncation error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredType</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;normalize;[desiredType, source.getString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>normalize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredType</ParamName>
+                    <ParamType>DataTypeDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [desiredWidth=desiredType.getMaximumWidth()]</InnerVar>
+                <InnerVar>int [sourceWidth=sourceValue.length()]</InnerVar>
+                <InnerVar>String [truncatedString=sourceValue.substring(0,desiredWidth)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;hasNonBlankChars;[sourceValue, desiredWidth, sourceWidth]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setValue;[truncatedString]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasNonBlankChars</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>end</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setWidth</MethodName>
+            <MethodComment>/** 
+ * Set the width of the to the desired value.  Used when CASTing.  Ideally we'd recycle normalize(), but the behavior is different (we issue a warning instead of an error, and we aren't interested in nullability).
+ * @param desiredWidth  the desired length
+ * @param desiredScale  the desired scale (ignored)
+ * @param errorOnTrunc  throw an error on truncation
+ * @exception StandardException     Thrown when errorOnTruncis true and when a shrink will truncate non-white spaces.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredWidth</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desiredScale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>errorOnTrunc</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [sourceWidth]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUTF8Length</MethodName>
+            <MethodComment>/** 
+ * Get the number of bytes needed to represent a string in modified UTF-8, which is the encoding used by  {@code writeExternal()} and{@code writeUTF()}.
+ * @param string the string whose length to calculate
+ * @param start start index (inclusive)
+ * @param end end index (exclusive)
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>string</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>end</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CounterOutputStream [cs=new CounterOutputStream()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>equals</MethodName>
+            <MethodComment>/** 
+ * The = operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the =
+ * @param right         The value on the right side of the =
+ * @return  A SQL boolean value telling whether the two parameters are equal
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notEquals</MethodName>
+            <MethodComment>/** 
+ * The &amp;lt;&amp;gt; operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the operator
+ * @param right         The value on the right side of the operator
+ * @return  A SQL boolean value telling whether the two parametersare not equal
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lessThan</MethodName>
+            <MethodComment>/** 
+ * The &amp;lt; operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the operator
+ * @param right         The value on the right side of the operator
+ * @return  A SQL boolean value telling whether the first operand isless than the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>greaterThan</MethodName>
+            <MethodComment>/** 
+ * The &amp;gt; operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the operator
+ * @param right         The value on the right side of the operator
+ * @return  A SQL boolean value telling whether the first operand isgreater than the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lessOrEquals</MethodName>
+            <MethodComment>/** 
+ * The &amp;lt;= operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the operator
+ * @param right         The value on the right side of the operator
+ * @return  A SQL boolean value telling whether the first operand isless than or equal to the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>greaterOrEquals</MethodName>
+            <MethodComment>/** 
+ * The &amp;gt;= operator as called from the language module, as opposed to the storage module.
+ * @param left          The value on the left side of the operator
+ * @param right         The value on the right side of the operator
+ * @return  A SQL boolean value telling whether the first operand isgreater than or equal to the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>left</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>right</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [comparison]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>charLength</MethodName>
+            <MethodComment>/** 
+ * This method implements the char_length function for char.
+ * @param result    The result of a previous call to this method, nullif not called yet
+ * @return  A SQLInteger containing the length of the char value
+ * @exception StandardException     Thrown on error
+ * @see ConcatableDataValue#charLength(NumberDataValue)
+ */
+</MethodComment>
+            <ReturnType>NumberDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>NumberDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[this.getLength()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>concatenate</MethodName>
+            <MethodComment>/** 
+ * @see StringDataValue#concatenate
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftOperand</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightOperand</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[leftOperand.getString().concat(rightOperand.getString())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>like</MethodName>
+            <MethodComment>/** 
+ * This method implements the like function for char (with no escape value).
+ * @param pattern       The pattern to use
+ * @return  A SQL boolean value telling whether the first operand islike the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pattern</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [likeResult]</InnerVar>
+                <InnerVar>char[] [evalCharArray=getCharArray()]</InnerVar>
+                <InnerVar>char[] [patternCharArray=((SQLChar)pattern).getCharArray()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>like</MethodName>
+            <MethodComment>/** 
+ * This method implements the like function for char with an escape value.
+ * @param pattern       The pattern to use
+ * @return  A SQL boolean value telling whether the first operand islike the second operand
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>BooleanDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pattern</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>escape</ParamName>
+                    <ParamType>DataValueDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [likeResult]</InnerVar>
+                <InnerVar>char[] [evalCharArray=getCharArray()]</InnerVar>
+                <InnerVar>char[] [patternCharArray=((SQLChar)pattern).getCharArray()]</InnerVar>
+                <InnerVar>char[] [escapeCharArray=(((SQLChar)escape).getCharArray())]</InnerVar>
+                <InnerVar>int [escapeLength=escape.getLength()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>locate</MethodName>
+            <MethodComment>/** 
+ * This method implements the locate function for char.
+ * @param searchFrom    - The string to search from
+ * @param start         - The position to search from in string searchFrom
+ * @param result        - The object to returnNote: use getString() to get the string to search for.
+ * @return  The position in searchFrom the fist occurrence of this.value.0 is returned if searchFrom does not contain this.value.
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>NumberDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>searchFrom</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>NumberDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>NumberDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startVal]</InnerVar>
+                <InnerVar>String [mySearchFrom=searchFrom.getString()]</InnerVar>
+                <InnerVar>String [mySearchFor=this.getString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[mySearchFrom.indexOf(mySearchFor,startVal - 1) + 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>substring</MethodName>
+            <MethodComment>/** 
+ * The SQL substr() function.
+ * @param start     Start of substr
+ * @param length    Length of substr
+ * @param result    The result of a previous call to this method,null if not called yet.
+ * @param maxLen    Maximum length of the result
+ * @return  A ConcatableDataValue containing the result of the substr()
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>ConcatableDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>NumberDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>NumberDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>ConcatableDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxLen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startInt]</InnerVar>
+                <InnerVar>int [lengthInt]</InnerVar>
+                <InnerVar>StringDataValue [stringResult]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trimInternal</MethodName>
+            <MethodComment>/** 
+ * This function public for testing purposes.
+ * @param trimType  Type of trim (LEADING, TRAILING, or BOTH)
+ * @param trimChar  Character to trim
+ * @param source    String from which to trim trimChar
+ * @return A String containing the result of the trim.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>trimType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>trimChar</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [len=source.length()]</InnerVar>
+                <InnerVar>int [start=0]</InnerVar>
+                <InnerVar>int [end=len - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ansiTrim</MethodName>
+            <MethodComment>/** 
+ * @param trimType  Type of trim (LEADING, TRAILING, or BOTH)
+ * @param trimChar  Character to trim from this SQLChar (may be null)
+ * @param result    The result of a previous call to this method,null if not called yet.
+ * @return A StringDataValue containing the result of the trim.
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>trimType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>trimChar</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>char [trimCharacter=trimChar.getString().charAt(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[trimInternal(trimType,trimCharacter,getString())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>upper</MethodName>
+            <MethodComment>/** 
+ * @see StringDataValue#upper
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [upper=getString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[upper]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lower</MethodName>
+            <MethodComment>/** 
+ * @see StringDataValue#lower 
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>result</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [lower=getString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>result;setValue;[lower]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>typePrecedence</MethodName>
+            <MethodComment>/** 
+ * @see DataValueDescriptor#typePrecedence 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stringCompare</MethodName>
+            <MethodComment>/** 
+ * Compare two Strings using standard SQL semantics.
+ * @param op1               The first String
+ * @param op2               The second String
+ * @return  -1 - op1 &amp;lt;  op20 - op1 == op2 1 - op1 &amp;gt; op2
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op1</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>op2</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [posn]</InnerVar>
+                <InnerVar>char [leftchar]</InnerVar>
+                <InnerVar>char [rightchar]</InnerVar>
+                <InnerVar>int [leftlen]</InnerVar>
+                <InnerVar>int [rightlen]</InnerVar>
+                <InnerVar>int [retvalIfLTSpace]</InnerVar>
+                <InnerVar>String [remainingString]</InnerVar>
+                <InnerVar>int [remainingLen]</InnerVar>
+                <InnerVar>int [shorterLen=leftlen &lt; rightlen ? leftlen : rightlen]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stringCompare</MethodName>
+            <MethodComment>/** 
+ * Compare two SQLChars.  
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>char1</ParamName>
+                    <ParamType>SQLChar</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>char2</ParamName>
+                    <ParamType>SQLChar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stringCompare</MethodName>
+            <MethodComment>/** 
+ * Compare two Strings using standard SQL semantics.
+ * @param op1               The first String
+ * @param op2               The second String
+ * @return  -1 - op1 &amp;lt;  op20 - op1 == op2 1 - op1 &amp;gt; op2
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op1</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leftlen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>op2</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightlen</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [posn]</InnerVar>
+                <InnerVar>char [leftchar]</InnerVar>
+                <InnerVar>char [rightchar]</InnerVar>
+                <InnerVar>int [retvalIfLTSpace]</InnerVar>
+                <InnerVar>char[] [remainingString]</InnerVar>
+                <InnerVar>int [remainingLen]</InnerVar>
+                <InnerVar>int [shorterLen=leftlen &lt; rightlen ? leftlen : rightlen]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCollationKey</MethodName>
+            <MethodComment>/** 
+ * This method gets called for the collation sensitive char classes ie CollatorSQLChar, CollatorSQLVarchar, CollatorSQLLongvarchar, CollatorSQLClob. These collation sensitive chars need to have the  collation key in order to do string comparison. And the collation key is obtained using the Collator object that these classes already have.
+ * @return CollationKey obtained using Collator on the string
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>CollationKey</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>char [tmpCharArray[]]</InnerVar>
+                <InnerVar>int [lastNonspaceChar=rawLength]</InnerVar>
+                <InnerVar>RuleBasedCollator [rbc=getCollatorForCollation()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hashCode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [lvalue=value]</InnerVar>
+                <InnerVar>int [lastNonPadChar=lvalue.length() - 1]</InnerVar>
+                <InnerVar>int [hashcode=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hashCodeForCollation</MethodName>
+            <MethodComment>/** 
+ * Hash code implementation for collator sensitive subclasses.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>CollationKey [key=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewVarchar</MethodName>
+            <MethodComment>/** 
+ * Get a SQLVarchar for a built-in string function.  
+ * @return a SQLVarchar.
+ * @exception StandardException     Thrown on error
+ */
+</MethodComment>
+            <ReturnType>StringDataValue</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLocaleFinder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>localeFinder</ParamName>
+                    <ParamType>LocaleFinder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocale</MethodName>
+            <MethodComment>/** 
+ * @exception StandardException        Thrown on error 
+ */
+</MethodComment>
+            <ReturnType>Locale</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCollatorForCollation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RuleBasedCollator</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocaleFinder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LocaleFinder</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>estimateMemoryUsage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [sz=BASE_MEMORY_USAGE + ClassSize.estimateMemoryUsage(value)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyState</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>SQLChar</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;copyState;[other.value, other.rawData, other.rawLength, other.cKey, other.stream, other._clobValue, other.localeFinder]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyState</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>otherValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherRawData</ParamName>
+                    <ParamType>char[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherRawLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherCKey</ParamName>
+                    <ParamType>CollationKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherStream</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherClobValue</ParamName>
+                    <ParamType>Clob</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>otherLocaleFinder</ParamName>
+                    <ParamType>LocaleFinder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTraceString</MethodName>
+            <MethodComment>/** 
+ * Gets a trace representation for debugging.
+ * @return a trace representation of this SQL Type.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStreamHeaderGenerator</MethodName>
+            <MethodComment>/** 
+ * Returns the default stream header generator for the string data types.
+ * @return A stream header generator.
+ */
+</MethodComment>
+            <ReturnType>StreamHeaderGenerator</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setStreamHeaderFormat</MethodName>
+            <MethodComment>/** 
+ * Sets the mode for the database being accessed.
+ * @param inSoftUpgradeMode {@code true} if the database is being accessedin soft upgrade mode,  {@code false} if not, and {@code null} ifunknown
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inSoftUpgradeMode</ParamName>
+                    <ParamType>Boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClobLength</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rawGetClobLength</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [maxLength=Integer.MAX_VALUE]</InnerVar>
+                <InnerVar>long [length=_clobValue.length()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,914 @@
+/**
+ * LanguageConnectionContext keeps the pool of prepared statements,
+ * activations, and cursors in use by the current connection.
+ * 
+ * The generic impl does not provide statement caching.
+ *
+ *
+ */
+
+/** The maximum size of acts since the last time it was trimmed. Used to
+     * determine whether acts should be trimmed to reclaim space. */
+
+/**
+     * If xplainOnlyMode is set (via SYSCS_SET_XPLAIN_MODE), then the
+     * connection does not actually execute statements, but only
+     * compiles them, and emits the query plan information into the
+     * XPLAIN tables.
+     */
+
+/** the current xplain schema. Is usually NULL. Can be set via
+     * SYSCS_SET_XPLAIN_SCHEMA, in which case it species the schema into
+     * which XPLAIN information should be stored in user tables.
+     */
+
+/**
+     * For each XPLAIN table, this map stores a SQL INSERT statement which
+     * can be prepared and used to insert rows into the table during the
+     * capturing of statistics data into the user XPLAIN tables.
+     */
+
+/**
+    The transaction to use within this language connection context.  It may
+    be more appropriate to have it in a separate context (LanguageTransactionContext?).
+    REVISIT (nat): I shoehorned the transaction context that
+    the language uses into this class.  The main purpose is so
+    that the various language code can find out what its
+    transaction is.
+    **/
+
+/**
+     * If non-null indicates that a read-only nested 
+     * user transaction is in progress.
+     */
+
+/**
+     * queryNestingDepth is a counter used to keep track of how many calls 
+     * have been made to begin read-only nested transactions. Only the first call 
+     * actually starts a Nested User Transaction with the store. Subsequent
+     * calls simply increment this counter. commitNestedTransaction only
+     * decrements the counter and when it drops to 0 actually commits the 
+     * nested user transaction.
+     */
+
+/**
+     * The top SQL session context stack frame (SQL 2003, section
+     * 4.37.3), is kept in topLevelSSC. For nested session contexts,
+     * the SQL session context is held by the activation of the
+     * calling statement, cf. pushNestedSessionContext and it is
+     * accessible through the current statement context
+     * (compile-time), or via the current activation (execution-time).
+     *      */
+
+/**
+     * Used to hold the computed value of the initial default schema,
+     * cf logic in initDefaultSchemaDescriptor.
+     */
+
+/**
+     * To support lastAutoincrementValue: This is a hashtable which maps
+     * schemaName,tableName,columnName to a Long value.
+     */
+
+/**
+     * whether to allow updates or not. 
+     */
+
+/**
+     * Interrupt status flag of this session's thread, in the form of an
+     * exception created where an interrupt was (last) detected during operation,
+     * null if no interrupt has been seen.
+     */
+
+/**
+     * Connection local state for cached {@code TableDescriptor}s used
+     * for keeping track of referenced columns for a table during DDL
+     * operations.
+     */
+
+/**
+     * The set of disk backed hash tables containing any index rows
+     * saved for deferred constraints in this transaction, keyed by the
+     * conglomerate id. Checked at commit time, then discarded.
+     */
+
+/**
+     * In contrast to current user id, which may change (inside a routine
+     * executing with definer's rights), the sessionUser is constant in a
+     * session.
+     */
+
+/**
+     * Compute the initial default schema and set
+     * cachedInitialDefaultSchemaDescr accordingly.
+     *
+     * @return computed initial default schema value for this session
+     *      */
+
+/**
+     * Get the computed value for the initial default schema.
+     * @return the schema descriptor of the computed initial default schema
+     */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     * get the lock escalation threshold.
+     */
+
+/**
+     * Add the activation to those known about by this connection.
+     */
+
+/**
+     * Make a note that some activations are marked unused
+     */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     * After a release of a savepoint, we need to go through our temp tables 
+     * list. If there are tables with their declare or drop or modified in 
+     * savepoint levels set to savepoint levels higher than the current 
+     * savepoint level, then we should change them to the current savepoint
+     * level
+     */
+
+/**
+     * Do the necessary work at commit time for temporary tables
+     * 
+     * 1)If a temporary table was marked as dropped in this transaction, then 
+     *   remove it from the list of temp tables for this connection
+     * 2)If a temporary table was not dropped in this transaction, then mark 
+     *   it's declared savepoint level and modified savepoint level as -1
+     * 3)After savepoint fix up, then handle all ON COMMIT DELETE ROWS with
+     *   no open held cursor temp tables.
+     * 
+     *
+     * @param in_xa_transaction if true, then transaction is an XA transaction,
+     *                          and special nested transaction may be necessary
+     *                          to cleanup internal containers supporting the
+     *                          temp tables at commit time.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+        Reset the connection before it is returned (indirectly) by
+        a PooledConnection object. See EmbeddedConnection.
+     */
+
+/**
+     * Drop all the declared global temporary tables associated with this 
+     * connection. This gets called when a getConnection() is done on a 
+     * PooledConnection. This will ensure all the temporary tables declared on
+     * earlier connection handle associated with this physical database 
+     * connection are dropped before a new connection handle is issued on that 
+     * same physical database connection.
+     */
+
+/**
+     * do the necessary work at rollback time for temporary tables
+     * 1)If a temp table was declared in the UOW, then drop it and remove it 
+     *   from list of temporary tables.
+     * 2)If a temp table was declared and dropped in the UOW, then remove it 
+     *   from list of temporary tables.
+     * 3)If an existing temp table was dropped in the UOW, then recreate it 
+     *   with no data.
+     * 4)If an existing temp table was modified in the UOW, then get rid of 
+     *   all the rows from the table.
+     */
+
+/** Invalidate a dropped temp table */
+
+/**
+     * This is called at the commit time for temporary tables with 
+     * ON COMMIT DELETE ROWS
+     *
+     * If a temp table with ON COMMIT DELETE ROWS doesn't have any held cursor 
+     * open on them, we delete the data from them by dropping the conglomerate 
+     * and recreating the conglomerate. In order to store the new conglomerate
+     * information for the temp table, we need to replace the existing table 
+     * descriptor with the new table descriptor which has the new conglomerate
+     * information
+     *
+     * @param tableName Temporary table name whose table descriptor is 
+     *                  getting changed
+     * @param td        New table descriptor for the temporary table
+     */
+
+/**
+     *      */
+
+/**
+     * Find the declared global temporary table in the list of temporary tables known by this connection.
+     * @param tableName look for this table name in the saved list
+     * @return data structure defining the temporary table if found. Else, return null 
+     *
+     */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+         *          */
+
+/**
+     * Remove the activation to those known about by this connection.
+     *
+     */
+
+/**
+     * Return the number of activations known for this connection.
+     * Note that some of these activations may not be in use
+     * (when a prepared statement is finalized, its activations
+     * are marked as unused and later closed and removed on
+     * the next commit/rollback).
+     */
+
+/**
+     * See if a given cursor is available for use.
+     * if so return its activation. Returns null if not found.
+     * For use in execution.
+     *
+     * @return the activation for the given cursor, null
+     *  if none was found.
+     */
+
+/**
+    *  This method will remove a statement from the  statement cache.
+    *  It should only be called if there is an exception preparing
+    *  the statement. The caller must have set the flag
+    *  {@code preparedStmt.compilingStatement} in the {@code GenericStatement}
+    *  before calling this method in order to prevent race conditions when
+    *  calling {@link CacheManager#remove(Cacheable)}.
+    *
+    *  @param statement Statement to remove
+    *  @exception StandardException thrown if lookup goes wrong.
+    */
+
+/**
+     * See if a given statement has already been compiled for this user, and
+     * if so use its prepared statement. Returns null if not found.
+     *
+     * @exception StandardException thrown if lookup goes wrong.
+     * @return the prepared statement for the given string, null
+     *  if none was found.
+     */
+
+/**
+        Get a connection unique system generated name for a cursor.
+    */
+
+/**
+        Get a connection unique system generated name for an unnamed savepoint.
+    */
+
+/**
+        Get a connection unique system generated id for an unnamed savepoint.
+    */
+
+/**
+     * Build a String for a statement name.
+     *
+     * @param prefix    The prefix for the statement name.
+     * @param number    The number to append for uniqueness
+     *
+     * @return  A unique String for a statement name.
+     */
+
+/**
+     * Do a commit as appropriate for an internally generated
+     * commit (e.g. as needed by sync, or autocommit).
+     *
+     * @param   commitStore true if we should commit the Store transaction
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+     * Do a commmit as is appropriate for a user requested
+     * commit (e.g. a java.sql.Connection.commit() or a language
+     * 'COMMIT' statement.  Does some extra checking to make
+     * sure that users aren't doing anything bad.
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+        Commit the language transaction by doing a commitNoSync()
+        on the store's TransactionController.
+
+        
+        Do *NOT* tell the data dictionary that the transaction is
+        finished. The reason is that this would allow other transactions
+        to see comitted DDL that could be undone in the event of a
+        system crash.
+
+        @param  commitflag  the flags to pass to commitNoSync in the store's
+                            TransactionController
+
+        @exception StandardException thrown on failure
+     */
+
+/**
+        Same as userCommit except commit a distributed transaction.   
+        This commit always commit store and sync the commit.
+
+        @param onePhase if true, allow it to commit without first going thru a
+        prepared state.
+
+        @exception StandardException    thrown if something goes wrong
+     */
+
+/**
+     * If dropAndRedeclare is true, that means we have come here for temp 
+     * tables with on commit delete rows and no held curosr open on them. We 
+     * will drop the existing conglomerate and redeclare a new conglomerate
+     * similar to old conglomerate. This is a more efficient way of deleting 
+     * all rows from the table.
+     *
+     * If dropAndRedeclare is false, that means we have come here for the 
+     * rollback cleanup work. We are trying to restore old definition of the 
+     * temp table (because the drop on it is being rolled back).
+     */
+
+/**
+     * Do a rollback as is appropriate for a user requested
+     * rollback (e.g. a java.sql.Connection.rollback() or a language
+     * 'ROLLBACk' statement.  Does some extra checking to make
+     * sure that users aren't doing anything bad.
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+        Same as userRollback() except rolls back a distrubuted transaction.
+
+        @exception StandardException    thrown if something goes wrong
+     */
+
+/**
+     * When a rollback happens, the language connection context
+     * will close all open activations and invalidate
+     * their prepared statements. Then the language will abort the
+     * Store transaction.
+     * 
+     * The invalidated statements can revalidate themselves without
+     * a full recompile if they verify their dependencies' providers still
+     * exist unchanged. REVISIT when invalidation types are created.
+     * 
+     * REVISIT: this may need additional alterations when
+     * RELEASE SAVEPOINT/ROLLBACK TO SAVEPOINT show up.
+     * 
+     * Also, tell the data dictionary that the transaction is finished,
+     * if necessary (that is, if the data dictionary was put into
+     * DDL mode in this transaction.
+     *
+     * @param xa    true if this is an xa rollback
+     * @param requestedByUser   true if requested by user
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+     * Reset all statement savepoints. Traverses the StatementContext
+     * stack from bottom to top, calling resetSavePoint()
+     * on each element.
+     *
+     * @exception StandardException thrown if something goes wrong
+     */
+
+/**
+     * Let the context deal with a rollback to savepoint
+     *
+     * @param   savepointName   Name of the savepoint that needs to be rolled back
+     * @param   refreshStyle    boolean indicating whether or not the controller should close
+     * open conglomerates and scans. Also used to determine if language should close
+     * open activations.
+     * @param   kindOfSavepoint  A NULL value means it is an internal savepoint (ie not a user defined savepoint)
+     * Non NULL value means it is a user defined savepoint which can be a SQL savepoint or a JDBC savepoint
+     *   A String value for kindOfSavepoint would mean it is SQL savepoint
+     *   A JDBC Savepoint object value for kindOfSavepoint would mean it is JDBC savepoint
+     *
+     * @exception StandardException thrown if something goes wrong
+     */
+
+/**
+      Let the context deal with a release of a savepoint
+
+      @param    savepointName   Name of the savepoint that needs to be released
+      @param    kindOfSavepoint  A NULL value means it is an internal savepoint (ie not a user defined savepoint)
+      Non NULL value means it is a user defined savepoint which can be a SQL savepoint or a JDBC savepoint
+      A String value for kindOfSavepoint would mean it is SQL savepoint
+      A JDBC Savepoint object value for kindOfSavepoint would mean it is JDBC savepoint
+
+      @exception StandardException thrown if something goes wrong
+     */
+
+/**
+      Sets a savepoint. Causes the Store to set a savepoint.
+
+      @param    savepointName   name of savepoint
+      @param    kindOfSavepoint  A NULL value means it is an internal savepoint (ie not a user defined savepoint)
+      Non NULL value means it is a user defined savepoint which can be a SQL savepoint or a JDBC savepoint
+      A String value for kindOfSavepoint would mean it is SQL savepoint
+      A JDBC Savepoint object value for kindOfSavepoint would mean it is JDBC savepoint
+
+        @exception StandardException thrown if something goes wrong
+      */
+
+/**
+     * Start a Nested User Transaction (NUT) with the store. If a NUT is 
+     * already active simply increment a counter, queryNestingDepth, to keep
+     * track of how many times we have tried to start a NUT.
+     */
+
+/**
+     * Get the transaction controller to use at compile time with this language
+     * connection context. If a NUT is active then return NUT else return parent
+     * transaction.
+     */
+
+/** Get the data value factory to use with this language connection
+        context.
+     */
+
+/**
+        Get the language factory to use with this language connection
+        context.
+     */
+
+/**
+        Get the language connection factory to use with this language connection
+        context.
+     */
+
+/**
+     * check if there are any activations that reference this temporary table
+     * @param tableName look for any activations referencing this table name
+     * @return boolean  false if found no activations
+     */
+
+/**
+     * Verify that there are no activations with open held result sets.
+     *
+     * @return boolean  Found no open (held) resultsets.
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+     * Verify that there are no activations with open result sets
+     * on the specified prepared statement.
+     *
+     * @param pStmt     The prepared Statement
+     * @param provider  The object precipitating a possible invalidation
+     * @param action    The action causing the possible invalidation
+     *
+     * @return Nothing.
+     *
+     * @exception StandardException thrown on failure
+     */
+
+/**
+     * Get the session user
+     *
+     * @return String the authorization id of the session user.
+     */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      * SchemaDescriptor sd)
+     */
+
+/**
+     *      *      String schemaName)
+     */
+
+/**
+     * Get the identity column value most recently generated.
+     *
+     * @return the generated identity column value
+     */
+
+/**
+     * Set the field of most recently generated identity column value.
+     *
+     * @param val the generated identity column value
+     */
+
+/**
+     * Push a CompilerContext on the context stack with
+     * the current default schema as the default schema
+     * which we compile against.
+     *
+     * @return the compiler context
+     */
+
+/**
+     * Pop a CompilerContext off the context stack.
+     *
+     * @param cc  The compiler context.
+     */
+
+/**
+     * Pop a StatementContext of the context stack.
+     *
+     * @param statementContext  The statement context.
+     * @param error             The error, if any  (Only relevant for DEBUG)
+     */
+
+/**
+     * Push a new execution statement validator.  An execution statement 
+     * validator is an object that validates the current statement to
+     * ensure that it is permitted given the current execution context.
+     * An example of a validator a trigger ExecutionStmtValidator that
+     * doesn't allow ddl on the trigger target table.
+     * 
+     * Multiple ExecutionStmtValidators may be active at any given time.
+     * This mirrors the way there can be multiple connection nestings
+     * at a single time.  The validation is performed by calling each
+     * validator's validateStatement() method.  This yields the union
+     * of all validations.
+     *
+     * @param validator the validator to add
+     */
+
+/**
+     * Remove the validator.  Does an object identity (validator == validator)
+     * comparison.  Asserts that the validator is found.
+     *
+     * @param validator the validator to remove
+     *
+     * @exception StandardException on error
+     */
+
+/**
+     * Push a new trigger execution context.
+     * 
+     * Multiple TriggerExecutionContexts may be active at any given time.
+     *
+     * @param tec the trigger execution context
+     *
+     * @exception StandardException on trigger recursion error
+     */
+
+/**
+     * Remove the tec.  Does an object identity (tec == tec)
+     * comparison.  Asserts that the tec is found.
+     *
+     * @param tec the tec to remove
+     *
+     * @exception StandardException on error
+     */
+
+/**
+     * Get the topmost tec.  
+     *
+     * @return the tec
+     */
+
+/**
+     * Validate a statement.  Does so by stepping through all the validators
+     * and executing them.  If a validator throws and exception, then the
+     * checking is stopped and the exception is passed up.
+     *
+     * @param constantAction the constantAction that is about to be executed (and
+     *  should be validated
+     *
+     * @exception StandardException on validation failure
+     */
+
+/**
+     * Set the trigger table descriptor.  Used to compile
+     * statements that may special trigger pseudo tables.
+     *
+     * @param td the table that the trigger is 
+     * defined upon
+     *
+     */
+
+/**
+     * Remove the trigger table descriptor.
+     *
+     * @param td the table to remove from the stack.
+     */
+
+/**
+     * Get the topmost trigger table descriptor
+     *
+     * @return the table descriptor, or null if we
+     * aren't in the middle of compiling a create
+     * trigger.
+     */
+
+/**
+     *      */
+
+/** @see LanguageConnectionContext#incrementBindCount */
+
+/** @see LanguageConnectionContext#decrementBindCount */
+
+/** @see LanguageConnectionContext#getBindCount */
+
+/** @see LanguageConnectionContext#setDataDictionaryWriteMode */
+
+/** @see LanguageConnectionContext#dataDictionaryInWriteMode */
+
+/** @see LanguageConnectionContext#setRunTimeStatisticsMode */
+
+/** @see LanguageConnectionContext#getRunTimeStatisticsMode */
+
+/** @see LanguageConnectionContext#setStatisticsTiming */
+
+/** @see LanguageConnectionContext#getStatisticsTiming */
+
+/** @see LanguageConnectionContext#setRunTimeStatisticsObject */
+
+/** @see LanguageConnectionContext#getRunTimeStatisticsObject */
+
+/**
+      * Reports how many statement levels deep we are.
+      *
+      * @return a statement level &gt;= OUTERMOST_STATEMENT
+      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+      * Reports whether there is any outstanding work in the transaction.
+      *
+      * @return true if there is outstanding work in the transaction
+      *             false otherwise
+      */
+
+/**
+        If worse than a transaction error, everything goes; we
+        rely on other contexts to kill the context manager
+        for this session.
+        
+        If a transaction error, act like we saw a rollback.
+        
+        If more severe or a java error, the outer cleanup
+        will shutdown the connection, so we don't have to clean up.
+        
+        REMIND: connection should throw out all contexts and start
+        over when the connection is closed... perhaps by throwing
+        out the context manager?
+        
+        REVISIT: If statement error, should we do anything?
+        
+        Since the access manager's own context takes care of its own
+        resources on errors, there is nothing that this context has
+        to do with the transaction controller.
+
+        @exception StandardException thrown on error. REVISIT: don't want
+        cleanupOnError's to throw exceptions.
+     */
+
+/**
+     *      */
+
+/**
+        Finish the data dictionary transaction, if any.
+
+        @exception StandardException    Thrown on error
+     */
+
+/**
+      * Increments the statement depth.
+      */
+
+/**
+      * Decrements the statement depth
+      */
+
+/**
+      * Resets the statementDepth.
+      */
+
+/**
+            @exception StandardException The operation is disallowed.
+      */
+
+/**
+            */
+
+/**
+           */
+
+/**
+     * lastAutoincrementValue searches for the last autoincrement value inserted
+     * into a column specified by the user. The search for the "last" value
+     * supports nesting levels caused by triggers (Only triggers cause nesting,
+     * not server side JDBC). 
+     * If lastAutoincrementValue is called from within a trigger, the search
+     * space for ai-values are those values that are inserted by this trigger as
+     * well as previous triggers; 
+     * i.e if a SQL statement fires trigger T1, which in turn does something
+     * that fires trigger t2, and if lastAutoincrementValue is called from
+     * within t2, then autoincrement values genereated by t1 are visible to
+     * it. By the same logic, if it is called from within t1, then it does not
+     * see values inserted by t2.
+     *
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     * returns the next value to be inserted into an autoincrement col.
+     * This is used internally by the system to generate autoincrement values
+     * which are going to be inserted into a autoincrement column. This is
+     * used when as autoincrement column is added to a table by an alter 
+     * table statemenet and during bulk insert.
+     *
+     * @param schemaName
+     * @param tableName
+     * @param columnName identify the column uniquely in the system.
+     */
+
+/**
+     * Flush the cache of autoincrement values being kept by the lcc.
+     * This will result in the autoincrement values being written to the
+     * SYSCOLUMNS table as well as the mapping used by lastAutoincrementValue
+     * 
+     * @exception StandardException thrown on error.
+     *      *      */
+
+/**
+     * Copies an existing autoincrement mapping
+     * into autoincrementHT, the cache of autoincrement values 
+     * kept in the languageconnectioncontext.
+     */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     * Return the current SQL session context of the activation
+     *
+     * @param activation the activation
+     */
+
+/**
+     * Return the current SQL session context based on statement context
+     */
+
+/**
+     * {@inheritDoc}
+     */
+
+/**
+     * @param a {@inheritDoc}
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     *      */
+
+/**
+     * This holds a map of AST nodes that have already been printed during a
+     * compiler phase, so as to be able to avoid printing a node more than once.
+     *      */
+
+/**
+     *      */
+
+/** @see LanguageConnectionContext#getXplainOnlyMode() */
+
+/** @see LanguageConnectionContext#setXplainOnlyMode(boolean) */
+
+/** @see LanguageConnectionContext#getXplainSchema() */
+
+/** @see LanguageConnectionContext#setXplainSchema(String) */
+
+/**
+     * Set the constraint mode to deferred for the specified constraint.
+     *
+     * @param a             activation
+     * @param cd            the constraint descriptor
+     * @param deferred      the constraint mode
+     *      */
+
+/**
+     * Clear deferred information for this transaction.
+     */
+
+/**
+     * Validate all deferred constraints.
+     */
+
+/**
+     * Validate a deferred constraint.
+     *
+     * @param cd the descriptor of the constraint to validate
+     */
+

@@ -1,0 +1,325 @@
+/**
+
+  A b-tree scan controller corresponds to an instance of an open b-tree scan.
+  
+  Concurrency Notes
+  
+  The concurrency rules are derived from OpenBTree.
+  
+  
+**/
+
+/**
+     * init_startKeyValue, init_qualifier, and init_stopKeyValue all are used 
+     * to store * references to the values passed in when ScanController.init()
+     * is called.  It is assumed that these are not altered by the client
+     * while the scan is active.
+     */
+
+/**
+     * The fetch descriptor which describes the row to be returned by the scan.
+     **/
+
+/**
+     * A constant FetchDescriptor which describes the position of the 
+     * RowLocation field within the btree, currently always the last column).  
+     * Used by lock/unlock to fetch the RowLocation.  
+     * Only needs to be allocated once per scan.
+     **/
+
+/**
+      * Whether the scan should requests UPDATE locks which then will be 
+      * converted to X locks when the actual operation is performed.
+     **/
+
+/**
+     * Delay positioning the  table at the start position until the first
+     * next() call.  The initial position is done in positionAtStartPosition().
+     */
+
+/**
+     * Performance counters ...
+     */
+
+/**
+     * What kind of row locks to get during the scan.
+     **/
+
+/**
+     * A 1 element array to turn fetchNext and fetch calls into 
+     * fetchNextGroup calls.
+     **/
+
+/**
+     * Fetch the next N rows from the table.
+     * 
+     * Utility routine used by both fetchSet() and fetchNextGroup().
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Shared initialization code between init() and reopenScan().
+     * 
+     * Basically save away input parameters describing qualifications for
+     * the scan, and do some error checking.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Position scan at "start" position for a forward scan.
+     *  
+     * Positions the scan to the slot just before the first record to be 
+     * returned from the scan.  Returns the start page latched, and 
+     * sets "current_slot" to the slot number.
+     * 
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Position scan to 0 slot on next page.
+     * 
+     * Position to next page, keeping latch on previous page until we have 
+     * latch on next page.  This routine releases the latch on current_page
+     * once it has successfully gotten the latch on the next page.
+     *
+     * @param pos           current row position of the scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Check if a B-tree page is empty. The control row, which is always
+     * present, is not counted.
+     *
+     * @param page the B-tree page to check
+     * @return true if the page is empty, false otherwise
+     *      */
+
+/**
+    Position scan at "start" position.
+    
+    Positions the scan to the slot just before the first record to be returned
+    from the scan.  Returns the start page latched, and sets "current_slot" to
+    the slot number.
+
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+     * Do any necessary work to complete the scan.
+     *
+     * @param pos           current row position of the scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Do work necessary to close a scan.
+     * 
+     * This routine can only be called "inline" from other btree routines,
+     * as it counts on the state of the pos to be correct.
+     * 
+     * Closing a scan from close() must handle long jumps from exceptions
+     * where the state of pos may not be correct.  The easiest case is
+     * a lock timeout which has caused us not to have a latch on a page,
+     * but pos still thinks there is a latch.  This is the easiest but
+     * other exceptions can also caused the same state at close() time.
+     **/
+
+/**
+     * process_qualifier - Determine if a row meets all qualifier conditions.
+     * 
+     * Check all qualifiers in the qualifier array against row.  Return true
+     * if all compares specified by the qualifier array return true, else
+     * return false.
+     * 
+     * It is up to caller to make sure qualifier list is non-null.
+     *
+     * @param row      The row with the same partial column list as the
+     *                 row returned by the current scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     */
+
+/**
+    Initialize the scan for use.
+    
+    Any changes to this method may have to be reflected in close as well.
+    
+    The btree init opens the container (super.init), and stores away the
+    state of the qualifiers.  The actual searching for the first position
+    is delayed until the first next() call.
+
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+    Close the scan.
+    **/
+
+/**
+    Delete the row at the current position of the scan.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+     * A call to allow client to indicate that current row does not qualify.
+     * 
+     * Indicates to the ScanController that the current row does not
+     * qualify for the scan.  If the isolation level of the scan allows, 
+     * this may result in the scan releasing the lock on this row.
+     * 
+     * Note that some scan implimentations may not support releasing locks on 
+     * non-qualifying rows, or may delay releasing the lock until sometime
+     * later in the scan (ie. it may be necessary to keep the lock until 
+     * either the scan is repositioned on the next row or page).
+     * 
+     * This call should only be made while the scan is positioned on a current
+     * valid row.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Fetch the row at the current position of the Scan.
+     * 
+     * @param row The row into which the value of the current 
+     * position in the scan is to be stored.
+     * @param qualify indicates whether the qualifiers should be applied.
+     * 
+     * @exception  StandardException  Standard exception policy.
+     */
+
+/**
+     *      */
+
+/**
+    Fetch the row at the current position of the Scan.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+     * Fetch the row at the current position of the Scan without applying the 
+     * qualifiers.
+     *      * 
+     * @exception  StandardException  Standard exception policy.
+     */
+
+/**
+     * Return ScanInfo object which describes performance of scan.
+     * 
+     * Return ScanInfo object which contains information about the current
+     * scan.
+     * 
+     *
+     *      *
+     * @return The ScanInfo object which contains info about current scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+    Returns true if the current position of the scan is at a
+    deleted row.  This case can come about if the current scan
+    or another scan on the same table in the same transaction
+    deleted the row after the next() call which positioned the
+    scan at this row.
+
+    The results of a fetch() performed on a scan positioned on
+    a deleted row are undefined.
+
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+     * Return whether this is a keyed conglomerate.
+     * 
+     *
+     * @return whether this is a keyed conglomerate.
+     **/
+
+/**
+     *      *
+     * Not implemented for this class
+     */
+
+/**
+    Move to the next position in the scan.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+    Fetch the row at the next position of the Scan.
+
+    If there is a valid next position in the scan then
+    the value in the template storable row is replaced
+    with the value of the row at the current scan
+    position.  The columns of the template row must
+    be of the same type as the actual columns in the
+    underlying conglomerate.
+
+    The resulting contents of templateRow after a fetchNext() 
+    which returns false is undefined.
+
+    The result of calling fetchNext(row) is exactly logically
+    equivalent to making a next() call followed by a fetch(row)
+    call.  This interface allows implementations to optimize 
+    the 2 calls if possible.
+
+    @param row The template row into which the value
+    of the next position in the scan is to be stored.
+
+    @return True if there is a next position in the scan,
+    false if there isn't.
+
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+    Fetch the location of the current position in the scan.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+    Return a row location object of the correct type to be
+    used in calls to fetchLocation.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+    Replace the entire row at the current position of the scan.
+
+    Unimplemented interface by btree, will throw an exception.
+
+        @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+    Close the scan, a commit or abort is about to happen.
+    **/
+
+/**
+     * Save the current scan position by key and release the latch on the leaf
+     * that's being scanned. This method should be called if the latch on a
+     * leaf needs to be released in the middle of the scan. The scan can
+     * later reposition to the saved position by calling {@code reposition()}.
+     *
+     * @param partialKey known parts of the key that should be saved, or
+     * {@code null} if the entire key is unknown and will have to be fetched
+     * from the page
+     * @param vcols an array which tells which columns of the partial key are
+     * valid (key columns that have 0 in this array are not valid, and their
+     * values must be fetched from the page), or {@code null} if all the
+     * columns are valid
+     *      *      */
+
+/** Shortcut for for savePositionAndReleasePage(null,null). */
+

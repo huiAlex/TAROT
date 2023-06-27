@@ -1,0 +1,913 @@
+<Class>
+    <Id>1000</Id>
+    <Package>org.apache.derby.impl.store.access.btree</Package>
+    <ClassName>BTreeController</ClassName>
+    <SuperClass>OpenBTree</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ConglomerateController</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BTreeController  /** 
+ * A b-tree controller corresponds to an instance of an open b-tree conglomerate. &lt;P&gt; &lt;B&gt;Concurrency Notes&lt;/B&gt; &lt;P&gt; The concurrency rules are derived from OpenBTree. &lt;P&gt;
+ * @see OpenBTree
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>scratch_template</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>get_insert_row_lock</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_MATCH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MATCH_FOUND</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RESCAN_REQUIRED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>BTreeController</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reclaim_deleted_rows</MethodName>
+            <MethodComment>/** 
+ * Attempt to reclaim committed deleted rows from the page. &lt;p&gt; Get exclusive latch on page, and then loop backward through page searching for deleted rows which are committed.  The routine assumes that it is called from a transaction which cannot have  deleted any rows on the page.  For each deleted row on the page it attempts to get an exclusive lock on the deleted row, NOWAIT. If it succeeds, and since this row did not delete the row then the row must have been deleted by a transaction which has committed, so it is safe to purge the row.  It then purges the row from the page. &lt;p&gt; Note that this routine may remove all rows from the page, it will not attempt a merge in this situation.  This is because this routine is called from split which is attempting an insert on the given page, so it would be a waste to merge the page only to split it again to allow the insert of the row causing the split.
+ * @return true if at least one row was purged.  If true, then the routinewill leave the page latched, and the caller will release the latch by committing or aborting the transaction.  The latch must be held to end transaction to insure space on the page remains available for a undo of the purge.
+ * @param open_btree The already open btree to use to get latch on page.
+ * @param pageno     The page number of the leaf to attempt the reclaim on.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>open_btree</ParamName>
+                    <ParamType>OpenBTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [purged_at_least_one_row=false]</InnerVar>
+                <InnerVar>ControlRow [controlRow=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start_xact_and_dosplit</MethodName>
+            <MethodComment>/** 
+ * Start an internal transaction and do the split. &lt;p&gt; This routine starts a new transaction, and handles any errors that may come during the transaction.  This transation must not obtain any locks as they are likely to conflict with the current user transaction. &lt;p&gt; If attempt_to_reclaim_deleted_rows is true this routine will  attempt to reclaim space on the leaf page input, by purging  committed deleted rows from the leaf.  If it succeeds in purging at least one row, then it will commit the internal transaction and return without actually performing a split.  
+ * @param scratch_template  A scratch template used to search a page.
+ * @param rowToInsert       The row to insert, make sure during split tomake room for this row.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>attempt_to_reclaim_deleted_rows</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf_pageno</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scratch_template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowToInsert</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TransactionManager [split_xact=null]</InnerVar>
+                <InnerVar>OpenBTree [split_open_btree=null]</InnerVar>
+                <InnerVar>ControlRow [root=null]</InnerVar>
+                <InnerVar>boolean [do_split=true]</InnerVar>
+                <InnerVar>long [new_leaf_pageno=leaf_pageno]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>split_xact;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>split_xact;destroy;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>comparePreviousRecord</MethodName>
+            <MethodComment>/** 
+ * Compares the oldrow with the one at 'slot' or the one left to it.  If the slot is first slot it will move to the left sibiling of  the 'leaf' and will compare with the record from the last slot.
+ * @param slot slot number to start with
+ * @param leaf LeafControlRow of the current page
+ * @param rows DataValueDescriptot array to fill it with fetched values
+ * @return  0 if no duplicate1 if duplicate  2 if rescan required
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rows</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldRows</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rh=null]</InnerVar>
+                <InnerVar>boolean [newLeaf=false]</InnerVar>
+                <InnerVar>LeafControlRow [originalLeaf=leaf]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareNextRecord</MethodName>
+            <MethodComment>/** 
+ * Compares the new record with the one at slot or the one  right to it. If the slot is last slot in the page it will move to  the right to sibling of the leaf and will compare with the record  from the last slot. 
+ * @param slot slot number to start with
+ * @param leaf LeafControlRow of the current page
+ * @param rows DataValueDescriptot array to fill it with fetched values
+ * @return  0 if no duplicate1 if duplicate  2 if rescan required
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rows</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldRows</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordHandle [rh=null]</InnerVar>
+                <InnerVar>boolean [newLeaf=false]</InnerVar>
+                <InnerVar>LeafControlRow [originalLeaf=leaf]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareRowsForInsert</MethodName>
+            <MethodComment>/** 
+ * Compares two rows for insert. If the two rows are not equal, {@link #NO_MATCH} is returned. Otherwise, it tries to get a lock onthe row in the tree. If the lock is obtained without waiting, {@link #MATCH_FOUND} is returned (even if the row has been deleted).Otherwise,  {@link #RESCAN_REQUIRED} is returned to indicate that thelatches have been released and the B-tree must be rescanned. If  {@code MATCH_FOUND} is returned, the caller should check whetherthe row has been deleted. If so, it may have to move to check the adjacent rows to be sure that there is no non-deleted duplicate row. If  {@code MATCH_FOUND} or {@code RESCAN_REQUIRED} is returned, thetransaction will hold an update lock on the specified record when the method returns. &lt;b&gt;Note!&lt;/b&gt; This method should only be called when the index is almost unique (that is, a non-unique index backing a unique constraint).
+ * @param originalRow row from the tree
+ * @param newRow row to be inserted
+ * @param leaf leaf where originalRow resides
+ * @param slot slot where originalRow
+ * @return  {@code NO_MATCH} if no duplicate is found,{@code MATCH_FOUND} if a duplicate is found, or{@code RESCAN_REQUIRED} if the B-tree must be rescanned
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>originalRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [template=runtime_mem.get_template(getRawTran())]</InnerVar>
+                <InnerVar>FetchDescriptor [lock_fetch_desc=RowUtil.getFetchDescriptorConstant(template.length - 1)]</InnerVar>
+                <InnerVar>RowLocation [lock_row_loc=(RowLocation)scratch_template[scratch_template.length - 1]]</InnerVar>
+                <InnerVar>boolean [latch_released=!getLockingPolicy().lockNonScanRowOnPage(leaf,slot,lock_fetch_desc,template,lock_row_loc,ConglomerateController.LOCK_UPD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareLeftAndRightSiblings</MethodName>
+            <MethodComment>/** 
+ * Compares immidiate left and right records to check for duplicates. This methods compares new record (being inserted) with the record  in immidate left and right postion to see if its duplicate (only for almost unique index and for non null keys)
+ * @param rowToInsert row being inserted
+ * @param insert_slot slot where rowToInsert is being inserted
+ * @param targetleaf page where rowToInsert
+ * @return  0 if no duplicate1 if duplicate  2 if rescan required
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowToInsert</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>insert_slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetleaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doIns</MethodName>
+            <MethodComment>/** 
+ * Insert a row into the conglomerate.
+ * @param rowToInsert The row to insert into the conglomerate.  The storedrepresentations of the row's columns are copied into a new row somewhere in the conglomerate.
+ * @return Returns 0 if insert succeeded.  Returns ConglomerateController.ROWISDUPLICATE if conglomerate supports uniqueness checks and has been created to disallow duplicates, and the row inserted had key columns which were duplicate of a row already in the table.  Other insert failures will raise StandardException's.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowToInsert</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LeafControlRow [targetleaf=null]</InnerVar>
+                <InnerVar>LeafControlRow [save_targetleaf=null]</InnerVar>
+                <InnerVar>int [insert_slot=0]</InnerVar>
+                <InnerVar>int [result_slot=0]</InnerVar>
+                <InnerVar>int [ret_val=0]</InnerVar>
+                <InnerVar>boolean [reclaim_deleted_rows_attempted=false]</InnerVar>
+                <InnerVar>SearchParameters [sp=new SearchParameters(rowToInsert,SearchParameters.POSITION_LEFT_OF_PARTIAL_KEY_MATCH,scratch_template,this,false)]</InnerVar>
+                <InnerVar>FetchDescriptor [lock_fetch_desc=RowUtil.getFetchDescriptorConstant(scratch_template.length - 1)]</InnerVar>
+                <InnerVar>RowLocation [lock_row_loc=(RowLocation)scratch_template[scratch_template.length - 1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>targetleaf;release;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>do_load_insert</MethodName>
+            <MethodComment>/** 
+ * Just insert the row on the current page/slot if it fits. &lt;p&gt;
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowToInsert</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>insert_slot</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LeafControlRow [old_leaf=null]</InnerVar>
+                <InnerVar>boolean [row_inserted=false]</InnerVar>
+                <InnerVar>int [num_rows_on_page=leaf.page.recordCount() - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>do_load_split</MethodName>
+            <MethodComment>/** 
+ * Create room to insert a row to the right of the largest key in table. &lt;p&gt; Perform a split pass on the tree which will move the largest key in leaf right to a new leaf, splitting parent branch pages as necessary.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>LeafControlRow</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rowToInsert</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>LeafControlRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LeafControlRow [new_leaf=null]</InnerVar>
+                <InnerVar>BranchRow [branchrow=BranchRow.createBranchRowFromOldLeafRow(rowToInsert,leaf.page.getPageNumber())]</InnerVar>
+                <InnerVar>long [old_leafpage=leaf.page.getPageNumber()]</InnerVar>
+                <InnerVar>long [new_leaf_pageno=start_xact_and_dosplit(false,old_leafpage,scratch_template,branchrow.getRow(),(ControlRow.SPLIT_FLAG_LAST_ON_PAGE | ControlRow.SPLIT_FLAG_LAST_IN_TABLE))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>leaf;release;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>init</MethodName>
+            <MethodComment>/** 
+ * Initialize the controller for use. &lt;p&gt; Any changes to this method will probably have to be reflected in close as  well. &lt;p&gt; Currently delegates to OpenBTree.  If the btree controller ends up not  having any state of its own, we can remove this method (the VM will  dispatch to OpenBTree), gaining some small efficiency.  For now, this  method remains for clarity.  
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hold</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container</ParamName>
+                    <ParamType>ContainerHandle</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rawtran</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>open_mode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>btree_locking_policy</ParamName>
+                    <ParamType>BTreeLockingPolicy</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conglomerate</ParamName>
+                    <ParamType>BTree</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>undo</ParamName>
+                    <ParamType>LogicalUndo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>static_info</ParamName>
+                    <ParamType>StaticCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dynamic_info</ParamName>
+                    <ParamType>DynamicCompiledOpenConglomInfo</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close the conglomerate controller. &lt;p&gt; Any changes to this method will probably have to be reflected in close as  well. &lt;p&gt; Currently delegates to OpenBTree.  If the btree controller ends up not  having any state of its own, we can remove this method (the VM will  dispatch to OpenBTree), gaining some small efficiency.  For now, this  method remains for clarity.  
+ * @see ConglomerateController#close
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeForEndTransaction</MethodName>
+            <MethodComment>/** 
+ * Close conglomerate controller as part of terminating a transaction. &lt;p&gt; Use this call to close the conglomerate controller resources as part of committing or aborting a transaction.  The normal close() routine may  do some cleanup that is either unnecessary, or not correct due to the  unknown condition of the controller following a transaction ending error. Use this call when closing all controllers as part of an abort of a  transaction. &lt;p&gt; This call is meant to only be used internally by the Storage system, clients of the storage system should use the simple close() interface. &lt;p&gt; RESOLVE (mikem) - move this call to ConglomerateManager so it is obvious that non-access clients should not call this.
+ * @param closeHeldScan     If true, means to close controller even ifit has been opened to be kept opened  across commit.  This is used to close these controllers on abort.
+ * @return boolean indicating that the close has resulted in a real closeof the controller.  A held scan will return false if  called by closeForEndTransaction(false), otherwise it  will return true.  A non-held scan will always return  true.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closeHeldScan</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insert</MethodName>
+            <MethodComment>/** 
+ * Insert a row into the conglomerate.
+ * @see ConglomerateController#insert
+ * @param row The row to insert into the conglomerate.  The storedrepresentations of the row's columns are copied into a new row somewhere in the conglomerate.
+ * @return Returns 0 if insert succeeded.  Returns ConglomerateController.ROWISDUPLICATE if conglomerate supports uniqueness checks and has been created to disallow duplicates, and the row inserted had key columns which were duplicate of a row already in the table.  Other insert failures will raise StandardException's.
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isKeyed</MethodName>
+            <MethodComment>/** 
+ * Return whether this is a keyed conglomerate. &lt;p&gt; All b-trees are keyed.
+ * @see ConglomerateController#isKeyed
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTableProperties</MethodName>
+            <MethodComment>/** 
+ * Request the system properties associated with a table.  &lt;p&gt; Request the value of properties that are associated with a table.  The following properties can be requested: derby.storage.pageSize  derby.storage.pageReservedSpace derby.storage.minimumRecordSize derby.storage.initialPages &lt;p&gt; To get the value of a particular property add it to the property list, and on return the value of the property will be set to it's current  value.  For example: get_prop(ConglomerateController cc) { Properties prop = new Properties(); prop.put("derby.storage.pageSize", ""); cc.getTableProperties(prop); System.out.println( "table's page size = " +  prop.getProperty("derby.storage.pageSize"); }
+ * @param prop   Property list to fill in.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prop</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>container;getContainerProperties;[prop]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInternalTablePropertySet</MethodName>
+            <MethodComment>/** 
+ * Request set of properties associated with a table.  &lt;p&gt; Returns a property object containing all properties that the store knows about, which are stored persistently by the store.  This set of properties may vary from implementation to implementation of the store. &lt;p&gt; This call is meant to be used only for internal query of the properties by jbms, for instance by language during bulk insert so that it can create a new conglomerate which exactly matches the properties that the original container was created with.  This call should not be used by the user interface to present properties to users as it may contain properties that are meant to be internal to jbms.  Some properties are  meant only to be specified by jbms code and not by users on the command line. &lt;p&gt; Note that not all properties passed into createConglomerate() are stored persistently, and that set may vary by store implementation.
+ * @param prop   Property list to add properties to.  If null, routine willcreate a new Properties object, fill it in and return it.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prop</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Properties [ret_properties=ConglomerateUtil.createRawStorePropertySet(prop)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;getTableProperties;[ret_properties]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>load</MethodName>
+            <MethodComment>/** 
+ * Load rows from rowSource into the opened btree. &lt;p&gt; Efficiently load rows into the already opened btree.  The btree must be table locked, as no row locks will be requested by this routine.   On exit from this routine the conglomerate will be closed (on both error or success). &lt;p&gt; This routine does an almost bottom up build of a btree.  It assumes all rows arrive in sorted order, and inserts them directly into the next (to the right) spot in the current leaf until there is no space. Then it calls the generic split code to add the next leaf (RESOLVE -  in the future we could optimize this to split bottom up rather than top down for create index).
+ * @exception StandardException Standard exception policy.  If conglomeratesupports uniqueness checks and has been  created to disallow duplicates, and one of  the rows being loaded had key columns which were duplicate of a row already in the  conglomerate, then raise  SQLState.STORE_CONGLOMERATE_DUPLICATE_KEY_EXCEPTION.
+ * @see org.apache.derby.iapi.store.access.conglomerate.Conglomerate#load
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_manager</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>createConglom</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowSource</ParamName>
+                    <ParamType>RowLocationRetRowSource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [num_rows_loaded=0]</InnerVar>
+                <InnerVar>LeafControlRow [current_leaf=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>delete</MethodName>
+            <MethodComment>/** 
+ * Delete a row from the conglomerate.  
+ * @see ConglomerateController#delete
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fetch</MethodName>
+            <MethodComment>/** 
+ * Fetch the row at the given location.
+ * @see ConglomerateController#fetch
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>validColumns</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fetch</MethodName>
+            <MethodComment>/** 
+ * Fetch the row at the given location.
+ * @see ConglomerateController#fetch
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>validColumns</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitForLock</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertAndFetchLocation</MethodName>
+            <MethodComment>/** 
+ * Insert a row into the conglomerate, and store its location in the provided template row location. Unimplemented by btree.
+ * @see ConglomerateController#insertAndFetchLocation
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateRowLocation</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newRowLocationTemplate</MethodName>
+            <MethodComment>/** 
+ * Return a row location object of the correct type to be used in calls to insertAndFetchLocation.
+ * @see ConglomerateController#newRowLocationTemplate
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRow</MethodName>
+            <MethodComment>/** 
+ * Lock the given row location. &lt;p&gt; Should only be called by access. &lt;p&gt; This call can be made on a ConglomerateController that was opened for locking only. &lt;p&gt; RESOLVE (mikem) - move this call to ConglomerateManager so it is obvious that non-access clients should not call this.
+ * @return true if lock was granted, only can be false if wait was false.
+ * @param loc    The "RowLocation" which describes the exact row to lock.
+ * @param wait   Should the lock call wait to be granted?
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lockRow</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>page_num</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>record_id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wait</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lock_duration</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unlockRowAfterRead</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>forUpdate</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row_qualifies</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replace</MethodName>
+            <MethodComment>/** 
+ * Replace the entire row at the given location.  
+ * @see ConglomerateController#replace
+ * @exception StandardException Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loc</ParamName>
+                    <ParamType>RowLocation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>validColumns</ParamName>
+                    <ParamType>FormatableBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

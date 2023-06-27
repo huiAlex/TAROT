@@ -1,0 +1,673 @@
+/**
+		Return my format identifier.
+	*/
+
+/**
+     * When the derby.system.durability property is set to 'test', the store 
+     * system will not force sync calls in the following cases
+     * - for the log file at each commit
+     * - for the log file before data page is forced to disk
+     * - for page allocation when file is grown
+     * - for data writes during checkpoint
+     * This means it is possible that the recovery system may not work properly,
+     * committed transactions may be lost, and/or database may not
+     * be in a consistent state.
+     * In order that we recognize this case that the database was previously
+     * at any time booted in this mode, this value is written out
+     * into the log control file. This will help prevent us from 
+     * wasting time to resolve issues in such cases. 
+     *      * This value is written as part of the log control file flags byte.
+     */
+
+/**
+     * keeps track of if the database was booted previously at any time with 
+     * derby.system.durability=test
+     */
+
+/** If this exception is set while in replication slave mode, the 
+     * exception will be thrown by the thread doing recovery will. 
+     * Effectively, this will shut down the database. */
+
+/** True if the database has been booted in replication slave pre
+     * mode, effectively turning off writes to the log file.
+     * @see SlaveFactory */
+
+/** DEBUG test only */
+
+/**
+		If not null then something is corrupt in the raw store and this represents the original error.
+	*/
+
+/**
+		If frozen, don't allow anything on disk to change.
+	 */
+
+/**
+	  Product Version information. Invarient after boot.
+	  */
+
+/**
+		On disk database version information. When running in soft upgrade this version
+		may be different to jbmsVersion.
+	*/
+
+/**
+     * Status for whether the check on the sync error on some JVMs has been
+     * done or not. See the checkJvmSyncError method for details.
+     */
+
+/**
+		MT- not needed for constructor
+	*/
+
+/**
+     * Once the log factory is marked as corrupt then the raw store will
+     * shut down.
+	*/
+
+/**
+		MT- not needed
+	*/
+
+/**
+		Make log factory aware of which raw store factory it belongs to
+	*/
+
+/**
+		Recover the rawStore to a consistent state using the log.
+
+		
+		In this implementation, the log is a stream of log records stored in
+		one or more flat files.  Recovery is done in 2 passes: redo and undo.
+		 Redo pass
+		 In the redo pass, reconstruct the state of the rawstore by
+		repeating exactly what happened before as recorded in the log.
+		Undo pass
+		 In the undo pass, all incomplete transactions are rolled back in
+		the order from the most recently started to the oldest.
+
+		MT - synchronization provided by caller - RawStore boot.
+		This method is guaranteed to be the only method being called and can
+		assume single thread access on all fields.
+
+				
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		checkpoint with pre-start transaction
+
+        @param rsf          The RawStoreFactory to use to do the checkpoint.
+        @param df           The DataFactory to use to do the checkpoint. 
+        @param tf           The TransactionFactory to use to do the checkpoint.
+        @param wait         If an existing checkpoint is in progress, then if
+                            wait=true then this routine will wait for the 
+                            checkpoint to complete and the do another checkpoint
+                            and wait for it to finish before returning.
+
+		@exception StandardException Derby Standard Error Policy 
+	*/
+
+/**
+		Flush all unwritten log record up to the log instance indicated to disk
+		and sync.
+		Also check to see if database is frozen or corrupt.
+
+		MT - not needed, wrapper method
+
+		@param where flush log up to here
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Flush all unwritten log record to disk and sync.
+		Also check to see if database is frozen or corrupt.
+
+		MT - not needed, wrapper method
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Verify that we the log file is of the right format and of the right
+		version and log file number.
+
+		MT - not needed, no global variables used
+
+		@param logFileName the name of the log file
+		@param number the log file number
+		@return true if the log file is of the current version and of the
+		correct format
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Verify that we the log file is of the right format and of the right
+		version and log file number.  The log file position is set to the
+		beginning.
+
+		MT - MT-unsafe, caller must synchronize
+
+		@param log the log file
+		@param number the log file number
+		@return true if the log file is of the current version and of the
+		correct format
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Initialize the log to the correct format with the given version and
+		log file number.  The new log file must be empty.  After initializing,
+		the file is synchronously written to disk.
+
+		MT - synchornization provided by caller
+
+		@param newlog the new log file to be initialized
+		@param number the log file number
+		@param prevLogRecordEndInstant the end position of the  previous log record
+
+		@return true if the log file is empty, else false.
+
+		@exception IOException if new log file cannot be accessed or initialized
+	*/
+
+/**
+		Switch to the next log file if possible.
+
+		MT - log factory is single threaded thru a log file switch, the log
+		is frozen for the duration of the switch
+	*/
+
+/**
+		Flush all unwritten log record up to the log instance indicated to disk
+		without syncing.
+
+		MT - not needed, wrapper method
+
+		@param wherePosition flush log up to here
+
+		@exception IOException Failed to flush to the log
+	*/
+
+/** Get rid of old and unnecessary log files
+
+		 MT- only one truncate log is allowed to be taking place at any
+		given time.  Synchronized on this.
+
+	 */
+
+/** Get rid of old and unnecessary log files
+	 * @param firstLogNeeded The log file number of the oldest log file
+	 * needed for recovery.
+	 */
+
+/**
+     * Return the "oldest" log file still needed by recovery. 
+     * 
+     * Returns the log file that contains the undoLWM, ie. the oldest
+     * log record of all uncommitted transactions in the given checkpoint.
+     * 
+     * If no checkpoint is given then returns -1, indicating all log records
+     * may be necessary.
+     *
+     **/
+
+/**
+		Carefully write out this value to the control file.
+        We do safe write of this data by writing the data 
+        into two files every time we write the control data.
+        we write checksum at the end of the file, so if by
+        chance system crashes while writing into the file,
+        using the checksum we find that the control file
+        is hosed then we  use the mirror file, which will have
+        the control data written at last check point.
+
+		see comment at beginning of file for log control file format.
+
+		 MT- synchronized by caller
+	*/
+
+/**
+     * Create the directory where transaction log should go.
+     * @exception StandardException Standard Error Policy
+    */
+
+/**
+     * Create readme file in log directory warning users against touching
+     *  any files in the directory
+     *      */
+
+/**
+		Return the control file name 
+
+		 MT- read only
+	*/
+
+/**
+		Return the mirror control file name 
+
+		 MT- read only
+	*/
+
+/**
+		Given a log file number, return its file name 
+
+		 MT- read only
+	*/
+
+/**
+		Scan backward from start position.
+
+		 MT- read only
+
+		@exception IOException cannot access the log
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Scan backward from end of log.
+		 MT- read only
+
+		@exception IOException cannot access the log
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+	  	  @exception StandardException Ooops.
+	 */
+
+/**
+		Scan Forward from start position.
+
+		 MT- read only
+
+		@param startAt - if startAt == INVALID_LOG_INSTANT,
+			start from the beginning of the log. Otherwise, start scan from startAt.
+		@param stopAt - if not null, stop at this log instant (inclusive).
+			Otherwise, stop at the end of the log
+
+		@exception IOException cannot access the log
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Open a log file and position the file at the beginning.
+		Used by scan to switch to the next log file
+
+		 MT- read only 
+
+		 When the database is in slave replication mode only:
+		Assumes that only recover() will call this method after
+		initializeReplicationSlaveRole() has been called, and until slave
+		replication has ended. If this changes, the current
+		implementation will fail.
+
+		@exception StandardException Standard Derby error policy
+		@exception IOException cannot access the log at the new position.
+	*/
+
+/**
+        Get a read-only handle to the log file positioned at the stated position
+
+         MT- read only
+
+        @return null if file does not exist or of the wrong format
+        @exception IOException cannot access the log at the new position.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+		Boot up the log factory.
+		 MT- caller provide synchronization
+
+		@exception StandardException log factory cannot start up
+	*/
+
+/**
+	    Stop the log factory
+		 MT- caller provide synchronization
+		(RESOLVE: this should be called AFTER dataFactory and transFactory are
+		stopped)
+	*/
+
+/**
+		Append length bytes of data to the log prepended by a long log instant
+		and followed by 4 bytes of length information.
+
+		
+		This method is synchronized to ensure log records are added sequentially
+		to the end of the log.
+
+		MT- single threaded through this log factory.  Log records are
+		appended one at a time.
+
+		@exception StandardException Log Full.
+
+	*/
+
+/**
+		Get the current log instant - this is the log instant of the Next log
+		record to be written out
+		 MT - This method is synchronized to ensure that it always points to
+		the end of a log record, not the middle of one. 
+	*/
+
+/**
+		Return the current log file number.
+
+		 MT - this method is synchronized so that
+		it is not in the middle of being changed by swithLogFile
+	*/
+
+/** 
+		Get the first valid log instant - this is the beginning of the first
+		log file
+
+		MT- synchronized on this
+	*/
+
+/**
+		Flush the log such that the log record written with the instant 
+        wherePosition is guaranteed to be on disk.
+
+		MT - only one flush is allowed to be taking place at any given time 
+		(RESOLVE: right now it single thread thru the log factory while the log
+		is frozen) 
+
+		@exception StandardException cannot sync log file
+
+	*/
+
+/**
+     * Utility routine to call sync() on the input file descriptor.
+     *  
+    */
+
+/**
+	  Open a forward scan of the transaction log.
+
+	   MT- read only
+	  @exception StandardException  Standard Derby exception policy
+	*/
+
+/**
+	  Get a forwards scan
+
+	  @exception StandardException Standard Derby error policy
+	  */
+
+/** {@inheritDoc} */
+
+/**
+				@exception StandardException Standard Derby Error Policy
+	 */
+
+/**
+				@exception StandardException Standard Derby Error Policy
+	 */
+
+/**
+		return the encryption block size used during encrypted db creation
+	 */
+
+/**
+	   returns the length that will make the data to be multiple of encryption
+	   block size based on the given length. Block cipher algorithms like DES 
+	   and Blowfish ..etc  require their input to be an exact multiple of the block size.
+	*/
+
+/**
+	  Get the instant of the first record which was not
+	  flushed.
+
+	  This only works after running recovery the first time.
+	  MT - RESOLVE:
+	  */
+
+/**
+	 * Backup restore - stop sending log record to the log stream
+	 * @exception StandardException Standard Derby error policy
+	 */
+
+/**
+	 * Backup restore - start sending log record to the log stream
+	 * @exception StandardException Standard Derby error policy
+	 */
+
+/**
+	 * Backup restore - is the log being archived to some directory?
+	 * if log archive mode is enabled return true else false
+	 */
+
+/**
+	   Check to see if a database has been upgraded to the required
+	   level in order to use a store feature.
+	   @param requiredMajorVersion  required database Engine major version
+	   @param requiredMinorVersion  required database Engine minor version
+	   @return True if the database has been upgraded to the required level, false otherwise.
+	**/
+
+/**
+     *  Check to see if a database has been upgraded to the required
+     *  level in order to use a store feature.
+     *
+     * @param requiredMajorVersion  required database Engine major version
+     * @param requiredMinorVersion  required database Engine minor version
+     * @param feature Non-null to throw an exception, null to return the 
+     *                state of the version match.
+     * @return  true  if the database has been upgraded to 
+     *         the required level,  false  otherwise.
+     * @exception  StandardException 
+     *             if the database is not at the require version 
+     *             when feature feature is 
+     *             not  null . 
+     */
+
+/**
+		Print error message to user about the log
+		MT - not needed, informational only
+	*/
+
+/**
+		Print error message to user about the log
+		MT - not needed, informational only
+	*/
+
+/**
+     * In case of boot errors, and if database is either booted
+     * with derby.system.durability=test or was previously at any time booted in
+     * this mode, mention in the error message that the error is probably 
+     * because the derby.system.durability was set. 
+     * Dont want to waste time to resolve issues in such
+     * cases
+     * 
+     * MT - not needed, informational only
+     */
+
+/**
+     * print stack trace from the Throwable including
+     * its nested exceptions 
+     * @param t trace starts from this error
+     */
+
+/**
+	 *  Testing support
+	 */
+
+/** 
+		Writes out a partial log record - takes the appendLogRecord.
+		Need to shutdown the database before another log record gets written,
+		or the database is not recoverable.
+	*/
+
+/**
+		Simulate a log full condition
+
+		if TEST_LOG_FULL is set to true, then the property
+		TEST_RECORD_TO_FILL_LOG indicates the number of times this function is
+		call before an IOException simulating a log full condition is raised.
+
+		If TEST_RECORD_TO_FILL_LOG is not set, it defaults to 100 log record
+	*/
+
+/**
+	 * Get the log file to Simulate a log corruption 
+	 * FOR UNIT TESTING USAGE ONLY 
+	*/
+
+/**
+         * Used to determine if the replication master mode has been started,
+         * and the logging for unlogged operations needs to be enabled.
+         *
+         * @return true If the master replication mode is turned on and the 
+         *              unlogged operations need to be logged.
+         *         false If the master replication mode is turned off and the 
+         *               unlogged operations need not be logged.
+         */
+
+/*********************************************************************
+	 * Log Testing
+	 * 
+	 * Implementations may use these strings to simulate error conditions for
+	 * testing purposes.
+	 *
+	 *********************************************************************/
+
+/**
+	  Set to true if we want the checkpoint to only switch the log but not
+	  actually do the checkpoint
+	*/
+
+/**
+	  Set to true if we want the upcoming log record to be only partially
+	  written.  The database is corrupted if not immediately shutdown.
+	  Set TEST_LOG_PARTIAL_LOG_WRITE_NUM_BYTES to the number of bytes to write
+	  out, default is 1 byte.
+	*/
+
+/**
+	  Set to the number of bytes we want the next log record to actually write
+	  out, only used when TEST_LOG_INCOMPLETE_LOG_WRITE is on.  Default is 1
+	  byte.
+	*/
+
+/**
+	  Set to true if we want to simulate a log full condition
+	*/
+
+/**
+	  Set to true if we want to simulate a log full condition while switching log
+	*/
+
+/**
+	  Set to the number of log record we want to write before the log is
+	  simulated to be full.
+	*/
+
+/**
+	 * Set to true if we want to simulate max possible log file number is 
+     * being used.
+	*/
+
+/**	
+	 *	redo a checkpoint during rollforward recovery
+     * 
+     *      */
+
+/**
+     * Make this LogFactory pass log records to the MasterFactory
+     * every time a log record is appended to the log on disk, and
+     * notify the MasterFactory when a log disk flush has taken place.
+     * @param masterFactory The MasterFactory service responsible for
+     * controlling the master side replication behaviour.
+     * @exception StandardException Standard Derby exception policy,
+     * thrown on replication startup error. Will only be thrown if
+     * replication is attempted started on a readonly database, i.e,
+     * never thrown here.
+     */
+
+/**
+     * Stop this LogFactory from passing log records to the
+     * MasterFactory and from notifying the MasterFactory when a log
+     * disk flush has taken place.
+     */
+
+/**
+     * Stop the slave functionality for this LogFactory. Calling this
+     * method causes the thread currently doing recovery to stop the
+     * recovery process and throw a StandardException with SQLState
+     * SHUTDOWN_DATABASE. This should only be done when the database
+     * will be shutdown.
+     *      *      */
+
+/**
+     * Used by LogAccessFile to check if it should take the
+     * replication master role, and thereby send log records to the
+     * MasterFactory.
+     * @param log The LogAccessFile that will take the replication
+     * master role iff this database is master.
+     */
+
+/**
+     * Used to make the slave stop appending log records, complete recovery 
+     * and boot the database.
+     */
+
+/**
+	 * open the given log file name for writes; if file can not be 
+	 * be opened in write sync mode then disable the write sync mode and 
+	 * open the file in "rw" mode.
+ 	 */
+
+/**
+     * In Java 1.4.2 and newer rws and rwd modes for RandomAccessFile
+     * are supported. Still, on some JVMs (e.g. early versions of 1.4.2
+     * and 1.5 on Mac OS and FreeBSD) the support for rws and rwd is
+     * not working. This method attempts to detect this by opening an
+     * existing file in "rws" mode. If this fails, Derby should fall
+     * back to use "rw" mode for the log files followed by explicit
+     * syncing of the log.
+     *
+     * Note: it is important to use "rws" for the test. If "rwd" is used, no
+     * exception is thrown when opening the file, but the syncing does not
+     * take place.
+     *
+     * For more details see DERBY-1 (and DERBY-2020).
+     *
+     * @param logFile information about the log file to be opened
+     *
+     * @return true if a JVM error is detected, false otherwise
+     *
+     * @exception StandardException Standard Derby exception
+     */
+
+/** set the endPosition of the log and make sure the new position won't spill off the end of the log */
+
+/**
+     * Privileged lookup of the ContextService. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged Monitor lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged module lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+

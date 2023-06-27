@@ -1,0 +1,215 @@
+<Class>
+    <Id>1833</Id>
+    <Package>org.apache.derbyTesting.functionTests.tests.upgradeTests</Package>
+    <ClassName>Changes10_2</ClassName>
+    <SuperClass>UpgradeChange</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Changes10_2  /** 
+ * Upgrade test cases for changes made in 10.2. If the old version is 10.2 or later then these tests will not be run. &lt;BR&gt; 10.2 Upgrade issues &lt;UL&gt; &lt;LI&gt; testTriggerInternalVTI - Check internal re-write of triggers does not break triggers in soft upgrade mode. &lt;LI&gt; testReusableRecordIdSequenceNumber - Test reuseable record identifiers does not cause issues in soft upgrade &lt;LI&gt; testGrantRevokeStatements - Check G/R not allowed in soft upgrade. &lt;LI&gt; testDatabaseOwner - test that on a hard upgrade database owner is set. &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>suite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Test</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>BaseTestSuite [suite=new BaseTestSuite("Upgrade changes for 10.2")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>suite;addTestSuite;[Changes10_2.class]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Changes10_2</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testTriggerInternalVTI</MethodName>
+            <MethodComment>/** 
+ * Triger (internal) VTI 10.2 - Check that a statement trigger created in 10.0 or 10.1 can be executed in 10.2 and that a statement trigger created in soft upgrade in 10.2 can be used in older releases. The VTI implementing statement triggers changed in 10.2 from implementations of ResultSet to implementations of PreparedStatement. See DERBY-438. The internal api for the re-written action statement remains the same. The re-compile of the trigger on version changes should automatically switch between the two implementations.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [s=createStatement()]</InnerVar>
+                <InnerVar>boolean [modeDb2SqlOptional=oldAtLeast(10,3)]</InnerVar>
+                <InnerVar>ResultSet [rs=s.executeQuery("SELECT a,b from D438.T438_T1 ORDER BY 2")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s;executeUpdate;["UPDATE D438.T438 set c = c + 1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>JDBC;assertFullResultSet;[rs, new String[][]{{"1","DERBY-438_ROW"},{"1","DERBY-438_STMT"}}]</InnerMethodInvoke>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;executeUpdate;["DELETE FROM D438.T438_T1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;executeUpdate;["DELETE FROM D438.T438_T2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;commit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testReusableRecordIdSequenceNumber</MethodName>
+            <MethodComment>/** 
+ * In 10.2: We will write a ReusableRecordIdSequenceNumber in the  header of a FileContaienr. Verify here that a 10.1 Database does not malfunction from this. 10.1 Databases should ignore the field.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>boolean [runCompress=oldAtLeast(10,1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testGrantRevokeStatements</MethodName>
+            <MethodComment>/** 
+ * Simple test of if GRANT/REVOKE statements are handled correctly in terms of being allowed in soft upgrade.
+ * @throws SQLException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Statement [s=createStatement()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDatabaseOwnerChange</MethodName>
+            <MethodComment>/** 
+ * This method lists the schema names and authorization ids in  SYS.SCHEMAS table. This is to test that the owner of system schemas is  changed from pseudo user "DBA" to the user invoking upgrade. 
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkSystemSchemasOwner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Statement [s=createStatement()]</InnerVar>
+                <InnerVar>ResultSet [rs=s.executeQuery("select AUTHORIZATIONID, SCHEMANAME from SYS.SYSSCHEMAS " + "WHERE SCHEMANAME LIKE 'SYS%' OR " + "SCHEMANAME IN ('NULLID', 'SQLJ')")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rs;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testSystemRoutinePermissions</MethodName>
+            <MethodComment>/** 
+ * This method checks that some system routines are granted public access  after a full upgrade.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeEncryptionFromNone</MethodName>
+            <MethodComment>/** 
+ * Run the change encryption test against a non-encrypted database. Test that changing the encryption is only allowed if the database has been hard-upgraded.  This test assumes it has its own single use database, which will not be booted by the general upgrade test setup.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataSource [ds=JDBCDataSource.getDataSourceLogical("NO_ENCRYPT_10_2")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeEncryptionFromEncryptedDatabase</MethodName>
+            <MethodComment>/** 
+ * Run the change encryption test against a encrypted database. Test that changing the encryption is only allowed if the database has been hard-upgraded.  This test assumes it has its own single use database, which will not be booted by the general upgrade test setup.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataSource [ds=JDBCDataSource.getDataSourceLogical("ENCRYPT_10_2")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

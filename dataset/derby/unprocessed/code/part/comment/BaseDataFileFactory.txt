@@ -1,0 +1,334 @@
+/**
+
+Provides the abstract class with most of the implementation of DataFactory and
+ModuleControl shared by all the different filesystem implementations.
+
+RESOLVE (mikem - 2/19/98) -
+Currently only getContainerClass() is abstract, there are probably more 
+routines which should be abstract.  Also the other implementations should 
+probably inherit from the abstract class, rather than from the DataFileFactory
+class.  Also there probably should be a generic directory and the rest of the
+filesystem implementations parallel to it.
+I wanted to limit the changes going into the branch and then fix 
+inheritance stuff in main.
+
+The code in this class was moved over from DataFileFactory.java and then
+that file was made to inherit from this one.
+
+**/
+
+/**
+		Database creation finished
+
+		@exception StandardException Standard Derby exception policy.
+	*/
+
+/**
+				@exception StandardException Standard Derby error policy
+	*/
+
+/**
+				@exception StandardException Standard Derby error policy
+	*/
+
+/** Add a container with a specified page size to a segment.
+		@exception StandardException Standard Derby error policy
+	*/
+
+/** Add and load a stream container
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		open an exsisting streamContainer
+
+				@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Drop a stream container.
+
+	    Synchronisation
+		
+		This call will remove the container.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		re-Create a container during redo recovery.
+
+		called ONLY during recovery load tran.
+
+		@exception StandardException Standard Derby Error policy
+	 */
+
+/**
+		Drop a container.
+
+	    Synchronisation
+		
+		This call will mark the container as dropped and then obtain an CX lock
+		(table level exclusive lock) on the container. Once a container has 
+        been marked as dropped it cannot be retrieved by an openContainer() 
+        call unless explicitly with droppedOK.
+		
+		Once the exclusive lock has been obtained the container is removed
+		and all its pages deallocated. The container will be fully removed
+		at the commit time of the transaction.
+
+		@exception StandardException Standard Derby error policy
+	*/
+
+/**
+		Return my unique identifier
+
+			*/
+
+/**
+		Really this is just a convience routine for callers that might not
+		have access to a log factory.
+	*/
+
+/**
+     * Register a handler class for insert undo events.
+     * 
+     * Register a class to be called when an undo of an insert is executed.  
+     * When an undo of an event is executed by the raw store 
+     * UndoHandler.insertUndoNotify() will be called, allowing upper level 
+     * callers to execute code as necessary.  The initial need is for the 
+     * access layer to be able to queue post commit reclaim space in the case 
+     * of inserts which are aborted (including the normal case of inserts 
+     * failed for duplicate key violations) (see DERBY-4057)
+     * 
+     *
+     * @param input_undo_handle Class to use to notify callers of an undo of 
+     *                          an insert.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Notify through set handler that an undo of an insert has happened.
+     * 
+     * When an undo of an event is executed by the raw store 
+     * UndoHandler.insertUndoNotify() will be called, allowing upper level 
+     * callers to execute code as necessary.  The initial need is for the 
+     * access layer to be able to queue post commit reclaim space in the case 
+     * of inserts which are aborted (including the normal case of inserts 
+     * failed for duplicate key violations) (see DERBY-4057)
+     * Longer descrption of routine.
+     * 
+     *
+     * @param rxact     raw transaction of the aborted insert.
+     * @param page_key  page key of the aborted insert.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+		Ask the log factory to flush up to this log instant.
+
+		@exception StandardException cannot sync log file
+	*/
+
+/**
+     * Produces new container objects.
+     * 
+     * Concrete implementations of a DataFactory must implement this routine
+     * to indicate what kind of containers are produced. This class produces
+     * file-based containers - RAFContainer objects for files that support
+     * random access and InputStreamContainer object for others, such as data
+     * files in JARs.
+     * 
+     * @return A new file container object.
+     *
+     **/
+
+/**
+     * Creates a RAFContainer object.
+     * This method is overridden in BaseDataFileFactoryJ4 to produce
+     * RAFContainer4 objects instead of RAFContainer objects.
+     */
+
+/**
+	 * Get the loggable allocation action associated with this implementation
+	 *
+	 * @return the PageActions
+	 */
+
+/**
+		Return an alternate path to container file relative to the root directory.
+        The alternate path uses upper case 'C','D', and 'DAT' instead of 
+        lower case - there have been cases of people copying the database and
+        somehow upper casing all the file names.
+
+        The intended use is as a bug fix for track 3444.
+
+		@param containerId The container being opened/created
+		@param stub True if the file name for the stub is requested, otherwise the file name for the data file
+
+	*/
+
+/**
+		Remove stubs in this database.  Stubs are committed deleted containers
+	*/
+
+/**
+	 * keeps track of information about the stub files of the  committed deleted
+	 * containers. We use the info to delete them at checkpoints.
+	 * In addition to the file info , we also keep track of the identity of the
+	 * container; which helps to remove entry in the cache and the log instant
+	 * when the stub was created, which helps us to figure out whether we
+	 * require the stub file for the crash recovery.
+	 * We maintain the information in a hashtable:
+	 * key(LOG INSTANT) Values: File handle , and ContainerIdentity.
+	 **/
+
+/**
+	 * Delete the stub files that are not required for recovery. A stub file
+	 * is not required to be around if the recovery is not going to see
+	 * any log record that belongs to that container. Since the stub files
+	 * are created as a post commit operation, they are not necessary during
+	 * undo operation of the recovery.
+	 *
+	 * To remove a stub file we have to be sure that it was created before the
+	 * redoLWM in the check point record. We can be sure that the stub is not
+	 * required if the log instant when it was created is less than the redoLWM.
+	 */
+
+/**
+     * Find the largest containerid is seg 0.
+     * 
+     * Do a file list of the files in seg0 and return the highest numbered
+     * file found.
+     * 
+     * Until I figure out some reliable place to store this information across
+     * a boot of the system, this is what is used following a boot to assign
+     * the next conglomerate id when a new conglomerate is created.  It is
+     * only called at most once, and then the value is cached by calling store
+     * code.
+     * 
+     *
+	 * @return The largest containerid in seg0.
+     **/
+
+/**
+		Does this factory support this service type.
+	*/
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/** {@inheritDoc} */
+
+/**
+     * Return a jar file by asking the class's 
+     * class loader for the location where the class was loaded from. 
+     * If no value, it returns null
+     * @param cls the Class to ask to print the class name of an object
+     *
+     * @return the ClassPath of a jar file
+     **/
+
+/**
+     * Return values of system properties that identify the OS.
+     * Will catch SecurityExceptions and note them for displaying information.
+     * @return the Java system property value for the OS or a string capturing a
+     * security exception.
+     */
+
+/**
+     * Return values of system properties that identify the JVM. 
+     * Will catch SecurityExceptions and note them for displaying information.
+     * @return the Java system property value from the JVM or a string capturing a
+     * security exception.
+     */
+
+/**
+		Returns the encryption block size used by the algorithm at time of
+		creation of an encrypted database
+	 */
+
+/**
+     * Return an id which can be used to create a container.
+     * 
+     * Return an id number with is greater than any existing container
+     * in the current database.  Caller will use this to allocate future
+     * container numbers - most likely caching the value and then incrementing
+     * it as it is used.
+     * 
+     *
+	 * @return The an id which can be used to create a container.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/** return a secure random number */
+
+/**
+		Add a file to the list of files to be removed post recovery.
+	*/
+
+/**
+		Called after recovery is performed.
+
+		@exception StandardException Standard Derby Error Policy
+	*/
+
+/**
+     * Set up the cache cleaner for the container cache and the page cache.
+     */
+
+/**
+     * get all the names of the files in seg 0.
+     * MT - This method needs to be synchronized to avoid conflicts 
+     * with other privileged actions execution in this class.
+     * @return An array of all the file names in seg0.
+     **/
+
+/**
+	 * removes the data directory(seg*) from database home directory and
+	 * restores it from backup location.
+	 * This function gets called only when any of the folling attributes
+	 * are specified on connection URL:
+	 * Attribute.CREATE_FROM (Create database from backup if it does not exist)
+	 * Attribute.RESTORE_FROM (Delete the whole database if it exists and 
+     *     then restore * it from backup)
+	 * Attribute.ROLL_FORWARD_RECOVERY_FROM:(Perform Rollforward Recovery;
+	 * except for the log directory everthing else is replced  by the copy  from
+	 * backup. log files in the backup are copied to the existing online log 
+     * directory.
+	 *
+	 * In all the cases, data directory(seg*) is replaced by the data directory
+	 * directory from backup when this function is called.
+	 */
+
+/**
+		Is the store read-only.
+	*/
+
+/** Return true if the Lucene plugin is loaded */
+
+/**
+     * @return The StorageFactory used by this dataFactory
+     */
+
+/**
+     * Privileged Monitor lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged startup. Must be private so that user code
+     * can't call this entry point.
+     */
+

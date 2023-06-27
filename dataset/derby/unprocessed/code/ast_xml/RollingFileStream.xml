@@ -1,0 +1,663 @@
+<Class>
+    <Id>1747</Id>
+    <Package>org.apache.derby.impl.services.stream</Package>
+    <ClassName>RollingFileStream</ClassName>
+    <SuperClass>OutputStream</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RollingFileStream  /** 
+ * This class provides rolling file OutputStream.  The file pattern, file size, and number of files can be customized. &lt;p&gt; This class borrows extensively from the java.util.logger.FileHandler class for its file handling ability and instead of handling logger messages it extends  java.io.OutputStream. &lt;p&gt; A pattern consists of a string that includes the following special components that will be replaced at runtime: &lt;ul&gt; &lt;li&gt;    "/"    the local pathname separator  &lt;li&gt;     "%t"   the system temporary directory &lt;li&gt;     "%h"   the value of the "user.home" system property &lt;li&gt;     "%d"   the value of the "derby.system.home" system property &lt;li&gt;     "%g"   the generation number to distinguish rotated logs &lt;li&gt;     "%u"   a unique number to resolve conflicts &lt;li&gt;     "%%"   translates to a single percent sign "%" &lt;/ul&gt; If no "%g" field has been specified and the file count is greater than one, then the generation number will be added to the end of the generated filename, after a dot. &lt;p&gt;  Thus for example a pattern of "%t/java%g.log" with a count of 2 would typically cause files to be written on Solaris to  /var/tmp/java0.log and /var/tmp/java1.log whereas on Windows 95 they would be typically written to C:\TEMP\java0.log and C:\TEMP\java1.log &lt;p&gt;  Generation numbers follow the sequence 0, 1, 2, etc. &lt;p&gt; Normally the "%u" unique field is set to 0.  However, if the &lt;tt&gt;FileHandler&lt;/tt&gt; tries to open the filename and finds the file is currently in use by another process it will increment the unique number field and try again.  This will be repeated until &lt;tt&gt;FileHandler&lt;/tt&gt; finds a file name that is  not currently in use. If there is a conflict and no "%u" field has been specified, it will be added at the end of the filename after a dot. (This will be after any automatically added generation number.) &lt;p&gt; Thus if three processes were all trying to output to fred%u.%g.txt then  they  might end up using fred0.0.txt, fred1.0.txt, fred2.0.txt as the first file in their rotating sequences. &lt;p&gt; Note that the use of unique ids to avoid conflicts is only guaranteed to work reliably when using a local disk file system.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>meter</FieldName>
+            <FieldType>MeteredStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>append</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>limit</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>count</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pattern</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lockFileName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lockStream</FieldName>
+            <FieldType>FileOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>files</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_LOCKS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>java.util.HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>out</FieldName>
+            <FieldType>OutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>written</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RollingFileStream</MethodName>
+            <MethodComment>/** 
+ * Construct a default &lt;tt&gt;RollingFileStream&lt;/tt&gt;. This will be configured entirely with default values:  &lt;ul&gt; &lt;li&gt;pattern - %d/derby-%g.log (DERBY_HOME/derby-0.log)&lt;/li&gt; &lt;li&gt;limit - 0 (unlimited)&lt;/li&gt; &lt;li&gt;count - 1 (one file)&lt;/li&gt; &lt;li&gt;append - false (overwrite and not append)&lt;/li&gt; &lt;/ul&gt;
+ * @exception IOException if there are IO problems opening the files.
+ * @exception SecurityException if a security manager exists and if the caller does not have&lt;tt&gt;LoggingPermission("control"))&lt;/tt&gt;.
+ * @exception NullPointerException if pattern property is an empty String.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SecurityException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>RollingFileStream</MethodName>
+            <MethodComment>/** 
+ * Initialize a &lt;tt&gt;RollingFileStream&lt;/tt&gt; to write to a set of files with optional append. When (approximately) the given limit has been written to one file, another file will be opened. The output will cycle through a set of count files.
+ * @param pattern the pattern for naming the output file
+ * @param limit the maximum number of bytes to write to any one file
+ * @param count the number of files to use
+ * @param append specifies append mode
+ * @exception IOException if there are IO problems opening the files.
+ * @exception SecurityException if a security manager exists and if the caller does not have&lt;tt&gt;LoggingPermission("control")&lt;/tt&gt;.
+ * @exception IllegalArgumentException if limit &amp;lt; 0, or count &amp;lt; 1.
+ * @exception IllegalArgumentException if pattern is an empty string
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pattern</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>limit</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>count</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>append</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;openFiles;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SecurityException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>write</MethodName>
+            <MethodComment>/** 
+ * Implements the write method of the OutputStream.  This writes the value to the metered stream.
+ * @param b The value to write
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.meter;write;[b]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;checkMeter;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openFiles</MethodName>
+            <MethodComment>/** 
+ * Opens the output files files based on the configured pattern, limit, count, and append mode.
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [unique=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generate</MethodName>
+            <MethodComment>/** 
+ * Generates and returns File from a pattern
+ * @param pattern The filename pattern
+ * @param generation The generation number used if there is a conflict
+ * @param unique The unique number to append to the filename
+ * @return The File
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>File</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pattern</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>generation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unique</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>File [file=null]</InnerVar>
+                <InnerVar>String [word=""]</InnerVar>
+                <InnerVar>int [ix=0]</InnerVar>
+                <InnerVar>boolean [sawg=false]</InnerVar>
+                <InnerVar>boolean [sawu=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rotate</MethodName>
+            <MethodComment>/** 
+ * Rotates the log files.  The metered OutputStream is closed,the log files are rotated and then a new metered OutputStream is created.
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close all the files.
+ * @exception SecurityException if a security manager exists and if the caller does not have&lt;tt&gt;LoggingPermission("control")&lt;/tt&gt;.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;fileDelete;[new File(lockFileName)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SecurityException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemProperty</MethodName>
+            <MethodComment>/** 
+ * Gets a system property in a privileged block
+ * @param property The propety to get
+ * @return The property value
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>property</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=AccessController.doPrivileged(new PrivilegedAction&lt;String&gt;(){
+  public String run(){
+    return System.getProperty(property);
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openFile</MethodName>
+            <MethodComment>/** 
+ * Opens a file in the privileged block
+ * @param filename The name of the file to open
+ * @param append if &lt;code&gt;true&lt;/code&gt; open the file in append mode
+ * @return The FileOutputStream for the file
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>FileOutputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>append</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FileOutputStream [fis=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>FileOutputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>FileOutputStream [res=new FileOutputStream(filename,append)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FileNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fileExists</MethodName>
+            <MethodComment>/** 
+ * Check to see if a file exists in a privilege block
+ * @param file The file to check
+ * @return &lt;code&gt;true&lt;/code&gt; if the file exists or &lt;code&gt;false&lt;/code&gt; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [value=AccessController.doPrivileged(new PrivilegedAction&lt;Boolean&gt;(){
+  public Boolean run(){
+    return file.exists();
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fileDelete</MethodName>
+            <MethodComment>/** 
+ * Delete a file in a privilege block
+ * @param file The file to delete
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>AccessController;doPrivileged;[new PrivilegedAction&lt;Object&gt;(){
+  public Object run(){
+    file.delete();
+    return null;
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>file;delete;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fileRename</MethodName>
+            <MethodComment>/** 
+ * Rename a file in a privilege block
+ * @param file1 The file to rename
+ * @param file2 The file to rename it to
+ * @return &lt;code&gt;true&lt;/code&gt; if the file was renamed or &lt;/code&gt;false&lt;/code&gt; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file1</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>file2</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Boolean [value=AccessController.doPrivileged(new PrivilegedAction&lt;Boolean&gt;(){
+  public Boolean run(){
+    return file1.renameTo(file2);
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fileLength</MethodName>
+            <MethodComment>/** 
+ * Get the length of a file in a privilege block
+ * @param file The file to get the length of
+ * @return The length of the file
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Long [value=AccessController.doPrivileged(new PrivilegedAction&lt;Long&gt;(){
+  public Long run(){
+    return file.length();
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>open</MethodName>
+            <MethodComment>/** 
+ * Opens a new file that and delegates it to a MeteredStream
+ * @param fname The name of the file
+ * @param append If &lt;code&gt;true&lt;/code&gt; append to the existing file
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fname</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>append</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [len=0]</InnerVar>
+                <InnerVar>FileOutputStream [fout=openFile(fname.toString(),append)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkMeter</MethodName>
+            <MethodComment>/** 
+ * Invoked by the metered OutputStream 
+ * @throws IOException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>MeteredStream</MethodName>
+            <MethodComment>/** 
+ * Creates a new instance of MeteredStream
+ * @param out The OutputStream to delegate to
+ * @param written The number of bytes currently written to the OuptutStream
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>OutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>written</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>write</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[b]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWritten</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,680 @@
+<Class>
+    <Id>1597</Id>
+    <Package>org.apache.derbyTesting.junit</Package>
+    <ClassName>SpawnedProcess</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SpawnedProcess  /** 
+ * Utility code that wraps a spawned process (Java Process object). &lt;p&gt; There are three main aspects handled by this class: &lt;ul&gt; &lt;li&gt;Draining the output streams of the process.&lt;br/&gt; Happens automatically, the output gathered can be accessed with {@linkplain #getFailMessage},  {@linkplain #getFullServerError}, {@linkplain #getFullServerOutput}, and {@linkplain #getNextServerOutput}&lt;/li&gt; &lt;li&gt;Waiting for process completion, followed by cleanup (see {@linkplain #complete()} and {@linkplain #complete(long)})&lt;/li&gt; &lt;li&gt;Forcibly destroying a process that live too long, for instance if inter-process communication hangs. This happens automatically if a threshold value is exceeded.&lt;/li&gt; &lt;/ul&gt; &lt;p&gt; &lt;em&gt;Implementation notes&lt;/em&gt;: Active waiting is employed when waiting for the process to complete. This is considered acceptable since the expected usage pattern is to spawn the process, execute a set of tests, and then finally asking the process to shut down. Waiting for the process to complete is the last step, and a process typically lives only for a short period of time anyway (often only for seconds, seldom more than a few minutes). &lt;br/&gt; Forcibly destroying processes that live too long makes the test run continue even when facing inter-process communication hangs. The prime example is when both the client and the server are waiting for the other party to send data. Since the timeout is very high this feature is intended to avoid automated test runs from hanging indefinitely, for instance due to environmental issues affecting the process.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>TAG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KILL_TIMER</FieldName>
+            <FieldType>Timer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KILL_THRESHOLD_PROPERTY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KILL_THRESHOLD_DEFAULT</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KILL_THRESHOLD</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>name</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>javaProcess</FieldName>
+            <FieldType>Process</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errSaver</FieldName>
+            <FieldType>StreamSaver</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outSaver</FieldName>
+            <FieldType>StreamSaver</FieldType>
+        </Field>
+        <Field>
+            <FieldName>suppressOutput</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>killTask</FieldName>
+            <FieldType>TimerTask</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stdOutReadOffset</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stream</FieldName>
+            <FieldType>ByteArrayOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>thread</FieldName>
+            <FieldType>Thread</FieldType>
+        </Field>
+        <Field>
+            <FieldName>name</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>process</FieldName>
+            <FieldType>Process</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>sleep</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ms</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SpawnedProcess</MethodName>
+            <MethodComment>/** 
+ * Creates a new wrapper to handle the given process.
+ * @param javaProcess a (running) process
+ * @param name name to associate with the process
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>javaProcess</ParamName>
+                    <ParamType>Process</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scheduleKill</MethodName>
+            <MethodComment>/** 
+ * Schedules a task to kill/terminate the task after a predefined timeout.
+ * @param name name of the process
+ * @param process the process
+ * @return The task object.
+ */
+</MethodComment>
+            <ReturnType>TimerTask</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>process</ParamName>
+                    <ParamType>Process</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TimerTask [killer=new ProcessKillerTask(process,name)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>KILL_TIMER;schedule;[killer, KILL_THRESHOLD]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>suppressOutputOnComplete</MethodName>
+            <MethodComment>/** 
+ * Causes output obtained from the process to be suppressed when executing the  {@code complete}-methods.
+ * @see #getFullServerOutput() to obtain suppressed output from stdout
+ * @see #getFullServerError() to obtain suppressed output from stderr
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProcess</MethodName>
+            <MethodComment>/** 
+ * Get the Java Process object
+ */
+</MethodComment>
+            <ReturnType>Process</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFullServerOutput</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the full server output (stdout) as a string using the default encoding which is assumed is how it was originally written. &lt;/p&gt; &lt;p&gt; This method should only be called after the process has completed. That is,  {@link #complete()} or {@link #complete(long)}should be called first. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>outSaver.thread;join;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFullServerError</MethodName>
+            <MethodComment>/** 
+ * Get the full server error output (stderr) as a string using the default encoding which is assumed is how it was originally written. &lt;p&gt; This method should only be called after the process has completed. That is,  {@link #complete()} or {@link #complete(long)}should be called first.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>errSaver.thread;join;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextServerOutput</MethodName>
+            <MethodComment>/** 
+ * Get the next set of server output (stdout) as a string using the default encoding which is assumed is how it was originally written. Assumes a single caller is executing the calls to this method.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>byte[] [fullData]</InnerVar>
+                <InnerVar>String [output=new String(fullData,stdOutReadOffset,fullData.length - stdOutReadOffset)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFailMessage</MethodName>
+            <MethodComment>/** 
+ * Get a fail message that is the passed in reason plus the stderr and stdout for any output written. Allows easier debugging if the reason the process failed is there!
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reason</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuffer [sb=new StringBuffer()]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [err=errSaver.stream]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [out=outSaver.stream]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;sleep;[500]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[reason]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[":Spawned "]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[name]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[" exitCode="]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>complete</MethodName>
+            <MethodComment>/** 
+ * Waits for the process to terminate. &lt;p&gt; This call will block until one of the following conditions are met: &lt;ul&gt; &lt;li&gt;the process terminates on its own&lt;/li&gt; &lt;li&gt;the hung-process watchdog mechanism forcibly terminates the process (see  {@linkplain #scheduleKill})&lt;/li&gt;
+ * @return The process exit code.
+ * @throws IOException if printing diagnostics fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>complete</MethodName>
+            <MethodComment>/** 
+ * Waits for the process to terminate, forcibly terminating it if it takes longer than the specified timeout. &lt;p&gt; This call will block until one of the following conditions are met: &lt;ul&gt; &lt;li&gt;the process terminates on its own&lt;/li&gt; &lt;li&gt;the timeout is exceeded, at which point the process is forcibly destroyed&lt;/li&gt; &lt;li&gt;the hung-process watchdog mechanism forcibly terminates the process (see  {@linkplain #scheduleKill})&lt;/li&gt;
+ * @param timeout the number of milliseconds to wait for the processto terminate normally before destroying it
+ * @return The process exit code.
+ * @throws IOException if printing diagnostics fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [start=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>Integer [exitCode=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>killTask;cancel;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;joinWith;[errSaver.thread]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;joinWith;[outSaver.thread]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanupProcess;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printDiagnostics;[exitCode.intValue()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanupProcess</MethodName>
+            <MethodComment>/** 
+ * Cleans up the process, explicitly closing the streams associated with it.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;closeStream;[javaProcess.getOutputStream()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;closeStream;[javaProcess.getErrorStream()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;closeStream;[javaProcess.getInputStream()]</InnerMethodInvoke>
+                <InnerMethodInvoke>javaProcess;destroy;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printDiagnostics</MethodName>
+            <MethodComment>/** 
+ * Prints diagnostics to stdout/stderr if the process failed.
+ * @param exitCode the exit code of the spawned process
+ * @throws IOException if writing to an output stream fails
+ * @see #suppressOutput
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exitCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [err=errSaver.stream]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [out=outSaver.stream]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>joinWith</MethodName>
+            <MethodComment>/** 
+ * Joins up with the specified thread. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Thread</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeStream</MethodName>
+            <MethodComment>/** 
+ * Closes the specified stream, ignoring any exceptions.
+ * @param stream stream to close (may be {@code null})
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stream</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>StreamSaver</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stream</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>thread</ParamName>
+                    <ParamType>Thread</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startStreamSaver</MethodName>
+            <MethodComment>/** 
+ * Creates and starts a stream saver that reads the specified input stream in a separate stream.
+ * @param in input stream to read from
+ * @param name name of the thread
+ * @return A {@code StreamSaver} object.
+ */
+</MethodComment>
+            <ReturnType>StreamSaver</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [out=new ByteArrayOutputStream(){
+  public void reset(){
+    super.reset();
+    new Throwable("WWW").printStackTrace(System.out);
+  }
+}
+]</InnerVar>
+                <InnerVar>Thread [streamReader=new Thread(new Runnable(){
+  public void run(){
+    try {
+      byte[] buffer=new byte[1024];
+      int read;
+      while ((read=in.read(buffer)) != -1) {
+synchronized (SpawnedProcess.this) {
+          out.write(buffer,0,read);
+        }
+      }
+    }
+ catch (    IOException ioe) {
+      ioe.printStackTrace(new PrintStream(out,true));
+    }
+  }
+}
+,name)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>streamReader;setDaemon;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>streamReader;start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reset</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>new Throwable("WWW");printStackTrace;[System.out]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ProcessKillerTask</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>process</ParamName>
+                    <ParamType>Process</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cancel</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [retriesAllowed=10]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.err;println;["DEBUG: Destroying process '" + name + "'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>process;destroy;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>waitForExit</MethodName>
+            <MethodComment>/** 
+ * Return  {@code true} if the subprocess {@code p} has exited within {@code patience} milliseconds. Sleep {@code sleepInterval} between each check}.Note: you still need to call one of the  {@link #complete} overloads evenif using this method (which is optional). It can be used before trying a  {@link #jstack} call.
+ * @param patience the maximum milliseconds we want to wait for
+ * @param sleepInterval sleep for this amount of milliseconds before tryingtesting again if not already exited the first time we check. If patience &amp;lt;= sleepInterval we only check once.
+ * @return true if the process exited before our patience is up.
+ * @throws java.lang.InterruptedException
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>patience</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sleepInterval</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [completed=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>jstack</MethodName>
+            <MethodComment>/** 
+ * Return the jstack(1) dump of the process if possible. It will only work if we are running with a full JDK, not a simple JRE. It will not work on Windows, and just return an empty string.
+ * @return jstack dump if possible
+ * @throws PrivilegedActionException
+ * @throws InterruptedException
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [output=""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPid</MethodName>
+            <MethodComment>/** 
+ * Return the pid if on Unixen, or -1 on Windows (can't be obtained).
+ * @return pid
+ * @throws PrivilegedActionException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Field [f=javaProcess.getClass().getDeclaredField("pid")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>f;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IllegalAccessException</ExceptionType>
+                <ExceptionType>NoSuchFieldException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

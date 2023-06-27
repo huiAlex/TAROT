@@ -1,0 +1,696 @@
+<Class>
+    <Id>2034</Id>
+    <Package>org.apache.derbyBuild.jirasoap</Package>
+    <ClassName>FilteredIssueLister</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FilteredIssueLister  /** 
+ * Client talking to the Apache JIRA instance to retrieve and derive information required to generate releases notes for a Derby release. &lt;p&gt; The purpose of this client is to carry out some of the tasks a release manager has to do when generating the release notes.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>ANCESTOR_CUTOFF_PROP</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_ANCESTOR_CUTOFF</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REPORT_DISQUALIFICATIONS_PROP</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>USAGE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DERBY_PROJECT</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FIELD_RELEASE_NOTE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RELEASE_NOTE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GENERATE_JQL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logOut</FieldName>
+            <FieldType>PrintStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jiraSoapService</FieldName>
+            <FieldType>JiraSoapService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>user</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>auth</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>allVersions</FieldName>
+            <FieldType>DerbyVersion[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ancestorCutoff</FieldName>
+            <FieldType>DerbyVersion</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reportDisqualifiedIssues</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ancestryOverridden</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PARSECAL</FieldName>
+            <FieldType>Calendar</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>FilteredIssueLister</MethodName>
+            <MethodComment>/** 
+ * Creates a new JIRA client.
+ * @param username JIRA user to log in as
+ * @param cred JIRA password
+ * @throws RemoteException if the login fails for some unexpected reason, orif fetching the version list fails
+ * @throws ServiceException if obtaining the JIRA service fails
+ * @throws RuntimeException if the JIRA credentials are invalid
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>username</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cred</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JiraSoapServiceService [jiraSoapServiceLocator=new JiraSoapServiceServiceLocator()]</InnerVar>
+                <InnerVar>RemoteVersion[] [jiraVer=jiraSoapService.getVersions(auth,DERBY_PROJECT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;log;["getting JIRA service"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["logging in as '" + username + "'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["fetching versions"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;printReleases;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>RemoteException</ExceptionType>
+                <ExceptionType>ServiceException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>FilteredIssueLister</MethodName>
+            <MethodComment>/** 
+ * Constructor for testing, where the Derby versions can be specified manually.
+ * @param versions format is {{"major.minor.fixpack.point", "YYYY-MM-DD"}}
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>username</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cred</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>versions</ParamName>
+                    <ParamType>String[][]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JiraSoapServiceService [jiraSoapServiceLocator=new JiraSoapServiceServiceLocator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;log;["getting JIRA service"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["logging in as '" + username + "'"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>RemoteException</ExceptionType>
+                <ExceptionType>ServiceException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareReleaseNotes</MethodName>
+            <MethodComment>/** 
+ * Generates a list of Derby JIRA issues addressed by the target release version and writes these to a file for further processing. &lt;p&gt; &lt;b&gt;Important:&lt;/b&gt; Although some sanity checks are performed, it is crucial that the manually created filter is set up correctly. If the filter misses issues addressed by the release, they will not make it into the generated release notes. Short description: &lt;ul&gt; &lt;li&gt;include bugs and improvements&lt;/li&gt; &lt;li&gt;include issues resolved as Fixed&lt;/li&gt; &lt;li&gt;include issues marked as Resolved or Closed&lt;/li&gt; &lt;li&gt;include all release candidates in the fix version field (if not already released)&lt;/li&gt; &lt;/ul&gt;
+ * @param version the target release version
+ * @param filterId the JIRA filter id
+ * @param destFile output file for the issue report
+ * @throws IOException if writing to the output file fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filterId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destFile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ancestorVersions</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DerbyVersion [releaseVersion=getVersion(version)]</InnerVar>
+                <InnerVar>DerbyVersion[] [ancestors=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;persistFilterResult;[releaseVersion, filterId, destFile, ancestors]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printAncestors</MethodName>
+            <MethodComment>/** 
+ * Prints the list of ancestors, i.e. earlier releases down the release chain, for specified Derby version. &lt;p&gt; Note that only released versions are considered to be ancestors.
+ * @param parentVersion the version to start at (released or not)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentVersion</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DerbyVersion [parent=getVersion(parentVersion)]</InnerVar>
+                <InnerVar>DerbyVersion[] [ancestors=getAncestors(parent)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;["--- Ancestors for version " + parentVersion + " ("+ (parent.isReleased() ? "released)" : "unreleased)")]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["(cutoff=" + ancestorCutoff.getVersion() + ")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printReleases</MethodName>
+            <MethodComment>/** 
+ * Prints all Derby releases.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ArrayList [releases=new ArrayList()]</InnerVar>
+                <InnerVar>Iterator [relIter=releases.iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[releases, new Comparator(){
+  public int compare(  Object o1,  Object o2){
+    Long release1=new Long(((DerbyVersion)o1).getReleaseDateMillis());
+    Long release2=new Long(((DerbyVersion)o2).getReleaseDateMillis());
+    return release1.compareTo(release2);
+  }
+}
+]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;reverse;[releases]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["--- Derby releases"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compare</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o1</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>o2</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Long [release1=new Long(((DerbyVersion)o1).getReleaseDateMillis())]</InnerVar>
+                <InnerVar>Long [release2=new Long(((DerbyVersion)o2).getReleaseDateMillis())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>destroy</MethodName>
+            <MethodComment>/** 
+ * Releases resources associated with the client.
+ * @throws RemoteException if logging out fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jiraSoapService;logout;[auth]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>RemoteException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>persistFilterResult</MethodName>
+            <MethodComment>/** 
+ * Executes a JIRA filter and writes the matching JIRA issues to file.
+ * @param targetVersion targetted release version
+ * @param filterId JIRA filter id used to obtain the relevant issues
+ * @param destFile destination file
+ * @param excludeFixVersions exclude issues which have been fixed on oneof the exclude versions (also called ancestry chain)
+ * @return The number of filters written to the destination file.
+ * @throws IOException if writing to the output file fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetVersion</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filterId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destFile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludeFixVersions</ParamName>
+                    <ParamType>DerbyVersion[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=excludeFixVersions == null ? 0 : excludeFixVersions.length]</InnerVar>
+                <InnerVar>ArrayList [excludeList=new ArrayList(size)]</InnerVar>
+                <InnerVar>BufferedWriter [out=new BufferedWriter(new OutputStreamWriter(new FileOutputStream(destFile),"UTF-8"))]</InnerVar>
+                <InnerVar>RemoteIssue[] [issues=null]</InnerVar>
+                <InnerVar>int [count=0]</InnerVar>
+                <InnerVar>int [issuesWithReleaseNote=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;["// Produced on " + new java.util.Date().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Release version: " + targetVersion.getVersion()]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Previous release: " + excludeFixVersions[0].getVersion()]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// " + (ancestryOverridden ? "Overridden" : "Derived")]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[" ancestry chain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["persisting issues (" + issues.length + " candidate issues)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Candidate issue count: " + issues.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Issues written: " + count]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Issues disqualified: "]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// Issues with release note: " + issuesWithReleaseNote]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["wrote " + count + " issues, "+ issuesWithReleaseNote+ " with release notes, "+ (issues.length - count)+ " issues disqualified"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["dump file: " + new File(destFile).getCanonicalPath()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVersion</MethodName>
+            <MethodComment>/** 
+ * Returns the version object for the specified Derby version.
+ * @param version target version
+ * @return A version object.
+ * @throws IllegalArgumentException if the specified version doesn't exist
+ */
+</MethodComment>
+            <ReturnType>DerbyVersion</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DerbyVersion [match=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAncestors</MethodName>
+            <MethodComment>/** 
+ * Computes the ancestors for the specified version.
+ * @param parent the initial parent version
+ * @return A list of ancestors for the specified version.
+ */
+</MethodComment>
+            <ReturnType>DerbyVersion[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList [ancestors=new ArrayList()]</InnerVar>
+                <InnerVar>DerbyVersion[] [dv=getSortedAndFilteredReleases(parent)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ancestors;toArray;[dv]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortedAndFilteredReleases</MethodName>
+            <MethodComment>/** 
+ * Returns a list of sorted and filtered Derby releases. &lt;p&gt; If a target release is specified, all later releases will be filtered out. The filtering happens at two levels: &lt;ul&gt; &lt;li&gt;version number (i.e. 10.6.2.1 &gt; 10.5.1.0)&lt;/li&gt; &lt;li&gt;release date&lt;/li&gt; &lt;/ul&gt; &lt;p&gt; The target version will always be found at index zero. &lt;p&gt; Not specifying a target version will return all Derby releases sorted by version number.
+ * @param target target version to start sorting/filtering at (may be null)
+ * @return A list of previous releases, sorted by version number(highest first).
+ */
+</MethodComment>
+            <ReturnType>DerbyVersion[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>target</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList [tmp=new ArrayList()]</InnerVar>
+                <InnerVar>DerbyVersion[] [result=new DerbyVersion[tmp.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[tmp]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;reverse;[tmp]</InnerMethodInvoke>
+                <InnerMethodInvoke>tmp;toArray;[result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execJiraFilterQuery</MethodName>
+            <MethodComment>/** 
+ * Fetches JIRA issues matched by a predefined filter search. &lt;p&gt; The filter must be created manually and before the release notes are generated.
+ * @param out output stream
+ * @param auth JIRA authententication token
+ * @param filterId JIRA filter id (digits only)
+ * @return A list of matching issues.
+ * @throws IOException if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>RemoteIssue[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>BufferedWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>auth</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filterId</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;["// Filter id: " + filterId + ", user id "+ user]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["fetching issues from filter (id = " + filterId + ")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execJiraJQLQuery</MethodName>
+            <MethodComment>/** 
+ * Fetches JIRA issues matching a generated JQL (Jira Query Language) search.
+ * @param out output stream
+ * @param auth JIRA authententication token
+ * @param targetVersion the target release version
+ * @return A list of matching issues.
+ * @throws IOException if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>RemoteIssue[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>BufferedWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>auth</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetVersion</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludeFixVersions</ParamName>
+                    <ParamType>DerbyVersion[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List [rcs=new ArrayList()]</InnerVar>
+                <InnerVar>Iterator [rcIter=rcs.iterator()]</InnerVar>
+                <InnerVar>String [jql="project = DERBY AND resolution = fixed AND component not in ( Test ) AND fixversion "]</InnerVar>
+                <InnerVar>StringBuffer [sb=new StringBuffer("in (")]</InnerVar>
+                <InnerVar>StringBuilder [notIn=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[rcs]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;reverse;[rcs]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb.deleteCharAt(sb.length() - 1);deleteCharAt;[sb.length() - 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb;append;[')']</InnerMethodInvoke>
+                <InnerMethodInvoke>notIn;append;[" and fixversion not in ( "]</InnerMethodInvoke>
+                <InnerMethodInvoke>notIn;append;[" )"]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;["// JQL query: " + jql]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;newLine;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;log;["executing JQL query: " + jql]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment>/** 
+ * Interface for running from the command line.
+ * @param args see USAGE constant, or invoke with zero arguments
+ * @throws Exception if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>log</MethodName>
+            <MethodComment>/** 
+ * Logs status/convenience messages. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stringifyAndCheckFixVersions</MethodName>
+            <MethodComment>/** 
+ * Converts an array of fix versions into a string representation.
+ * @param fixVersions fix versions for a JIRA issue
+ * @return A string describing all the fix versions.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>issueKey</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fixVersions</ParamName>
+                    <ParamType>RemoteVersion[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludeVersions</ParamName>
+                    <ParamType>List</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>releaseVersion</ParamName>
+                    <ParamType>DerbyVersion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [disqualified=false]</InnerVar>
+                <InnerVar>boolean [sanityCheckPassed=false]</InnerVar>
+                <InnerVar>StringBuffer [sb=new StringBuffer()]</InnerVar>
+                <InnerVar>StringBuffer [fixedIn=new StringBuffer()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;deleteCharAt;[sb.length() - 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasReleaseNote</MethodName>
+            <MethodComment>/** 
+ * Tells if the issue has a release note.
+ * @param issue JIRA issue
+ * @return {@code true} if the issue has a release note attached.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>issue</ParamName>
+                    <ParamType>RemoteIssue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [aNames=issue.getAttachmentNames()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasCustomField</MethodName>
+            <MethodComment>/** 
+ * Tells if the issue has the specified custom field value set.
+ * @param fieldValue the value to look for
+ * @param values the field values
+ * @return {@code true} if the custom field value was found,{@code false} otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>values</ParamName>
+                    <ParamType>RemoteCustomFieldValue[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseDate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>date</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [comp=date.split("-")]</InnerVar>
+                <InnerVar>int [year=Integer.parseInt(comp[0])]</InnerVar>
+                <InnerVar>int [month=Integer.parseInt(comp[1]) - 1]</InnerVar>
+                <InnerVar>int [day=Integer.parseInt(comp[2])]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>PARSECAL;set;[year, month, day, 0, 0, 0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

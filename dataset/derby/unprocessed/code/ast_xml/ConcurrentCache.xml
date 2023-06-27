@@ -1,0 +1,922 @@
+<Class>
+    <Id>786</Id>
+    <Package>org.apache.derby.impl.services.cache</Package>
+    <ClassName>ConcurrentCache</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CacheManager</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ConcurrentCache  /** 
+ * A cache manager based on the utilities found in the &lt;code&gt;java.util.concurrent&lt;/code&gt; package. It allows multiple threads to access the cache concurrently without blocking each other, given that they request different objects and the requested objects are present in the cache. &lt;p&gt; All methods of this class should be thread safe. When exclusive access to an entry is required, it is achieved by calling the &lt;code&gt;lock()&lt;/code&gt; method on the &lt;code&gt;CacheEntry&lt;/code&gt; object. To ensure that the entry is always unlocked, all calls to &lt;code&gt;CacheEntry.lock()&lt;/code&gt; should be followed by a &lt;code&gt;try&lt;/code&gt; block with a &lt;code&gt;finally&lt;/code&gt; clause that unlocks the entry.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>ConcurrentHashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>holderFactory</FieldName>
+            <FieldType>CacheableFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>name</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>replacementPolicy</FieldName>
+            <FieldType>ReplacementPolicy</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mbean</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>collectAccessCounts</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hits</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>misses</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>evictions</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stopped</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cleaner</FieldName>
+            <FieldType>BackgroundCleaner</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ConcurrentCache</MethodName>
+            <MethodComment>/** 
+ * Creates a new cache manager.
+ * @param holderFactory factory which creates &lt;code&gt;Cacheable&lt;/code&gt;s
+ * @param name the name of the cache
+ * @param initialSize the initial capacity of the cache
+ * @param maxSize maximum number of elements in the cache
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>holderFactory</ParamName>
+                    <ParamType>CacheableFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initialSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReplacementPolicy</MethodName>
+            <MethodComment>/** 
+ * Return the &lt;code&gt;ReplacementPolicy&lt;/code&gt; instance for this cache.
+ * @return replacement policy
+ */
+</MethodComment>
+            <ReturnType>ReplacementPolicy</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEntry</MethodName>
+            <MethodComment>/** 
+ * Get the entry associated with the specified key from the cache. If the entry does not exist, insert an empty one and return it. The returned entry is always locked for exclusive access by the current thread, but not kept. If another thread is currently setting the identity of this entry, this method will block until the identity has been set.
+ * @param key the identity of the cached object
+ * @return an entry for the specified key, always locked
+ */
+</MethodComment>
+            <ReturnType>CacheEntry</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=cache.get(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeEntry</MethodName>
+            <MethodComment>/** 
+ * Remove an entry from the cache. Its &lt;code&gt;Cacheable&lt;/code&gt; is cleared and made available for other entries. This method should only be called if the entry is present in the cache and locked by the current thread.
+ * @param key the identity of the entry to remove
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=cache.remove(key)]</InnerVar>
+                <InnerVar>Cacheable [c=entry.getCacheable()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;free;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evictEntry</MethodName>
+            <MethodComment>/** 
+ * Evict an entry to make room for a new entry that is being inserted into the cache. Clear the identity of its  {@code Cacheable} and set it to{@code null}. When this method is called, the caller has already chosen the  {@code Cacheable} for reuse. Therefore, this method won't call{@code CacheEntry.free()} as that would make the {@code Cacheable} freefor reuse by other entries as well. &lt;p&gt; The caller must have locked the entry that is about to be evicted.
+ * @param key identity of the entry to remove
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=cache.remove(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry.getCacheable();clearIdentity;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>entry;setCacheable;[null]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;countEviction;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertIntoFreeSlot</MethodName>
+            <MethodComment>/** 
+ * Insert a  {@code CacheEntry} into a free slot in the {@code ReplacementPolicy}'s internal data structure, and return a  {@code Cacheable} that the caller can reuse. The entry must have been lockedbefore this method is called.
+ * @param key the identity of the object being inserted
+ * @param entry the entry that is being inserted
+ * @return a {@code Cacheable} object that the caller can reuse
+ * @throws StandardException if an error occurs while inserting the entryor while allocating a new  {@code Cacheable}
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Cacheable [free=entry.getCacheable()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;keep;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>settingIdentityComplete</MethodName>
+            <MethodComment>/** 
+ * Complete the setting of the identity. This includes notifying the threads that are waiting for the setting of the identity to complete, so that they can wake up and continue. If setting the identity failed, the entry will be removed from the cache.
+ * @param key the identity of the object being inserted
+ * @param entry the entry which is going to hold the cached object
+ * @param item a {@code Cacheable} object with the identity set (ifthe identity was successfully set), or  {@code null} if setting theidentity failed
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Cacheable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>find</MethodName>
+            <MethodComment>/** 
+ * Find an object in the cache. If it is not present, add it to the cache. The returned object is kept until &lt;code&gt;release()&lt;/code&gt; is called.
+ * @param key identity of the object to find
+ * @return the cached object, or &lt;code&gt;null&lt;/code&gt; if it cannot be found
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=getEntry(key)]</InnerVar>
+                <InnerVar>Cacheable [item]</InnerVar>
+                <InnerVar>Cacheable [itemWithIdentity=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findCached</MethodName>
+            <MethodComment>/** 
+ * Find an object in the cache. If it is not present, return &lt;code&gt;null&lt;/code&gt;. The returned object is kept until &lt;code&gt;release()&lt;/code&gt; is called.
+ * @param key identity of the object to find
+ * @return the cached object, or &lt;code&gt;null&lt;/code&gt; if it's not in the cache
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=cache.get(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>create</MethodName>
+            <MethodComment>/** 
+ * Create an object in the cache. The object is kept until &lt;code&gt;release()&lt;/code&gt; is called.
+ * @param key identity of the object to create
+ * @param createParameter parameters passed to&lt;code&gt;Cacheable.createIdentity()&lt;/code&gt;
+ * @return a reference to the cached object, or &lt;code&gt;null&lt;/code&gt; if theobject cannot be created
+ * @exception StandardException if the object is already in the cache, orif some other error occurs
+ * @see Cacheable#createIdentity(Object,Object)
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>createParameter</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=new CacheEntry()]</InnerVar>
+                <InnerVar>Cacheable [item]</InnerVar>
+                <InnerVar>Cacheable [itemWithIdentity=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>release</MethodName>
+            <MethodComment>/** 
+ * Release an object that has been fetched from the cache with &lt;code&gt;find()&lt;/code&gt;, &lt;code&gt;findCached()&lt;/code&gt; or &lt;code&gt;create()&lt;/code&gt;.
+ * @param item a &lt;code&gt;Cacheable&lt;/code&gt; value
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Cacheable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [entry=cache.get(item.getIdentity())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Remove an object from the cache. The object must previously have been fetched from the cache with &lt;code&gt;find()&lt;/code&gt;, &lt;code&gt;findCached()&lt;/code&gt; or &lt;code&gt;create()&lt;/code&gt;. The user of the cache must make sure that only one caller executes this method on a cached object. This method will wait until the object has been removed (its keep count must drop to zero before it can be removed).
+ * @param item the object to remove from the cache
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Cacheable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [key=item.getIdentity()]</InnerVar>
+                <InnerVar>CacheEntry [entry=cache.get(key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanAll</MethodName>
+            <MethodComment>/** 
+ * Clean all dirty objects in the cache. All objects that existed in the cache at the time of the call will be cleaned. Objects added later may or may not be cleaned.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;cleanCache;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clean</MethodName>
+            <MethodComment>/** 
+ * Clean all dirty objects matching a partial key.
+ * @param partialKey the partial (or exact) key to match
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>partialKey</ParamName>
+                    <ParamType>Matchable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;cleanCache;[partialKey]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanCache</MethodName>
+            <MethodComment>/** 
+ * Clean all dirty objects matching a partial key. If no key is specified, clean all dirty objects in the cache.
+ * @param partialKey the partial (or exact) key to match, or&lt;code&gt;null&lt;/code&gt; to match all keys
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>partialKey</ParamName>
+                    <ParamType>Matchable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanEntry</MethodName>
+            <MethodComment>/** 
+ * Clean an entry in the cache.
+ * @param entry the entry to clean
+ * @exception StandardException if an error occurs while cleaning
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Cacheable [item]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entry;lock;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanAndUnkeepEntry;[entry, item]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanAndUnkeepEntry</MethodName>
+            <MethodComment>/** 
+ * Clean an entry in the cache and decrement its keep count. The entry must be kept before this method is called, and it must contain the specified &lt;code&gt;Cacheable&lt;/code&gt;.
+ * @param entry the entry to clean
+ * @param item the cached object contained in the entry
+ * @exception StandardException if an error occurs while cleaning
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>Cacheable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ageOut</MethodName>
+            <MethodComment>/** 
+ * Remove all objects that are not kept and not dirty.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shutdown</MethodName>
+            <MethodComment>/** 
+ * Shut down the cache.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;cleanAll;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;ageOut;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;deregisterMBean;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>useDaemonService</MethodName>
+            <MethodComment>/** 
+ * Specify a daemon service that can be used to perform operations in the background. Callers must provide enough synchronization so that they have exclusive access to the cache when this method is called.
+ * @param daemon the daemon service to use
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>daemon</ParamName>
+                    <ParamType>DaemonService</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBackgroundCleaner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BackgroundCleaner</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>discard</MethodName>
+            <MethodComment>/** 
+ * Discard all unused objects that match a partial key. Dirty objects will not be cleaned before their removal.
+ * @param partialKey the partial (or exact) key, or &lt;code&gt;null&lt;/code&gt; tomatch all keys
+ * @return &lt;code&gt;true&lt;/code&gt; if all matching objects were removed,&lt;code&gt;false&lt;/code&gt; otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>partialKey</ParamName>
+                    <ParamType>Matchable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [allRemoved=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>values</MethodName>
+            <MethodComment>/** 
+ * Return a collection view of all the &lt;code&gt;Cacheable&lt;/code&gt;s in the cache. There is no guarantee that the objects in the collection can be accessed in a thread-safe manner once this method has returned, so it should only be used for diagnostic purposes. (Currently, it is only used by the &lt;code&gt;StatementCache&lt;/code&gt; VTI.)
+ * @return a collection view of the objects in the cache
+ */
+</MethodComment>
+            <ReturnType>Cacheable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;Cacheable&gt; [values=new ArrayList&lt;Cacheable&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerMBean</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ManagementService [managementService=(ManagementService)getSystemModule(Module.JMX)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deregisterMBean</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>countHit</MethodName>
+            <MethodComment>/** 
+ * Count a cache hit. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>countMiss</MethodName>
+            <MethodComment>/** 
+ * Count a cache miss. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>countEviction</MethodName>
+            <MethodComment>/** 
+ * Count an eviction from the cache. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCollectAccessCounts</MethodName>
+            <MethodComment>/** 
+ * Enable or disable collection of hit/miss/eviction counts. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>collect</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCollectAccessCounts</MethodName>
+            <MethodComment>/** 
+ * Check if collection of hit/miss/eviction counts is enabled. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHitCount</MethodName>
+            <MethodComment>/** 
+ * Get the number of cache hits. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMissCount</MethodName>
+            <MethodComment>/** 
+ * Get the number of cache misses. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEvictionCount</MethodName>
+            <MethodComment>/** 
+ * Get the number of evictions from the cache. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxEntries</MethodName>
+            <MethodComment>/** 
+ * Get the maximum number of entries in the cache. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllocatedEntries</MethodName>
+            <MethodComment>/** 
+ * Get the number of allocated entries in the cache. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUsedEntries</MethodName>
+            <MethodComment>/** 
+ * Get the number of cached objects. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSystemModule</MethodName>
+            <MethodComment>/** 
+ * Privileged module lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

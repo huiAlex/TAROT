@@ -1,0 +1,1679 @@
+/**
+ * This class translates DRDA protocol from an application requester to JDBC
+ * for Derby and then translates the results from Derby to DRDA
+ * for return to the application requester.
+ */
+
+/** Time slice for this thread. */
+
+/** Whether or not to log connections. */
+
+/** End this thread. */
+
+/** The value returned by the previous call to
+     * parsePKGNAMCSN(). */
+
+/** Current RDB Package Name. */
+
+/** Current RDB Collection Identifier. */
+
+/** Current RDB Package Identifier. */
+
+/** Current RDB Package Consistency Token. */
+
+/** Current RDB Package Section Number. */
+
+/**
+     * Tells if the reset / connect request is a deferred request.
+     * This information is used to work around a bug (DERBY-3596) in a
+     * compatible manner, which also avoids any changes in the client driver.
+     * 
+     * The bug manifests itself when a connection pool data source is used and
+     * logical connections are obtained from the physical connection associated
+     * with the data source. Each new logical connection causes a new physical
+     * connection on the server, including a new transaction. These connections
+     * and transactions are not closed / cleaned up.
+     */
+
+/**
+     * Create a new Thread for processing session requests
+     *
+     * @param session Session requesting processing
+     * @param server  Server starting thread
+     * @param timeSlice timeSlice for thread
+     * @param logConnections
+     **/
+
+/**
+     * Main routine for thread, loops until the thread is closed
+     * Gets a session, does work for the session
+     */
+
+/**
+     * Get input stream
+     *
+     * @return input stream
+     */
+
+/**
+     * Get output stream
+     *
+     * @return output stream
+     */
+
+/** Get product id as bytes */
+
+/**
+     *  get DDMReader
+     * @return DDMReader for this thread
+     */
+
+/** 
+     * get  DDMWriter 
+     * @return DDMWriter for this thread
+     */
+
+/**
+     * Get correlation id
+     *
+     * @return correlation id
+     */
+
+/**
+     * Get session we are working on
+     *
+     * @return session
+     */
+
+/**
+     * Get Database we are working on
+     *
+     * @return database
+     */
+
+/**
+     * Get server
+     *
+     * @return server
+     */
+
+/**
+     * Get correlation token
+     *
+     * @return crrtkn
+     */
+
+/**
+     * Get database name
+     *
+     * @return database name
+     */
+
+/**
+     * Close DRDA  connection thread
+     */
+
+/**
+     * Set logging of connections
+     * 
+     * @param value value to set for logging connections
+     */
+
+/**
+     * Set time slice value
+     *
+     * @param value new value for time slice
+     */
+
+/**
+     * Indicate a communications failure
+     * 
+     * @param arg1 - info about the communications failure
+     * @param arg2 - info about the communications failure
+     * @param arg3 - info about the communications failure
+     * @param arg4 - info about the communications failure
+     *
+     * @exception DRDAProtocolException  disconnect exception always thrown
+     */
+
+/**
+         * Indicate a communications failure. Log to derby.log
+         * 
+         * @param e  - Source exception that was thrown
+         * @param arg1 - info about the communications failure
+         * @param arg2 - info about the communications failure
+         * @param arg3 - info about the communications failure
+         * @param arg4 - info about the communications failure
+         *
+         * @exception DRDAProtocolException  disconnect exception always thrown
+         */
+
+/**
+     * Syntax error
+     *
+     * @param errcd     Error code
+     * @param cpArg  code point value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Agent error - something very bad happened
+     *
+     * @param msg   Message describing error
+     *
+     * @exception DRDAProtocolException  newAgentError always thrown
+     */
+
+/**
+     * Missing code point
+     *
+     * @param codePoint  code point value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Print a line to the DB2j log
+     *
+     * @param dbname  database name
+     * @param drdaID    DRDA identifier
+     * @param msg   message
+     */
+
+/**
+     * Write RDBNAM
+     *
+     * @param rdbnam    database name
+     * @exception DRDAProtocolException
+     */
+
+/***************************************************************************
+     *                   Private methods
+     ***************************************************************************/
+
+/**
+     * Initialize class
+     */
+
+/**
+     * Initialize for a new session
+     */
+
+/**      
+     * In initial state for a session, 
+     * determine whether this is a command
+     * session or a DRDA protocol session.  A command session is for changing
+     * the configuration of the Net server, e.g., turning tracing on
+     * If it is a command session, process the command and close the session.
+     * If it is a DRDA session, exchange server attributes and change session
+     * state.
+     */
+
+/**
+     * Cleans up and closes a result set if an exception is thrown
+     * when collecting QRYDTA in response to OPNQRY or CNTQRY.
+     *
+     * @param stmt the DRDA statement to clean up
+     * @param sqle the exception that was thrown
+     * @param writerMark start index for the first DSS to clear from
+     * the output buffer
+     * @exception DRDAProtocolException if a DRDA protocol error is
+     * detected
+     */
+
+/**
+     * Process DRDA commands we can receive once server attributes have been
+     * exchanged.
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * If there's a severe error in the DDM chain, and if the header indicates
+     * "terminate chain on error", we stop processing further commands in the chain
+     * nor do we send any reply for them.  In accordance to this, a SQLERRRM message 
+     * indicating the severe error must have been sent! (otherwise application requestor,
+     * such as JCC, would not terminate the receiving of chain replies.)
+     *
+     * Each DRDA command is processed independently. DRDA defines no interdependencies
+     * across chained commands. A command is processed the same when received within
+     * a set of chained commands or received separately.  The chaining was originally
+     * defined as a way to save network costs.
+     *
+     * @param e     the SQLException raised
+     * @exception   DRDAProtocolException
+     */
+
+/**
+     * Exchange server attributes with application requester
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Switch the DDMWriter and DDMReader to UTF8 IF supported
+     */
+
+/**
+     * Switch the DDMWriter and DDMReader to EBCDIC
+     */
+
+/**
+     * Write RDB Failure
+     *
+     * Instance Variables
+     *  SVRCOD - Severity Code - required
+     *  RDBNAM - Relational Database name - required
+     *  SRVDGN - Server Diagnostics - optional (not sent for now)
+     *
+     * @param   codePoint   codepoint of failure
+     */
+
+/**
+     * Verify userId and password
+     *
+     * Username and password is verified by making a connection to the
+     * database
+     *
+     * @return security check code, 0 is O.K.
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Get connection from a database name
+     *
+     * Username and password is verified by making a connection to the
+     * database
+     *
+     * @return security check code, 0 is O.K.
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parses EXCSAT (Exchange Server Attributes)
+     * Instance variables
+     *  EXTNAM(External Name)   - optional
+     *  MGRLVLLS(Manager Levels) - optional
+     *  SPVNAM(Supervisor Name) - optional
+     *  SRVCLSNM(Server Class Name) - optional
+     *  SRVNAM(Server Name) - optional, ignorable
+     *  SRVRLSLV(Server Product Release Level) - optional, ignorable
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parses EXCSAT2 (Exchange Server Attributes)
+     * Instance variables
+     *  EXTNAM(External Name)   - optional
+     *  MGRLVLLS(Manager Levels) - optional
+     *  SPVNAM(Supervisor Name) - optional
+     *  SRVCLSNM(Server Class Name) - optional
+     *  SRVNAM(Server Name) - optional, ignorable
+     *  SRVRLSLV(Server Product Release Level) - optional, ignorable
+     *
+     * @exception DRDAProtocolException
+     * 
+     * This parses a second occurrence of an EXCSAT command
+     * The target must ignore the values for extnam, srvclsnm, srvnam and srvrlslv.
+     * I am also going to ignore spvnam since it should be null anyway.
+     * Only new managers can be added.
+     */
+
+/**
+     *  Parse manager levels
+     *  Instance variables
+     *      MGRLVL - repeatable, required
+     *        CODEPOINT
+     *          CCSIDMGR - CCSID Manager
+     *          CMNAPPC - LU 6.2 Conversational Communications Manager
+     *          CMNSYNCPT - SNA LU 6.2 SyncPoint Conversational Communications Manager
+     *          CMNTCPIP - TCP/IP Communication Manager
+     *          DICTIONARY - Dictionary
+     *          RDB - Relational Database
+     *          RSYNCMGR - Resynchronization Manager
+     *          SECMGR - Security Manager
+     *          SQLAM - SQL Application Manager
+     *          SUPERVISOR - Supervisor
+     *          SYNCPTMGR - Sync Point Manager
+     *        VALUE
+     *
+     *  On the second appearance of this codepoint, it can only add managers
+     *
+     * @param time  1 for first time this is seen, 2 for subsequent ones
+     * @exception DRDAProtocolException
+     * 
+     */
+
+/**
+     * Write reply to EXCSAT command
+     * Instance Variables
+     *  EXTNAM - External Name (optional)
+     *  MGRLVLLS - Manager Level List (optional)
+     *  SRVCLSNM - Server Class Name (optional) - used by JCC
+     *  SRVNAM - Server Name (optional)
+     *  SRVRLSLV - Server Product Release Level (optional)
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse OPNQRY
+     * Instance Variables
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCSN - RDB Package Name, Consistency Token and Section Number - required
+     *  QRYBLKSZ - Query Block Size - required
+     *  QRYBLKCTL - Query Block Protocol Control - optional 
+     *  MAXBLKEXT - Maximum Number of Extra Blocks - optional - default value 0
+     *  OUTOVROPT - Output Override Option
+     *  QRYROWSET - Query Rowset Size - optional - level 7
+     *  MONITOR - Monitor events - optional.
+     *
+     * @return RDB Package Name, Consistency Token, and Section Number
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse OPNQRY objects
+     * Objects
+     *  TYPDEFNAM - Data type definition name - optional
+     *  TYPDEFOVR - Type defintion overrides - optional
+     *  SQLDTA- SQL Program Variable Data - optional
+     *
+     * If TYPDEFNAM and TYPDEFOVR are supplied, they apply to the objects
+     * sent with the statement.  Once the statement is over, the default values
+     * sent in the ACCRDB are once again in effect.  If no values are supplied,
+     * the values sent in the ACCRDB are used.
+     * Objects may follow in one DSS or in several DSS chained together.
+     * 
+     *      *      */
+
+/**
+     * Parse OUTOVROPT - this indicates whether output description can be
+     * overridden on just the first CNTQRY or on any CNTQRY
+     *
+     * @return output override option
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse QRYBLSZ - this gives the maximum size of the query blocks that
+     * can be returned to the requester
+     *
+     * @return query block size
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse QRYROWSET - this is the number of rows to return
+     *
+     * @param minVal - minimum value
+     * @return query row set size
+     * @exception DRDAProtocolException
+     */
+
+/** Parse a QRYCLSIMP - Implicitly close non-scrollable cursor 
+     * after end of data.
+     * @return  true to close on end of data 
+     */
+
+/**
+     * Write a QRYPOPRM - Query Previously opened
+     * Instance Variables
+     *  SVRCOD - Severity Code - required - 8 ERROR
+     *  RDBNAM - Relational Database Name - required
+     *  PKGNAMCSN - RDB Package Name, Consistency Token, and Section Number - required
+     * 
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write a QRYNOPRM - Query Not Opened
+     * Instance Variables
+     *  SVRCOD - Severity Code - required -  4 Warning 8 ERROR
+     *  RDBNAM - Relational Database Name - required
+     *  PKGNAMCSN - RDB Package Name, Consistency Token, and Section Number - required
+     * 
+     * @param svrCod    Severity Code
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write a OPNQFLRM - Open Query Failure
+     * Instance Variables
+     *  SVRCOD - Severity Code - required - 8 ERROR
+     *  RDBNAM - Relational Database Name - required
+     *
+     * @param   e   Exception describing failure
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write PKGNAMCSN
+     * Instance Variables
+     *   NAMESYMDR - database name - not validated
+     *   RDBCOLID - RDB Collection Identifier
+     *   PKGID - RDB Package Identifier
+     *   PKGCNSTKN - RDB Package Consistency Token
+     *   PKGSN - RDB Package Section Number
+     *
+     * There are two possible formats, fixed and extended which includes length
+     * information for the strings
+     *
+     *      */
+
+/**
+     * Skip remainder of current DSS and all chained DSS'es
+     *
+     * @param onlySkipSameIds True if we _only_ want to skip DSS'es
+     *   that are chained with the SAME id as the current DSS.
+     *   False means skip ALL chained DSSes, whether they're
+     *   chained with same or different ids.
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse CNTQRY objects
+     * Instance Variables
+     *   OUTOVR - Output Override Descriptor - optional
+     *
+     * @param stmt DRDA statement we are working on
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse OUTOVR - Output Override Descriptor
+     * This specifies the output format for data to be returned as output to a SQL
+     * statement or as output from a query.
+     *
+     * @param stmt  DRDA statement this applies to
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Piggy-back any modified session attributes on the current message. Writes
+     * a PBSD conataining one or both of PBSD_ISO and PBSD_SCHEMA. PBSD_ISO is
+     * followed by the jdbc isolation level as an unsigned byte. PBSD_SCHEMA is
+     * followed by the name of the current schema as an UTF-8 String.
+     *      *      */
+
+/**
+     * Write OPNQRYRM - Open Query Complete
+     * Instance Variables
+     *   SVRCOD - Severity Code - required
+     *   QRYPRCTYP - Query Protocol Type - required
+     *   SQLCSRHLD - Hold Cursor Position - optional
+     *   QRYATTSCR - Query Attribute for Scrollability - optional - level 7
+     *   QRYATTSNS - Query Attribute for Sensitivity - optional - level 7
+     *   QRYATTUPD - Query Attribute for Updatability -optional - level 7
+     *   QRYINSID - Query Instance Identifier - required - level 7
+     *   SRVDGN - Server Diagnostic Information - optional
+     *
+     * @param isDssObject - return as a DSS object (part of a reply) 
+     * @param stmt - DRDA statement we are processing
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write ENDQRYRM - query process has terminated in such a manner that the
+     *  query or result set is now closed.  It cannot be resumed with the CNTQRY
+     *  command or closed with the CLSQRY command
+     * @param svrCod  Severity code - WARNING or ERROR
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write ABNUOWRM - query process has terminated in an error condition
+     * such as deadlock or lock timeout.
+     * Severity code is always error
+     *   * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse database name
+     *
+     * @return database name
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write ACCSECRD
+     * If the security mechanism is known, we just send it back along with
+     * the security token if encryption is going to be used.
+     * If the security mechanism is not known, we send a list of the ones
+     * we know.
+     * Instance Variables
+     *  SECMEC - security mechanism - required
+     *  SECTKN - security token - optional (required if security mechanism
+     *                      uses encryption)
+     *  SECCHKCD - security check code - error occurred in processing ACCSEC
+     *
+     * @param securityCheckCode
+     * 
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse security check
+     * Instance Variables
+     *  SECMGRNM - security manager name - optional, ignorable
+     *  SECMEC  - security mechanism - required
+     *  SECTKN  - security token - optional, (required if encryption used)
+     *  PASSWORD - password - optional, (required if security mechanism uses it)
+     *  NEWPASSWORD - new password - optional, (required if sec mech. uses it)
+     *  USRID   - user id - optional, (required if sec mec. uses it)
+     *  RDBNAM  - database name - optional (required if databases can have own sec.)
+     *
+     * 
+     * @return security check code
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write security check reply
+     * Instance variables
+     *  SVRCOD - serverity code - required
+     *  SECCHKCD    - security check code  - required
+     *  SECTKN - security token - optional, ignorable
+     *  SVCERRNO    - security service error number
+     *  SRVDGN  - Server Diagnostic Information
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Calculate SVRCOD value from SECCHKCD
+     *
+     * @param securityCheckCode
+     * @return SVRCOD value
+     */
+
+/**
+     * Parse access RDB
+     * Instance variables
+     *  RDBACCCL - RDB Access Manager Class - required must be SQLAM
+     *  CRRTKN - Correlation Token - required
+     *  RDBNAM - Relational database name -required
+     *  PRDID - Product specific identifier - required
+     *  TYPDEFNAM   - Data Type Definition Name -required
+     *  TYPDEFOVR   - Type definition overrides -required
+     *  RDBALWUPD -  RDB Allow Updates optional
+     *  PRDDTA - Product Specific Data - optional - ignorable
+     *  STTDECDEL - Statement Decimal Delimiter - optional
+     *  STTSTRDEL - Statement String Delimiter - optional
+     *  TRGDFTRT - Target Default Value Return - optional
+     *
+     * @return severity code
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse TYPDEFNAM
+     *
+     * @return typdefnam
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Set a statement or the database' byte order, depending on the arguments
+     *
+     * @param setDatabase   if true, set database' byte order, otherwise set statement's
+     * @param stmt          DRDAStatement, used when setDatabase is false
+     * @param typDefNam     TYPDEFNAM value
+     */
+
+/**
+     * Write Access to RDB Completed
+     * Instance Variables
+     *  SVRCOD - severity code - 0 info, 4 warning -required
+     *  PRDID - product specific identifier -required
+     *  TYPDEFNAM - type definition name -required
+     *  TYPDEFOVR - type definition overrides - required
+     *  RDBINTTKN - token which can be used to interrupt DDM commands - optional
+     *  CRRTKN  - correlation token - only returned if we didn't get one from requester
+     *  SRVDGN - server diagnostic information - optional
+     *  PKGDFTCST - package default character subtype - optional
+     *  USRID - User ID at the target system - optional
+     *  SRVLST - Server List
+     * 
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse Type Defintion Overrides
+     *  TYPDEF Overrides specifies the Coded Character SET Identifiers (CCSIDs)
+     *  that are in a named TYPDEF.
+     * Instance Variables
+     *  CCSIDSBC - CCSID for Single-Byte - optional
+     *  CCSIDDBC - CCSID for Double-Byte - optional
+     *  CCSIDMBC - CCSID for Mixed-byte characters -optional
+     *
+     * @param st    Statement this TYPDEFOVR applies to
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse PRPSQLSTT - Prepare SQL Statement
+     * Instance Variables
+     *   RDBNAM - Relational Database Name - optional
+     *   PKGNAMCSN - RDB Package Name, Consistency Token, and Section Number - required
+     *   RTNSQLDA - Return SQL Descriptor Area - optional
+     *   MONITOR - Monitor events - optional.
+     *   
+     * @return return 0 - don't return sqlda, 1 - return input sqlda, 
+     *      2 - return output sqlda
+     *      *      */
+
+/**
+     * Parse PRPSQLSTT objects
+     * Objects
+     *  TYPDEFNAM - Data type definition name - optional
+     *  TYPDEFOVR - Type defintion overrides - optional
+     *  SQLSTT - SQL Statement required
+     *  SQLATTR - Cursor attributes on prepare - optional - level 7
+     *
+     * If TYPDEFNAM and TYPDEFOVR are supplied, they apply to the objects
+     * sent with the statement.  Once the statement is over, the default values
+     * sent in the ACCRDB are once again in effect.  If no values are supplied,
+     * the values sent in the ACCRDB are used.
+     * Objects may follow in one DSS or in several DSS chained together.
+     * 
+     * @return SQL statement
+     *      *      */
+
+/**
+     * Parse TYPSQLDA - Type of the SQL Descriptor Area
+     *
+     * @return true if for output; false otherwise
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse SQLATTR - Cursor attributes on prepare
+     *   This is an encoded string. Can have combination of following, eg INSENSITIVE SCROLL WITH HOLD
+     * Possible strings are
+     *  SENSITIVE DYNAMIC SCROLL [FOR UPDATE]
+     *  SENSITIVE STATIC SCROLL [FOR UPDATE]
+     *  INSENSITIVE SCROLL
+     *  FOR UPDATE
+     *  WITH HOLD
+     *
+     * @param stmt DRDAStatement
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse DSCSQLSTT - Describe SQL Statement previously prepared
+     * Instance Variables
+     *  TYPSQLDA - sqlda type expected (output or input)
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCSN - RDB Package Name, Consistency Token and Section Number - required
+     *  MONITOR - Monitor events - optional.
+     *
+     * @return expect "output sqlda" or not
+     *      *      */
+
+/**
+     * Parse EXCSQLSTT - Execute non-cursor SQL Statement previously prepared
+     * Instance Variables
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCSN - RDB Package Name, Consistency Token and Section Number - required
+     *  OUTEXP - Output expected
+     *  NBRROW - Number of rows to be inserted if it's an insert
+     *  PRCNAM - procedure name if specified by host variable, not needed for Derby
+     *  QRYBLKSZ - query block size
+     *  MAXRSLCNT - max resultset count
+     *  MAXBLKEXT - Max number of extra blocks
+     *  RSLSETFLG - resultset flag
+     *  RDBCMTOK - RDB Commit Allowed - optional
+     *  OUTOVROPT - output override option
+     *  QRYROWSET - Query Rowset Size - Level 7
+     *  MONITOR - Monitor events - optional.
+     *
+     *      *      */
+
+/**
+     * Parse RDBCMTOK - tells the database whether to allow commits or rollbacks
+     * to be executed as part of the command
+     * Since we don't have a SQL commit or rollback command, we will just ignore
+     * this for now
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse EXCSQLSTT command objects
+     * Command Objects
+     *  TYPDEFNAM - Data Type Definition Name - optional
+     *  TYPDEFOVR - TYPDEF Overrides -optional
+     *  SQLDTA - optional, variable data, specified if prpared statement has input parameters
+     *  EXTDTA - optional, externalized FD:OCA data
+     *  OUTOVR - output override descriptor, not allowed for stored procedure calls
+     *
+     * If TYPDEFNAM and TYPDEFOVR are supplied, they apply to the objects
+     * sent with the statement.  Once the statement is over, the default values
+     * sent in the ACCRDB are once again in effect.  If no values are supplied,
+     * the values sent in the ACCRDB are used.
+     * Objects may follow in one DSS or in several DSS chained together.
+     * 
+     * @param stmt  the DRDAStatement to execute
+     *      *      */
+
+/**
+     * Write SQLCINRD - result set column information
+     *
+     *      *      */
+
+/**
+     * Write SQLRSLRD - result set reply data
+     *
+     *      *      */
+
+/**
+     * Write RSLSETRM
+     * Instance variables
+     *  SVRCOD - Severity code - Information only - required
+     *  PKGSNLST - list of PKGNAMCSN -required
+     *  SRVDGN - Server Diagnostic Information -optional
+     *
+     *      *      */
+
+/**
+     * Parse SQLDTA - SQL program variable data 
+     * and handle exception.
+     *      */
+
+/**
+     * Parse SQLDTA - SQL program variable data
+     * Instance Variables
+     *  FDODSC - FD:OCA data descriptor - required
+     *  FDODTA - FD:OCA data - optional
+     *    
+     *      *      */
+
+/** A cached {@code Calendar} instance using the GMT time zone. */
+
+/**
+     * Get a {@code Calendar} instance with time zone set to GMT. The instance
+     * is cached for reuse by this thread. This calendar can be used to
+     * consistently read and write date and time values using the same
+     * calendar. Since the local default calendar may not be able to represent
+     * all times (for instance because the time would fall into a non-existing
+     * hour of the day when switching to daylight saving time, see DERBY-4582),
+     * we use the GMT time zone which doesn't observe daylight saving time.
+     *
+     * @return a calendar in the GMT time zone
+     */
+
+/**
+     * Read different types of input parameters and set them in
+     * PreparedStatement
+     * @param i         index of the parameter
+     * @param stmt      drda statement
+     * @param pmeta     parameter meta data
+     *
+     *      *      */
+
+/** Read a UDT from the stream */
+
+/**
+     * Parse a date string as it is received from the client.
+     *
+     * @param dateString the date string to parse
+     * @param cal the calendar in which the date is parsed
+     * @return a Date object representing the date in the specified calendar
+     *      *      */
+
+/**
+     * Parse a time string as it is received from the client.
+     *
+     * @param timeString the time string to parse
+     * @param cal the calendar in which the time is parsed
+     * @return a Date object representing the time in the specified calendar
+     *      *      */
+
+/**
+     * Parse a timestamp string as it is received from the client.
+     *
+     * @param timeString the time string to parse
+     * @param cal the calendar in which the timestamp is parsed
+     * @return a Date object representing the timestamp in the specified
+     * calendar
+     *      *      * formatted
+     */
+
+/**
+     * Read different types of input parameters and set them in PreparedStatement
+     * @param i zero-based index of the parameter
+     * @param stmt          associated ps
+     * @param drdaType  drda type of the parameter
+     *
+     *      *      */
+
+/**
+     * Parse EXCSQLIMM - Execute Immediate Statement
+     * Instance Variables
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCSN - RDB Package Name, Consistency Token and Section Number - required
+     *  RDBCMTOK - RDB Commit Allowed - optional
+     *  MONITOR - Monitor Events - optional
+     *
+     * Command Objects
+     *  TYPDEFNAM - Data Type Definition Name - optional
+     *  TYPDEFOVR - TYPDEF Overrides -optional
+     *  SQLSTT - SQL Statement -required
+     *
+     * @return update count
+     *      *      */
+
+/**
+     * Parse EXCSQLSET - Execute Set SQL Environment
+     * Instance Variables
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCT - RDB Package Name, Consistency Token  - optional
+     *  MONITOR - Monitor Events - optional
+     *
+     * Command Objects
+     *  TYPDEFNAM - Data Type Definition Name - required
+     *  TYPDEFOVR - TYPDEF Overrides - required
+     *  SQLSTT - SQL Statement - required (at least one; may be more)
+     *
+     *      *      */
+
+/**
+     * Parse EXCSQLIMM objects
+     * Objects
+     *  TYPDEFNAM - Data type definition name - optional
+     *  TYPDEFOVR - Type defintion overrides
+     *  SQLSTT - SQL Statement required
+     *
+     * If TYPDEFNAM and TYPDEFOVR are supplied, they apply to the objects
+     * sent with the statement.  Once the statement is over, the default values
+     * sent in the ACCRDB are once again in effect.  If no values are supplied,
+     * the values sent in the ACCRDB are used.
+     * Objects may follow in one DSS or in several DSS chained together.
+     * 
+     * @return SQL Statement
+     *      *      */
+
+/**
+     * Parse EXCSQLSET objects
+     * Objects
+     *  TYPDEFNAM - Data type definition name - optional
+     *  TYPDEFOVR - Type defintion overrides - optional
+     *  SQLSTT - SQL Statement - required (a list of at least one)
+     *
+     * Objects may follow in one DSS or in several DSS chained together.
+     * 
+     *      *      */
+
+/**
+     * Write RDBUPDRM
+     * Instance variables
+     *  SVRCOD - Severity code - Information only - required
+     *  RDBNAM - Relational database name -required
+     *  SRVDGN - Server Diagnostic Information -optional
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse PKGNAMCSN - RDB Package Name, Consistency Token, and Section Number
+     * Instance Variables
+     *   NAMESYMDR - database name - not validated
+     *   RDBCOLID - RDB Collection Identifier
+     *   PKGID - RDB Package Identifier
+     *   PKGCNSTKN - RDB Package Consistency Token
+     *   PKGSN - RDB Package Section Number
+     *
+     * @return Pkgnamcsn value
+     *      */
+
+/**
+     * Parse SQLSTT Dss
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse an encoded data string from the Application Requester
+     *
+     * @return string value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse variable character mixed byte or variable character single byte
+     * Format
+     *  I2 - VCM Length
+     *  N bytes - VCM value
+     *  I2 - VCS Length
+     *  N bytes - VCS value 
+     * Only 1 of VCM length or VCS length can be non-zero
+     *
+     * @return string value
+     */
+
+/**
+     * Parse nullable character mixed byte or nullable character single byte
+     * Format
+     *  1 byte - null indicator
+     *  I4 - mixed character length
+     *  N bytes - mixed character string
+     *  1 byte - null indicator
+     *  I4 - single character length
+     *  N bytes - single character length string
+     *
+     * @return string value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse mixed character string
+     * 
+     * @return string value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse single byte character string
+     * 
+     * @return string value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Parse CLSQRY
+     * Instance Variables
+     *  RDBNAM - relational database name - optional
+     *  PKGNAMCSN - RDB Package Name, Consistency Token and Section Number - required
+     *  QRYINSID - Query Instance Identifier - required - level 7
+     *  MONITOR - Monitor events - optional.
+     *
+     * @return DRDAstatement being closed
+     *      *      */
+
+/**
+     * Parse MONITOR
+     * DRDA spec says this is optional.  Since we
+     * don't currently support it, we just ignore.
+     */
+
+/**
+     * 
+     * Get the SQLCODE to send for an exception or a warning.
+     * 
+     *
+     * 
+     * The client expects a negative SQLCODE for exceptions and a positive
+     * SQLCODE for warnings. SQLCODE 0 means there is no error or warning
+     * condition. SQLCODE is also used to encode the severity of the condition
+     * (as returned by {@code SQLException.getErrorCode()}).
+     * 
+     *
+     * 
+     * For warnings, the SQLCODE is 10000, which is identical to
+     * {@link ExceptionSeverity#WARNING_SEVERITY}.
+     * 
+     *
+     * 
+     * For exceptions, the SQLCODE is set to {@code -severity-1}, which allows
+     * all non-negative severity values to be encoded. (Derby only uses
+     * non-negative severity values in the first place.)
+     * 
+     *
+     * @param e the exception or warning to get the SQLCODE for
+     * @return the value to send as SQLCODE
+     */
+
+/**
+     * Write a null SQLCARD as an object
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write SQLERRRM
+     *
+     * Instance Variables
+     *  SVRCOD - Severity Code - required
+     *
+     * @param   severity    severity of error
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write CMDCHKRM
+     *
+     * Instance Variables
+     *  SVRCOD - Severity Code - required
+     *
+     * @param   severity    severity of error
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Translate from Derby exception severity to SVRCOD
+     *
+     * @param e SQLException
+     */
+
+/**
+     * Write SQLCAGRP
+     *
+     * SQLCAGRP : FDOCA EARLY GROUP
+     * SQL Communcations Area Group Description
+     *
+     * FORMAT FOR SQLAM &lt;= 6
+     *   SQLCODE; DRDA TYPE I4; ENVLID 0x02; Length Override 4
+     *   SQLSTATE; DRDA TYPE FCS; ENVLID 0x30; Length Override 5
+     *   SQLERRPROC; DRDA TYPE FCS; ENVLID 0x30; Length Override 8
+     *   SQLCAXGRP; DRDA TYPE N-GDA; ENVLID 0x52; Length Override 0
+     *
+     * FORMAT FOR SQLAM &gt;= 7
+     *   SQLCODE; DRDA TYPE I4; ENVLID 0x02; Length Override 4
+     *   SQLSTATE; DRDA TYPE FCS; ENVLID 0x30; Length Override 5
+     *   SQLERRPROC; DRDA TYPE FCS; ENVLID 0x30; Length Override 8
+     *   SQLCAXGRP; DRDA TYPE N-GDA; ENVLID 0x52; Length Override 0
+     *   SQLDIAGGRP; DRDA TYPE N-GDA; ENVLID 0x56; Length Override 0
+     *
+     * @param e     SQLException encountered
+     * 
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * SQLERRMC_TOKEN_DELIMITER separates message argument tokens 
+     */
+
+/**
+     * SQLERRMC_PREFORMATTED_MESSAGE_DELIMITER, When full message text is 
+     * sent for severe errors. This value separates the messages. 
+     */
+
+/**
+     * Build preformatted SQLException text 
+     * for severe exceptions or SQLExceptions that are not Derby exceptions.
+     * Just send the message text localized to the server locale.
+     * 
+     * @param se  SQLException for which to build SQLERRMC
+     * @return preformated message text 
+     *          with messages separted by SQLERRMC_PREFORMATED_MESSAGE_DELIMITER
+     * 
+     */
+
+/**
+     * Build Tokenized SQLERRMC to just send the tokenized arguments to the client.
+     * for a Derby SQLException or an SQLException thrown by user code.
+     * Message argument tokens are separated by SQLERRMC_TOKEN_DELIMITER 
+     * Multiple messages are separated by SystemProcedures.SQLERRMC_MESSAGE_DELIMITER
+     * 
+     *                 ...
+     * @param se   SQLException to print
+     * 
+     */
+
+/**
+     * Build the SQLERRMC for a {@code java.sql.DataTruncation} warning.
+     * Serialize all the fields of the {@code DataTruncation} instance in the
+     * order in which they appear in the parameter list of the constructor.
+     *
+     * @param dt the {@code DataTruncation} instance to serialize
+     * @return the SQLERRMC string with all fields of the warning
+     */
+
+/**
+     * Write the ERR and WARN part of the SQLCA
+     *
+     * @param updateCount
+     * @param rowCount 
+     */
+
+/**
+     * Write SQLDIAGGRP: SQL Diagnostics Group Description - Identity 0xD1
+     * Nullable Group
+     * SQLDIAGSTT; DRDA TYPE N-GDA; ENVLID 0xD3; Length Override 0
+     * SQLDIAGCN;  DRFA TYPE N-RLO; ENVLID 0xF6; Length Override 0
+     * SQLDIAGCI;  DRDA TYPE N-RLO; ENVLID 0xF5; Length Override 0
+     */
+
+/**
+     * writeSQLDIAGCI: SQL Diagnostics Condition Information Array - Identity 0xF5
+     * SQLNUMROW; ROW LID 0x68; ELEMENT TAKEN 0(all); REP FACTOR 1
+     * SQLDCIROW; ROW LID 0xE5; ELEMENT TAKEN 0(all); REP FACTOR 0(all)
+     */
+
+/**
+     * writeSQLNUMROW: Writes SQLNUMROW : FDOCA EARLY ROW
+     * SQL Number of Elements Row Description
+     * FORMAT FOR SQLAM LEVELS
+     * SQLNUMGRP; GROUP LID 0x58; ELEMENT TAKEN 0(all); REP FACTOR 1
+     */
+
+/**
+     * writeSQLNUMGRP: Writes SQLNUMGRP : FDOCA EARLY GROUP
+     * SQL Number of Elements Group Description
+     * FORMAT FOR ALL SQLAM LEVELS
+     * SQLNUM; DRDA TYPE I2; ENVLID 0x04; Length Override 2
+     */
+
+/**
+     * writeSQLDCROW: SQL Diagnostics Condition Row - Identity 0xE5
+     * SQLDCGRP; GROUP LID 0xD5; ELEMENT TAKEN 0(all); REP FACTOR 1
+     */
+
+/** 
+     * Write SQLDARD
+     *
+     * SQLDARD : FDOCA EARLY ARRAY
+     * SQL Descriptor Area Row Description with SQL Communications Area
+     *
+     * FORMAT FOR SQLAM &lt;= 6
+     *   SQLCARD; ROW LID 0x64; ELEMENT TAKEN 0(all); REP FACTOR 1
+     *   SQLNUMROW; ROW LID 0x68; ELEMENT TAKEN 0(all); REP FACTOR 1
+     *   SQLDAROW; ROW LID 0x60; ELEMENT TAKEN 0(all); REP FACTOR 0(all)
+     *
+     * FORMAT FOR SQLAM &gt;= 7
+     *   SQLCARD; ROW LID 0x64; ELEMENT TAKEN 0(all); REP FACTOR 1
+     *   SQLDHROW; ROW LID 0xE0; ELEMENT TAKEN 0(all); REP FACTOR 1
+     *   SQLNUMROW; ROW LID 0x68; ELEMENT TAKEN 0(all); REP FACTOR 1
+     *
+     * @param stmt  prepared statement
+     *
+     *      *      */
+
+/**
+     * Write QRYDSC - Query Answer Set Description
+     *
+     * @param stmt DRDAStatement we are working on
+     * @param FDODSConly    simply the FDODSC, without the wrap
+     *
+     * Instance Variables
+     *   SQLDTAGRP - required
+     * 
+     * Only 84 columns can be sent in a single QRYDSC.  If there are more columns
+     * they must be sent in subsequent QRYDSC.
+     * If the QRYDSC will not fit into the current block, as many columns as can
+     * fit are sent and then the remaining are sent in the following blocks.
+     * 
+     *      *      */
+
+/**
+     * Write SQLDTAGRP
+     * SQLDAGRP : Late FDOCA GROUP
+     * SQL Data Value Group Descriptor
+     *  LENGTH - length of the SQLDTAGRP
+     *  TRIPLET_TYPE - NGDA for first, CPT for following
+     *  ID - SQLDTAGRP_LID for first, NULL_LID for following
+     *  For each column
+     *    DRDA TYPE 
+     *    LENGTH OVERRIDE
+     *      For numeric/decimal types
+     *        PRECISON
+     *        SCALE
+     *      otherwise
+     *        LENGTH or DISPLAY_WIDTH
+     *
+     * @param stmt      drda statement
+     * @param rsmeta    resultset meta data
+     * @param pmeta     parameter meta data for CallableStatement
+     * @param colStart  starting column for group to send
+     * @param colEnd    end column to send
+     * @param first     is this the first group
+     *
+     *      *      */
+
+/**
+     * Holdability passed in as it can represent the holdability of
+     * the statement or a specific result set.
+     * @param holdability HOLD_CURSORS_OVER_COMMIT or CLOSE_CURSORS_AT_COMMIT
+     *      *      */
+
+/**
+     * 
+     * Get the value of an output parameter of the specified type from a
+     * {@code CallableStatement}, in a form suitable for being writted by
+     * {@link #writeFdocaVal}. For most types, this means just calling
+     * {@code CallableStatement.getObject(int)}.
+     * 
+     *
+     * 
+     * This method should behave like the corresponding method for
+     * {@code ResultSet}, and changes made to one of these methods, must be
+     * reflected in the other method. See
+     * {@link #getObjectForWriteFdoca(java.sql.ResultSet, int, int)}
+     * for details.
+     * 
+     *
+     * @param cs the callable statement to fetch the object from
+     * @param index the parameter index
+     * @param drdaType the DRDA type of the object to fetch
+     * @return an object with the value of the output parameter
+     *      *      */
+
+/**
+     * Process remainder data resulting from a split.
+     *
+     * This routine is called at the start of building each QRYDTA block.
+     * Normally, it observes that there is no remainder data from the
+     * previous QRYDTA block, and returns FALSE, indicating that there
+     * was nothing to do.
+     *
+     * However, if it discovers that the previous QRYDTA block was split,
+     * then it retrieves the remainder data from the result set, writes
+     * as much of it as will fit into the QRYDTA block (hopefully all of
+     * it will fit, but the row may be very long), and returns TRUE,
+     * indicating that this QRYDTA block has been filled with remainder
+     * data and should now be sent immediately.
+     */
+
+/**
+     * Done data
+     * Send SQLCARD for the end of the data
+     * 
+     * @param stmt DRDA statement
+     * @param rs Result set
+     *      *      */
+
+/**
+     * Position cursor for insensitive scrollable cursors
+     *
+     * @param stmt  DRDA statement
+     * @param rs    Result set
+     */
+
+/**
+     * Write variable character mixed byte or single byte
+     * The preference is to write mixed byte if it is defined for the server,
+     * since that is our default and we don't allow it to be changed, we always
+     * write mixed byte.
+     * 
+     * @param s string to write
+     * @exception DRDAProtocolException
+     */
+
+/**
+   * Write Fdoca Value to client 
+   * @param index     Index of column being returned
+   * @param val       Value to write to client
+   * @param drdaType  FD:OCA DRDA Type from FdocaConstants
+   * @param precision Precision
+   * @param stmt       Statement being processed
+   * @param isParam   True when writing a value for a procedure parameter
+   *
+   * @exception DRDAProtocolException  
+   * 
+   * @exception SQLException
+   *
+   *    */
+
+/**
+     * write nullability if this is a nullable drdatype and FDOCA null
+     * value if appropriate
+     * @param drdaType      FDOCA type
+     * @param valNull       true if this is a null value. False otherwise
+     * 
+     **/
+
+/**
+     * Convert a {@code java.sql.Date} to a string with the format expected
+     * by the client.
+     *
+     * @param date the date to format
+     * @return a string on the format YYYY-MM-DD representing the date
+     *      */
+
+/**
+     * Convert a {@code java.sql.Time} to a string with the format expected
+     * by the client.
+     *
+     * @param time the time to format
+     * @return a string on the format HH:MM:SS representing the time
+     *      */
+
+/**
+     * Convert a {@code java.sql.Timestamp} to a string with the format
+     * expected by the client.
+     *
+     * @param ts the timestamp to format
+     * @return a string on the format YYYY-MM-DD-HH.MM.SS.ffffff[fff]
+     *      */
+
+/**
+     * Insert an integer into a char array and pad it with leading zeros if
+     * its string representation is shorter than {@code length} characters.
+     *
+     * @param buf the char array
+     * @param offset where in the array to start inserting the value
+     * @param length the desired length of the inserted string
+     * @param value the integer value to insert
+     */
+
+/**
+     * Methods to keep track of required codepoints
+     */
+
+/**
+     * Copy a list of required code points to template for checking
+     *
+     * @param req list of required codepoints
+     */
+
+/**
+     * Remove codepoint from required list
+     *
+     * @param codePoint - code point to be removed
+     */
+
+/**
+     * Check whether we have seen all the required code points
+     *
+     * @param codePoint code point for which list of code points is required
+     */
+
+/**
+     * Error routines
+     */
+
+/**
+     * Seen too many of this code point
+     *
+     * @param codePoint  code point which has been duplicated
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Object too big
+     *
+     * @param codePoint  code point with too big object
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Invalid non-derby client tried to connect.
+     * thrown a required Value not found error and log a message to derby.log
+     * 
+     * @param prdid product id that does not match DNC 
+     *      */
+
+/*** Required value not found.
+     * 
+     * @param codePoint code point with invalid value
+     * 
+     */
+
+/**
+     * Object length not allowed
+     *
+     * @param codePoint  code point with bad object length
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * RDB not found
+     *
+     * @param rdbnam  name of database
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Invalid value for this code point
+     *
+     * @param codePoint  code point value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Invalid codepoint for this command
+     *
+     * @param codePoint code point value
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Don't support this code point
+     *
+     * @param codePoint  code point value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Don't support this value
+     *
+     * @param codePoint  code point value
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Verify that the code point is the required code point
+     *
+     * @param codePoint code point we have
+     * @param reqCodePoint code point required at this time
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Verify that the code point is in the right order
+     *
+     * @param codePoint code point we have
+     * @param reqCodePoint code point required at this time
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Database name given under code point doesn't match previous database names
+     *
+     * @param codePoint codepoint where the mismatch occurred
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Close the current session
+     */
+
+/**
+     * Handle Exceptions - write error protocol if appropriate and close session
+     *  or thread as appropriate
+     */
+
+/**
+     * Notice the client about a protocol error.
+     *
+     * @param de DRDAProtocolException to be sent
+     */
+
+/**
+     * Send unpexpected error to the client
+     * @param e Exception to be sent
+     */
+
+/**
+     * Test if DRDA connection thread is closed
+     *
+     * @return true if close; false otherwise
+     */
+
+/**
+     * Get whether connections are logged
+     *
+     * @return true if connections are being logged; false otherwise
+     */
+
+/**
+     * Get time slice value for length of time to work on a session
+     *
+     * @return time slice
+     */
+
+/**
+     * Send string to console
+     *
+     * @param value - value to print on console
+     */
+
+/**
+     * Sends a trace string to the console when reading an EXTDTA value (if
+     * tracing is enabled).
+     *
+     * @param drdaType the DRDA type of the EXTDTA value
+     * @param index the one-based parameter index
+     * @param stream the stream being read
+     * @param streamLOB whether or not the value is being streamed as the last
+     *      parameter value in the DRDA protocol flow
+     * @param encoding the encoding of the data, if any
+     */
+
+/***
+     * Show runtime memory
+     *
+     ***/
+
+/**
+     * convert byte array to a Hex string
+     * 
+     * @param buf buffer to  convert
+     * @return hex string representation of byte array
+     */
+
+/**
+     * check that the given typdefnam is acceptable
+     * 
+     * @param typdefnam 
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Check that the length is equal to the required length for this codepoint
+     *
+     * @param codepoint codepoint we are checking
+     * @param reqlen    required length
+     * 
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Read and check a boolean value
+     * 
+     * @param codepoint codePoint to be used in error reporting
+     * @return true or false depending on boolean value read
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Create a new database and intialize the 
+     * DRDAConnThread database.
+     * 
+     * @param dbname database name to initialize. If 
+     * dbnam is non null, add database to the current session
+     *
+     */
+
+/**
+     * Set the current database
+     * 
+     * @param codePoint     codepoint we are processing
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Write ENDUOWRM
+     * Instance Variables
+     *  SVCOD - severity code - WARNING - required
+     *  UOWDSP - Unit of Work Disposition - required
+     *  RDBNAM - Relational Database name - optional
+     *  SRVDGN - Server Diagnostics information - optional
+     *
+     * @param opType - operation type 1 - commit, 2 -rollback
+     */
+
+/**
+     * Check SQLWarning and write SQLCARD as needed.
+     * 
+     * @param conn      connection to check
+     * @param stmt      statement to check
+     * @param rs        result set to check
+     * @param updateCount   update count to include in SQLCARD
+     * @param alwaysSend    whether always send SQLCARD regardless of
+     *                      the existance of warnings
+     * @param sendWarn  whether to send any warnings or not.
+     *
+     * @exception DRDAProtocolException
+     */
+
+/**
+     * Finalize the current DSS chain and send it if
+     * needed.
+     */
+
+/**
+     *  Validate SECMEC_USRSSBPWD (Strong Password Substitute) can be used as
+     *  DRDA security mechanism.
+     *
+     *  Here we check that the target server can support SECMEC_USRSSBPWD
+     *  security mechanism based on the environment, application
+     *  requester's identity (PRDID) and connection URL.
+     *
+     *  IMPORTANT NOTE:
+     *  --------------
+     *  SECMEC_USRSSBPWD is ONLY supported by the target server if:
+     *      - current authentication provider is Derby BUILTIN or
+     *        NONE. (database / system level) (Phase I)
+     *      - database-level password must have been encrypted with the
+     *        SHA-1 based authentication scheme
+     *      - Application requester is 'DNC' (Derby Network Client)
+     *        (Phase I)
+     *
+     *  @return security check code - 0 if everything O.K.
+     */
+
+/**
+     * Close a stream.
+     *
+     * @param stream the stream to close (possibly {@code null})
+     *      * the stream failed
+     */
+
+/**
+     * Sets the specified character EXTDTA parameter of the embedded statement.
+     *
+     * @param stmt the DRDA statement to use
+     * @param i the one-based index of the parameter
+     * @param extdtaStream the EXTDTA stream to read data from
+     * @param streamLOB whether or not the stream content is streamed as the
+     *      last value in the DRDA protocol flow
+     * @param encoding the encoding of the EXTDTA stream
+     *      *      */
+
+/**
+     * Sets the specified binary EXTDTA parameter of the embedded statement.
+     *
+     * @param stmt the DRDA statement to use
+     * @param index the one-based index of the parameter
+     * @param stream the EXTDTA stream to read data from
+     * @param streamLOB whether or not the stream content is streamed as the
+     *      last value in the DRDA protocol flow
+     *      *      */
+
+/**
+     * Privileged Monitor lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+
+/**
+     * Privileged service lookup. Must be private so that user code
+     * can't call this entry point.
+     */
+

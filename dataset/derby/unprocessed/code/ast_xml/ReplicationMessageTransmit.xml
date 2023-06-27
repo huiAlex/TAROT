@@ -1,0 +1,358 @@
+<Class>
+    <Id>39</Id>
+    <Package>org.apache.derby.impl.store.replication.net</Package>
+    <ClassName>ReplicationMessageTransmit</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ReplicationMessageTransmit  /** 
+ * Used to send replication messages to the slave. Called by the Master controller to transmit replication messages wrapped in a &lt;code&gt;ReplicationMessage&lt;/code&gt; object to a receiver. The receiver is implemented by the &lt;code&gt;ReplicationMessageReceive&lt;/code&gt; class.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_MESSAGE_RESPONSE_TIMEOUT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>receiveSemaphore</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>receivedMsg</FieldName>
+            <FieldType>ReplicationMessage</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stopMessageReceiver</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>slaveAddress</FieldName>
+            <FieldType>SlaveAddress</FieldType>
+        </Field>
+        <Field>
+            <FieldName>socketConn</FieldName>
+            <FieldType>SocketConnection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dbname</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pongMsg</FieldName>
+            <FieldType>ReplicationMessage</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ReplicationMessageTransmit</MethodName>
+            <MethodComment>/** 
+ * Constructor initializes the slave address used in replication.
+ * @param slaveAddress contains the address (host name and port number)of the slave to connect to.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>slaveAddress</ParamName>
+                    <ParamType>SlaveAddress</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initConnection</MethodName>
+            <MethodComment>/** 
+ * Used to create a &lt;code&gt;Socket&lt;/code&gt; connection to the slave and establish compatibility with the database version of the slave by comparing the UID's of the &lt;code&gt;ReplicationMessage&lt;/code&gt; classes of the master and the slave.
+ * @param timeout the amount of time for which the connection shouldblock before being established.
+ * @param synchOnInstant the master log instant, used to checkthat the master and slave log files are in synch. If no chunks of log records have been shipped to the slave yet, this is the end position in the current log file. If a chunk of log has been shipped, this is the instant of the log record shipped last. Note that there is a difference!
+ * @throws IOException if an exception occurs while trying to create the&lt;code&gt;SocketConnection&lt;/code&gt; class or open a connection.
+ * @throws StandardException If an error message is received from theserver indicating incompatible software versions of master and slave.
+ * @throws ClassNotFoundException Class of a serialized object cannotbe found.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>synchOnInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Socket [s=null]</InnerVar>
+                <InnerVar>int [timeout_=timeout]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s;setKeepAlive;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;startMessageReceiverThread;[dbname]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;brokerConnection;[synchOnInstant]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Socket</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SocketFactory [sf=SocketFactory.getDefault()]</InnerVar>
+                <InnerVar>InetSocketAddress [sockAddr=new InetSocketAddress(slaveAddress.getHostAddress(),slaveAddress.getPortNumber())]</InnerVar>
+                <InnerVar>Socket [s_temp=sf.createSocket()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s_temp;connect;[sockAddr, timeout_]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment>/** 
+ * Tear down the network connection established with the other replication peer
+ * @throws IOException if an exception occurs while trying to teardown the network connection
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sendMessage</MethodName>
+            <MethodComment>/** 
+ * Used to send a replication message to the slave.
+ * @param message a &lt;code&gt;ReplicationMessage&lt;/code&gt; object that containsthe message to be transmitted.
+ * @throws IOException 1) if an exception occurs while transmittingthe message. 2) if the connection handle is invalid.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <ParamType>ReplicationMessage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkSocketConnection;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>socketConn;writeMessage;[message]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sendMessageWaitForReply</MethodName>
+            <MethodComment>/** 
+ * Send a replication message to the slave and return the message received as a response. Will only wait DEFAULT_MESSAGE_RESPONSE_TIMEOUT millis for the response message. If not received when the wait times out, no message is returned. The method is synchronized to guarantee that only one thread will be waiting for a response message at any time.
+ * @param message a ReplicationMessage object that contains the message tobe transmitted.
+ * @return the response message
+ * @throws IOException 1) if an exception occurs while sending or receivinga message. 2) if the connection handle is invalid.
+ * @throws StandardException if the response message has not been receivedafter DEFAULT_MESSAGE_RESPONSE_TIMEOUT millis
+ */
+</MethodComment>
+            <ReturnType>ReplicationMessage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <ParamType>ReplicationMessage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [startMillis=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>long [waited=0L]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkSocketConnection;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>socketConn;writeMessage;[message]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>brokerConnection</MethodName>
+            <MethodComment>/** 
+ * Used to send initiator messages to the slave and receive information about the compatibility of the slave with the master. One message is used to check that the slave and master have the same software versions. A second message is used to check that the master and slave log files are in synch.
+ * @param synchOnInstant the master log instant, used to checkthat the master and slave log files are in synch. If no chunks of log records have been shipped to the slave yet, this is the end position in the current log file. If a chunk of log has been shipped, this is the instant of the log record shipped last. Note that there is a difference!
+ * @throws IOException if an exception occurs during the sending orreading of the message.
+ * @throws StandardException If an error message is received from theserver indicating a mis-match in serialVersionUID or log files out of synch.
+ * @throws ClassNotFoundException Class of a serialized object cannotbe found.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>synchOnInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ReplicationMessage [initiatorMsg=new ReplicationMessage(ReplicationMessage.TYPE_INITIATE_VERSION,ReplicationMessage.serialVersionUID)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;verifyMessageType;[sendMessageWaitForReply(initiatorMsg), ReplicationMessage.TYPE_ACK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;verifyMessageType;[sendMessageWaitForReply(initiatorMsg), ReplicationMessage.TYPE_ACK]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyMessageType</MethodName>
+            <MethodComment>/** 
+ * Used to parse a message received from the slave. If the message is an ack of the last shipped message, this method terminates quietly. Otherwise, it throws the exception received in the message from the slave describing why the last message could not be acked.
+ * @throws StandardException If an error message is received fromthe server
+ * @throws ClassNotFoundException Class of a serialized object cannotbe found.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <ParamType>ReplicationMessage</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkSocketConnection</MethodName>
+            <MethodComment>/** 
+ * Verifies if the &lt;code&gt;SocketConnection&lt;/code&gt; is valid.
+ * @throws IOException If the socket connection object is notvalid (is null).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startMessageReceiverThread</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MasterReceiverThread [msgReceiver=new MasterReceiverThread(dbname)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>msgReceiver;setDaemon;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>msgReceiver;start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>MasterReceiverThread</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ReplicationMessage [message]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readMessage</MethodName>
+            <MethodComment>/** 
+ * Used to read a replication message sent by the slave. Hangs until a message is received from the slave
+ * @return the reply message.
+ * @throws ClassNotFoundException Class of a serialized object cannotbe found.
+ * @throws IOException 1) if an exception occurs while reading from thestream. 2) if the connection handle is invalid.
+ */
+</MethodComment>
+            <ReturnType>ReplicationMessage</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkSocketConnection;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

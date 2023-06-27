@@ -1,0 +1,145 @@
+<Class>
+    <Id>1878</Id>
+    <Package>org.apache.derby.iapi.store.access.conglomerate</Package>
+    <ClassName>ConglomerateFactory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>MethodFactory</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ConglomerateFactory  /** 
+ * The factory interface for all conglomerate access methods.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>HEAP_FACTORY_ID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BTREE_FACTORY_ID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getConglomerateFactoryId</MethodName>
+            <MethodComment>/** 
+ * Return the conglomerate factory id. &lt;p&gt; Return a number in the range of 0-15 which identifies this factory. Code which names conglomerates depends on this range currently, but could be easily changed to handle larger ranges.   One hex digit seemed reasonable for the number of conglomerate types currently implemented (heap, btree) and those that might be implemented in the future: gist, gist btree, gist rtree, hash, others? ). &lt;p&gt;
+ * @return an unique identifier used to the factory into the conglomid.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createConglomerate</MethodName>
+            <MethodComment>/** 
+ * Create the conglomerate and return a conglomerate object for it.  It is expected that the caller of this method will place the the resulting object in the conglomerate directory.
+ * @param xact_mgr             transaction to perform the create in.
+ * @param segment              segment to create the conglomerate in.
+ * @param input_containerid    containerid to assign the container, or ContainerHandle.DEFAULT_ASSIGN_ID if you want raw store to assign an id.
+ * @param template             Template of row in the conglomerate.
+ * @param columnOrder          columns sort order for Index creation
+ * @param collationIds         collation ids of columns in the conglomerate.
+ * @param properties           Properties associated with the conglomerate.
+ * @exception StandardException if the conglomerate could not beopened for some reason, or if an error occurred in one of the lower level modules.
+ */
+</MethodComment>
+            <ReturnType>Conglomerate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_mgr</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segment</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>input_containerid</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>template</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnOrder</ParamName>
+                    <ParamType>ColumnOrdering[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>collationIds</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>temporaryFlag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readConglomerate</MethodName>
+            <MethodComment>/** 
+ * Return Conglomerate object for conglomerate with container_key. &lt;p&gt; Return the Conglomerate Object.  This is implementation specific. Examples of what will be done is using the key to find the file where the conglomerate is located, and then executing implementation specific code to instantiate an object from reading a "special" row from a known location in the file.  In the btree case the btree conglomerate is stored as a column in the control row on the root page. &lt;p&gt; This operation is costly so it is likely an implementation using this will cache the conglomerate row in memory so that subsequent accesses need not perform this operation.
+ * @param xact_mgr      transaction to perform the create in.
+ * @param container_key The unique id of the existing conglomerate.
+ * @return An instance of the conglomerate.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>Conglomerate</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>xact_mgr</ParamName>
+                    <ParamType>TransactionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container_key</ParamName>
+                    <ParamType>ContainerKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>insertUndoNotify</MethodName>
+            <MethodComment>/** 
+ * Interface to be called when an undo of an insert is processed. &lt;p&gt; Implementer of this class provides interface to be called by the raw store when an undo of an insert is processed.  Initial implementation will be by Access layer to queue space reclaiming events if necessary when a rows is logically "deleted" as part of undo of the original insert.  This undo can happen a lot for many applications if they generate expected and handled duplicate key errors. &lt;p&gt; Caller may decide to call or not based on deleted row count of the page, or if overflow rows/columns are present.
+ * @param access_factory    current access_factory of the aborted insert.
+ * @param xact              transaction that is being backed out.
+ * @param page_key          page key of the aborted insert.
+ * @exception StandardException  Standard exception policy.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access_factory</ParamName>
+                    <ParamType>AccessFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>xact</ParamName>
+                    <ParamType>Transaction</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>page_key</ParamName>
+                    <ParamType>PageKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

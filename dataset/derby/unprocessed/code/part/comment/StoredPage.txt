@@ -1,0 +1,1279 @@
+/**************************************************************************
+     * static final Fields of the class
+     **************************************************************************
+     */
+
+/**
+     * Return my format identifier.
+     **/
+
+/**
+     * Constants used to find different portions of data on the page.  
+     * 
+     * The page is laid out as follows:
+     * The page is broken into five sections
+     * +----------+-------------+---------+-------------------+----------+
+     * | formatId | page header | records | slot offset table | checksum |
+     * +----------+-------------+---------+-------------------+----------+
+     *
+     * offset               size                    section
+     * ------               -------------------     --------------------------
+     * 0                    PAGE_FORMAT_ID_SIZE     formatId
+     * PAGE_FORMAT_ID_SIZE: PAGE_HEADER_SIZE (56)   page header
+     * RECORD_SPACE_OFFSET: variable                records
+     **/
+
+/**
+     * Start of page, formatId must fit in 4 bytes.
+     * 
+     * where the page header starts - page format is mandated by cached page
+     **/
+
+/**
+     * Fixed size of the page header
+     **/
+
+/** 
+        Start of the record storage area
+    */
+
+/**
+     * Start of the record storage area.
+     * 
+     * Note: a subclass may change the start of the record storage area.  
+     * Don't always count on this number.
+     **/
+
+/**
+     * offset of the page version number
+     **/
+
+/**
+     * SMALL_SLOT_SIZE are for pages smaller than 64K,
+     * LARGE_SLOT_SIZE is for pages bigger than 64K.
+     **/
+
+/**
+     * Size of the checksum stored on the page.
+     *
+     * The checksum is stored in the last 8 bytes of the page, the slot table
+     * grows backward up the page starting at the end of the page just before
+     * the checksum.
+     **/
+
+/**
+     * OVERFLOW_POINTER_SIZE - Number of bytes to reserve for overflow pointer
+     * 
+     * The overflow pointer is the pointer that the takes the place of the 
+     * last column of a row if the row can't fit on the page.  The pointer
+     * then points to another page where the next column of the row can be
+     * found.  The overflow pointer can be bigger than a row, so when 
+     * overflowing a row the code must overflow enough columns so that there
+     * is enough free space to write the row.  Note this means that the
+     * minimum space a row can take on a page must allow for at least the
+     * size of the overflow pointers so that if the row is updated it can 
+     * write the over flow pointer.
+     *
+     **/
+
+/**
+     * OVERFLOW_PTR_FIELD_SIZE - Number of bytes of an overflow field
+     * 
+     * This is the length to reserve for either a column or row overflow
+     * pointer field.  It includes the size of the field header plus the 
+     * maxium length of the overflow pointer (it could be shorter due to
+     * compressed storage).
+     *
+     * The calcualtion is:
+     *
+     * OVERFLOW_PTR_FIELD_SIZE = 
+     *     OVERFLOW_POINTER_SIZE + 
+     *     sizeof(status byte) + 
+     *     sizeof(field length field for a field which is just an overflow ptr)
+     *     
+     *
+     **/
+
+/**
+     * In memory buffer used as scratch space for streaming columns.
+     **/
+
+/**************************************************************************
+     * Fields of the class
+     **************************************************************************
+     */
+
+/**
+     * Constants used in call to logColumn.
+     * 
+     * Action taken in this routine is determined by the kind of column as
+     * specified in the columnFlag:
+     *     COLUMN_NONE   - the column is insignificant
+     *     COLUMN_FIRST  - this is the first column in a logRow() call
+     *     COLUMN_LONG   - this is a known long column, therefore we will 
+     *                     store part of the column on the current page and 
+     *                     overflow the rest if necessary.
+     *     COLUMN_CREATE_NULL   - the column was recently added.
+     *                  it doesn't actually exist in the on-disk row yet.
+     *                  we will need to put a null in it as soon as possible.
+     *                  see DERBY-5679.
+     **/
+
+/**
+     * maxFieldSize is a worst case calculation for the size of a record
+     * on an empty page, with a single field, but still allow room for 
+     * an overflow pointer if another field is to be added.  See initSpace().
+     * maxFieldSize is a worst case calculation for the size of a record
+     * 
+     * This is used as the threshold for a long column.
+     * 
+     * maxFieldSize = 
+     *      totalSpace - slotEntrySize - 16 - OVERFLOW_POINTER_SIZE;
+     **/
+
+/**
+     * Is the header in the byte array out of date wrt the fields.
+     * 
+     * this field must be set to true whenever one of the above header fields 
+     * is modified.  Ie any of (isOverflowPage, slotsInUse, nextId, generation,
+     * prevGeneration, bipLocation, deletedRowCount)
+     **/
+
+/**
+     * holder for the checksum.
+     **/
+
+/**
+     * scratch variable used to keep track of the total user size for the row.
+     * the information is used by logRow to maintain minimumRecordSize
+     * on Page.  minimumRecordSize is only considered for main data pages,
+     * therefore, the page must be latched during an insert operation.
+     **/
+
+/**
+     * slot field and slot entry size.
+     * 
+     * The size of these fields is dependant on the page size.
+     * These 2 variables should be set when pageSize is determined, and should
+     * not be changed for that page.
+     *
+     * Each slot entry contains 3 fields (slotOffet, recordPortionLength and
+     * reservedSpace) for the record the slot is pointing to.
+     * slotFieldSize is the size for each of the slot field.
+     * slotEntrySize is the total space used for a single slot entry.
+     **/
+
+/**
+     * Offset of the first entry in the slot table.
+     * 
+     * Offset table is located at end of page, just before checksum.  It
+     * grows backward as an array from this point toward the middle of the
+     * page.
+     * 
+     * slotTableOffsetToFirstEntry is the offset to the beginning of the
+     * first entry (slot[0]) in the slot table.  This allows the following
+     * math to get to the offset of N'th entry in the slot table:
+     *
+     *     offset of slot[N] = slotTableOffsetToFirstEntry + (N * slotEntrySize)
+     **/
+
+/**
+     * Offset of the record length entry in the 1st slot table entry.
+     * 
+     * Offset table is located at end of page, just before checksum.  It
+     * grows backward as an array from this point toward the middle of the
+     * page.  The record length is stored as the second "field" of the 
+     * slot table entry.
+     * 
+     * slotTableOffsetToFirstRecordLengthField is the offset to the beginning 
+     * of the record length field in the first entry (slot[0]) in the slot 
+     * table.  This allows the following
+     * math to get to the record length field of N'th entry in the slot table:
+     *
+     *     offset of record length of slot[N] slot entry = 
+     *         slotTableOffsetToFirstRecordLengthField + (N * slotEntrySize)
+     **/
+
+/**
+     * Offset of the reserved space length entry in the 1st slot table entry.
+     * 
+     * Offset table is located at end of page, just before checksum.  It
+     * grows backward as an array from this point toward the middle of the
+     * page.  The reserved space length is stored as the third "field" of the 
+     * slot table entry.
+     * 
+     * slotTableOffsetToFirstReservedSpaceField is the offset to the beginning 
+     * of the reserved space field in the first entry (slot[0]) in the slot 
+     * table.  This allows the following
+     * math to get to the reserved space field of N'th entry in the slot table:
+     *
+     *     offset of reserved space of slot[N] slot entry = 
+     *         slotTableOffsetToFirstReservedSpaceField + (N * slotEntrySize)
+     **/
+
+/**
+     * total usable space on a page.
+     * 
+     * This is the space not taken by page hdr, page table, and existing
+     * slot entries/rows.
+     **/
+
+/**
+     * % of page to keep free for updates.
+     * 
+     * How much of a head page should be reserved as "free" so that the space
+     * can be used by update which expands the row without needing to overflow
+     * it.  1 means save 1% of the free space for expansion.
+     **/
+
+/**
+     * Scratch variable used when you need a overflowRecordHeader.  Declared
+     * globally so that object is only allocated once per page.
+     **/
+
+/**
+     * Input streams used to read/write bytes to/from the page byte array.
+     **/
+
+/**************************************************************************
+     * Constructors for This class:
+     **************************************************************************
+     */
+
+/**
+     * Simple no-arg constructor for StoredPage.
+     **/
+
+/**************************************************************************
+     * Private/Protected methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * get scratch space for over flow record header.
+     * 
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Initialize the StoredPage.
+     * 
+     * Initialize the object, ie. perform work normally perfomed in constructor.
+     * Called by setIdentity() and createIdentity() - the Cacheable interfaces
+     * which are used to move a page in/out of cache.
+     **/
+
+/**
+     * Create the output streams.
+     * 
+     * Create the output streams, these are created on demand
+     * to avoid creating unrequired objects for pages that are
+     * never modified during their lifetime in the cache.
+     * 
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Tie the logical output stream to a passed in OutputStream.
+     * 
+     * Tie the logical output stream to a passed in OutputStream with
+     * no limit as to the number of bytes that can be written.
+     **/
+
+/**
+     * Reset the logical output stream.
+     * 
+     * Reset the logical output stream (logicalDataOut) to be attached
+     * to the page array stream as is the norm, no limits are placed 
+     * on any writes.
+     *
+     **/
+
+/**************************************************************************
+     * Protected Methods of CachedPage class: (create, read and write a page.)
+     **************************************************************************
+     */
+
+/**
+     * use this passed in page buffer as this object's page data.
+     * 
+     * The page content may not have been read in from disk yet.
+     * For pagesize smaller than 64K:
+     *      Size of the record offset stored in a slot (unsigned short)
+     *      Size of the record portion length stored in a slot (unsigned short)
+     *      Size of the record portion length stored in a slot (unsigned short)
+     *  For pagesize greater than 64K, but less than 2gig:
+     *      Size of the record offset stored in a slot (int)
+     *      Size of the record portion length stored in a slot (int)
+     *      Size of the record portion length stored in a slot (int)
+     * 
+     *
+     * @param pageBuffer    The array of bytes to use as the page buffer.
+     **/
+
+/**
+     * Calculate the slot field size from the page size.
+     *
+     * @param pageSize page size in bytes
+     * @return slot field size in bytes
+     */
+
+/**
+     * Create a new StoredPage.
+     * 
+     * Make this object represent a new page (ie. a page that never existed
+     * before, as opposed to reading in an existing page from disk).
+     * 
+     *
+     * @param newIdentity   The key describing page (segment,container,page).
+     * @param args          information stored about the page, once in the 
+     *                      container header and passed in through the object.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Initialize the page from values in the page buffer.
+     * 
+     * Initialize in memory structure using the buffer in pageData.  This
+     * is how a StoredPage object is intialized to represent page read in
+     * from disk.
+     * 
+     *
+     * @param myContainer   The container to read the page in from.
+     * @param newIdentity   The key representing page being read in (segment,
+     *                      container, page number)
+     *
+     * @exception StandardException If the page cannot be read correctly, 
+     *                              or is inconsistent.
+     **/
+
+/**
+     * Validate the check sum on the page.
+     * 
+     * Compare the check sum stored in the page on disk with the checksum
+     * calculated from the bytes on the page.
+     * 
+     *
+     * @param id     The key that describes the page.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Recalculate checksum and write it to the page array.
+     * 
+     * Recalculate the checksum of the page, and write the result back into
+     * the last bytes of the page.
+     *
+     * @exception  IOException  if writing to end of array fails.
+     **/
+
+/**
+     * Write information about page from variables into page byte array.
+     * 
+     * This routine insures that all information about the page is reflected
+     * in the page byte buffer.  This involves moving information from local
+     * variables into encoded version on the page in page header and checksum.
+     * 
+     *
+     * @param identity  The key of this page.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Write out the format id of this page
+     *
+     * @param identity  The key of this page.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Protected Methods of Cacheable Interface:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Protected OverRidden Methods of BasePage:
+     **************************************************************************
+     */
+
+/**
+     * Ensure that the page is released from the cache when it is unlatched.
+     *
+     *      *
+     **/
+
+/**
+     * Return the total number of bytes used, reserved, or wasted by the
+     * record at this slot.
+     * 
+     * The amount of space the record on this slot is currently taking on the 
+     * page.
+     *
+     * If there is any reserve space or wasted space, count that in also
+     * Do NOT count the slot entry size
+     * 
+     *
+     * @return The number of bytes used by the row at slot "slot".
+     *
+     * @param slot  look at row at this slot.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is there minimal space for insert?
+     * 
+     * Does quick calculation to see if average size row on this page could
+     * be inserted on the page.  This is done because the actual row size
+     * being inserted isn't known until we actually copy the columns from
+     * their object form into their on disk form which is expensive.  So
+     * we use this calculation so that in the normal case we only do one 
+     * copy of the row directly onto the page.
+     * 
+     *
+     * @return true if we think the page will allow an insert, false otherwise.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is row guaranteed to be inserted successfully on this page?
+     * 
+     * Return true if this record is guaranteed to be inserted successfully 
+     * using insert() or insertAtSlot(). This guarantee is only valid while
+     * the row remains unchanged and the page latch is held.
+     * 
+     *
+     * @return bolean indicating if row can be inserted on this page.
+     *
+     * @param row                   The row to check for insert.
+     * @param validColumns          bit map to interpret valid columns in row.
+     * @param overflowThreshold     The percentage of the page to use for the
+     *                              insert.  100 means use 100% of the page,
+     *                              50 means use 50% of page (ie. make sure
+     *                              2 rows fit per page).
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Is this page unfilled?
+     * 
+     * Returns true if page is relatively unfilled, 
+     * which means the page is &lt; 1/2 full and has enough space to insert an
+     * "average" sized row onto the page.
+     * 
+     *
+     * @return true if page is relatively unfilled.
+     **/
+
+/**
+     * Is there enough space on the page to insert a minimum size row?
+     * 
+     * Calculate whether there is enough space on the page to insert a 
+     * minimum size row.  The calculation includes maintaining the required
+     * reserved space on the page for existing rows to grow on the page.
+     * 
+     *
+     * @return boolean indicating if a minimum sized row can be inserted.
+     **/
+
+/**
+     * Does this page have enough space to insert the input rows?
+     * 
+     * Can the rows with lengths spaceNeeded[0..num_rows-1] be copied onto
+     * this page?
+     * 
+     *
+     * @return true if the sum of the lengths will fit on the page.
+     *
+     * @param num_rows      number of rows to check for.
+     * @param spaceNeeded   array of lengths of the rows to insert.
+     **/
+
+/**
+     * Does this page have enough space to move the row to it.
+     * 
+     * Calculate if a row of length "spaceNeeded" with current record id
+     * "source_id" will fit on this page.
+     *
+     * @param spaceNeeded   length of the row encoded with source_id record id.
+     * @param source_id     record id of the row being moved. 
+     *
+     * @return true if the record will fit on this page, after being given a
+     *         new record id as the next id on this page.
+     **/
+
+/**
+     * Create a new record handle.
+     * 
+     * Return the next record id for allocation.  Callers of this interface
+     * expect the next id to get bumped some where else - probably by
+     * storeRecordForInsert().
+     * 
+     *
+     * @return The next id to assing to a row.
+     **/
+
+/**
+     * Create a new record handle, and bump the id.
+     * 
+     * Create a new record handle, and bump the id while holding the latch
+     * so that no other user can ever see this record id.  This will lead
+     * to unused record id's in the case where an insert fails because there
+     * is not enough space on the page.
+     * 
+     *
+     * @return The next id to assing to a row.
+     **/
+
+/**
+     * Create a new record id based on current one passed in.
+     * 
+     * This interface is used for the "copy" insert interface of raw store
+     * where multiple rows are inserted into a page in a single logged 
+     * operation.  We don't want to bump the id until the operation is logged
+     * so we just allocated each id in order and then bump the next id at
+     * the end of the operation.
+     * 
+     *
+     * @return the next id based on the input id.
+     *
+     * @param recordId  The id caller just used, return the next one.
+     *
+     **/
+
+/**************************************************************************
+     * Public Methods specific to StoredPage:
+     **************************************************************************
+     */
+
+/**
+     * Get the full size of the page.
+     **/
+
+/**
+     * Zero out a portion of the page.
+     *
+     * @param offset position of first byte to clear
+     * @param length how many bytes to clear
+     **/
+
+/**
+     * The maximum free space on this page possible.
+     * 
+     * The the maximum amount of space that can be used on the page
+     * for the records and the slot offset table.
+     * NOTE: subclass may have overwitten it to report less freeSpace
+     *
+     * @return the maximum free space on this page possible.
+     *
+     **/
+
+/**
+     * The current free space on the page.
+     **/
+
+/**************************************************************************
+     * Page header routines
+     **************************************************************************
+     */
+
+/**
+     * Read the page header from the page array.
+     * 
+     * Read the page header from byte form in the page array into in memory
+     * variables.
+     **/
+
+/**
+     * Update the page header in the page array.
+     * 
+     * Write the bytes of the page header, taking the values from those 
+     * in the in memory variables.
+     **/
+
+/**
+     * Update the page version number in the byte array
+     **/
+
+/**************************************************************************
+     * Slot Offset & Length table manipulation
+     **************************************************************************
+     */
+
+/**
+     * Get the page offset of a given slot entry.
+     * 
+     * Get the page offset of a slot entry, this is not the offset of
+     * the record stored in the slot, but the offset of the actual slot.
+     *
+     * @return The page offset of a given slot entry.
+     *
+     * @param slot  The array entry of the slot to find.
+     **/
+
+/**
+     * Get the page offset of the record associated with the input slot.
+     * 
+     * This is the actual offset on the page of the beginning of the record.
+     *
+     * @return The page offset of the record associated with the input slot.
+     *
+     * @param slot  The array entry of the slot to find.
+     **/
+
+/**
+     * Set the page offset of the record associated with the input slot.
+     * 
+     * This is the actual offset on the page of the beginning of the record.
+     *
+     * @param slot          The array entry of the slot to set.
+     * @param recordOffset  the new offset to set.
+     **/
+
+/**
+     * Return length of row on this page.
+     * 
+     * Return the total length of data and header stored on this page for 
+     * this record.  This length is stored as the second "field" of the
+     * slot table entry.
+     *
+     * @return The length of the row on this page.
+     *
+     * @param slot   the slot of the row to look up the length of.
+     *
+     **/
+
+/**
+     * Return reserved length of row on this page.
+     * 
+     * Return the reserved length of this record.  
+     * This length is stored as the third "field" of the slot table entry.
+     *
+     * @return The reserved length of the row on this page.
+     *
+     * @param slot   the slot of the row to look up the length of.
+     *
+     **/
+
+/**
+        Update the length of data stored on this page for this record
+    */
+
+/**
+     * Update the length of data stored on this page for this record
+     * 
+     * Update both the record length "field" and the reserved space "field"
+     * of the slot table entry associated with "slot".  This length is stored 
+     * as the second "field" of the slot table entry.  The changes to these
+     * 2 fields are represented as the delta to apply to each field as input
+     * in "delta" and "reservedDelta."
+     * 
+     *
+     * @param slot              the slot of the record to set.
+     * @param delta             The amount the record length changed.
+     * @param reservedDelta     The amount the reserved length changed.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Initialize the in-memory slot table.
+     * 
+     * Initialize the in-memory slot table, ie. that of our super-class 
+     * BasePage.  Go through all the records on the page and set the 
+     * freeSpace and firstFreeByte on page.
+     * 
+     * @param newIdentity   The identity of the page we are trying to 
+     *                      initialize, since we are in the middle of trying
+     *                      to build the page existing info in the class is
+     *                      not set up yet (like getIdentity()). 
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Set up a new slot entry.
+     * 
+     *
+     * @param slot                  the slot to initialize.
+     * @param recordOffset          the offset on the page to find the record.
+     * @param recordPortionLength   the actual length of record+hdr on page.
+     * @param reservedSpace         the reserved length associated with record.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Insert a new slot entry into the current slot array.
+     * 
+     * Shift the existing slots from slot to (slotsInUse - 1) up by one.
+     * Up here means from low slot to high slot (e.g from slot 2 to slot 3).
+     * Our slot table grows backward so we have to be careful here.
+     *
+     * @param slot                  Position the new slot will take
+     * @param recordOffset          Offset of the record for the new slot
+     * @param recordPortionLength   Length of the record stored in the new slot
+     * @param reservedSpace         Length of reserved space of record in slot
+     *
+     **/
+
+/**
+     * Remove slot entry from slot array.
+     * 
+     * Remove a storage slot at slot. Shift the existing slots from
+     * slot+1 to (slotsInUse - 1) down by one..
+     * Down here means from high slot to low slot (e.g from slot 3 to slot 2)
+     *
+     * @param slot                  The slot to delete.
+     *
+     **/
+
+/**
+     * create the record header for the specific slot.
+     * 
+     * Create a new record header object, initialize it, and add it
+     * to the array of cache'd record headers on this page.  Finally return
+     * reference to the initialized record header.
+     *
+     * @return The record header for the specific slot.
+     *
+     * @param slot   return record header of this slot.
+     **/
+
+/**************************************************************************
+     * Record based routines.
+     **************************************************************************
+     */
+
+/**
+     * Is entire record on the page?
+     * 
+     *
+     * @return true if the entire record at slot is on this page, 
+     *         i.e, no overflow row or long columns.
+     *
+     * @param slot   Check record at this slot.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Purge one row on an overflow page.  
+     * 
+     * HeadRowHandle is the recordHandle pointing to the head row piece.
+     * 
+     *
+     * @param slot              slot number of row to purge.
+     * @param headRowHandle     recordHandle of the head row piece.
+     * @param needDataLogged    when true data is logged for purges otherwise just headers.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Purge the column chain that starts at overflowPageId, overflowRecordId
+     * 
+     * Purge just the column chain that starts at the input address.
+     * The long column chain is pointed at by a field in a row.  The long
+     * column is then chained as a sequence of "rows", the last column then
+     * points to the next segment of the chain on each page.
+     * Long columns chains currently are only one row per page so the next
+     * slot of a row in a long row chain should always be the first slot.
+     * 
+     *
+     * @param overflowPageId    The page where the long column chain starts.
+     * @param overflowRecordId  The record id where long column chain starts.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * purge long columns chains which eminate from this page.
+     * 
+     * Purge all the long column chains emanating from the record on this slot
+     * of this page.  The headRowHandle is the record handle of the head row
+     * piece of this row - if this page is the head row, then headRowHandle is
+     * the record handle at the slot.  Otherwise, headRowHandle points to a
+     * row on a different page, i.e., the head page.
+     * 
+     *
+     * @param t             The raw transaction doing the purging.
+     * @param slot          The slot of the row to purge.
+     * @param headRowHandle The RecordHandle of the head row.
+     *
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Purge all the overflow columns and overflow rows of the record at slot.
+     * 
+     * Purge all the overflow columns and overflow rows of the record at slot.
+     * This is called by BasePage.purgeAtSlot, the head row piece is purged
+     * there. 
+     * 
+     *
+     * @param t             The raw transaction doing the purging.
+     * @param slot          The slot of the row to purge.
+     * @param headRowHandle The RecordHandle of the head row.
+     * @param needDataLogged    when true data is logged for purges otherwise just headers.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Remove a column chain that may have been orphaned by an update.  
+     * 
+     * Remove a column chain that may have been orphaned by an update.  This
+     * is executed as a post commit operation.  This page is the head page of
+     * the row which used to point to the column chain in question.  The
+     * location of the orphaned column chain is in the ReclaimSpace record.
+     * 
+     * MT - latched.  No lock will be gotten, the head record must already be
+     * locked exclusive with no outstanding changes that can be rolled back.
+     * 
+     *
+     * @param work          object describing the chain to remove.
+     * @param containerHdl  open container handle to use to remove chain.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * See if there is a orphaned long colum chain or not.  
+     * 
+     * See if there is a orphaned long colum chain or not.  This is a helper
+     * function for removeOrphanedChain.  This page, which may be a head page
+     * or overflow page, contains the column specified in columnId.  It used to
+     * point to a long column chain at oldPageId and oldRecordId.  Returns true
+     * if it no longer points to that long column chain.
+     * 
+     *
+     * @return true if page no longer points to the long column chain.
+     *
+     * @param recordHeader  record header which used to point at the long column
+     * @param columnId      column id of the long column in head.
+     * @param oldPageId     the page id where the long column used to be.
+     * @param oldRecordId   the record id where the long column used to be.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+        @return a recordHandle pointing to the next piece of the column chain.
+        This page must be an overflow page that is in a column chain.  If this
+        is the last piece of the overflow colum, return null.
+
+        @param slot the slot number where the current piece of overflow column
+        is at.
+        @exception StandardException Derby Standard Error Policy
+     */
+
+/**
+     * Return the next recordHandle in a long column chain.
+     * 
+     * Return a recordHandle pointing to the next piece of the column chain.
+     * This page must be an overflow page that is in a column chain.  If this
+     * is the last piece of the overflow colum, return null.
+     * 
+     *
+     * @return The next record handle in a long column chain.
+     *
+     * @param slot   The slot of the current long column piece.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Page space usage
+     **************************************************************************
+     */
+
+/**
+     * initialize the in memory variables associated with space maintenance.
+     * 
+     * Get the total available space on an empty page.
+     * initSlotTable() must be called after the page has been read in.
+     **/
+
+/**
+     * Initialize the freeSpace count and set the firstFreeByte on page
+     **/
+
+/**
+     * Compress out the space specified by startByte and endByte.
+     * 
+     * As part of moving rows, updating rows, purging rows compact the space
+     * left between rows.
+     * 
+     *
+     * @param startByte compress out space starting at startByte offset
+     * @param endByte   compress out space ending   at endByte   offset
+     *
+     **/
+
+/**
+     * Free up required bytes by shifting rows "down" the page.
+     * 
+     * Expand page, move all the data from start Offset down the page by
+     * the amount required to free up the required bytes.
+     *
+     * @param startOffset   offset on page to begin the shift
+     * @param requiredBytes the number of bytes that must be freed.
+     *
+     * @exception IOException   If IOException is raised during the page mod.
+     **/
+
+/**
+     * Shrink page. 
+     * 
+     * move all the data from start Offset up the page by the amount shrunk. 
+     *
+     *
+     * @param startOffset   offset on page to begin the shift
+     * @param shrinkBytes   the number of bytes that must be moved.
+     *
+     * @exception IOException   some IOException is raised during the page mod,
+     *                          (unlikely as this is just writing to array).
+     **/
+
+/**
+
+        @param row (IN/OUT) the row that is to be restored (sparse representation)
+        @param limitInput the limit input stream
+        @param objectInput the object input stream
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException  I/O exception in reading meta data.
+    */
+
+/**
+     * Restore a storable row from a LimitInputStream.
+     * 
+     * Restore a storable row from an LimitInputStream - user must supply two 
+     * streams on top of the same data, one implements ObjectInput interface 
+     * that knows how to restore the object, the other one implements 
+     * LimitInputStream.
+     * 
+     * @param in           the limit input stream
+     * @param row          (IN/OUT) row that is to be restored 
+     *                     (sparse representation)
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Restore a portion of a long column.
+     * 
+     * Restore a portion of a long column - user must supply two streams on top
+     * of the same data, one implements ObjectInput interface that knows how to
+     * restore the object, the other one implements LimitInputStream.
+     *
+     * @param fetchStream  the stream to read the next portion of long col from
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Log a Storable to a stream.
+     * 
+     * Log a Storable into a stream.  This is used by update field operations
+     * 
+     * Write the column in its field format to the stream. Field format is a 
+     * field header followed the data of the column as defined by the data 
+     * itself.  See this class's description for the specifics of the header.
+     *
+     * @exception StandardException     Standard Derby error policy
+     * @exception IOException           RESOLVE
+     **/
+
+/**
+     * Log a long column into a DataOuput.
+     * 
+     * Log a long column into a DataOuput.  This is used by insert operations
+     * 
+     * Write the column in its field format to the stream. Field format is a 
+     * field header followed the data of the column as defined by the data 
+     * itself.  See this class's description for the specifics of the header.
+     *
+     * @param slot      slot of the row with the column
+     * @param recordId  record id of the
+     * @param column    the object form of the column to log 
+     * @param out       where to log to the column to.
+     *
+     * @exception StandardException Standard Derby error policy
+     * @exception IOException       I/O exception from writing to an array.
+     *
+     *      **/
+
+/**
+     * Create and write a long row header to the log stream.
+     * 
+     * Called to log a new overflow record, will check for space available
+     * and throw an exception if the record header will not fit on the page.
+     * 
+     *
+     * @return -1
+     *
+     * @param slot           slot of record to log.
+     * @param spaceAvailable spaceAvaliable on page.
+     * @param out            stream to log the record to.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Log a record to the ObjectOutput stream.
+     * 
+     * Write out the complete on-page record to the store stream.  Data is 
+     * preceeded by a  compressed int that gives the length of the following 
+     * data.
+     *
+     * @exception StandardException Standard Derby error policy
+     * @exception IOException       on error writing to log stream.
+     *
+     *      **/
+
+/**
+        Log a field to the ObjectOutput stream.
+        
+        Find the field in the record and then write out the complete
+        field, i.e. header and data.
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+
+            */
+
+/**
+        Override insertAtSlot to provide long row support.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Update field at specified slot
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Get the number of fields on the row at slot
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Initialize the page.  
+
+        If reuse, then 
+        Clean up any in memory or on disk structure to ready the page for reuse.
+        This is not only reusing the page buffer, but reusing a free page 
+        which may or may not be cleaned up the the client of raw store when it 
+        was deallocated.
+
+        @exception StandardException Derby Standard Error Policy
+     */
+
+/**
+        Set page status
+        @exception StandardException Derby Standard Error Policy
+    */
+
+/**
+        Set the row reserved space.
+        @exception StandardException Derby Standard Error Policy
+     */
+
+/**
+        Store a record at the given slot.
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+    */
+
+/**
+        Create the space to update a portion of a record.
+        This method ensures there is enough room to replace the
+        old data of length oldLength at the given offset, with the new data of length
+        newLength. This method does put any new data on the page, it moves old data around
+        and zeros out any old data when newLength &lt; oldLength. This method does
+        update the information in the slot table.
+
+        The passed in offset is the correct place to put the data
+        when this method returns, ie. it only moves data that
+        has an offset greater then this.
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+    */
+
+/**
+        storeField
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+    */
+
+/**
+        reserveSpaceForSlot
+        This method will reserve at least specified "spaceToReserve" bytes for the record
+        in the slot.
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+    */
+
+/**
+        Skip a field header and its data on the given stream.
+        
+        @exception IOException corrupt stream
+    */
+
+/**
+        Shift data within a record to account for an update.
+
+        @param offset  Offset where the update starts, need not be on a field boundry.
+        @param oldLength length of the data being replaced
+        @param newLength length of the data replacing the old data
+
+        @return the length of the data in the record after the replaced data.
+    */
+
+/**
+        Set the deleted status
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+            */
+
+/**
+        get record count without checking for latch
+    */
+
+/**
+        purgeRecord from page.  Move following slots up by one.
+
+        @exception StandardException    Standard Derby error policy
+        @exception IOException          RESOLVE
+    */
+
+/**
+        Get the offset of the field header of the given field for
+        the record in the given slot.
+
+        Field number is the absolute number for the complete record, not just this portion.
+        E.g. if this is a record portion that starts at field 3 and has 6 fields
+        then the second field on this *page* has field number 4.
+    */
+
+/**
+        Get a time stamp for this page
+        @return page time stamp
+    */
+
+/**
+        Set given pageVersion to be the as what is on this page
+      
+        @exception StandardException given time stamp is null or is not a time
+        stamp implementation this page knows how to deal with
+    */
+
+/**
+        compare given PageVersion with pageVersion on page
+
+        @param ts the page version gotton from this page via a currentTimeStamp
+                or setTimeStamp call earlier
+
+        @return true if the same
+        @exception StandardException given time stamp not gotton from this page
+    */
+
+/** debugging, print this page */
+
+/**
+        Get the overflow page for a record that has already overflowed.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Get an empty overflow page.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Get the overflow slot for a record that has already overflowed.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Get a overflow page that potentially can handle a new overflowed record.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Update an already overflowed record.
+
+        @param slot Slot of the original record on its original page
+        @param row new version of the data
+
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        Update a record handle to point to an overflowed record portion.
+        Note that the record handle need not be the current page.
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        @exception StandardException Standard Derby error policy
+    */
+
+/**
+        return the max datalength allowed with the space available
+    */
+
+/**
+        return whether the field has exceeded the max threshold for this page
+        it compares the fieldSize with the largest possible field for this page
+    */
+
+/**
+        Perform an update.
+
+        @exception StandardException Standard Derby policy
+    */
+
+/**
+     */
+
+/**
+     * See if reserved space should be reclaimed for the input row.
+     * 
+     * See if the row on this page has reserved space that should be shrunk 
+     * once the update commits.  Will only indicate space should be reclaimed
+     * if at least RawTransaction.MINIMUM_RECORD_SIZE_DEFAULT bytes can be
+     * reclaimed.  
+     * 
+     *
+     * @return true if space should be reclaimed from this row post commit.
+     **/
+
+/**
+                @exception StandardException Standard Derby error policy
+     */
+

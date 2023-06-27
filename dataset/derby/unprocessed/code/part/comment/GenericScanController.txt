@@ -1,0 +1,259 @@
+/**************************************************************************
+     * Constants of the class
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Fields of the class
+     **************************************************************************
+     */
+
+/**
+     * The following group of fields are all basic input parameters which are
+     * provided by the calling code when doing a scan.
+     * These are just saved values from what was initially input.
+     **/
+
+/**
+     * Delay positioning the table at the start position until the first
+     * next() call.
+     */
+
+/**
+     * If this flag is set to true, a RowLocation returned from this controller
+     * may have been reused for another row.
+     */
+
+/**
+     * This is the sequence number for when a record id can be
+     * reused. If it has been changed in the container, a RowLocation
+     * may be reused for another row.
+     */
+
+/**
+     * Performance counters ...
+     */
+
+/**************************************************************************
+     * Constructors for This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Private methods of This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Protected methods implementing mechanics of scanning rows:
+     *
+     *     positionAtInitScan()             - move scan state to SCAN_INIT
+     *     positionAtStartForForwardScan()  - SCAN_INIT -> SCAN_INPROGRESS
+     *     positionAtResumeScan()           - reposition after losing scan latch
+     *     fetchRows()                      - move scan while in SCAN_INPROGRESS
+     *     positionAtNextPage()             - move page while in SCAN_INPROGRESS
+     *     positionAtDoneScan()             - SCAN_INPROGRESS -> SCAN_DONE
+     *
+     **************************************************************************
+     */
+
+/**
+     * Move scan to the the SCAN_INIT state.
+     * 
+     * This routine is called to move the scan to the SCAN_INIT state.
+     * It is used both for initialization of the ScanController and
+     * by reopenScan().
+     **/
+
+/**
+     * Reposition the scan upon entering the fetchRows loop.
+     * 
+     * Called upon entering fetchRows() while in the SCAN_INPROGRESS state.
+     * Do work necessary to look at rows in the current page of the scan.
+     * 
+     * The default implementation uses a record handle to maintain a scan
+     * position.  It will get the latch again on the current
+     * scan position and set the slot to the current record handle.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Move the scan from SCAN_INIT to SCAN_INPROGRESS.
+     * 
+     * This routine is called to move the scan from SCAN_INIT to 
+     * SCAN_INPROGRESS.  Upon return from this routine it is expected
+     * that scan_position is set such that calling the generic 
+     * scan loop will reach the first row of the scan.  Note that this
+     * usually means setting the scan_postion to one before the 1st 
+     * row to be returned.
+     * 
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Position scan to slot before first slot on next page.
+     * 
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Do any necessary work to complete the scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Protected methods of This class:
+     **************************************************************************
+     */
+
+/**
+     * Create object which represents the scan position.
+     * 
+     * Designed so that extending classes can override and allocate 
+     * implementation specific row position's.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Fetch the next N rows from the table.
+     * 
+     * Utility routine used by both fetchSet() and fetchNextGroup().
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/** Make a RowLocation from a RowPosition */
+
+/**************************************************************************
+     * abstract protected Methods of This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Public Methods of This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Public Methods implementing ScanController:
+     **************************************************************************
+     */
+
+/**
+     * Reopens the scan after it has been closed as part of a commit.
+     * This method will check the reusableRecordIdSequenceNumber of the 
+     * container, and will set the rowLocationsInvalidated flag if it has 
+     * changed.
+     * @return true if the conglomerate has been reopened
+     * @exception StandardException Derby standard exception
+     */
+
+/**
+        **/
+
+/**
+     * A call to allow client to indicate that current row does not qualify.
+     * 
+     * Indicates to the ScanController that the current row does not
+     * qualify for the scan.  If the isolation level of the scan allows, 
+     * this may result in the scan releasing the lock on this row.
+     * 
+     * Note that some scan implimentations may not support releasing locks on 
+     * non-qualifying rows, or may delay releasing the lock until sometime
+     * later in the scan (ie. it may be necessary to keep the lock until 
+     * either the scan is repositioned on the next row or page).
+     * 
+     * This call should only be made while the scan is positioned on a current
+     * valid row.
+     * RESOLVE (mikem-05/29/98) - Implement this when we support levels of
+     * concurrency less than serializable.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+        **/
+
+/**
+    Returns true if the current position of the scan still qualifies
+    under the set of qualifiers passed to the openScan().  When called
+    this routine will reapply all qualifiers against the row currently
+    positioned and return true if the row still qualifies.  If the row
+    has been deleted or no longer passes the qualifiers then this routine
+    will return false.
+    
+    This case can come about if the current scan
+    or another scan on the same table in the same transaction 
+    deleted the row or changed columns referenced by the qualifier after 
+    the next() call which positioned the scan at this row.  
+
+    Note that for comglomerates which don't support update, like btree's, 
+    there is no need to recheck the qualifiers.
+
+    The results of a fetch() performed on a scan positioned on 
+    a deleted row are undefined.
+
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+    Fetch the row at the current position of the Scan without applying the 
+    qualifiers.
+    
+        **/
+
+/**
+     *      */
+
+/**
+    Fetch the row at the current position of the Scan.
+
+        **/
+
+/**
+    Fetch the row at the current position of the Scan.
+
+    @param row The row into which the value of the current 
+     position in the scan is to be stored.
+
+    @param qualify Indicates whether the qualifiers should be applied.
+
+    @exception StandardException Standard exception policy.
+    **/
+
+/**
+    Fetch the location of the current position in the scan.
+    
+    @exception  StandardException  Standard exception policy.
+    **/
+
+/**
+     * Return ScanInfo object which describes performance of scan.
+     * 
+     * Return ScanInfo object which contains information about the current
+     * scan.
+     * 
+     *
+     *      *
+     * @return The ScanInfo object which contains info about current scan.
+     *
+     * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+    Returns true if the current position of the scan is at a 
+    deleted row.  This case can come about if the current scan
+    or another scan on the same table in the same transaction 
+    deleted the row after the next() call which positioned the
+    scan at this row.  
+
+    The results of a fetch() performed on a scan positioned on 
+    a deleted row are undefined.
+
+    @exception StandardException Standard exception policy.
+    **/
+

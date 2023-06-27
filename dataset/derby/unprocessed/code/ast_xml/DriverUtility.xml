@@ -1,0 +1,214 @@
+<Class>
+    <Id>1808</Id>
+    <Package>org.apache.derbyTesting.system.oe.run</Package>
+    <ClassName>DriverUtility</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DriverUtility  /** 
+ * Driver to do the load phase for the Order Entry benchmark. This class takes in following arguments currently: Usage: java org.apache.derbyTesting.system.oe.run.DriverUtility options Options: &lt;OL&gt; &lt;LI&gt;-scale warehouse scaling factor. Takes a short value. If not specified  defaults to 1 &lt;LI&gt;-doChecks check consistency of data, takes a boolean value. If not specified, defaults to true &lt;LI&gt;-driver jdbc driver class to use &lt;LI&gt;-dbUrl  database connection url  &lt;LI&gt;-help prints usage &lt;/OL&gt; To load database with scale of 2 and to not do any checks, the command to run the test is as follows: &lt;BR&gt; java org.apache.derbyTesting.system.oe.run.DriverUtility -driver org.apache.derby.jdbc.ClientDriver -dbUrl 'jdbc:derby://localhost:1527/db' -scale 2 -doChecks false &lt;BR&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>conn</FieldName>
+            <FieldType>Connection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scale</FieldName>
+            <FieldType>short</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dbUrl</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>driver</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doChecks</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DriverUtility</MethodName>
+            <MethodComment>/** 
+ * Create a test case with the given name.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment>/** 
+ * Run OE load
+ * @param args supply arguments for benchmark.
+ * @throws Exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DriverUtility [oe=new DriverUtility()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;parseArgs;[args]</InnerMethodInvoke>
+                <InnerMethodInvoke>oe;populate;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>oe;cleanup;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConnection</MethodName>
+            <MethodComment>/** 
+ * @return the connection
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>Connection</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populate</MethodName>
+            <MethodComment>/** 
+ * Populate the OE database. Assumption is that the schema is already loaded in the database.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Load [loader=new SimpleInsert()]</InnerVar>
+                <InnerVar>long [start=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>long [stop=System.currentTimeMillis()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>loader;setupLoad;[getConnection(), scale]</InnerMethodInvoke>
+                <InnerMethodInvoke>loader;populateAllTables;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Time to load (ms)=" + (stop - start)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allChecks</MethodName>
+            <MethodComment>/** 
+ * Do the necessary checks to see if database is in consistent state
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>OEChecks [checks=new OEChecks()]</InnerVar>
+                <InnerVar>long [start=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>long [stop=System.currentTimeMillis()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>checks;initialize;[new HandleCheckError(), getConnection(), scale]</InnerMethodInvoke>
+                <InnerMethodInvoke>checks;checkAllRowCounts;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Time to do checks (ms)=" + (stop - start)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseArgs</MethodName>
+            <MethodComment>/** 
+ * parse arguments.
+ * @param args arguments to parse
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printUsage</MethodName>
+            <MethodComment>/** 
+ * prints the usage
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;["Usage: java org.apache.derbyTesting.system.oe." + "run.DriverUtility options"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Options:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["  -scale warehouse scaling factor. " + "Takes a short value. If not specified defaults to 1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["  -doChecks  should consistency checks be run" + " on the database. Takes a boolean value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["  -driver  the class of the jdbc driver"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["  -dbUrl  the database connection url"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["  -help prints usage"]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanup</MethodName>
+            <MethodComment>/** 
+ * cleanup resources. 
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

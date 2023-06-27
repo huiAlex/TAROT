@@ -1,0 +1,200 @@
+/**
+ * Optimizer uses OptimizableList to keep track of the best join order as it
+ * builds it.  For each available slot in the join order, we cost all of the
+ * Optimizables from that slot til the end of the OptimizableList.  Later,
+ * we will choose the best Optimizable for that slot and reorder the list
+ * accordingly.
+ * In order to do this, we probably need to move the temporary pushing and
+ * pulling of join clauses into Optimizer, since the logic will be different
+ * for other implementations.  (Of course, we're not pushing and pulling join
+ * clauses between permutations yet.)
+ */
+
+/**
+	 * This method is called before every "round" of optimization, where
+	 * we define a "round" to be the period between the last time a call to
+	 * getOptimizer() (on either a ResultSetNode or an OptimizerFactory)
+	 * returned _this_ OptimizerImpl and the time a call to this OptimizerImpl's
+	 * getNextPermutation() method returns FALSE.  Any re-initialization
+	 * of state that is required before each round should be done in this
+	 * method.
+	 */
+
+/**
+     * Determine if we want to try "jumping" permutations with this
+     * OptimizerImpl, and (re-)initialize the permuteState field accordingly.
+     */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * Do any work that needs to be done after the current round
+	 * of optimization has completed.  For now this just means walking
+	 * the subtrees for each optimizable and removing the "bestPlan"
+	 * that we saved (w.r.t to this OptimizerImpl) from all of the
+	 * nodes.  If we don't do this post-optimization cleanup we
+	 * can end up consuming a huge amount of memory for deeply-
+	 * nested queries, which can lead to OOM errors.  DERBY-1315.
+	 */
+
+/**
+	 * Iterate through all optimizables in the current proposedJoinOrder
+	 * and find the accumulated sum of their estimated costs.  This method
+	 * is used to 'recover' cost estimate sums that have been lost due to
+	 * the addition/subtraction of the cost estimate for the Optimizable
+	 * at position "joinPosition".  Ex. If the total cost for Optimizables
+	 * at positions &lt; joinPosition is 1500, and then the Optimizable at
+	 * joinPosition has an estimated cost of 3.14E40, adding those two
+	 * numbers effectively "loses" the 1500. When we later subtract 3.14E40
+	 * from the total cost estimate (as part of "pull" processing), we'll
+	 * end up with 0 as the result--which is wrong. This method allows us
+	 * to recover the "1500" that we lost in the process of adding and
+	 * subtracting 3.14E40.
+	 */
+
+/**
+	 * Check to see if the optimizable corresponding to the received
+	 * optNumber can legally be placed within the current join order.
+	 * More specifically, if the optimizable has any dependencies,
+	 * check to see if those dependencies are satisified by the table
+	 * map representing the current join order.
+	 */
+
+/**
+	 * Pull whatever optimizable is at joinPosition in the proposed
+	 * join order from the join order, and update all corresponding
+	 * state accordingly.
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+     * Get the unique tuple descriptor of the current access path for an Optimizable.
+     */
+
+/** Return true if the optimizable is a table function */
+
+/**
+	 * Is the cost of this join order lower than the best one we've
+	 * found so far?  If so, remember it.
+	 *
+	 * NOTE: If the user has specified a join order, it will be the
+	 * only join order the optimizer considers, so it is OK to use
+	 * costing to decide that it is the "best" join order.
+	 *	@exception StandardException	Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * This method decides whether the given conglomerate descriptor is
+	 * cheapest based on cost, rather than based on rules.  It compares
+	 * the cost of using the given ConglomerateDescriptor with the cost
+	 * of using the best ConglomerateDescriptor so far.
+	 */
+
+/**
+	 * This is the version of costOptimizable for non-base-tables.
+	 *
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/**
+	 * 	 */
+
+/**
+	 * 	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** @see Optimizer#getOptimizedCost */
+
+/**
+	 * 	 *
+	 * Sum up the cost of all of the trulyTheBestAccessPaths
+	 * for the Optimizables in our list.  Assumption is that
+	 * we only get here after optimization has completed--i.e.
+	 * while modifying access paths.
+	 */
+
+/** @see Optimizer#setOuterRows */
+
+/** @see Optimizer#tableLockThreshold */
+
+/**
+	 * Get the number of join strategies supported by this optimizer.
+	 */
+
+/** @see Optimizer#getJoinStrategy */
+
+/** @see Optimizer#getJoinStrategy */
+
+/**
+		
+		@exception StandardException	Thrown on error
+	 */
+
+/**
+	 * Estimate the total cost of doing a join with the given optimizable.
+	 *
+	 * @exception StandardException		Thrown on error
+	 */
+
+/** @see Optimizer#getLevel */
+
+/** @see Optimizer#useStatistics */
+
+/**
+	 * Process (i.e. add, load, or remove) current best join order as the
+	 * best one for some outer query or ancestor node, represented by another
+	 * OptimizerImpl or an instance of FromTable, respectively. Then
+	 * iterate through our optimizableList and tell each Optimizable
+	 * to do the same.  See Optimizable.updateBestPlan() for more on why
+	 * this is necessary.
+	 *
+	 * @param action Indicates whether to add, load, or remove the plan
+	 * @param planKey Object to use as the map key when adding/looking up
+	 *  a plan.  If this is an instance of OptimizerImpl then it corresponds
+	 *  to an outer query; otherwise it's some Optimizable above this
+	 *  OptimizerImpl that could potentially reject plans chosen by this
+	 *  OptimizerImpl.
+	 */
+
+/**
+	 * Add scoped predicates to this optimizer's predicateList. This method
+	 * is intended for use during the modifyAccessPath() phase of
+	 * compilation, as it allows nodes (esp. SelectNodes) to add to the
+	 * list of predicates available for the final "push" before code
+	 * generation.  Just as the constructor for this class allows a
+	 * caller to specify a predicate list to use during the optimization
+	 * phase, this method allows a caller to specify a predicate list to
+	 * use during the modify-access-paths phase.
+	 *
+	 * Before adding the received predicates, this method also
+	 * clears out any scoped predicates that might be sitting in
+	 * OptimizerImpl's list from the last round of optimizing.
+	 *
+	 * This method should be in the Optimizer interface, but it relies
+     * on an argument type (PredicateList) which lives in an impl package.
+	 *
+	 * @param pList List of predicates to add to this OptimizerImpl's
+	 *  own list for pushing.
+	 */
+
+/** Get the trace machinery */
+

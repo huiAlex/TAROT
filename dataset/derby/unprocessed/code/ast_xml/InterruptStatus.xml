@@ -1,0 +1,215 @@
+<Class>
+    <Id>1621</Id>
+    <Package>org.apache.derby.iapi.util</Package>
+    <ClassName>InterruptStatus</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>InterruptStatus  /** 
+ * Static methods to save and retrieve information about a (session) thread's interrupt status flag. If during operation we notice an interrupt, Derby will either: &lt;ul&gt; &lt;li&gt;immediately throw an exception to cut execution short, also resurrecting the thread's interrupted status flag. This does not require use of this class. &lt;li&gt;just note the fact using this class ( {@code noteAndClearInterrupt}, or ( {@code setInterrupted})), and retry whatever got interrupted, continuing execution. To achieve this, Derby will always temporarily clear the interrupted status flag. Later, depending on the type of SQL statement, we may wish to interrupt execution by throwing an SQLException at a safe place, say, after a statement in a batch is complete ( {@code throwIf}), or just let the execution run to completion, and then just prior to returning to the appliction, the thread's interrupted status flag will resurrected ( {@code restoreIntrFlagIfSeen}) &lt;/ul&gt; Normally, the information is saved away in the session's LanguageConnectionContext, if available. If not, we save it in a thread local variable.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MAX_INTERRUPT_RETRIES</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INTERRUPT_RETRY_SLEEP</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exception</FieldName>
+            <FieldType>ThreadLocal</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exception</FieldName>
+            <FieldType>Exception</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setInterrupted</MethodName>
+            <MethodComment>/** 
+ * Make a note that this thread saw an interrupt. Thread's intr status flag is presumably off already, but we reset it here also. Use lcc if available, else thread local variable.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=null]</InnerVar>
+                <InnerVar>StandardException [e=StandardException.newException(SQLState.CONN_INTERRUPT)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Thread;interrupted;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>saveInfoFromLcc</MethodName>
+            <MethodComment>/** 
+ * Use when lcc is dying to save info in thread local instead. Useful under shutdown.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StandardException [e=lcc.getInterruptedException()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>noteAndClearInterrupt</MethodName>
+            <MethodComment>/** 
+ * Checks if the thread has been interrupted in NIO, presumably because we saw an exception indicating this. Make a note of this and clear the thread's interrupt status flag (NIO doesn't clear it when throwing) so we can retry whatever we are doing. It will be set back ON before control is transferred back to the application, cf.  {@code restoreIntrFlagIfSeen}. &lt;p/&gt; The note that we saw an interrupt is stored in the lcc if available, if not, in thread local  {@code exception}.
+ * @param s (debug info) whence
+ * @param threadsInPageIO (debug info) number of threads inside the NIOcode concurrently
+ * @param hashCode (debug info) container id
+ * @return true if the thread's interrupt status flag was set
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>threadsInPageIO</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>hashCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreIntrFlagIfSeen</MethodName>
+            <MethodComment>/** 
+ * Check if the we ever noticed and reset the thread's interrupt status flag to allow safe operation during execution.  Called from JDBC API methods before returning control to user application. Typically, this happens just prior to return in methods that catch  {@code Throwable} andinvoke {@code handleException} (directly or indirectly) on it, e.g.&lt;pre&gt; : InterruptStatus.restoreIntrFlagIfSeen(); return ...; } catch (Throwable t) { throw handleException(t); } &lt;/pre&gt; {@code handleException} does its own calls to {@code restoreIntrFlagIfSeen}. If  {@code setupContextStack} has been calledconsider using the overloaded variant of  {@code restoreIntrFlagIfSeen}with an lcc argument. &lt;p/&gt; If an interrupt status flag was seen, we set it back &lt;em&gt;on&lt;/em&gt; here.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreIntrFlagIfSeen</MethodName>
+            <MethodComment>/** 
+ * Same purpose as  {@code restoreIntrFlagIfSeen()}. This variant presumes we are sure we have a  {@code lcc != null}, i.e.  {@code setupContextStack} has been called and not yet restored.  Note that wecannot merge this code with  {@code restoreContextStack}, since that is typically called in a  {@code finally} block, at which point in time, the{@code lcc} may be gone due to errors of severity {@code SESSION_SEVERITY} or {@code DATABASE_SEVERITY}. &lt;p/&gt; If no  {@code lcc} is available, use the zero-arg variant. We only needthis variant for performance reasons.
+ * @param lcc the language connection context for this session
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>throwIf</MethodName>
+            <MethodComment>/** 
+ * Check if the we ever noticed and reset the thread's interrupt status flag to allow safe operation during execution, or if the interrupt status flag is set now.  Called when operations want to be prematurely terminated due to interrupt. &lt;p/&gt; If an interrupt status flag was seen, but temporarily switched off, we set it back ON here.
+ * @param lcc the language connection context for this session
+ * @throws StandardException (session level SQLState.CONN_INTERRUPT) ifinterrupt seen
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StandardException [e=lcc.getInterruptedException()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextOrNull</MethodName>
+            <MethodComment>/** 
+ * Privileged lookup of a Context. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>contextID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

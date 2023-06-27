@@ -1,0 +1,540 @@
+<Class>
+    <Id>783</Id>
+    <Package>org.apache.derby.impl.jdbc</Package>
+    <ClassName>EmbedClob</ClassName>
+    <SuperClass>ConnectionChild</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Clob</SuperInterface>
+        <SuperInterface>EngineLOB</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EmbedClob  /** 
+ * Implements java.sql.Clob (see the JDBC 2.0 spec). A clob sits on top of a CHAR, VARCHAR or LONG VARCHAR column. If its data is small (less than 1 page) it is a byte array taken from the SQLChar class. If it is large (more than 1 page) it is a long column in the database. The long column is accessed as a stream, and is implemented in store as an OverflowInputStream. The Resetable interface allows sending messages to that stream to initialize itself (reopen its container and lock the corresponding row) and to reset itself to the beginning. &lt;p&gt; NOTE: In the case that the data is large, it is represented as a stream. This stream can be returned to the user in the getAsciiStream() method. This means that we have limited control over the state of the stream, since the user can read bytes from it at any time.  Thus all methods here reset the stream to the beginning before doing any work. CAVEAT: The methods may not behave correctly if a user sets up multiple threads and sucks data from the stream (returned from getAsciiStream()) at the same time as calling the Clob methods. &lt;P&gt;&lt;B&gt;Supports&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; JSR169 - no subsetting for java.sql.Clob &lt;LI&gt; JDBC 2.0 &lt;LI&gt; JDBC 3.0 - no new dependencies on new JDBC 3.0 or JDK 1.4 classes, new update methods can safely be added into implementation. &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>clob</FieldName>
+            <FieldType>InternalClob</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isValid</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locator</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>EmbedClob</MethodName>
+            <MethodComment>/** 
+ * Creates an empty Clob object.
+ * @param con The Connection object associated with this EmbedClob object.
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>con</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>con;addLOBReference;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>EmbedClob</MethodName>
+            <MethodComment>/** 
+ * Creates a Clob on top of a data value descriptor. &lt;p&gt; This constructor should only be called by  {@link EmbedResultSet#getClob}. The data value descriptor may provide a &lt;code&gt;String&lt;/code&gt; or a stream as the source of the Clob.
+ * @param dvd string data value descriptor providing the Clob source
+ * @param con associated connection for the Clob
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>con</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dvd</ParamName>
+                    <ParamType>StringDataValue</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>con;addLOBReference;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>length</MethodName>
+            <MethodComment>/** 
+ * Returns the number of characters in the &lt;code&gt;CLOB&lt;/code&gt; value designated by this &lt;code&gt;Clob&lt;/code&gt; object.
+ * @return The length of the &lt;code&gt;CLOB&lt;/code&gt; in number of characters.
+ * @exception SQLException if obtaining the length fails
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSubString</MethodName>
+            <MethodComment>/** 
+ * Returns a copy of the specified substring in the &lt;code&gt;CLOB&lt;/code&gt; value designated by this &lt;code&gt;Clob&lt;/code&gt; object. &lt;p&gt; The substring begins at position &lt;code&gt;pos&lt;/code&gt; and has up to * &lt;code&gt;length&lt;/code&gt; consecutive characters. The starting position must be between 1 and the length of the CLOB plus 1. This allows for  zero-length CLOB values, from which only zero-length substrings can be returned. &lt;p&gt; If a larger length is requested than there are characters available, characters from the start position to the end of the CLOB are returned. &lt;p&gt; &lt;em&gt;NOTE&lt;/em&gt;: If the starting position is the length of the CLOB plus 1, zero characters are returned regardless of the length requested.
+ * @param pos the first character of the substring to be extracted.The first character is at position 1.
+ * @param length the number of consecutive characters to be copied
+ * @return A &lt;code&gt;String&lt;/code&gt; that is the specified substring in the&lt;code&gt;CLOB&lt;/code&gt; value designated by this &lt;code&gt;Clob&lt;/code&gt; object
+ * @exception SQLException if there is an error accessing the&lt;code&gt;CLOB&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [result]</InnerVar>
+                <InnerVar>Reader [reader]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCharacterStream</MethodName>
+            <MethodComment>/** 
+ * Gets the &lt;code&gt;Clob&lt;/code&gt; contents as a stream of characters.
+ * @return A character stream containing the &lt;code&gt;CLOB&lt;/code&gt; data.
+ * @exception SQLException if there is an error accessing the&lt;code&gt;CLOB&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>java.io.Reader</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAsciiStream</MethodName>
+            <MethodComment>/** 
+ * Gets the &lt;code&gt;CLOB&lt;/code&gt; value designated by this &lt;code&gt;Clob&lt;/code&gt; object as a stream of Ascii bytes.
+ * @return An Ascii stream containing the &lt;code&gt;CLOB&lt;/code&gt; data. Validvalues in the stream are 0 - 255.
+ * @exception SQLException if there is an error accessing the&lt;code&gt;CLOB&lt;/code&gt; value
+ */
+</MethodComment>
+            <ReturnType>java.io.InputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>position</MethodName>
+            <MethodComment>/** 
+ * Determines the character position at which the specified substring &lt;code&gt;searchStr&lt;/code&gt; appears in the &lt;code&gt;CLOB&lt;/code&gt; value. &lt;p&gt; The search begins at position &lt;code&gt;start&lt;/code&gt;. The method uses the following algorithm for the search: &lt;p&gt; If the &lt;code&gt;CLOB&lt;/code&gt; value is materialized as a string, use &lt;code&gt;String.indexOf&lt;/code&gt;. &lt;p&gt; If the &lt;code&gt;CLOB&lt;/code&gt; value is represented as a stream, read a block of chars from the start position and compare the chars with &lt;code&gt;searchStr&lt;/code&gt;. Then: &lt;ul&gt; &lt;li&gt;If a matching char is found, increment &lt;code&gt;matchCount&lt;/code&gt;. &lt;li&gt;If &lt;code&gt;matchCount&lt;/code&gt; is equal to the length of &lt;code&gt;searchStr&lt;/code&gt;, return with the current start position. &lt;li&gt;If no match is found, and there is more data, restart search (see below). &lt;li&gt;If no match is found, return &lt;code&gt;-1&lt;/code&gt;. &lt;/ul&gt; &lt;p&gt; The position where the stream has a char equal to the first char of &lt;code&gt;searchStr&lt;/code&gt; will be remembered and used as the starting position for the next search-iteration if the current match fails. If a non-matching char is found, start a fresh search from the position remembered. If there is no such position, next search will start at the current position &lt;code&gt;+1&lt;/code&gt;.
+ * @param searchStr the substring for which to search
+ * @param start the position at which to begin searching; the first positionis &lt;code&gt;1&lt;/code&gt;
+ * @return The position at which the substring appears, &lt;code&gt;-1&lt;/code&gt; ifit does not appear in the &lt;code&gt;CLOB&lt;/code&gt; value. The first position is &lt;code&gt;1&lt;/code&gt;.
+ * @exception SQLException if there is an error accessing the&lt;code&gt;CLOB&lt;/code&gt; value
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>searchStr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [pushStack=false]</InnerVar>
+                <InnerVar>EmbedConnection [ec=getEmbedConnection()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>position</MethodName>
+            <MethodComment>/** 
+ * Determines the character position at which the specified &lt;code&gt;Clob&lt;/code&gt; object &lt;code&gt;searchstr&lt;/code&gt; appears in this &lt;code&gt;Clob&lt;/code&gt; object.  The search begins at position &lt;code&gt;start&lt;/code&gt;.
+ * @param searchClob the &lt;code&gt;Clob&lt;/code&gt; object for which to search
+ * @param start the position at which to begin searching; the firstposition is 1
+ * @return the position at which the &lt;code&gt;Clob&lt;/code&gt; object appears,else -1; the first position is 1
+ * @exception SQLException if there is an error accessing the&lt;code&gt;CLOB&lt;/code&gt; value
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>searchClob</ParamName>
+                    <ParamType>Clob</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [pushStack=false]</InnerVar>
+                <InnerVar>EmbedConnection [ec=getEmbedConnection()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setString</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Writes the given Java String to the CLOB value that this Clob object designates at the position pos.
+ * @param pos the position at which to start writing to the CLOB value thatthis Clob object represents
+ * @return the number of characters written
+ * @throws SQLException if writing the string fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setString</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Writes len characters of str, starting at character offset, to the CLOB value that this Clob represents.
+ * @param pos the position at which to start writing to this Clob object
+ * @param str the string to be written to the CLOB value that this Clobdesignates
+ * @param offset the offset into str to start reading the characters to bewritten
+ * @param len the number of characters to be written
+ * @return the number of characters written
+ * @exception SQLException if writing the string fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAsciiStream</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Retrieves a stream to be used to write Ascii characters to the CLOB value that this Clob object represents, starting at position pos.
+ * @param pos the position at which to start writing to this Clob object
+ * @return the stream to which ASCII encoded characters can be written
+ * @exception SQLException if obtaining the stream fails
+ */
+</MethodComment>
+            <ReturnType>java.io.OutputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCharacterStream</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Retrieves a stream to be used to write a stream of characters to the CLOB value that this Clob object represents, starting at position pos.
+ * @param pos the position at which to start writing to this Clob object
+ * @return the stream to which Unicode encoded characters can be written
+ * @exception SQLException if obtaining the stream fails
+ */
+</MethodComment>
+            <ReturnType>java.io.Writer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>truncate</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Truncates the CLOB value that this Clob designates to have a length of len characters
+ * @param len the length, in characters, to which the CLOB value should betruncated, 0 is accepted
+ * @exception SQLException if truncating the CLOB value fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>free</MethodName>
+            <MethodComment>/** 
+ * Frees the &lt;code&gt;Clob&lt;/code&gt; and releases the resources that it holds. &lt;p&gt; The object is invalid once the &lt;code&gt;free&lt;/code&gt; method is called. If &lt;code&gt;free&lt;/code&gt; is called multiple times, the subsequent calls to &lt;code&gt;free&lt;/code&gt; are treated as a no-op.
+ * @throws SQLException if an error occurs releasing the Clobs resources
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCharacterStream</MethodName>
+            <MethodComment>/** 
+ * Returns a &lt;code&gt;Reader&lt;/code&gt; object that contains a partial &lt;code&gt;Clob&lt;/code&gt; value, starting with the character specified by pos, which is length characters in length.
+ * @param pos the offset to the first character of the partial value tobe retrieved.  The first character in the Clob is at position 1.
+ * @param length the length in characters of the partial value to beretrieved.
+ * @return &lt;code&gt;Reader&lt;/code&gt; through which the partial &lt;code&gt;Clob&lt;/code&gt;value can be read.
+ * @throws SQLException if pos is less than 1 or if pos is greater than thenumber of characters in the  {@code Clob} or if {@code pos + length} is greater than{@code Clob.length() +1}
+ */
+</MethodComment>
+            <ReturnType>java.io.Reader</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pos</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkValidity;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkValidity</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>localConn;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeWritableClobClone</MethodName>
+            <MethodComment>/** 
+ * Makes a writable clone of the current Clob. &lt;p&gt; This is called when we have a  {@link StoreStreamClob} and the user callsa method updating the content of the Clob. A temporary Clob will then be created to hold the updated content.
+ * @throws IOException if accessing underlying I/O resources fail
+ * @throws SQLException if accessing underlying resources fail
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>InternalClob [toBeAbandoned=this.clob]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>toBeAbandoned;release;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeWritableClobClone</MethodName>
+            <MethodComment>/** 
+ * Makes a writable clone of the current Clob. &lt;p&gt; This is called when we have a  {@link StoreStreamClob} and the user callsa method updating the content of the Clob. A temporary Clob will then be created to hold the updated content.
+ * @param len number of characters to be cloned (should be smallerthan clob length)
+ * @throws IOException if accessing underlying I/O resources fail
+ * @throws SQLException if accessing underlying resources fail
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>InternalClob [toBeAbandoned=this.clob]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>toBeAbandoned;release;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInternalClob</MethodName>
+            <MethodComment>/** 
+ * Returns the current internal Clob representation. &lt;p&gt; Care should be taken, as the representation can change when the user performs operations on the Clob. An example is if the Clob content is served from a store stream and the user updates the content. The internal representation will then be changed to a temporary Clob copy that allows updates.
+ * @return The current internal Clob representation.
+ */
+</MethodComment>
+            <ReturnType>InternalClob</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocator</MethodName>
+            <MethodComment>/** 
+ * @return locator value for this Clob.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

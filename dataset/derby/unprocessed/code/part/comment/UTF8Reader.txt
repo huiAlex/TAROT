@@ -1,0 +1,176 @@
+/**
+ * Class for reading characters from streams encoded in the modified UTF-8
+ * format.
+ * 
+ * Note that we often operate on a special Derby stream.
+ * A Derby stream is possibly different from a "normal" stream in two ways;
+ * an encoded length is inserted at the head of the stream, and if the encoded
+ * length is 0 a Derby-specific end of stream marker is appended
+ * to the data.
+ * 
+ * If the underlying stream is capable of repositioning itself on request,
+ * this class supports multiple readers on the same source stream in such a way
+ * that the various readers do not interfere with each other (except for
+ * serializing access). Each reader instance will have its own pointer into the
+ * stream, and request that the stream repositions itself before calling
+ * read/skip on the stream.
+ *
+ *  */
+
+/** Maximum size in number of chars for the internal character buffer. */
+
+/** The underlying data stream. */
+
+/** Stream that can reposition itself on request (may be {@code null}). */
+
+/**
+     * Store the last visited position in the store stream, if it is capable of
+     * repositioning itself ({@code positionedIn != null}).
+     */
+
+/** Number of bytes read from the stream, including any header bytes. */
+
+/** Number of characters read from the stream. */
+
+/** Internal character buffer storing characters read from the stream. */
+
+/** The number of characters in the internal buffer. */
+
+/** The position of the next character to read in the internal buffer. */
+
+/** Tells if this reader has been closed. */
+
+/** 
+     * A reference to the parent object of the stream.
+     * 
+     * The reference is kept so that the parent object can't get
+     * garbage collected until we are done with the stream.
+     */
+
+/**
+     * Descriptor containing information about the stream.
+     * Except for the current positions, the information in this object is
+     * considered permanent and valid for the life-time of the stream.
+     */
+
+/**
+     * Constructs a reader on top of the source UTF-8 encoded stream.
+     *
+     * @param csd a description of and reference to the source stream
+     * @param conChild the parent object / connection child
+     * @param sync synchronization object used when accessing the underlying
+     *      data stream
+     *      */
+
+/**
+     * Reads a single character from the stream.
+     * 
+     * @return A character or -1 if end of stream has been reached.
+     *      *      raised while reading from the underlying stream
+     */
+
+/**
+     * Reads characters into an array.
+     * 
+     * @return The number of characters read, or -1 if the end of
+     *      the stream has been reached.
+     */
+
+/**
+     * Skips characters.
+     * 
+     * @param len the numbers of characters to skip
+     * @return The number of characters actually skipped.
+     *      *      negative
+     *      */
+
+/**
+     * Close the reader, disallowing further reads.
+     */
+
+/**
+     * Reads characters from the stream.
+     * 
+     * Due to internal buffering a smaller number of characters than what is
+     * requested might be returned. To ensure that the request is fulfilled,
+     * call this method in a loop until the requested number of characters is
+     * read or -1 is returned.
+     * 
+     * @param sb the destination buffer
+     * @param len maximum number of characters to read
+     * @return The number of characters read, or -1 if the end of
+     *      the stream is reached.
+     */
+
+/**
+     * Reads characters into an array as ASCII characters.
+     * 
+     * Due to internal buffering a smaller number of characters than what is
+     * requested might be returned. To ensure that the request is fulfilled,
+     * call this method in a loop until the requested number of characters is
+     * read or -1 is returned.
+     * 
+     * Characters outside the ASCII range are replaced with an out of range
+     * marker.
+     * 
+     * @param abuf the buffer to read into
+     * @param off the offset into the destination buffer
+     * @param len maximum number of characters to read
+     * @return The number of characters read, or -1 if the end of
+     *      the stream is reached.
+     */
+
+/**
+     * Close the underlying stream if it is open.
+     */
+
+/**
+     * Convenience method generating an {@link UTFDataFormatException} and
+     * cleaning up the reader state.
+     */
+
+/**
+     * Fills the internal character buffer by decoding bytes from the stream.
+     * 
+     * @return true if the end of the stream is reached,
+     *      false if there is apparently more data to be read.
+     */
+
+/**
+     * Resets the reader.
+     * 
+     * This method is used internally to achieve better performance.
+     *      *
+     *      *      */
+
+/**
+     * Repositions the stream so that the next character read will be the
+     * character at the requested position.
+     * 
+     * There are three types of repositioning, ordered after increasing cost:
+     *  Reposition within current character buffer (small hops forwards
+     *          and potentially backwards - in range 1 char to
+     *          {@code MAXIMUM_BUFFER_SIZE} chars)
+     *      Forward stream from current position (hops forwards)
+     *      Reset stream and skip data (hops backwards)
+     * 
+     *
+     * @param requestedCharPos 1-based requested character position
+     *      *      */
+
+/**
+     * Calculates an optimized buffer size.
+     * 
+     * The maximum size allowed is returned if the specified values don't give
+     * enough information to say a smaller buffer size is preferable.
+     *
+     * @param csd stream descriptor
+     * @return An (sub)optimal buffer size.
+     */
+
+/**
+     * Skips the requested number of characters.
+     *
+     * @param toSkip number of characters to skip
+     *      *      */
+

@@ -1,0 +1,195 @@
+/**
+
+  An open b-tree contains fields and methods common to scans and controllers.
+  
+  Concurrency Notes
+  
+  An instance of an open b-tree is owned by a single context.  The b-tree code
+  assumes that the context ensures that only one thread at a time is using
+  the open b-tree.  The open b-tree itself does not enforce or check this.
+
+**/
+
+/**
+     * The following group of fields are all basic input parameters which are
+     * provided by the calling code when doing any sort of operation requiring
+     * an open conglomerate (openScan(), open(), openCostController(), ...).
+     * These are just saved values from what was initially input.
+     **/
+
+/**
+    The TransactionManager that open'd this btree.  In the case of Internal
+    transactions used by split this will be the internal transaction, and 
+    init_open_user_scans will be the user transaction that began the internal
+    transaction.
+    **/
+
+/**
+	The ContainerHandle mode the container is opened with.  Remember this so
+	that if the BTree needs to do SMO with another transaction, it would open
+	the container with the same mode.
+	**/
+
+/**
+    Table or page locking?
+    **/
+
+/**
+    The Locking Policy to use for for access to this btree.
+    **/
+
+/**
+	The (open) container which contains the b-tree.
+	**/
+
+/**
+    The conglomerate containerid for error reporting.
+    **/
+
+/** The user transaction that opened this B-tree. */
+
+/**
+     * scratch space used for stuff like templates, export rows, ...
+     **/
+
+/**************************************************************************
+     * Public Accessors of This class:
+     **************************************************************************
+     */
+
+/**************************************************************************
+     * Public Methods of RowCountable class:
+     **************************************************************************
+     */
+
+/**
+     * Get the total estimated number of rows in the container.
+     * 
+     * The number is a rough estimate and may be grossly off.  In general
+     * the server will cache the row count and then occasionally write
+     * the count unlogged to a backing store.  If the system happens to 
+     * shutdown before the store gets a chance to update the row count it
+     * may wander from reality.
+     * 
+     * This call is currently only supported on Heap conglomerates, it
+     * will throw an exception if called on btree conglomerates.
+     *
+	 * @return The total estimated number of rows in the conglomerate.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Set the total estimated number of rows in the container.
+     * 
+     * Often, after a scan, the client of RawStore has a much better estimate
+     * of the number of rows in the container than what store has.  For 
+     * instance if we implement some sort of update statistics command, or
+     * just after a create index a complete scan will have been done of the
+     * table.  In this case this interface allows the client to set the
+     * estimated row count for the container, and store will use that number
+     * for all future references.
+     * 
+     * This call is currently only supported on Heap conglomerates, it
+     * will throw an exception if called on btree conglomerates.
+     *
+     * @param count the estimated number of rows in the container.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Public Methods of ConglomerateController interface:
+     **************************************************************************
+     */
+
+/**
+     * Check consistency of a btree.
+     * 
+     * Read in root and check consistency of entire tree.  Currently raises
+     * sanity check errors.
+     * 
+     * RESOLVE (mikem) if this is to be supported in non-sanity servers what 
+     * should it do?
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**************************************************************************
+     * Public Methods of ScanController interface:
+     **************************************************************************
+     */
+
+/**
+     * is the open btree table locked?
+     **/
+
+/**
+	Initialize the open conglomerate.
+
+    If container is null, open the container, otherwise use the container
+    passed in.
+
+    @exception StandardException standard exception policy.
+	**/
+
+/**
+     * Open the container after it has been closed previously.
+     * 
+     * Open the container, obtaining necessary locks.  Most work is actually
+     * done by RawStore.openContainer().  Will only reopen() if the container
+     * is not already open.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+    Close the open conglomerate.
+    **/
+
+/**
+    Check if all the 
+    columns are Indexable and Storable.  Eventually this routine could
+    check whether all the types were right also.
+
+    @exception StandardException Standard Exception Policy.
+    **/
+
+/**
+     * Return the container handle.
+     * 
+	 * @return The open container handle of the btree.
+     **/
+
+/**
+     * get height of the tree.
+     * 
+     * Read in root and return the height (number of levels) of the tree.
+     * The level of a tree is 0 in the leaf and increases by 1 for each
+     * level of the tree as you go up the tree.  
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Dump information about tree into the log.
+     * 
+     * Traverse the tree dumping info about tree into the log.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+     * Testing infrastructure to cause unusual paths through the code.
+     * 
+     * Through the use of debug flags allow test code to cause otherwise
+     * hard to cause paths through the code.  
+     * 
+     *
+     * @param pos the current scan position if the condition simulated by
+     * this call would have resulted in the position being saved
+	 * @return whether the latch has been released by this routine.
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+

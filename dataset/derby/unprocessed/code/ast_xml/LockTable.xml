@@ -1,0 +1,311 @@
+<Class>
+    <Id>1900</Id>
+    <Package>org.apache.derby.diag</Package>
+    <ClassName>LockTable</ClassName>
+    <SuperClass>VTITemplate</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>VTICosting</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LockTable  /** 
+ * LockTable is a virtual table that shows all locks currently held in the database. This virtual table can be invoked by calling it directly &lt;PRE&gt; select * from SYSCS_DIAG.LOCK_TABLE &lt;/PRE&gt; &lt;P&gt;The LockTable virtual table takes a snap shot of the lock table while the system is in flux, so it is possible that some locks may be in transition state while the snap shot is taken. We choose to do this rather then impose extranous timing restrictions so that the use of this tool will not alter the normal timing and flow of execution in the application. &lt;P&gt;The LockTable virtual table has the following columns: &lt;UL&gt;&lt;LI&gt;XID varchar(15) - not nullable.  The transaction id, this can be joined with the TransactionTable virtual table's XID.&lt;/LI&gt; &lt;LI&gt;TYPE varchar(5) - nullable.  The type of lock, ROW, TABLE, or LATCH&lt;/LI&gt; &lt;LI&gt;MODE varchar(4) - not nullable.  The mode of the lock, "S", "U", "X", "IS", "IX".&lt;/LI&gt; &lt;UL&gt;&lt;LI&gt;S is shared lock (N/A to Latch) &lt;/LI&gt; &lt;LI&gt;U is update lock (N/A to Latch) &lt;/LI&gt; &lt;LI&gt;X is exclusive lock &lt;/LI&gt; &lt;LI&gt;IS is intent shared lock (N/A to Latch or Row lock) &lt;/LI&gt; &lt;LI&gt;IX is intent exclusive lock (N/A to Latch or Row lock) &lt;/LI&gt; &lt;/UL&gt; &lt;LI&gt;TABLENAME varchar(128) - not nullable. The name of the base table the lock is for &lt;/LI&gt; &lt;LI&gt;LOCKNAME varchar(20) - not nullable.  The name of the lock &lt;/LI&gt; &lt;LI&gt;STATE varchar(5) - nullable.  GRANT or WAIT &lt;/LI&gt; &lt;LI&gt;TABLETYPE varchar(9) - not nullable.  'T' for user table, 'S' for system table &lt;/LI&gt; &lt;LI&gt;LOCKCOUNT varchar(5) - not nullable.  Internal lock count.&lt;/LI&gt; &lt;LI&gt;INDEXNAME varchar(128) - normally null.  If non-null, a lock is held on  the index.&lt;/LI&gt; &lt;/UL&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LATCH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TABLE_AND_ROWLOCK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ALL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tc</FieldName>
+            <FieldType>TransactionController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentRow</FieldName>
+            <FieldType>Hashtable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lockTable</FieldName>
+            <FieldType>Enumeration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wasNull</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initialized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>flag</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tabInfo</FieldName>
+            <FieldType>TableNameInfo</FieldType>
+        </Field>
+        <Field>
+            <FieldName>columnInfo</FieldName>
+            <FieldType>ResultColumnDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>metadata</FieldName>
+            <FieldType>ResultSetMetaData</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LockTable</MethodName>
+            <MethodComment>/** 
+ * The normal way of instantiating a LockTable, equivalent to LockTable(org.apache.derby.diag.LockTable-&amp;gt;TABLE_AND_ROWLOCK). Only shows row and table lock and not latches.  Latches are generally held for very short duration and are not of interest to Derby  users.  Only under abnormal circumstances will one be interested in looking at latches.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LockTable</MethodName>
+            <MethodComment>/** 
+ * This call is intrusive and should only be used under the supervision of technical support.  Create an instance of the lock table which has transient latches as well as locks.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flag</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMetaData</MethodName>
+            <MethodComment>/** 
+ * @see java.sql.ResultSet#getMetaData
+ */
+</MethodComment>
+            <ReturnType>ResultSetMetaData</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>next</MethodName>
+            <MethodComment>/** 
+ * @see java.sql.ResultSet#next
+ * @exception SQLException if no transaction context can be found, or otherDerby internal errors are encountered.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * @see java.sql.ResultSet#close
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getString</MethodName>
+            <MethodComment>/** 
+ * All columns in TransactionTable VTI are of String type.
+ * @see java.sql.ResultSet#getString
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [val=(String)currentRow.get(columnInfo[columnNumber - 1].getName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wasNull</MethodName>
+            <MethodComment>/** 
+ * @see java.sql.ResultSet#wasNull
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimatedRowCount</MethodName>
+            <MethodComment>/** 
+ * @see VTICosting#getEstimatedRowCount
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>vtiEnvironment</ParamName>
+                    <ParamType>VTIEnvironment</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimatedCostPerInstantiation</MethodName>
+            <MethodComment>/** 
+ * @see VTICosting#getEstimatedCostPerInstantiation
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>vtiEnvironment</ParamName>
+                    <ParamType>VTIEnvironment</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supportsMultipleInstantiations</MethodName>
+            <MethodComment>/** 
+ * @return false
+ * @see VTICosting#supportsMultipleInstantiations
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>vtiEnvironment</ParamName>
+                    <ParamType>VTIEnvironment</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dumpLock</MethodName>
+            <MethodComment>/** 
+ * Convert the lock information into a hashtable.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lock</ParamName>
+                    <ParamType>Latch</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Hashtable&lt;String,Object&gt; [attributes=new Hashtable&lt;String,Object&gt;(17)]</InnerVar>
+                <InnerVar>Object [lock_type=lock.getQualifier()]</InnerVar>
+                <InnerVar>Lockable [lockable=lock.getLockable()]</InnerVar>
+                <InnerVar>int [lockCount=lock.getCount()]</InnerVar>
+                <InnerVar>String [state]</InnerVar>
+                <InnerVar>Long [conglomId=(Long)attributes.get(VirtualLockTable.CONGLOMID)]</InnerVar>
+                <InnerVar>Object [owner=lock.getCompatabilitySpace().getOwner()]</InnerVar>
+                <InnerVar>String [tableName=tabInfo.getTableName(conglomId)]</InnerVar>
+                <InnerVar>String [indexName=tabInfo.getIndexName(conglomId)]</InnerVar>
+                <InnerVar>String [tableType=tabInfo.getTableType(conglomId)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.LOCKOBJ, lock]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.XACTID, (owner == null) ? "&lt;null&gt;" : owner.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.LOCKMODE, lock_type.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.LOCKCOUNT, Integer.toString(lockCount)]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.STATE, state]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.TABLENAME, tableName]</InnerMethodInvoke>
+                <InnerMethodInvoke>attributes;put;[VirtualLockTable.TABLETYPE, tableType]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

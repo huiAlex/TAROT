@@ -1,0 +1,332 @@
+<Class>
+    <Id>165</Id>
+    <ClassName>SetDerbyVersion</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SetDerbyVersion  /** 
+ * Checks the current Derby jars in the source tree directory, obtains the Derby version from them, and replaces the value of the placeholder version tags in the POM files. &lt;p&gt; After this method has been successfully run you should be ready to generate the Maven 2 artifacts for Derby. &lt;p&gt; The main task of this class is to replace the version tags in the Maven POM files. The can be done manually, but exact process would vary from platform to platform. Also, running a search-and-replace could potentially replace tags not supposed to be replaced. To make the Maven 2 artifact publish process simpler, this class was written.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>PROMPT_CONT_WARN</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROMPT_USE_SANE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JDBC_URL</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REL_JAR_PATH</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SANE</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INSANE</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JARS</FieldName>
+            <FieldType>String[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>warnings</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>versionString</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PREFIX</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getYesNoInput</MethodName>
+            <MethodComment>/** 
+ * Displays a prompt and obtains a yes / no answer from standard in.
+ * @param prompt the prompt to display
+ * @return {@code true} if the answer is yes, {@code false} if the answeris no.
+ * @throws IOException if reading from standard in fails
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prompt</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedReader [bIn=new BufferedReader(new InputStreamReader(System.in))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>warn</MethodName>
+            <MethodComment>/** 
+ * Prints a warning message and sets the internal warning flag.
+ * @param msg the message to print
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;["WARNING! " + msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>info</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.out;println;[msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkJars</MethodName>
+            <MethodComment>/** 
+ * Checks that all required jars are found in the jar directory.
+ * @return {@code true} if all required jars exist, {@code false} otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>URL[] [URLS=new URL[JARS.length]]</InnerVar>
+                <InnerVar>URLClassLoader [cl=new URLClassLoader(URLS,null)]</InnerVar>
+                <InnerVar>Class [driverClass=Class.forName("org.apache.derby.jdbc.EmbeddedDriver",true,cl)]</InnerVar>
+                <InnerVar>Driver [driver=(Driver)driverClass.newInstance()]</InnerVar>
+                <InnerVar>Connection [con=driver.connect(JDBC_URL,null)]</InnerVar>
+                <InnerVar>DatabaseMetaData [meta=con.getMetaData()]</InnerVar>
+                <InnerVar>String [fullVersion=meta.getDatabaseProductVersion()]</InnerVar>
+                <InnerVar>String[] [components=fullVersion.split(" - ")]</InnerVar>
+                <InnerVar>String [srcRevision=components[1].replaceAll("\\(|\\)","")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;info;[""]</InnerMethodInvoke>
+                <InnerMethodInvoke>con;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>new File("derby.log");delete;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;info;["Obtained product version string: " + fullVersion]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;info;["(version=" + versionString + ", revision="+ srcRevision+ ")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setPOMVersionTags</MethodName>
+            <MethodComment>/** 
+ * Replaces the relevant version tags in the various POM files.
+ * @throws IOException if accessing a POM file fails
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>File [curDir=new File(".")]</InnerVar>
+                <InnerVar>boolean [gotWarnings=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;info;[""]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>printSanityNote</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkResult</MethodName>
+            <MethodComment>/** 
+ * Verifies that the correct number of tags were replaced in the POM.
+ * @param replaceCount the number of tags replaced
+ * @param pom the POM modified
+ * @return {@code 0} if the check passed, a negative value if too few tagswere replaced, and a positive value if too many tags were replaced.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>replaceCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pom</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [parent=pom.getParent()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setVersionTag</MethodName>
+            <MethodComment>/** 
+ * Replaces all qualifying version tags in the specified POM.
+ * @param pom the POM to modify
+ * @return {@code false} if warnings were produced when replacing,{@code true} if all seemed to go well.
+ * @throws IOException if reading or writing to the POM file fails
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pom</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [lines=readFile(pom)]</InnerVar>
+                <InnerVar>BufferedWriter [bOut=new BufferedWriter(new FileWriter(pom,false))]</InnerVar>
+                <InnerVar>int [replaced=0]</InnerVar>
+                <InnerVar>boolean [artifactIdOk=false]</InnerVar>
+                <InnerVar>boolean [groupIdOk=false]</InnerVar>
+                <InnerVar>int [result=checkResult(replaced,pom)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readFile</MethodName>
+            <MethodComment>/** 
+ * Reads the contents of a text file.
+ * @param f the file to read
+ * @return A list containing the lines of the file.
+ * @throws IOException if reading the file fails
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;String&gt; [lines=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>BufferedReader [bIn=new BufferedReader(new FileReader(f))]</InnerVar>
+                <InnerVar>String [lineIn]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureSuccess</MethodName>
+            <MethodComment>/** 
+ * Quits the JVM if a failure is detected.
+ * @param success the return value to check
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>success</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment>/** 
+ * Checks the current Derby jars in the source tree directory, obtains the Derby version from them, and replaces the value of the placeholder version tags in the POM files. &lt;p&gt; After this method has been successfully run you should be ready to generate the Maven 2 artifacts for Derby.
+ * @param args ignored
+ * @throws Exception if something goes wrong
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SetDerbyVersion [sdv=new SetDerbyVersion()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureSuccess;[sdv.checkJars()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;ensureSuccess;[sdv.setPOMVersionTags()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sdv;printSanityNote;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

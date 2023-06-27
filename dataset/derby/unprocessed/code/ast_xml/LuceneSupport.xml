@@ -1,0 +1,2202 @@
+<Class>
+    <Id>1992</Id>
+    <Package>org.apache.derby.optional.lucene</Package>
+    <ClassName>LuceneSupport</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>OptionalTool</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LuceneSupport  /** 
+ * Support for creating, updating, and querying Lucene indexes in Derby, and associated utility functions.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LUCENE_SCHEMA</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LIST_INDEXES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CREATE_INDEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DROP_INDEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>UPDATE_INDEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SEPARATOR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SCORE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DOCUMENT_ID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TABLE_PART</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COLUMN_PART</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PART_COUNT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROPERTIES_FILE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INDEX_DESCRIPTOR_MAKER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ANALYZER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LUCENE_VERSION</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>UPDATE_TIMESTAMP</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LuceneSupport</MethodName>
+            <MethodComment>/** 
+ * 0-arg constructor as an OptionalTool
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadTool</MethodName>
+            <MethodComment>/** 
+ * Load the procedures and functions for Lucene support: In the LuceneSupport schema, these are: listIndexes, createIndex, dropIndex, updateIndex.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>configurationParameters</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Connection [conn=getDefaultConnection()]</InnerVar>
+                <InnerVar>boolean [sqlAuthorizationEnabled=ToolUtilities.sqlAuthorizationEnabled(conn)]</InnerVar>
+                <InnerVar>StringBuilder [listFunction=new StringBuilder()]</InnerVar>
+                <InnerVar>StringBuilder [createProcedure=new StringBuilder()]</InnerVar>
+                <InnerVar>StringBuilder [dropProcedure=new StringBuilder()]</InnerVar>
+                <InnerVar>StringBuilder [updateProcedure=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidReadOnlyConnections;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ToolUtilities;mustBeDBO;[conn]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["create function " + LIST_INDEXES]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;[" () "]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["returns table"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["("]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["schemaname varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["tablename varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["columnname varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["lastupdated timestamp,"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["luceneversion varchar( 20 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["analyzer varchar( 32672 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["indexdescriptormaker varchar( 32672 )"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;[")"]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["language java "]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["parameter style DERBY_JDBC_RESULT_SET "]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["contains sql "]</InnerMethodInvoke>
+                <InnerMethodInvoke>listFunction;append;["external name '" + getClass().getName() + ".listIndexes'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, listFunction.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["create procedure " + CREATE_INDEX]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;[" (schemaname varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["tablename varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["textcolumn varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["indexdescriptormaker varchar( 32672 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["keyColumns varchar( 32672 )...)"]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["parameter style derby modifies sql data language java external name "]</InnerMethodInvoke>
+                <InnerMethodInvoke>createProcedure;append;["'" + getClass().getName() + ".createIndex'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, createProcedure.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;["create procedure " + DROP_INDEX]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;[" (schemaname varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;["tablename varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;["textcolumn varchar( 128 ))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;["parameter style java modifies sql data language java external name "]</InnerMethodInvoke>
+                <InnerMethodInvoke>dropProcedure;append;["'" + getClass().getName() + ".dropIndex'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, dropProcedure.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["create procedure " + UPDATE_INDEX]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;[" (schemaname varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["tablename varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["textcolumn varchar( 128 ),"]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["indexdescriptormaker varchar( 32672 ))"]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["parameter style java reads sql data language java external name "]</InnerMethodInvoke>
+                <InnerMethodInvoke>updateProcedure;append;["'" + getClass().getName() + ".updateIndex'"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, updateProcedure.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createLuceneDir;[conn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>grantPermissions</MethodName>
+            <MethodComment>/** 
+ * Grant permissions to use the newly loaded LuceneSupport routines.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Connection [conn=getDefaultConnection()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;executeDDL;[conn, "grant execute on function " + LIST_INDEXES + " to public"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, "grant execute on procedure " + CREATE_INDEX + " to public"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, "grant execute on procedure " + DROP_INDEX + " to public"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeDDL;[conn, "grant execute on procedure " + UPDATE_INDEX + " to public"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unloadTool</MethodName>
+            <MethodComment>/** 
+ * Removes the functions and procedures loaded by loadTool and created by createIndex. Drop the LuceneSupport schema. Drop the lucene subdirectory.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>configurationParameters</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Connection [conn=getDefaultConnection()]</InnerVar>
+                <InnerVar>String [className=getClass().getName()]</InnerVar>
+                <InnerVar>int [endPackageIdx=className.lastIndexOf(".")]</InnerVar>
+                <InnerVar>String [packageName=className.substring(0,endPackageIdx)]</InnerVar>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("select s.schemaName, a.alias, a.aliastype\n" + "from sys.sysschemas s, sys.sysaliases a\n" + "where s.schemaID = a.schemaID\n"+ "and substr( cast( a.javaclassname as varchar( 32672 ) ), 1, ? ) = ?\n")]</InnerVar>
+                <InnerVar>ResultSet [routines=ps.executeQuery()]</InnerVar>
+                <InnerVar>StorageFactory [storageFactory=getStorageFactory(conn)]</InnerVar>
+                <InnerVar>StorageFile [luceneDir=storageFactory.newStorageFile(Database.LUCENE_DIR)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidReadOnlyConnections;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ToolUtilities;mustBeDBO;[conn]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setInt;[1, packageName.length()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ps;setString;[2, packageName]</InnerMethodInvoke>
+                <InnerMethodInvoke>conn.prepareStatement("drop schema " + LUCENE_SCHEMA + " restrict");execute;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>luceneQuery</MethodName>
+            <MethodComment>/** 
+ * Query a Lucene index created by createIndex
+ * @param queryText a Lucene query, see the Lucene classic queryparser syntax 
+ * @param scoreCeiling Return results only below this score
+ * @return A result set in the form of LuceneQueryVTI table
+ * @throws ParseException
+ * @throws IOException
+ * @see org.apache.derby.optional.lucene.LuceneQueryVTI
+ */
+</MethodComment>
+            <ReturnType>LuceneQueryVTI</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queryText</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>windowSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scoreCeiling</ParamName>
+                    <ParamType>Float</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LuceneQueryVTI [lqvti=new LuceneQueryVTI(queryText,windowSize,scoreCeiling)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ParseException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>listIndexes</MethodName>
+            <MethodComment>/** 
+ * Return a list of Lucene indexes for this database. Filter by schema and table, if given.
+ */
+</MethodComment>
+            <ReturnType>LuceneListIndexesVTI</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>LuceneListIndexesVTI [llivti=new LuceneListIndexesVTI()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateIndex</MethodName>
+            <MethodComment>/** 
+ * Update a document in a Lucene index. Drops and recreates the Lucene index but does not touch the query function specific to the index.
+ * @param schema Schema where the indexed column resides
+ * @param table table where the indexed column resides
+ * @param textcol the indexed column
+ * @param indexDescriptorMaker name of static method which instantiates the index configuration. may be null.
+ * @throws SQLException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexDescriptorMaker</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Connection [conn=getDefaultConnection()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidReadOnlyConnections;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;vetIdentifiers;[schema, table, textcol]</InnerMethodInvoke>
+                <InnerMethodInvoke>ToolUtilities;mustBeOwner;[conn, schema]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createOrRecreateIndex;[conn, schema, table, textcol, indexDescriptorMaker, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createIndex</MethodName>
+            <MethodComment>/** 
+ * Create a Lucene index on the specified column.
+ * @param schema The schema of the column to index
+ * @param table The table or view containing the indexable column
+ * @param textcol The column to create the Lucene index on
+ * @param indexDescriptorMaker name of static method which instantiates the index configuration. may be null.
+ * @param keyColumns names of key columns if we're indexing a column in a view
+ * @throws SQLException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexDescriptorMaker</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Connection [conn=getDefaultConnection()]</InnerVar>
+                <InnerVar>DatabaseMetaData [dbmd=conn.getMetaData()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidReadOnlyConnections;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;vetIdentifiers;[schema, table, textcol]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;vetTextColumn;[dbmd, schema, table, textcol]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createOrRecreateIndex;[conn, schema, table, textcol, indexDescriptorMaker, true, keyColumns]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createOrRecreateIndex</MethodName>
+            <MethodComment>/** 
+ * Create or re-create a Lucene index on the specified column.
+ * @param schema The schema of the column to index
+ * @param table The table of the column to index
+ * @param textcol The column to create the Lucene index on
+ * @param indexDescriptorMaker name of static method which instantiates the index configuration. may be null.
+ * @param create True if the index is to be created, false if it is to be recreated
+ * @throws SQLException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexDescriptorMaker</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>create</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>VTITemplate.ColumnDescriptor[] [primaryKeys=new VTITemplate.ColumnDescriptor[0]]</InnerVar>
+                <InnerVar>int [keyCount=0]</InnerVar>
+                <InnerVar>StorageFile [propertiesFile=getIndexPropertiesFile(conn,schema,table,textcol)]</InnerVar>
+                <InnerVar>Version [luceneVersion=LuceneUtils.currentVersion()]</InnerVar>
+                <InnerVar>DerbyLuceneDir [derbyLuceneDir=getDerbyLuceneDir(conn,schema,table,textcol)]</InnerVar>
+                <InnerVar>LuceneIndexDescriptor [indexDescriptor=getIndexDescriptor(indexDescriptorMaker)]</InnerVar>
+                <InnerVar>String[] [fieldNames=indexDescriptor.getFieldNames()]</InnerVar>
+                <InnerVar>Analyzer [analyzer=indexDescriptor.getAnalyzer()]</InnerVar>
+                <InnerVar>Properties [indexProperties=new Properties()]</InnerVar>
+                <InnerVar>StringBuilder [tableFunction=new StringBuilder()]</InnerVar>
+                <InnerVar>PreparedStatement [ps=null]</InnerVar>
+                <InnerVar>ResultSet [rs=null]</InnerVar>
+                <InnerVar>IndexWriter [iw=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;vetColumnName;[ToolUtilities.derbyIdentifier(textcol)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;sortAndVetFieldNames;[fieldNames, primaryKeys]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexProperties;setProperty;[LUCENE_VERSION, luceneVersion.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexProperties;setProperty;[UPDATE_TIMESTAMP, Long.toString(System.currentTimeMillis())]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexProperties;setProperty;[INDEX_DESCRIPTOR_MAKER, indexDescriptorMaker]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexProperties;setProperty;[ANALYZER, analyzer.getClass().getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>tableFunction;append;["create function " + makeTableFunctionName(schema,table,textcol) + "\n"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tableFunction;append;["( query varchar( 32672 ), windowSize int, scoreCeiling real )\n"]</InnerMethodInvoke>
+                <InnerMethodInvoke>tableFunction;append;["returns table\n("]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writeIndexProperties;[propertiesFile, indexProperties]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vetIdentifiers</MethodName>
+            <MethodComment>/** 
+ * Verify that the schema, table, and column names aren't null 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkNotNull;["SCHEMANAME", schema]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;checkNotNull;["TABLENAME", table]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;checkNotNull;["TEXTCOLUMN", textcol]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sortAndVetFieldNames</MethodName>
+            <MethodComment>/** 
+ * Raise an exception if a field has the same name as a key or if two fields have the same name.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HashSet&lt;String&gt; [keyNames=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>String [previousFieldName=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;sort;[fieldNames]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropIndex</MethodName>
+            <MethodComment>/** 
+ * Drop a Lucene index. This removes the Lucene index directory from the filesystem.
+ * @param schema The schema of the column that is indexed
+ * @param table The table of the column that is indexed
+ * @param textcol The column that is indexed
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidReadOnlyConnections;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;vetIdentifiers;[schema, table, textcol]</InnerMethodInvoke>
+                <InnerMethodInvoke>getDefaultConnection().prepareStatement("drop function " + makeTableFunctionName(schema,table,textcol));execute;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;dropIndexDirectories;[schema, table, textcol]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dropIndexDirectories</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Drop the Lucene directories which support an index. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DerbyLuceneDir [derbyLuceneDir=getDerbyLuceneDir(getDefaultConnection(),schema,table,textcol)]</InnerVar>
+                <InnerVar>StorageFile [indexDir=derbyLuceneDir.getDirectory()]</InnerVar>
+                <InnerVar>StorageFile [tableDir=indexDir.getParentDir()]</InnerVar>
+                <InnerVar>StorageFile [schemaDir=tableDir.getParentDir()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;deleteFile;[indexDir]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapType</MethodName>
+            <MethodComment>/** 
+ * Get the SQL type name for a key column 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDesc</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapType</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the type of an external database's column as a Derby type name. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jdbcType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>typeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>precisionToLength</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Turns precision into a length designator. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>precisionAndScale</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Build a precision and scale designator. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addValue</MethodName>
+            <MethodComment>/** 
+ * Add the field to the document so that it can be read by LuceneQueryVTI. May raise an exception if the type is not supported.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>doc</ParamName>
+                    <ParamType>Document</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>IndexableField [field=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStringField</MethodName>
+            <MethodComment>/** 
+ * Get a string value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [stringValue=rs.getString(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFloatField</MethodName>
+            <MethodComment>/** 
+ * Get a float value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>float [value=rs.getFloat(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDoubleField</MethodName>
+            <MethodComment>/** 
+ * Get a double value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [value=rs.getDouble(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLongField</MethodName>
+            <MethodComment>/** 
+ * Get an long value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [value=rs.getLong(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDateField</MethodName>
+            <MethodComment>/** 
+ * Get a Date value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Date [value=rs.getDate(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimeField</MethodName>
+            <MethodComment>/** 
+ * Get a Time value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Time [value=rs.getTime(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimestampField</MethodName>
+            <MethodComment>/** 
+ * Get a Timestamp value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Timestamp [value=rs.getTimestamp(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIntField</MethodName>
+            <MethodComment>/** 
+ * Get an integer value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [value=rs.getInt(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBinaryField</MethodName>
+            <MethodComment>/** 
+ * Get a binary value to add to the document read by LuceneQueryVTI.
+ */
+</MethodComment>
+            <ReturnType>IndexableField</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyDescriptor</ParamName>
+                    <ParamType>VTITemplate.ColumnDescriptor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIdx</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [value=rs.getBytes(columnIdx)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vetTextColumn</MethodName>
+            <MethodComment>/** 
+ * Raise an exception if the text column doesn't exist or isn't a String datatype.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbmd</ParamName>
+                    <ParamType>DatabaseMetaData</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSet [rs=dbmd.getColumns(null,schema,table,textcol)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vetColumnName</MethodName>
+            <MethodComment>/** 
+ * A Lucene query table function already has system-supplied columns named documentID and score. These can't be the names of the key or text columns supplied by the user.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [derbyColumnName=columnName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeTableName</MethodName>
+            <MethodComment>/** 
+ * Return the qualified name of the table.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeTableFunctionName</MethodName>
+            <MethodComment>/** 
+ * Return the qualified name of the table function 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [function=makeUnqualifiedTableFunctionName(table,textcol)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;forbidCharacter;[schema, table, textcol, "."]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;forbidCharacter;[schema, table, textcol, "/"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;forbidCharacter;[schema, table, textcol, "\\"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeUnqualifiedTableFunctionName</MethodName>
+            <MethodComment>/** 
+ * Make the unqualified name of a querying table function 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tableFunctionExists</MethodName>
+            <MethodComment>/** 
+ * Return true if the table function exists 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [function=makeUnqualifiedTableFunctionName(table,textcol)]</InnerVar>
+                <InnerVar>ResultSet [rs=conn.getMetaData().getFunctions(null,schema,function)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decodeFunctionName</MethodName>
+            <MethodComment>/** 
+ * Decompose a function name of the form $table__$column into $table and $column 
+ */
+</MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>functionName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [separatorIdx=functionName.indexOf(SEPARATOR)]</InnerVar>
+                <InnerVar>String[] [retval=new String[PART_COUNT]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexPropertiesFile</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the handle on the file holding the index properties. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexPropertiesFile</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the handle on the file holding the index properties. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>StorageFile</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>DerbyLuceneDir</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageFile [propertiesFile=dir.getFile(PROPERTIES_FILE_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readIndexPropertiesNoPrivs</MethodName>
+            <MethodComment>/** 
+ * Read the index properties file 
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Properties [properties=new Properties()]</InnerVar>
+                <InnerVar>InputStream [is=file.getInputStream()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>properties;load;[is]</InnerMethodInvoke>
+                <InnerMethodInvoke>is;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeIndexProperties</MethodName>
+            <MethodComment>/** 
+ * Write the index properties file 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OutputStream [os]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>properties;store;[os, null]</InnerMethodInvoke>
+                <InnerMethodInvoke>os;flush;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>os;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OutputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forbidReadOnlyConnections</MethodName>
+            <MethodComment>/** 
+ * Raise an error if the connection is readonly.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDefaultConnection</MethodName>
+            <MethodComment>/** 
+ * Get a connection to the database
+ * @return a connection
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>Connection</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>luceneSchemaExists</MethodName>
+            <MethodComment>/** 
+ * Return true if the LuceneSupport schema exists already 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=conn.prepareStatement("select count(*) from sys.sysschemas where schemaName = ?")]</InnerVar>
+                <InnerVar>ResultSet [rs=ps.executeQuery()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ps;setString;[1, LUCENE_SCHEMA.toUpperCase()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>executeDDL</MethodName>
+            <MethodComment>/** 
+ * Execute a DDL statement
+ * @param c a Connection
+ * @param text the text of the statement to execute
+ * @throws SQLException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>c</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ddl=c.prepareStatement(text)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ddl;execute;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ddl;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>delimitID</MethodName>
+            <MethodComment>/** 
+ * Double quote an identifier in order to preserver casing 
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkNotNull</MethodName>
+            <MethodComment>/** 
+ * Raise an error if an argument is being given a null value 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>argumentName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>argumentValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPrimaryKeys</MethodName>
+            <MethodComment>/** 
+ * Return the primary key columns for a table, sorted by key position.
+ */
+</MethodComment>
+            <ReturnType>VTITemplate.ColumnDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResultSet [keysRS=conn.getMetaData().getPrimaryKeys(null,ToolUtilities.derbyIdentifier(schema),ToolUtilities.derbyIdentifier(table))]</InnerVar>
+                <InnerVar>ArrayList&lt;VTITemplate.ColumnDescriptor&gt; [keyArray=new ArrayList&lt;VTITemplate.ColumnDescriptor&gt;()]</InnerVar>
+                <InnerVar>VTITemplate.ColumnDescriptor[] [result=new VTITemplate.ColumnDescriptor[keyArray.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>keyArray;toArray;[result]</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;sort;[result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeys</MethodName>
+            <MethodComment>/** 
+ * Return the key columns for an existing LuceneQueryVTI table function.
+ */
+</MethodComment>
+            <ReturnType>VTITemplate.ColumnDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [functionName=makeUnqualifiedTableFunctionName(table,textcol)]</InnerVar>
+                <InnerVar>ArrayList&lt;VTITemplate.ColumnDescriptor&gt; [keyArray=new ArrayList&lt;VTITemplate.ColumnDescriptor&gt;()]</InnerVar>
+                <InnerVar>ResultSet [rs=conn.getMetaData().getFunctionColumns(null,schema,functionName,"%")]</InnerVar>
+                <InnerVar>VTITemplate.ColumnDescriptor[] [temp=new VTITemplate.ColumnDescriptor[keyArray.size()]]</InnerVar>
+                <InnerVar>int [count=temp.length - 2]</InnerVar>
+                <InnerVar>VTITemplate.ColumnDescriptor[] [result=new VTITemplate.ColumnDescriptor[count]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>keyArray;toArray;[temp]</InnerMethodInvoke>
+                <InnerMethodInvoke>Arrays;sort;[temp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeys</MethodName>
+            <MethodComment>/** 
+ * Return column information for a proposed set of keys.
+ */
+</MethodComment>
+            <ReturnType>VTITemplate.ColumnDescriptor[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyColumns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [qualifiedName=makeTableName(schema,table)]</InnerVar>
+                <InnerVar>StringBuilder [buffer=new StringBuilder()]</InnerVar>
+                <InnerVar>int [counter=0]</InnerVar>
+                <InnerVar>ArrayList&lt;VTITemplate.ColumnDescriptor&gt; [keyArray=new ArrayList&lt;VTITemplate.ColumnDescriptor&gt;()]</InnerVar>
+                <InnerVar>ResultSet [rs=conn.prepareStatement(buffer.toString()).executeQuery()]</InnerVar>
+                <InnerVar>ResultSetMetaData [rsmd=rs.getMetaData()]</InnerVar>
+                <InnerVar>VTITemplate.ColumnDescriptor[] [result=new VTITemplate.ColumnDescriptor[keyArray.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>buffer;append;["select "]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;["\nfrom " + qualifiedName]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;["\nwhere 1=2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>keyArray;toArray;[result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEmpty</MethodName>
+            <MethodComment>/** 
+ * Return true if the directory is empty 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [contents=AccessController.doPrivileged(new PrivilegedAction&lt;String[]&gt;(){
+  public String[] run(){
+    return dir.list();
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exists</MethodName>
+            <MethodComment>/** 
+ * Return true if the file exists 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deleteFile</MethodName>
+            <MethodComment>/** 
+ * Really delete a file 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>StorageFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [result=AccessController.doPrivileged(new PrivilegedAction&lt;Boolean&gt;(){
+  public Boolean run(){
+    return file.isDirectory() ? file.deleteAll() : file.delete();
+  }
+}
+)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forbidCharacter</MethodName>
+            <MethodComment>/** 
+ * Forbid invalid character 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>invalidCharacter</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexWriter</MethodName>
+            <MethodComment>/** 
+ * Returns a Lucene IndexWriter, that writes inside the lucene directory inside the database directory.
+ * @param luceneVersion the version of Lucene being used
+ * @param analyzer      the Analyzer being used
+ * @param schema The schema of the indexed column
+ * @param table The table of the indexed column
+ * @param textcol The name of the column to be indexed
+ * @return a Lucene IndexWriter
+ */
+</MethodComment>
+            <ReturnType>IndexWriter</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>luceneVersion</ParamName>
+                    <ParamType>Version</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>analyzer</ParamName>
+                    <ParamType>Analyzer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>derbyLuceneDir</ParamName>
+                    <ParamType>DerbyLuceneDir</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>IndexWriter</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>IndexWriterConfig [iwc=new IndexWriterConfig(luceneVersion,analyzer)]</InnerVar>
+                <InnerVar>IndexWriter [iw=new IndexWriter(derbyLuceneDir,iwc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDocument</MethodName>
+            <MethodComment>/** 
+ * Add a document to a Lucene index wrier.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexWriter</ParamName>
+                    <ParamType>IndexWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>document</ParamName>
+                    <ParamType>Document</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexWriter;addDocument;[document]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close an IndexWriter.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexWriter</ParamName>
+                    <ParamType>IndexWriter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexWriter;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexDescriptor</MethodName>
+            <MethodComment>/** 
+ * Invoke a static method (possibly supplied by the user) to instantiate an index descriptor. The method has no arguments.
+ */
+</MethodComment>
+            <ReturnType>LuceneIndexDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexDescriptorMaker</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PrivilegedActionException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LuceneIndexDescriptor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+                <ExceptionType>IllegalAccessException</ExceptionType>
+                <ExceptionType>InvocationTargetException</ExceptionType>
+                <ExceptionType>NoSuchMethodException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexDescriptorNoPrivs</MethodName>
+            <MethodComment>/** 
+ * Invoke a static method (possibly supplied by the user) to instantiate an index descriptor. The method has no arguments.
+ */
+</MethodComment>
+            <ReturnType>LuceneIndexDescriptor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexDescriptorMaker</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [lastDotIdx=indexDescriptorMaker.lastIndexOf(".")]</InnerVar>
+                <InnerVar>String [className=indexDescriptorMaker.substring(0,lastDotIdx)]</InnerVar>
+                <InnerVar>ClassInspector [ci=getClassFactory().getClassInspector()]</InnerVar>
+                <InnerVar>Class&lt;? extends Object&gt; [klass=ci.getClass(className)]</InnerVar>
+                <InnerVar>String [methodName=indexDescriptorMaker.substring(lastDotIdx + 1,indexDescriptorMaker.length())]</InnerVar>
+                <InnerVar>Method [method=klass.getDeclaredMethod(methodName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+                <ExceptionType>IllegalAccessException</ExceptionType>
+                <ExceptionType>InvocationTargetException</ExceptionType>
+                <ExceptionType>NoSuchMethodException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createLuceneDir</MethodName>
+            <MethodComment>/** 
+ * Add a document to a Lucene index wrier.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StorageFactory [storageFactory=getStorageFactory(conn)]</InnerVar>
+                <InnerVar>StorageFile [luceneDir=storageFactory.newStorageFile(Database.LUCENE_DIR)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>luceneDir;mkdir;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDerbyLuceneDir</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Get the handle on the Lucene directory inside the database. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>DerbyLuceneDir</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>textcol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StorageFactory [storageFactory=getStorageFactory(conn)]</InnerVar>
+                <InnerVar>DerbyLuceneDir [result=DerbyLuceneDir.getDirectory(storageFactory,schema,table,textcol)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStorageFactory</MethodName>
+            <MethodComment>/** 
+ * Get the StorageFactory of the connected database 
+ */
+</MethodComment>
+            <ReturnType>StorageFactory</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataFactory</MethodName>
+            <MethodComment>/** 
+ * Get the DataFactory of the connected database 
+ */
+</MethodComment>
+            <ReturnType>DataFactory</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conn</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClassFactory</MethodName>
+            <MethodComment>/** 
+ * Get the ClassFactory to use with this database.
+ */
+</MethodComment>
+            <ReturnType>ClassFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findServiceModule</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceModule</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findService</MethodName>
+            <MethodComment>/** 
+ * Privileged service lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

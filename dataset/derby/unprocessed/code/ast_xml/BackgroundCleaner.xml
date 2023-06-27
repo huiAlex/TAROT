@@ -1,0 +1,222 @@
+<Class>
+    <Id>740</Id>
+    <Package>org.apache.derby.impl.services.cache</Package>
+    <ClassName>BackgroundCleaner</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Serviceable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>BackgroundCleaner  /** 
+ * A background cleaner that  {@code ConcurrentCache} can use to clean {@code Cacheable}s asynchronously in a background instead of synchronously in the user threads. It is normally used by the replacement algorithm in order to make dirty  {@code Cacheable}s clean and evictable in the future. When the background cleaner is asked to clean an item, it puts the item in a queue and requests to be serviced by a &lt;code&gt;DaemonService&lt;/code&gt; running in a separate thread.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>daemonService</FieldName>
+            <FieldType>DaemonService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clientNumber</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scheduled</FieldName>
+            <FieldType>AtomicBoolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>queue</FieldName>
+            <FieldType>ArrayBlockingQueue</FieldType>
+        </Field>
+        <Field>
+            <FieldName>queue</FieldName>
+            <FieldType>CacheEntry</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shrink</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cacheManager</FieldName>
+            <FieldType>ConcurrentCache</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>BackgroundCleaner</MethodName>
+            <MethodComment>/** 
+ * Create a background cleaner instance and subscribe it to a daemon service.
+ * @param cache the cache manager that owns the cleaner
+ * @param daemon the daemon service which perfoms the work
+ * @param queueSize the maximum number of entries to keep in the queue(must be greater than 0)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cache</ParamName>
+                    <ParamType>ConcurrentCache</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>daemon</ParamName>
+                    <ParamType>DaemonService</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>queueSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scheduleClean</MethodName>
+            <MethodComment>/** 
+ * Try to schedule a clean operation in the background cleaner.
+ * @param entry the entry that needs to be cleaned
+ * @return &lt;code&gt;true&lt;/code&gt; if the entry has been scheduled for clean,&lt;code&gt;false&lt;/code&gt; if the background cleaner can't clean the entry (its queue is full)
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [queued=queue.offer(entry)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scheduleShrink</MethodName>
+            <MethodComment>/** 
+ * Request that the cleaner tries to shrink the cache the next time it wakes up.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;requestService;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>requestService</MethodName>
+            <MethodComment>/** 
+ * Notify the daemon service that the cleaner needs to be serviced.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unsubscribe</MethodName>
+            <MethodComment>/** 
+ * Stop subscribing to the daemon service.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>daemonService;unsubscribe;[clientNumber]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>performWork</MethodName>
+            <MethodComment>/** 
+ * Clean the first entry in the queue. If there is more work, re-request service from the daemon service.
+ * @param context ignored
+ * @return status for the performed work (normally&lt;code&gt;Serviceable.DONE&lt;/code&gt;)
+ * @throws StandardException if &lt;code&gt;Cacheable.clean()&lt;/code&gt; fails
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CacheEntry [e=queue.poll()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>scheduled;set;[false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceASAP</MethodName>
+            <MethodComment>/** 
+ * Indicate that we want to be serviced ASAP.
+ * @return &lt;code&gt;true&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceImmediately</MethodName>
+            <MethodComment>/** 
+ * Indicate that we don't want the work to happen immediately in the user thread.
+ * @return &lt;code&gt;false&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

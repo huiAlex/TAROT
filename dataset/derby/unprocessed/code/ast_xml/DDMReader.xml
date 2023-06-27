@@ -1,0 +1,1818 @@
+<Class>
+    <Id>1699</Id>
+    <Package>org.apache.derby.impl.drda</Package>
+    <ClassName>DDMReader</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DDMReader  /** 
+ * The DDMReader is used to read DRDA protocol.   DRDA Protocol is divided into three layers corresponding to the DDM three-tier architecture. For each layer, their is a DSS (Data Stream Structure) defined. Layer A     Communications management services Layer B     Agent services Layer C     Data management services &lt;P&gt; At layer A are request, reply and data correlation, structure chaining, continuation or termination of chains when errors are detected, interleaving and multi-leaving request, reply, and data DSSs for multitasking environments. For TCP/IP, the format of the DDM envelope is 2 bytes     Length of the data 1 byte      'D0' - indicates DDM data 1 byte      DDM format byte(DSSFMT) - type of DSS(RQSDSS,RPYDSS), whether it is chained, information about the next chained DSS 2 bytes     request correlation identifier &lt;P&gt; The correlation identifier ties together a request, the request data and the reply.  In a chained DSS, each request has a correlation identifier which is higher than the previous request (all correlation identifiers must be greater than 0). &lt;P&gt; At layer B are object mapping, object validation and command routing. Layer B objects with data 5 bytes less than 32K bytes consist of 2 bytes     Length 2 bytes     Type of the object (code point) Object data Object data is either SCALAR or COLLECTION data.  Scalar data consists of a string of bytes formatted as the class description of the object required. Collections consist of a set of objects in which the entries in the collection are nested within the length/ code point of the collection. &lt;P&gt; Layer B objects with data &amp;gt;=32763 bytes long format is  2 bytes     Length - length of class, length, and extended total length fields (high order bit set, indicating &amp;gt;=32763) 2 bytes     Type of the object (code point) n bytes     Extended total length - length of the object (n = Length - 4) Object data &lt;P&gt; At layer C are services each class of DDM object provides. |-------------------------------------------| Layer C | Specific  |   Specific    |   Specific    | | Commands  |   Replies     | Scalars and   | | and their |  and their    | Collections   | |-------------------------------------------|----------------| Layer B | Commands  |    Reply      | Scalars and   | Communications | |           |   Messages    | Collections   |                | |-----------|---------------|---------------|----------------| Layer A |  RQSDSS   |   RPYDSS      | OBJDSS        | CMNDSS         | |           |               |               | Mapped Data    | |-----------|---------------|---------------|----------------| |                DDM Data Stream Structures                  | |------------------------------------------------------------| DSS's may be chained so that more than one can be transmitted at a time to improve performance. For more details, see DRDA Volume 3 (Distributed Data Management(DDM) Architecture (DDS definition)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_BUFFER_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_MARKS_NESTING</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_CODEPOINT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_STACK</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ADJUST_LENGTHS</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_ADJUST_LENGTHS</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_EXTDTA_SIZE</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tenRadixMagnitude</FieldName>
+            <FieldType>int[][]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>agent</FieldName>
+            <FieldType>DRDAConnThread</FieldType>
+        </Field>
+        <Field>
+            <FieldName>utf8CcsidManager</FieldName>
+            <FieldType>Utf8CcsidManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ebcdicCcsidManager</FieldName>
+            <FieldType>EbcdicCcsidManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ccsidManager</FieldName>
+            <FieldType>CcsidManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pos</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>count</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>topDdmCollectionStack</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ddmCollectionLenStack</FieldName>
+            <FieldType>long[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ddmScalarLen</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssIsContinued</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>terminateChainOnErr</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssIsChainedWithSameID</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssIsChainedWithDiffID</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssCorrelationID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>prevCorrelationID</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>svrcod</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dssTrace</FieldName>
+            <FieldType>DssTrace</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inputStream</FieldName>
+            <FieldType>InputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>doingLayerBStreaming</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>totalByteCount</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DDMReader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>agent</ParamName>
+                    <ParamType>DRDAConnThread</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dssTrace</ParamName>
+                    <ParamType>DssTrace</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initialize;[agent, dssTrace]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DDMReader</MethodName>
+            <MethodComment>/** 
+ * This constructor is used for testing the protocol It is used by ProtocolTestAdapter to read the protocol returned by the server 
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputStream</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initialize;[null, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment>/** 
+ * Initialize values for this session, the reader is reused so we need to set null and 0 values
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>agent</ParamName>
+                    <ParamType>DRDAConnThread</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dssTrace</ParamName>
+                    <ParamType>DssTrace</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUtf8Ccsid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setEbcdicCcsid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>terminateChainOnErr</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isChainedWithSameID</MethodName>
+            <MethodComment>/** 
+ * Next DSS has same correlator as current DSS
+ * @return true if next DSS has the same correlator as current DSS
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isChainedWithDiffID</MethodName>
+            <MethodComment>/** 
+ * Next DSS has different correlator than current DSS
+ * @return true if next DSS has a different correlator than current DSS
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDdmLength</MethodName>
+            <MethodComment>/** 
+ * Length of current DDM object
+ * @return length of DDM object
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>moreDdmData</MethodName>
+            <MethodComment>/** 
+ * Is there more in this DDM object
+ * @return true if DDM length is &amp;gt; 0
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>moreDssData</MethodName>
+            <MethodComment>/** 
+ * Is there more in this DDS object
+ * @return true if DDS length is &amp;gt; 0
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>moreData</MethodName>
+            <MethodComment>/** 
+ * Is there more data in the buffer
+ * @return true if there is more data in the buffer
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCmd</MethodName>
+            <MethodComment>/** 
+ * Check for the command protocol
+ * @return true if this is a command; false otherwise
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [val=new String(buffer,0,4,NetworkServerControlImpl.DEFAULT_ENCODING)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[4]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+                <ExceptionType>java.io.UnsupportedEncodingException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readDssHeader</MethodName>
+            <MethodComment>/** 
+ * Read DSS header DSS Header format is  2 bytes - length 1 byte  - 'D0'  - indicates DDM data 1 byte  - DSS format |---|---------|----------| | 0 |  flags  |  type    | |---|---------|----------| | 0 | 1  2  3 | 4 5 6 7  | |---|---------|----------| bit 0 - '0' bit 1 - '0' - unchained, '1' - chained bit 2 - '0' - do not continue on error, '1' - continue on error bit 3 - '0' - next DSS has different correlator, '1' - next DSS has same correlator type - 1 - Request DSS - 2 - Reply DSS - 3 - Object DSS - 4 - Communications DSS - 5 - Request DSS where no reply is expected 2 bytes - request correlation id
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [gdsFormatter=buffer[pos++] &amp; 0xff]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[6]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readReplyDss</MethodName>
+            <MethodComment>/** 
+ * Read Reply DSS This is used in testing the protocol.  We shouldn't see a reply DSS when we are servicing DRDA commands
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [gdsFormatter=buffer[pos++] &amp; 0xff]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[6]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLengthAndCodePoint</MethodName>
+            <MethodComment>/** 
+ * Read the DDM Length and CodePoint
+ * @param isLayerBStreamingPossible true only when layer B streaming is possible
+ * @return - returns codepoint
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>isLayerBStreamingPossible</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [codePoint=readCodePoint()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[4, NO_ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readCodePoint</MethodName>
+            <MethodComment>/** 
+ * Read the CodePoint
+ * @return - returns codepoint
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markCollection</MethodName>
+            <MethodComment>/** 
+ * Push DDM Length on to collection stack
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCodePoint</MethodName>
+            <MethodComment>/** 
+ * Get the next CodePoint from a collection
+ * @return NO_CODEPOINT if collection stack is empty or remaining length is0; otherwise,  read length and code point
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCodePoint</MethodName>
+            <MethodComment>/** 
+ * Get the next CodePoint from a collection and check that it matches the specified CodePoint
+ * @param codePointCheck  - codePoint to check against
+ * @return  codePoint
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>codePointCheck</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [codePoint=getCodePoint()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readByte</MethodName>
+            <MethodComment>/** 
+ * Read byte value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>byte</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[1, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readUnsignedByte</MethodName>
+            <MethodComment>/** 
+ * Read byte value and mask out high order bytes before returning
+ * @return value
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[1, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readNetworkShort</MethodName>
+            <MethodComment>/** 
+ * Read network short value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[2, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readSignedNetworkShort</MethodName>
+            <MethodComment>/** 
+ * Read signed network short value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[2, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readShort</MethodName>
+            <MethodComment>/** 
+ * Read platform short value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>short</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>byteOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>short [s=SignedBinary.getShort(buffer,pos,byteOrder)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[2, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readNetworkInt</MethodName>
+            <MethodComment>/** 
+ * Read network int value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[4, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readInt</MethodName>
+            <MethodComment>/** 
+ * Read platform int value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>byteOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=SignedBinary.getInt(buffer,pos,byteOrder)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[4, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readNetworkLong</MethodName>
+            <MethodComment>/** 
+ * Read network long value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[8, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readNetworkSixByteLong</MethodName>
+            <MethodComment>/** 
+ * Read network six byte value and put it in a long v
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[6, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLong</MethodName>
+            <MethodComment>/** 
+ * Read platform long value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>byteOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [l=SignedBinary.getLong(buffer,pos,byteOrder)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[8, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readFloat</MethodName>
+            <MethodComment>/** 
+ * Read platform float value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>float</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>byteOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readDouble</MethodName>
+            <MethodComment>/** 
+ * Read platform double value
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>double</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>byteOrder</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readBigDecimal</MethodName>
+            <MethodComment>/** 
+ * Read a BigDecimal value
+ * @param precision of the BigDecimal
+ * @param scale of the BigDecimal
+ * @return  value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>BigDecimal</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>precision</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scale</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=precision / 2 + 1]</InnerVar>
+                <InnerVar>int [signum]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[length, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEXTDTAReaderInputStream</MethodName>
+            <MethodComment>/** 
+ * Creates an InputStream which can stream EXTDTA objects. The InputStream uses this DDMReader to read data from network. The  DDMReader should not be used before all data in the stream has been read.
+ * @param checkNullability used to check if the stream is null. If it is null, this method returns null
+ * @return EXTDTAReaderInputStream object which can be passed to preparedstatement as a binary stream.
+ * @exception DRDAProtocolException standard DRDA protocol exception
+ */
+</MethodComment>
+            <ReturnType>EXTDTAReaderInputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>checkNullability</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [readEXTDTAStatusByte=agent.getSession().appRequester.supportsEXTDTAAbort()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLOBInitStream</MethodName>
+            <MethodComment>/** 
+ * This method is used by EXTDTAReaderInputStream to read the first chunk  of data. This lengthless method must be called only when layer B streaming.
+ * @exception DRDAProtocolException standard DRDA protocol exception
+ */
+</MethodComment>
+            <ReturnType>ByteArrayInputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLOBInitStream</MethodName>
+            <MethodComment>/** 
+ * This method is used by EXTDTAReaderInputStream to read the first chunk  of data.
+ * @param desiredLength the desired length of chunk. This parameter is ignored when layerB Streaming is doing.
+ * @exception DRDAProtocolException standard DRDA protocol exception
+ */
+</MethodComment>
+            <ReturnType>ByteArrayInputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredLength</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLOBContinuationStream</MethodName>
+            <MethodComment>/** 
+ * This method is used by EXTDTAReaderInputStream to read the next chunk  of data. Calling this method finishes layer B streaming  if continuation of DSS segment was finished. This lengthless method must be called only when layer B streaming.
+ * @exception IOException IOException
+ */
+</MethodComment>
+            <ReturnType>ByteArrayInputStream</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLOBContinuationStream</MethodName>
+            <MethodComment>/** 
+ * This method is used by EXTDTAReaderInputStream to read the next chunk  of data. Furthermore, when Layer B streaming is carried out, calling this method finishes layer B streaming  if continuation of DSS segment was finished.
+ * @param desiredLength the desired length of chunk. This parameter is ignored when layerB Streaming is doing.
+ * @exception IOException IOException
+ */
+</MethodComment>
+            <ReturnType>ByteArrayInputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredLength</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLOBChunk</MethodName>
+            <MethodComment>/** 
+ * This method is used by EXTDTAReaderInputStream to read the next chunk  of data. Furthermore, when Layer B streaming is carried out, calling this method may finish layer B streaming.
+ * @param readHeader set to true if the dss continuation should be read
+ * @param desiredLength the desired length of chunk. This parameter is ignored when layerB Streaming is doing.
+ * @exception DRDAProtocolException standard DRDA protocol exception
+ */
+</MethodComment>
+            <ReturnType>ByteArrayInputStream</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>readHeader</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desiredLength</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [copySize=doingLayerBStreaming ? dssLength : (int)Math.min(dssLength,desiredLength)]</InnerVar>
+                <InnerVar>ByteArrayInputStream [bais=new ByteArrayInputStream(buffer,pos,copySize)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[copySize]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExtData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredLength</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>checkNullability</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [readHeader]</InnerVar>
+                <InnerVar>int [copySize]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [baos]</InnerVar>
+                <InnerVar>boolean [isLengthAndNullabilityUnknown=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readDSSContinuationHeader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[2]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEXTDTANull</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>byte [nullByte=buffer[pos++]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureALayerDataInBuffer;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;adjustLengths;[1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>packedNybblesToInt</MethodName>
+            <MethodComment>/** 
+ * Convert a range of packed nybbles (up to 9 digits without overflow) to an int. Note that for performance purpose, it does not do array-out-of-bound checking.
+ * @param buffer         buffer to read from
+ * @param offset         offset in the buffer
+ * @param startNybble        start nybble
+ * @param numberOfNybbles    number of nybbles
+ * @return   an int value
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startNybble</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numberOfNybbles</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [value=0]</InnerVar>
+                <InnerVar>int [i=startNybble / 2]</InnerVar>
+                <InnerVar>int [endNybble=startNybble + numberOfNybbles - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>packedNybblesToLong</MethodName>
+            <MethodComment>/** 
+ * Convert a range of packed nybbles (up to 18 digits without overflow) to a long. Note that for performance purpose, it does not do array-out-of-bound checking.
+ * @param buffer        buffer to read from
+ * @param offset        offset in the buffer
+ * @param startNybble       start nybble
+ * @param numberOfNybbles   number of nybbles
+ * @return  an long value
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startNybble</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numberOfNybbles</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [value=0]</InnerVar>
+                <InnerVar>int [i=startNybble / 2]</InnerVar>
+                <InnerVar>int [endNybble=startNybble + numberOfNybbles - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>computeMagnitude</MethodName>
+            <MethodComment>/** 
+ * Compute the int array of magnitude from input value segments.
+ * @param input value segments
+ * @return  array of int magnitudes
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=input.length]</InnerVar>
+                <InnerVar>int[] [mag=new int[length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readEncryptedString</MethodName>
+            <MethodComment>/** 
+ * Read encrypted string
+ * @param decryptM  decryption manager
+ * @param securityMechanism security mechanism
+ * @param initVector   initialization vector for cipher
+ * @param sourcePublicKey  public key (as in Deffie-Hellman algorithm)from source (encryptor)
+ * @return  decrypted string
+ * @exception DRDAProtocolException if a protocol error is detected
+ * @exception java.sql.SQLException wrapping any exception in decryption
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>decryptM</ParamName>
+                    <ParamType>DecryptionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>securityMechanism</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initVector</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourcePublicKey</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [cipherText=readBytes()]</InnerVar>
+                <InnerVar>byte[] [plainText=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+                <ExceptionType>java.sql.SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readString</MethodName>
+            <MethodComment>/** 
+ * Read string value Strings in DRDA protocol are encoded in EBCDIC by default so we need to convert to UCS2
+ * @param length  - length of string to read
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [result=ccsidManager.convertToJavaString(buffer,pos,length)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[length, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readString</MethodName>
+            <MethodComment>/** 
+ * Read string value into a &lt;code&gt;DRDAString&lt;/code&gt; object.
+ * @param dst  destination for the read string
+ * @param size size (in bytes) of string to read
+ * @param unpad if true, remove padding (trailing spaces)
+ * @exception DRDAProtocolException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dst</ParamName>
+                    <ParamType>DRDAString</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unpad</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startPos=pos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[size, ADJUST_LENGTHS]</InnerMethodInvoke>
+                <InnerMethodInvoke>dst;setBytes;[buffer, startPos, size]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readString</MethodName>
+            <MethodComment>/** 
+ * Read encoded string value
+ * @param length  - length of string to read
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>encoding</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [s=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[length, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readStringData</MethodName>
+            <MethodComment>/** 
+ * Read specified length of string value in DDM data with default encoding
+ * @param length  - length of string to read
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLDStringData</MethodName>
+            <MethodComment>/** 
+ * Read length delimited string value in DDM data with default encoding
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>encoding</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=readNetworkShort()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readString</MethodName>
+            <MethodComment>/** 
+ * Read string value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readBytes</MethodName>
+            <MethodComment>/** 
+ * Read byte string value
+ * @param length  - length of string to read
+ * @return byte array
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [b]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readBytes</MethodName>
+            <MethodComment>/** 
+ * Read byte string value
+ * @return byte array
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>skipBytes</MethodName>
+            <MethodComment>/** 
+ * Skip byte string value
+ * @param length  - length of string to skip
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[length, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>skipBytes</MethodName>
+            <MethodComment>/** 
+ * Skip byte string value
+ * @exception DRDAProtocolException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;skipBytes;[(int)ddmScalarLen]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>skipDss</MethodName>
+            <MethodComment>/** 
+ * Skip remaining DSS
+ * @exception DRDAProtocolException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;skipBytes;[(int)dssLength]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearBuffer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;skipBytes;[java.lang.Math.min(dssLength,count - pos)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>convertBytes</MethodName>
+            <MethodComment>/** 
+ * Convert EBCDIC byte array to unicode string
+ * @param buf - byte array
+ * @return string
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buf</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustLengths</MethodName>
+            <MethodComment>/** 
+ * Adjust remaining length
+ * @param length - adjustment length
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readCmdString</MethodName>
+            <MethodComment>/** 
+ * Read string value
+ * @param length  - length of string to read
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [result=new String(buffer,pos,length,NetworkServerControlImpl.DEFAULT_ENCODING)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureBLayerDataInBuffer;[length, ADJUST_LENGTHS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+                <ExceptionType>java.io.UnsupportedEncodingException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readCmdString</MethodName>
+            <MethodComment>/** 
+ * Read string value
+ * @return value
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [length=readNetworkShort()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+                <ExceptionType>java.io.UnsupportedEncodingException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureALayerDataInBuffer</MethodName>
+            <MethodComment>/** 
+ * Make sure a certain amount of Layer A data is in the buffer. The data will be in the buffer after this method is called.
+ * @param desiredDataSize - amount of data we need
+ * @exception DRDAProtocolException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredDataSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [avail=count - pos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureBLayerDataInBuffer</MethodName>
+            <MethodComment>/** 
+ * Make sure a certain amount of Layer B data is in the buffer. The data will be in the buffer after this method is called.
+ * @param desiredDataSize - amount of data we need
+ * @param adjustLen - whether to adjust the remaining lengths
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredDataSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>adjustLen</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compressBLayerData</MethodName>
+            <MethodComment>/** 
+ * Compress B Layer data if extended total length is used by removing the continuation headers
+ * @param continueDssHeaderCount - amount of data we need
+ * @exception   throws DRDAProtocolException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>continueDssHeaderCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [tempPos=0]</InnerVar>
+                <InnerVar>int [shiftSize=0]</InnerVar>
+                <InnerVar>int [bytesToShift=0]</InnerVar>
+                <InnerVar>int [continueHeaderLength=0]</InnerVar>
+                <InnerVar>int [newdssLength=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shiftBuffer</MethodName>
+            <MethodComment>/** 
+ * This is a helper method which shifts the buffered bytes from wherever they are in the current buffer to the beginning of different buffer (note these buffers could be the same). State information is updated as needed after the shift.
+ * @param destinationBuffer - buffer to shift data to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>destinationBuffer</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [sz=count - pos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[buffer, pos, destinationBuffer, 0, sz]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureSpaceInBufferForFill</MethodName>
+            <MethodComment>/** 
+ * This method makes sure there is enough room in the buffer for a certain number of bytes.  This method will allocate a new buffer if needed and shift the bytes in the current buffer to make ensure space is available for a fill.  Right now this method will shift bytes as needed to make sure there is as much room as possible in the buffer before trying to do the read.  The idea is to try to have space to get as much data as possible if we need to do a read on the socket's stream.
+ * @param desiredSpace - amount of data we need
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>desiredSpace</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [currentAvailableSpace=(buffer.length - count) + pos]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fill</MethodName>
+            <MethodComment>/** 
+ * This method will attempt to read a minimum number of bytes from the underlying stream.  This method will keep trying to read bytes until it has obtained at least the minimum number.
+ * @param minimumBytesNeeded - minimum required bytes
+ * @exception DRDAProtocolException if a protocol error is detected
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>minimumBytesNeeded</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [totalBytesRead=0]</InnerVar>
+                <InnerVar>int [actualBytesRead=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureSpaceInBufferForFill;[minimumBytesNeeded]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DRDAProtocolException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trace</MethodName>
+            <MethodComment>/** 
+ * Print a internal trace message
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrChainState</MethodName>
+            <MethodComment>/** 
+ * Return chaining bit for current DSS.
+ */
+</MethodComment>
+            <ReturnType>byte</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startLayerBStreaming</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finishLayerBStreaming</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doingLayerBStreaming</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

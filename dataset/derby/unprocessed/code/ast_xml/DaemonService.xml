@@ -1,0 +1,171 @@
+<Class>
+    <Id>1834</Id>
+    <Package>org.apache.derby.iapi.services.daemon</Package>
+    <ClassName>DaemonService</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DaemonService  /** 
+ * A DaemonService provides a background service which is suitable for asynchronous I/O and general clean up.  It should not be used as a general worker thread for parallel execution.  A DaemonService can be subscribe to by many Serviceable objects and a DaemonService will call that object's performWork from time to time.  The performWork method is defined by the client object and should be well behaved - in other words, it should not take too long or hog too many resources or deadlock with anyone else.  And it cannot (should not) error out. &lt;P&gt;It is up to each &lt;code&gt;DaemonService&lt;/code&gt; implementation to define its level of service, including &lt;UL&gt; &lt;LI&gt;how quickly and how often the clients should expect to be be serviced &lt;LI&gt;how the clients are prioritized &lt;LI&gt;whether the clients need to tolerate spurious services &lt;/UL&gt; &lt;P&gt;MT - all routines on the interface must be MT-safe.
+ * @see Serviceable
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>TIMER_DELAY</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DaemonTrace</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DaemonOff</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>subscribe</MethodName>
+            <MethodComment>/** 
+ * Add a new client that this daemon needs to service
+ * @param newClient a Serviceable object this daemon will service from time to time
+ * @param onDemandOnly only service this client when it ask for service with a serviceNow request
+ * @return a client number that uniquely identifies this client (this subscription) 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newClient</ParamName>
+                    <ParamType>Serviceable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>onDemandOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unsubscribe</MethodName>
+            <MethodComment>/** 
+ * Get rid of a client from the daemon. If a client is being serviced when the call is made, the implementation may choose whether or not the call should block until the client has completed its work. If the call does not block, the client must be prepared to handle calls to its &lt;code&gt;performWork()&lt;/code&gt; method even after &lt;code&gt;unsubscribe()&lt;/code&gt; has returned.
+ * @param clientNumber the number that uniquely identify the client
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clientNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>serviceNow</MethodName>
+            <MethodComment>/** 
+ * Service this subscription ASAP. When this method is called, the subscriber's &lt;code&gt;performWork()&lt;/code&gt; method is guaranteed to be invoked at some point in the future. However, there is no guarantee that a subscriber's &lt;code&gt;performWork()&lt;/code&gt; is called the same number of times as the subscriber calls this method. More precisely, if a subscriber is waiting for this daemon service to invoke its &lt;code&gt;performWork()&lt;/code&gt; method, the daemon service may, but is not required to, ignore requests from that subscriber until the &lt;code&gt;performWork()&lt;/code&gt; method has been invoked.
+ * @param clientNumber the number that uniquely identifies the client
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clientNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>enqueue</MethodName>
+            <MethodComment>/** 
+ * Request a one time service from the Daemon.  Unless performWork returns REQUEUE (see Serviceable), the daemon will service this client once and then it will get rid of this client.  Since no client number is associated with this client, it cannot request to be serviced or be unsubscribed.  The work is always added to the deamon, regardless of the state it returns.
+ * @param newClient the object that needs a one time service
+ * @param serviceNow if true, this client should be serviced ASAP, as if aserviceNow has been issued.  If false, then this client will be serviced with the normal scheduled.
+ * @return true if the daemon indicates it is being overloaded,false it's happy.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newClient</ParamName>
+                    <ParamType>Serviceable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceNow</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pause</MethodName>
+            <MethodComment>/** 
+ * Pause.  No new service is performed until a resume is issued.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resume</MethodName>
+            <MethodComment>/** 
+ * Resume service after a pause
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment>/** 
+ * End this daemon service
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clear</MethodName>
+            <MethodComment>/** 
+ * Clear all the queued up work from this daemon.  Subscriptions are not affected. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>waitUntilQueueIsEmpty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

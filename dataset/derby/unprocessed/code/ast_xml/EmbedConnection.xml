@@ -1,0 +1,3760 @@
+<Class>
+    <Id>1316</Id>
+    <Package>org.apache.derby.impl.jdbc</Package>
+    <ClassName>EmbedConnection</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>EngineConnection</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EmbedConnection  /** 
+ * Local implementation of Connection for a JDBC driver in  the same process as the database. &lt;p&gt;  There is always a single root (parent) connection.  The initial JDBC connection is the root connection. A call to &lt;I&gt;getCurrentConnection()&lt;/I&gt; or with the URL  &lt;I&gt;jdbc:default:connection&lt;/I&gt; yields a nested connection that shares the same root connection as the parent.  A nested connection is implemented using this class.  The nested connection copies the  state of the parent connection and shares some of the same  objects (e.g. ContextManager) that are shared across all nesting levels.  The proxy also maintains its own state that is distinct from its parent connection (e.g. autocommit or warnings). &lt;p&gt; &lt;B&gt;SYNCHRONIZATION&lt;/B&gt;: Just about all JDBC actions are synchronized across all connections stemming from the same root connection.  The synchronization is upon the a synchronized object return by the rootConnection. &lt;P&gt;&lt;B&gt;Supports&lt;/B&gt; &lt;UL&gt; &lt;LI&gt; JDBC 4.2 &lt;/UL&gt;
+ * @see TransactionResourceImpl
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>exceptionClose</FieldName>
+            <FieldType>StandardException</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_MEM</FieldName>
+            <FieldType>SQLException</FieldType>
+        </Field>
+        <Field>
+            <FieldName>memoryState</FieldName>
+            <FieldType>LowMemory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dbMetadata</FieldName>
+            <FieldType>DatabaseMetaData</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tr</FieldName>
+            <FieldType>TransactionResourceImpl</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobHashMap</FieldName>
+            <FieldType>HashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobHashMap</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobHMKey</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobReferences</FieldName>
+            <FieldType>WeakHashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobReferences</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobFiles</FieldName>
+            <FieldType>HashSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lobFiles</FieldName>
+            <FieldType>LOBFile</FieldType>
+        </Field>
+        <Field>
+            <FieldName>active</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aborting</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>autoCommit</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>needCommit</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>usingNoneAuth</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>connectionHoldAbility</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rootConnection</FieldName>
+            <FieldType>EmbedConnection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>topWarning</FieldName>
+            <FieldType>SQLWarning</FieldType>
+        </Field>
+        <Field>
+            <FieldName>factory</FieldName>
+            <FieldType>InternalDriver</FieldType>
+        </Field>
+        <Field>
+            <FieldName>applicationConnection</FieldName>
+            <FieldType>java.sql.Connection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>resultSetId</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>connString</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OP_ENCRYPT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OP_SHUTDOWN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OP_HARD_UPGRADE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OP_REPLICATION</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OP_DECRYPT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>EmbedConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>driver</ParamName>
+                    <ParamType>InternalDriver</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>url</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>info</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setupContextStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkDatabaseBooted</MethodName>
+            <MethodComment>/** 
+ * Check that a database has already been booted. Throws an exception  otherwise
+ * @param database The database that should have been booted
+ * @param operation The operation that requires that the database has already been booted, used in the exception message if not booted
+ * @param dbname The name of the database that should have been booted, used in the exception message if not booted
+ * @throws java.sql.SQLException thrown if database is not booted
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>database</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createBoot</MethodName>
+            <MethodComment>/** 
+ * Examine the attributes set provided for illegal boot combinations and determine if this is a create boot.
+ * @return true iff the attribute &lt;em&gt;create=true&lt;/em&gt; is provided. Thismeans create a standard database.  In other cases, returns false.
+ * @param p the attribute set.
+ * @exception SQLException Throw if more than one of&lt;em&gt;create&lt;/em&gt;, &lt;em&gt;createFrom&lt;/em&gt;, &lt;em&gt;restoreFrom&lt;/em&gt; and &lt;em&gt;rollForwardRecoveryFrom&lt;/em&gt; is used simultaneously. &lt;br&gt; Also, throw if (re)encryption is attempted with one of &lt;em&gt;createFrom&lt;/em&gt;, &lt;em&gt;restoreFrom&lt;/em&gt; and &lt;em&gt;rollForwardRecoveryFrom&lt;/em&gt;.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [createCount=0]</InnerVar>
+                <InnerVar>int [restoreCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleDBNotFound</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [dbname=tr.getDBName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;setInactive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDropDatabase</MethodName>
+            <MethodComment>/** 
+ * Examines the boot properties and determines if the given attributes would entail dropping the database.
+ * @param p the attribute set
+ * @return {@code true} if the drop database operation is requested,{@code false} if not.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCryptoBoot</MethodName>
+            <MethodComment>/** 
+ * Examines boot properties and determines if a boot with the given attributes would entail a cryptographic operation on the database.
+ * @param p the attribute set
+ * @return {@code true} if a boot will perform a cryptographic operation onthe database.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isHardUpgradeBoot</MethodName>
+            <MethodComment>/** 
+ * Examine boot properties and determine if a boot with the given attributes would entail a hard upgrade.
+ * @param p the attribute set
+ * @return true if a boot will hard upgrade the database
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStartReplicationSlaveBoot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStartReplicationMasterBoot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isReplicationFailover</MethodName>
+            <MethodComment>/** 
+ * used to verify if the failover attribute has been set.
+ * @param p The attribute set.
+ * @return true if the failover attribute has been set.false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStopReplicationMasterBoot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStopReplicationSlaveBoot</MethodName>
+            <MethodComment>/** 
+ * Examine the boot properties and determine if a boot with the given attributes should stop slave replication mode.
+ * @param p The attribute set.
+ * @return true if the stopSlave attribute has been set, falseotherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInternalShutdownSlaveDatabase</MethodName>
+            <MethodComment>/** 
+ * Examine the boot properties and determine if a boot with the given attributes should stop slave replication mode. A connection with this property should only be made from SlaveDatabase. Make sure to call SlaveDatabase.verifyShutdownSlave() to verify that this connection is not made from a client.
+ * @param p The attribute set.
+ * @return true if the shutdownslave attribute has been set, falseotherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSet</MethodName>
+            <MethodComment>/** 
+ * Tells if the attribute/property has been set. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>attribute</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isTrue</MethodName>
+            <MethodComment>/** 
+ * Tells if the attribute/property has the value  {@code true}. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>attribute</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>vetTrue</MethodName>
+            <MethodComment>/** 
+ * Returns true if the attribute exists and is set to true. Raises an exception if the attribute exists and is set to something else.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>attribute</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [value=p.getProperty(attribute)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReplicationOperation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [operation=null]</InnerVar>
+                <InnerVar>int [opcount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleStartReplicationMaster</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tr</ParamName>
+                    <ParamType>TransactionResourceImpl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [slavehost=p.getProperty(Attribute.REPLICATION_SLAVE_HOST)]</InnerVar>
+                <InnerVar>String [portString=p.getProperty(Attribute.REPLICATION_SLAVE_PORT)]</InnerVar>
+                <InnerVar>int [slaveport=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tr.getDatabase();startReplicationMaster;[getTR().getDBName(), slavehost, slaveport, MasterFactory.ASYNCHRONOUS_MODE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleStopReplicationMaster</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tr</ParamName>
+                    <ParamType>TransactionResourceImpl</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tr.getDatabase();stopReplicationMaster;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleStopReplicationSlave</MethodName>
+            <MethodComment>/** 
+ * Stop replication slave when called from a client. Stops replication slave mode, provided that the database is in replication slave mode and has lost connection with the master database. If the connection with the master is up, the call to this method will be refused by raising an exception. The reason for refusing the stop command if the slave is connected with the master is that we cannot authenticate the user on the slave side (because the slave database has not been fully booted) whereas authentication is not a problem on the master side. If not refused, this operation will cause SlaveDatabase to call internalStopReplicationSlave
+ * @param database The database the stop slave operation will beperformed on
+ * @param p The Attribute set.
+ * @exception StandardException Thrown on error, if not in replication slave mode or if the network connection with the master is not down
+ * @exception SQLException Thrown if the database has not beenbooted or if stopSlave is performed successfully
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>database</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkDatabaseBooted;[database, Attribute.REPLICATION_STOP_SLAVE, tr.getDBName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>database;stopReplicationSlave;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>internalStopReplicationSlave</MethodName>
+            <MethodComment>/** 
+ * Stop replication slave when called from SlaveDatabase. Called when slave replication mode has been stopped, and all that remains is to shutdown the database. This happens if handleStopReplicationSlave has successfully requested the slave to stop, if the replication master has requested the slave to stop using the replication network, or if a fatal exception has occurred in the database.
+ * @param database The database the internal stop slave operationwill be performed on
+ * @param p The Attribute set.
+ * @exception StandardException Thrown on error or if not in replication slave mode
+ * @exception SQLException Thrown if the database has not beenbooted or if this connection was not made internally from SlaveDatabase
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>database</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkDatabaseBooted;[database, Attribute.REPLICATION_INTERNAL_SHUTDOWN_SLAVE, tr.getDBName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>((SlaveDatabase)database);verifyShutdownSlave;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;handleException;[tr.shutdownDatabaseException()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleFailoverMaster</MethodName>
+            <MethodComment>/** 
+ * Used to authorize and verify the privileges of the user and initiate failover.
+ * @param tr an instance of TransactionResourceImpl Links the connection to the database.
+ * @throws StandardException 1) If the failover succeeds, an exception isthrown to indicate that the master database was shutdown after a successful failover 2) If a failure occurs during network communication with slave.
+ * @throws SQLException      1) Thrown upon a authorization failure.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tr</ParamName>
+                    <ParamType>TransactionResourceImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tr.getDatabase();failover;[tr.getDBName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleFailoverSlave</MethodName>
+            <MethodComment>/** 
+ * Used to perform failover on a database in slave replication mode. Performs failover, provided that the database is in replication slave mode and has lost connection with the master database. If the connection with the master is up, the call to this method will be refused by raising an exception. The reason for refusing the failover command if the slave is connected with the master is that we cannot authenticate the user on the slave side (because the slave database has not been fully booted) whereas authentication is not a problem on the master side. If not refused, this method will apply all operations received from the master and complete the booting of the database so that it can be connected to.
+ * @param database The database the failover operation will beperformed on
+ * @exception SQLException Thrown on error, if not in replication slave mode or if the network connection with the master is not down
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>database</ParamName>
+                    <ParamType>Database</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePhaseTwoProps</MethodName>
+            <MethodComment>/** 
+ * Remove any encryption or upgarde properties from the given properties
+ * @param p the attribute set
+ * @return clone sans encryption properties
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>p;remove;[Attribute.DATA_ENCRYPTION]</InnerMethodInvoke>
+                <InnerMethodInvoke>p;remove;[Attribute.DECRYPT_DATABASE]</InnerMethodInvoke>
+                <InnerMethodInvoke>p;remove;[Attribute.NEW_BOOT_PASSWORD]</InnerMethodInvoke>
+                <InnerMethodInvoke>p;remove;[Attribute.NEW_CRYPTO_EXTERNAL_KEY]</InnerMethodInvoke>
+                <InnerMethodInvoke>p;remove;[Attribute.UPGRADE_ATTR]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>EmbedConnection</MethodName>
+            <MethodComment>/** 
+ * Create a new connection based off of the  connection passed in.  Initializes state based on input connection, and copies  appropriate object pointers. This is only used for nested connections.
+ * @param inputConnection the input connection
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputConnection</ParamName>
+                    <ParamType>EmbedConnection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkUserCredentials</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>creatingDatabase</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userInfo</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AuthenticationService [authenticationService=null]</InnerVar>
+                <InnerVar>boolean [authenticationSucceeded=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>emptyCredential</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt; Forbid empty or null usernames and passwords. &lt;/p&gt;
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>credential</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareDatabaseNames</MethodName>
+            <MethodComment>/** 
+ * Compare two user-specified database names to see if they identify the same database.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leftDBName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rightDBName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkUserIsNotARole</MethodName>
+            <MethodComment>/** 
+ * If applicable, check that we don't connect with a user name that equals a role.
+ * @exception SQLException Will throw if the current authorizationid in  {@code lcc} (which is already normalized tocase normal form - CNF) equals an existing role name (which is also stored in CNF).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TransactionResourceImpl [tr=getTR()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkIsDBOwner</MethodName>
+            <MethodComment>/** 
+ * Check if actual authenticationId is equal to the database owner's.
+ * @param operation attempted operation which needs database owner powers
+ * @throws SQLException if actual authenticationId is differentfrom authenticationId of database owner.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LanguageConnectionContext [lcc=privilegedGetLCC()]</InnerVar>
+                <InnerVar>String [actualId=lcc.getSessionUserId()]</InnerVar>
+                <InnerVar>String [dbOwnerId=lcc.getDataDictionary().getAuthorizationDatabaseOwner()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEngineType</MethodName>
+            <MethodComment>/** 
+ * Gets the EngineType of the connected database.
+ * @return 0 if there is no database, the engine type otherwise. @see org.apache.derby.iapi.reference.EngineType
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Database [db=getDatabase()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createStatement</MethodName>
+            <MethodComment>/** 
+ * SQL statements without parameters are normally executed using Statement objects. If the same SQL statement  is executed many times, it is more efficient to use a  PreparedStatement JDBC 2.0 Result sets created using the returned Statement will have forward-only type, and read-only concurrency, by default.
+ * @return a new Statement object 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>Statement</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createStatement</MethodName>
+            <MethodComment>/** 
+ * JDBC 2.0 Same as createStatement() above, but allows the default result set type and result set concurrency type to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @return a new Statement object 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>Statement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createStatement</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Same as createStatement() above, but allows the default result set type, result set concurrency type and result set holdability type to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @param resultSetHoldability a holdability type,ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
+ * @return a new Statement object
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>Statement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetHoldability</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * A SQL statement with or without IN parameters can be pre-compiled and stored in a PreparedStatement object. This object can then be used to efficiently execute this statement multiple times. &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; This method is optimized for handling parametric SQL statements that benefit from precompilation. If the driver supports precompilation, prepareStatement will send the statement to the database for precompilation. Some drivers may not support precompilation. In this case, the statement may not be sent to the database until the PreparedStatement is executed.  This has no direct affect on users; however, it does affect which method throws certain SQLExceptions. JDBC 2.0 Result sets created using the returned PreparedStatement will have forward-only type, and read-only concurrency, by default.
+ * @param sql a SQL statement that may contain one or more '?' INparameter placeholders
+ * @return a new PreparedStatement object containing thepre-compiled statement 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * JDBC 2.0 Same as prepareStatement() above, but allows the default result set type and result set concurrency type to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @return a new PreparedStatement object containing thepre-compiled SQL statement
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Same as prepareStatement() above, but allows the default result set type, result set concurrency type and result set holdability to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @param resultSetHoldability - one of the following ResultSet constants:ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
+ * @return a new PreparedStatement object containing thepre-compiled SQL statement
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetHoldability</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * Creates a default PreparedStatement object capable of returning the auto-generated keys designated by the given array. This array contains the indexes of the columns in the target table that contain the auto-generated keys that should be made available. This array is ignored if the SQL statement is not an INSERT statement JDBC 3.0
+ * @param sql  An SQL statement that may contain one or more ? IN parameter placeholders
+ * @param columnIndexes  An array of column indexes indicating the columnsthat should be returned from the inserted row or rows
+ * @return  A new PreparedStatement object, containing the pre-compiledSQL statement, that will have the capability of returning auto-generated keys designated by the given array of column indexes
+ * @exception SQLException  Thrown on error.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIndexes</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * Creates a default PreparedStatement object capable of returning the auto-generated keys designated by the given array. This array contains the names of the columns in the target table that contain the auto-generated keys that should be returned. This array is ignored if the SQL statement is not an INSERT statement JDBC 3.0
+ * @param sql  An SQL statement that may contain one or more ? IN parameter placeholders
+ * @param columnNames  An array of column names indicating the columnsthat should be returned from the inserted row or rows
+ * @return  A new PreparedStatement object, containing the pre-compiledSQL statement, that will have the capability of returning auto-generated keys designated by the given array of column names
+ * @exception SQLException Thrown on error.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment>/** 
+ * Creates a default PreparedStatement object that has the capability to retieve auto-generated keys. The given constant tells the driver whether it should make auto-generated keys available for retrieval. This parameter is ignored if the SQL statement is not an INSERT statement. JDBC 3.0
+ * @param sql  A SQL statement that may contain one or more ? IN parameter placeholders
+ * @param autoGeneratedKeys  A flag indicating whether auto-generated keysshould be returned
+ * @return  A new PreparedStatement object, containing the pre-compiledSQL statement, that will have the capability of returning auto-generated keys
+ * @exception SQLException  Feature not implemented for now.
+ */
+</MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>autoGeneratedKeys</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetHoldability</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>autoGeneratedKeys</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIndexes</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareCall</MethodName>
+            <MethodComment>/** 
+ * A SQL stored procedure call statement is handled by creating a CallableStatement for it. The CallableStatement provides methods for setting up its IN and OUT parameters, and methods for executing it. &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; This method is optimized for handling stored procedure call statements. Some drivers may send the call statement to the database when the prepareCall is done; others may wait until the CallableStatement is executed. This has no direct affect on users; however, it does affect which method throws certain SQLExceptions. JDBC 2.0 Result sets created using the returned CallableStatement will have forward-only type, and read-only concurrency, by default.
+ * @param sql a SQL statement that may contain one or more '?'parameter placeholders. Typically this  statement is a JDBC function call escape string.
+ * @return a new CallableStatement object containing thepre-compiled SQL statement 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>CallableStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareCall</MethodName>
+            <MethodComment>/** 
+ * JDBC 2.0 Same as prepareCall() above, but allows the default result set type and result set concurrency type to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @return a new CallableStatement object containing thepre-compiled SQL statement 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>CallableStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareCall</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Same as prepareCall() above, but allows the default result set type, result set concurrency type and result set holdability to be overridden.
+ * @param resultSetType a result set type, see ResultSet.TYPE_XXX
+ * @param resultSetConcurrency a concurrency type, see ResultSet.CONCUR_XXX
+ * @param resultSetHoldability - one of the following ResultSet constants:ResultSet.HOLD_CURSORS_OVER_COMMIT or ResultSet.CLOSE_CURSORS_AT_COMMIT
+ * @return a new CallableStatement object containing thepre-compiled SQL statement 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>CallableStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetConcurrency</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetHoldability</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nativeSQL</MethodName>
+            <MethodComment>/** 
+ * A driver may convert the JDBC sql grammar into its system's native SQL grammar prior to sending it; nativeSQL returns the native form of the statement that the driver would have sent.
+ * @param sql a SQL statement that may contain one or more '?'parameter placeholders
+ * @return the native form of this statement
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAutoCommit</MethodName>
+            <MethodComment>/** 
+ * If a connection is in auto-commit mode, then all its SQL statements will be executed and committed as individual transactions.  Otherwise, its SQL statements are grouped into transactions that are terminated by either commit() or rollback().  By default, new connections are in auto-commit mode. The commit occurs when the statement completes or the next execute occurs, whichever comes first. In the case of statements returning a ResultSet, the statement completes when the last row of the ResultSet has been retrieved or the ResultSet has been closed. In advanced cases, a single statement may return multiple results as well as output parameter values. Here the commit occurs when all results and output param values have been retrieved.
+ * @param autoCommit true enables auto-commit; false disablesauto-commit.  
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>autoCommit</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAutoCommit</MethodName>
+            <MethodComment>/** 
+ * Get the current auto-commit state.
+ * @return Current state of auto-commit mode.
+ * @see #setAutoCommit 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commit</MethodName>
+            <MethodComment>/** 
+ * Commit makes all changes made since the previous commit/rollback permanent and releases any database locks currently held by the Connection. This method should only be used when auto commit has been disabled.
+ * @exception SQLException if a database-access error occurs.
+ * @see #setAutoCommit 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rollback</MethodName>
+            <MethodComment>/** 
+ * Rollback drops all changes made since the previous commit/rollback and releases any database locks currently held by the Connection. This method should only be used when auto commit has been disabled.
+ * @exception SQLException if a database-access error occurs.
+ * @see #setAutoCommit 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * In some cases, it is desirable to immediately release a Connection's database and JDBC resources instead of waiting for them to be automatically released; the close method provides this immediate release.  &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; A Connection is automatically closed when it is garbage collected. Certain fatal errors also result in a closed Connection.
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkForTransactionInProgress;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;close;[exceptionClose]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkForTransactionInProgress</MethodName>
+            <MethodComment>/** 
+ * Check if the transaction is active so that we cannot close down the connection. If auto-commit is on, the transaction is committed when the connection is closed, so it is always OK to close the connection in that case. Otherwise, throw an exception if a transaction is in progress.
+ * @throws SQLException if this transaction is active and the connectioncannot be closed
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>StandardException</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isClosed</MethodName>
+            <MethodComment>/** 
+ * Tests to see if a Connection is closed.
+ * @return true if the connection is closed; false if it's still open
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMetaData</MethodName>
+            <MethodComment>/** 
+ * A Connection's database is able to provide information describing its tables, its supported SQL grammar, its stored procedures, the capabilities of this connection, etc. This information is made available through a DatabaseMetaData object.
+ * @return a DatabaseMetaData object for this Connection 
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>DatabaseMetaData</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHoldability</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Retrieves the current holdability of ResultSet objects created using this Connection object.
+ * @return  The holdability, one of ResultSet.HOLD_CURSORS_OVER_COMMITor ResultSet.CLOSE_CURSORS_AT_COMMIT
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setHoldability</MethodName>
+            <MethodComment>/** 
+ * JDBC 3.0 Changes the holdability of ResultSet objects created using this Connection object to the given holdability.
+ * @param holdability  A ResultSet holdability constant, one of ResultSet.HOLD_CURSORS_OVER_COMMITor ResultSet.CLOSE_CURSORS_AT_COMMIT
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>holdability</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setReadOnly</MethodName>
+            <MethodComment>/** 
+ * You can put a connection in read-only mode as a hint to enable  database optimizations. &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; setReadOnly cannot be called while in the middle of a transaction.
+ * @param readOnly true enables read-only mode; false disablesread-only mode.  
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>readOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isReadOnly</MethodName>
+            <MethodComment>/** 
+ * Tests to see if the connection is in read-only mode.
+ * @return true if connection is read-only
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCatalog</MethodName>
+            <MethodComment>/** 
+ * A sub-space of this Connection's database may be selected by setting a catalog name. If the driver does not support catalogs it will silently ignore this request.
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>catalog</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCatalog</MethodName>
+            <MethodComment>/** 
+ * Return the Connection's current catalog name.
+ * @return the current catalog name or null
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTransactionIsolation</MethodName>
+            <MethodComment>/** 
+ * You can call this method to try to change the transaction isolation level using one of the TRANSACTION_* values. &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; setTransactionIsolation causes the current transaction to commit if the isolation level is changed. Otherwise, if the requested isolation level is the same as the current isolation level, this method is a no-op.
+ * @param level one of the TRANSACTION_* isolation values with theexception of TRANSACTION_NONE; some databases may not support other values
+ * @exception SQLException if a database-access error occurs.
+ * @see DatabaseMetaData#supportsTransactionIsolationLevel 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [iLevel]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionIsolation</MethodName>
+            <MethodComment>/** 
+ * Get this Connection's current transaction isolation mode.
+ * @return the current TRANSACTION_* mode value
+ * @exception SQLException if a database-access error occurs.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWarnings</MethodName>
+            <MethodComment>/** 
+ * The first warning reported by calls on this Connection is returned.   &lt;P&gt;&lt;B&gt;Note:&lt;/B&gt; Subsequent warnings will be chained to this SQLWarning.
+ * @return the first SQLWarning or null Synchronization note: Warnings are synchronized  on nesting level
+ */
+</MethodComment>
+            <ReturnType>SQLWarning</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearWarnings</MethodName>
+            <MethodComment>/** 
+ * After this call, getWarnings returns null until a new warning is reported for this Connection.   Synchronization node: Warnings are synchonized  on nesting level
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTypeMap</MethodName>
+            <MethodComment>/** 
+ * Install a type-map object as the default type-map for this connection. JDBC 2.0 - java.util.Map requires JDK 1
+ * @exception SQLException Feature not implemented for now.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>java.util.Map</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addWarning</MethodName>
+            <MethodComment>/** 
+ * Add a warning to the current list of warnings, to follow this note from Connection.getWarnings. Note: Subsequent warnings will be chained to this SQLWarning. 
+ * @see java.sql.Connection#getWarnings
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newWarning</ParamName>
+                    <ParamType>SQLWarning</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>topWarning;setNextWarning;[newWarning]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDBName</MethodName>
+            <MethodComment>/** 
+ * Return the dbname for this connection.
+ * @return String	The dbname for this connection.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLanguageConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkIfClosed</MethodName>
+            <MethodComment>/** 
+ * Raises an exception if the connection is closed.
+ * @exception SQLException if the connection is closed
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleException</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SQLException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>thrownException</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleException</MethodName>
+            <MethodComment>/** 
+ * Handle any type of Exception. &lt;UL&gt; &lt;LI&gt; Inform the contexts of the error &lt;LI&gt; Throw an Util based upon the thrown exception. &lt;/UL&gt; REMIND: now that we know all the exceptions from our driver are Utils, would it make sense to shut down the system for unknown SQLExceptions? At present, we do not. Because this is the last stop for exceptions, it will catch anything that occurs in it and try to cleanup before re-throwing them.
+ * @param thrownException the exception
+ * @param rollbackOnAutoCommit rollback the xact on if autocommit ison, otherwise rollback stmt but leave xact open (and continue to hold on to locks).  Most of the time, this will be true, excepting operations on result sets, like getInt().
+ */
+</MethodComment>
+            <ReturnType>SQLException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>thrownException</ParamName>
+                    <ParamType>Throwable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rollbackOnAutoCommit</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setInactive</MethodName>
+            <MethodComment>/** 
+ * Close the connection when processing errors, or when closing a nested connection. &lt;p&gt; This only marks it as closed and frees up its resources; any closing of the underlying connection or commit work is assumed to be done elsewhere. Called from EmbedConnectionContext's cleanup routine,	 and by proxy.close().
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>finalize</MethodName>
+            <MethodComment>/** 
+ * @exception Throwable	standard error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Throwable</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>needCommit</MethodName>
+            <MethodComment>/** 
+ * if auto commit is on, remember that we need to commit the current statement.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commitIfNeeded</MethodName>
+            <MethodComment>/** 
+ * if a commit is needed, perform it. Must have connection synchonization and context set up already.
+ * @exception SQLException if commit returns error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commitIfAutoCommit</MethodName>
+            <MethodComment>/** 
+ * If in autocommit, then commit. Used to force a commit after a result set closes in autocommit mode. The needCommit mechanism does not work correctly as there are times with cursors (like a commit, followed by a next, followed by a close) where the system does not think it needs a commit but we need to  force the commit on close.  It seemed safer to just force a commit on close rather than count on keeping the needCommit flag correct for all cursor cases. Must have connection synchonization and context set up already.
+ * @exception SQLException if commit returns error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConnectionSynchronization</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupContextStack</MethodName>
+            <MethodComment>/** 
+ * Install the context manager for this thread.  Check connection status here.
+ * @exception SQLException if fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getTR();setupContextStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreContextStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TransactionResourceImpl [tr=getTR()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tr;restoreContextStack;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDatabase</MethodName>
+            <MethodComment>/** 
+ * Create a new database.
+ * @param dbname the database name
+ * @param info the properties
+ * @return	Database The newly created database or null.
+ * @exception SQLException if fails to create database
+ */
+</MethodComment>
+            <ReturnType>Database</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>info</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>info;clear;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkDatabaseCreatePrivileges</MethodName>
+            <MethodComment>/** 
+ * Checks that a user has the system privileges to create a database. To perform this check the following policy grants are required &lt;ul&gt; &lt;li&gt; to run the encapsulated test: permission javax.security.auth.AuthPermission "doAsPrivileged"; &lt;li&gt; to resolve relative path names: permission java.util.PropertyPermission "user.dir", "read"; &lt;li&gt; to canonicalize path names: permission java.io.FilePermission "...", "read"; &lt;/ul&gt; or a SQLException will be raised detailing the cause. &lt;p&gt; In addition, for the test to succeed &lt;ul&gt; &lt;li&gt; the given user needs to be covered by a grant: principal org.apache.derby.authentication.SystemPrincipal "..." {} &lt;li&gt; that lists a permission covering the database location: permission org.apache.derby.security.DatabasePermission "directory:...", "create"; &lt;/ul&gt; or it will fail with a SQLException detailing the cause.
+ * @param user The user to be checked for database create privileges
+ * @param dbname the name of the database to create
+ * @throws SQLException if the privileges check fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>user</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sleep</MethodName>
+            <MethodComment>/** 
+ * Puts the current thread to sleep. &lt;p&gt; &lt;em&gt;NOTE&lt;/em&gt;: This method guarantees that the thread sleeps at least  {@code millis} milliseconds.
+ * @param millis milliseconds to sleep
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>millis</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [startMillis=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>long [waited=0L]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stripSubSubProtocolPrefix</MethodName>
+            <MethodComment>/** 
+ * Strips any sub-sub-protocol prefix from a database name.
+ * @param dbname a database name
+ * @return the database name without any sub-sub-protocol prefixes
+ * @throws NullPointerException if dbname is null
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=dbname.indexOf(':')]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bootDatabase</MethodName>
+            <MethodComment>/** 
+ * Boot database.
+ * @param info boot properties
+ * @param softAuthenticationBoot If true, don't fail soft upgrade dueto missing features (phase one of two phased hard upgrade boot).
+ * @return false iff the monitor cannot handle a serviceof the type indicated by the protocol within the name. If that's the case then we are the wrong driver.
+ * @throws Throwable if anything else is wrong.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>info</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>softAuthenticationBoot</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [dbname=tr.getDBName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Throwable</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareMetaDataStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PreparedStatement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocalDriver</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InternalDriver</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getContextManager</MethodName>
+            <MethodComment>/** 
+ * Return the context manager for this connection.
+ */
+</MethodComment>
+            <ReturnType>ContextManager</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SecurityUtil;checkDerbyInternalsPrivilege;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterProperties</MethodName>
+            <MethodComment>/** 
+ * Filter out properties from the passed in set of JDBC attributes to remove any derby.* properties. This is to ensure that setting derby.* properties does not work this way, it's not a defined way to set such properties and could be a secuirty hole in allowing remote connections to override system, application or database settings.
+ * @return a new Properties set copied from the parameter but with noderby.* properties.
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputSet</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Properties [limited=new Properties()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDatabase</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Database</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTR</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TransactionResourceImpl</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushConnectionContext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>EmbedConnectionContext</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cm</ParamName>
+                    <ParamType>ContextManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setApplicationConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>applicationConnection</ParamName>
+                    <ParamType>java.sql.Connection</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getApplicationConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>java.sql.Connection</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDrdaID</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>drdaID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>privilegedGetLCC();setDrdaID;[drdaID]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInGlobalTransaction</MethodName>
+            <MethodComment>/** 
+ * @see EngineConnection#isInGlobalTransaction() 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetFromPool</MethodName>
+            <MethodComment>/** 
+ * Reset the connection before it is returned from a PooledConnection to a new application request (wrapped by a BrokeredConnection). Examples of reset covered here is dropping session temporary tables and reseting IDENTITY_VAL_LOCAL. Most JDBC level reset is handled by calling standard java.sql.Connection methods from EmbedPooledConnection.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>xa_prepare</MethodName>
+            <MethodComment>/** 
+ * Do not use this method directly use XATransactionState.xa_prepare instead because it also maintains/cancels the timeout task which is scheduled to cancel/rollback the global transaction.
+ * @return One of {@link org.apache.derby.iapi.store.access.XATransactionController#XA_OK} or{@link org.apache.derby.iapi.store.access.XATransactionController#XA_RDONLY}
+ * @throws java.sql.SQLException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>xa_commit</MethodName>
+            <MethodComment>/** 
+ * Do not use this method directly use XATransactionState.xa_commit instead because it also maintains/cancels the timout task which is scheduled to cancel/rollback the global transaction.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>onePhase</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>xa_rollback</MethodName>
+            <MethodComment>/** 
+ * Do not use this method directly use XATransactionState.xa_rollback instead because it also maintains/cancels the timout task which is scheduled to cancel/rollback the global transaction.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transactionIsIdle</MethodName>
+            <MethodComment>/** 
+ * returns false if there is an underlying transaction and that transaction has done work.  True if there is no underlying transaction or that underlying transaction is idle
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setResultSetType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetType</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setPrepareIsolation</MethodName>
+            <MethodComment>/** 
+ * Set the transaction isolation level that will be used for the  next prepare.  Used by network server to implement DB2 style  isolation levels.
+ * @param level Isolation level to change to.  level is the DB2 levelspecified in the package names which happen to correspond to our internal levels. If  level == TransactionControl.UNSPECIFIED_ISOLATION, the statement won't be prepared with an isolation level.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>level</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPrepareIsolation</MethodName>
+            <MethodComment>/** 
+ * Return prepare isolation 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultSetOrderId</MethodName>
+            <MethodComment>/** 
+ * Return a unique order number for a result set. A unique value is only needed if the result set is being created within procedure and thus must be using a nested connection.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newSQLException</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SQLException</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>messageId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Get a String representation that uniquely identifies this connection.  Include the same information that is printed in the log for various trace and error messages. In Derby the "physical" connection is a LanguageConnectionContext,  or LCC. The JDBC Connection is an JDBC-specific layer on top of this.  Rather than create a new id here, we simply use the id of the underlying LCC. Note that this is a big aid in debugging, because much of the engine trace and log code prints the LCC id. 
+ * @return a string representation for this connection
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createClob</MethodName>
+            <MethodComment>/** 
+ * Constructs an object that implements the &lt;code&gt;Clob&lt;/code&gt; interface. The object returned initially contains no data.  The &lt;code&gt;setAsciiStream&lt;/code&gt;, &lt;code&gt;setCharacterStream&lt;/code&gt; and &lt;code&gt;setString&lt;/code&gt; methods of the &lt;code&gt;Clob&lt;/code&gt; interface may be used to add data to the &lt;code&gt;Clob&lt;/code&gt;.
+ * @return An object that implements the &lt;code&gt;Clob&lt;/code&gt; interface
+ * @throws SQLException if an object that implements the&lt;code&gt;Clob&lt;/code&gt; interface can not be constructed, this method is called on a closed connection or a database access error occurs.
+ */
+</MethodComment>
+            <ReturnType>Clob</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createBlob</MethodName>
+            <MethodComment>/** 
+ * Constructs an object that implements the &lt;code&gt;Blob&lt;/code&gt; interface. The object returned initially contains no data.  The &lt;code&gt;setBinaryStream&lt;/code&gt; and &lt;code&gt;setBytes&lt;/code&gt; methods of the &lt;code&gt;Blob&lt;/code&gt; interface may be used to add data to the &lt;code&gt;Blob&lt;/code&gt;.
+ * @return  An object that implements the &lt;code&gt;Blob&lt;/code&gt; interface
+ * @throws SQLException if an object that implements the&lt;code&gt;Blob&lt;/code&gt; interface can not be constructed, this method is called on a closed connection or a database access error occurs.
+ */
+</MethodComment>
+            <ReturnType>Blob</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addLOBMapping</MethodName>
+            <MethodComment>/** 
+ * Add the locator and the corresponding LOB object into the HashMap
+ * @param LOBReference The object which contains the LOB object thatthat is added to the HashMap.
+ * @return an integer that represents the locator that has beenallocated to this LOB.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>LOBReference</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [loc=getIncLOBKey()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getlobHMObj();put;[loc, LOBReference]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeLOBMapping</MethodName>
+            <MethodComment>/** 
+ * Remove the key(LOCATOR) from the hash table.
+ * @param key an integer that represents the locator that needs to beremoved from the table.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getlobHMObj();remove;[key]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLOBMapping</MethodName>
+            <MethodComment>/** 
+ * Get the LOB reference corresponding to the locator.
+ * @param key the integer that represents the LOB locator value.
+ * @return the LOB Object corresponding to this locator.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearLOBMapping</MethodName>
+            <MethodComment>/** 
+ * Clear the HashMap of all entries. Called when a commit or rollback of the transaction happens.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Map&lt;Object,Object&gt; [map=rootConnection.lobReferences]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIncLOBKey</MethodName>
+            <MethodComment>/** 
+ * Return the current locator value/ 0x800x values are not  valid values as they are used to indicate the BLOB  is being sent by value, so we skip those values (DERBY-3243)
+ * @return an integer that represents the most recent locator value.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [newKey=++rootConnection.lobHMKey]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addLOBReference</MethodName>
+            <MethodComment>/** 
+ * Adds an entry of the lob in WeakHashMap. These entries are used for cleanup during commit/rollback or close.
+ * @param lobReference LOB Object
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lobReference</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rootConnection.lobReferences;put;[lobReference, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getlobHMObj</MethodName>
+            <MethodComment>/** 
+ * Return the Hash Map in the root connection
+ * @return the HashMap that contains the locator to LOB object mapping
+ */
+</MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cancelRunningStatement</MethodName>
+            <MethodComment>/** 
+ * Cancels the current running statement. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>privilegedGetLCC().getStatementContext();cancel;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentSchemaName</MethodName>
+            <MethodComment>/** 
+ * Obtain the name of the current schema. Not part of the java.sql.Connection interface, but is accessible through the EngineConnection interface, so that the NetworkServer can get at the current schema for piggy-backing
+ * @return the current schema name
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addLobFile</MethodName>
+            <MethodComment>/** 
+ * Add a temporary lob file to the lobFiles set. This will get closed at transaction end or removed as the lob is freed.
+ * @param lobFile  LOBFile to add
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lobFile</ParamName>
+                    <ParamType>LOBFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeLobFile</MethodName>
+            <MethodComment>/** 
+ * Remove LOBFile from the lobFiles set. This will occur when the lob  is freed or at transaction end if the lobFile was removed from the  WeakHashMap but not finalized.
+ * @param lobFile  LOBFile to remove.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lobFile</ParamName>
+                    <ParamType>LOBFile</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isAborting</MethodName>
+            <MethodComment>/** 
+ * Return true if the connection is aborting 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>beginAborting</MethodName>
+            <MethodComment>/** 
+ * Begin aborting the connection 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setInactive;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSavepoint</MethodName>
+            <MethodComment>/** 
+ * Creates an unnamed savepoint in the current transaction and returns the new Savepoint object that represents it.
+ * @return  The new Savepoint object
+ * @exception SQLException if a database access error occurs orthis Connection object is currently in auto-commit mode
+ */
+</MethodComment>
+            <ReturnType>Savepoint</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSavepoint</MethodName>
+            <MethodComment>/** 
+ * Creates a savepoint with the given name in the current transaction and returns the new Savepoint object that represents it.
+ * @param name  A String containing the name of the savepoint
+ * @return  The new Savepoint object
+ * @exception SQLException if a database access error occurs orthis Connection object is currently in auto-commit mode
+ */
+</MethodComment>
+            <ReturnType>Savepoint</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commonSetSavepointCode</MethodName>
+            <MethodComment>/** 
+ * Creates a savepoint with the given name (if it is a named savepoint else we will generate a name because Derby only supports named savepoints internally) in the current transaction and returns the new Savepoint object that represents it.
+ * @param name A String containing the name of the savepoint. Willbe null if this is an unnamed savepoint
+ * @param userSuppliedSavepointName If true means it's a nameduser defined savepoint.
+ * @return  The new Savepoint object
+ */
+</MethodComment>
+            <ReturnType>Savepoint</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>userSuppliedSavepointName</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rollback</MethodName>
+            <MethodComment>/** 
+ * Undoes all changes made after the given Savepoint object was set. This method should be used only when auto-commit has been disabled.
+ * @param savepoint  The Savepoint object to rollback to
+ * @exception SQLException  if a database access error occurs,the Savepoint object is no longer valid, or this Connection object is currently in auto-commit mode
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>savepoint</ParamName>
+                    <ParamType>Savepoint</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>releaseSavepoint</MethodName>
+            <MethodComment>/** 
+ * Removes the given Savepoint object from the current transaction. Any reference to the savepoint after it has been removed will cause an SQLException to be thrown
+ * @param savepoint  The Savepoint object to be removed
+ * @exception SQLException if a database access error occurs orthe given Savepoint object is not a valid savepoint in the current transaction
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>savepoint</ParamName>
+                    <ParamType>Savepoint</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifySavepointCommandIsAllowed</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StatementContext [stmtCtxt=privilegedGetLCC().getStatementContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifySavepointArg</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>savepoint</ParamName>
+                    <ParamType>Savepoint</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>EmbedSavepoint [lsv=(EmbedSavepoint)savepoint]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSchema</MethodName>
+            <MethodComment>/** 
+ * Get the name of the current schema.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSchema</MethodName>
+            <MethodComment>/** 
+ * Set the default schema for the Connection.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PreparedStatement [ps=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkConflictingCryptoAttributes</MethodName>
+            <MethodComment>/** 
+ * Examines the boot properties looking for conflicting cryptographic options and commands.
+ * @param p boot properties (for instance URL connection attributes)
+ * @throws SQLException if conflicting crypto attributes are detected
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [appearsEncrypted=isSet(p,Attribute.CRYPTO_EXTERNAL_KEY) || isSet(p,Attribute.BOOT_PASSWORD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createArrayOf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Array</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>typeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>elements</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createNClob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>NClob</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSQLXML</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SQLXML</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createStruct</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Struct</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>typeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>attributes</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isValid</MethodName>
+            <MethodComment>/** 
+ * Checks if the connection has not been closed and is still valid.  The validity is checked by checking that the connection is not closed.
+ * @param timeout This should be the time in seconds to wait for the database operation used to validate the connection to complete  (according to the JDBC4 JavaDoc). This is currently not supported/used.
+ * @return true if the connection is valid, false otherwise
+ * @exception SQLException if the parameter value is illegal or if adatabase error has occurred
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setClientInfo</MethodName>
+            <MethodComment>/** 
+ * &lt;code&gt;setClientInfo&lt;/code&gt; will always throw a &lt;code&gt;SQLClientInfoException&lt;/code&gt; since Derby does not support any properties.
+ * @param name a property key &lt;code&gt;String&lt;/code&gt;
+ * @param value a property value &lt;code&gt;String&lt;/code&gt;
+ * @exception SQLClientInfoException unless both name and value are null
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Properties [p=FailedProperties40.makeProperties(name,value)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setClientInfo;[p]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLClientInfoException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setClientInfo</MethodName>
+            <MethodComment>/** 
+ * &lt;code&gt;setClientInfo&lt;/code&gt; will throw a &lt;code&gt;SQLClientInfoException&lt;/code&gt; unless the &lt;code&gt;properties&lt;/code&gt; parameter is empty, since Derby does not support any properties. All the property keys in the &lt;code&gt;properties&lt;/code&gt; parameter are added to failedProperties of the exception thrown, with REASON_UNKNOWN_PROPERTY as the value. 
+ * @param properties a &lt;code&gt;Properties&lt;/code&gt; object with theproperties to set
+ * @exception SQLClientInfoException unless properties parameteris null or empty
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FailedProperties40 [fp=new FailedProperties40(properties)]</InnerVar>
+                <InnerVar>StandardException [se=StandardException.newException(SQLState.PROPERTY_UNSUPPORTED_CHANGE,fp.getFirstKey(),fp.getFirstValue())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLClientInfoException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClientInfo</MethodName>
+            <MethodComment>/** 
+ * &lt;code&gt;getClientInfo&lt;/code&gt; always returns a &lt;code&gt;null String&lt;/code&gt; since Derby doesn't support ClientInfoProperties.
+ * @param name a &lt;code&gt;String&lt;/code&gt; value
+ * @return a &lt;code&gt;null String&lt;/code&gt; value
+ * @exception SQLException if the connection is closed.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClientInfo</MethodName>
+            <MethodComment>/** 
+ * &lt;code&gt;getClientInfo&lt;/code&gt; always returns an empty &lt;code&gt;Properties&lt;/code&gt; object since Derby doesn't support ClientInfoProperties.
+ * @return an empty &lt;code&gt;Properties&lt;/code&gt; object
+ * @exception SQLException if the connection is closed.
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeMap</MethodName>
+            <MethodComment>/** 
+ * Returns the type map for this connection.
+ * @return type map for this connection
+ * @exception SQLException if a database access error occurs
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isWrapperFor</MethodName>
+            <MethodComment>/** 
+ * Returns false unless &lt;code&gt;interfaces&lt;/code&gt; is implemented 
+ * @param interfaces             a Class defining an interface.
+ * @return true                   if this implements the interface or directly or indirectly wraps an object  that does.
+ * @throws java.sql.SQLException  if an error occurs while determining whether this is a wrapper for an object  with the given interface.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unwrap</MethodName>
+            <MethodComment>/** 
+ * Returns &lt;code&gt;this&lt;/code&gt; if this class implements the interface
+ * @param interfaces a Class defining an interface
+ * @return an object that implements the interface
+ * @throws SQLException if no object is found that implements theinterface
+ */
+</MethodComment>
+            <ReturnType>T</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <ParamType>T</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkIfClosed;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>abort</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>executor</ParamName>
+                    <ParamType>Executor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SecurityManager [securityManager=System.getSecurityManager()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;beginAborting;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>executor;execute;[new Runnable(){
+  public void run(){
+    try {
+      rollback();
+      close(exceptionClose);
+    }
+ catch (    SQLException se) {
+      Util.logSQLException(se);
+    }
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNetworkTimeout</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNetworkTimeout</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>executor</ParamName>
+                    <ParamType>Executor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>milliseconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMonitor</MethodName>
+            <MethodComment>/** 
+ * Privileged Monitor lookup. Must be package private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModuleFactory</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findService</MethodName>
+            <MethodComment>/** 
+ * Privileged service lookup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startPersistentService</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPersistentService</MethodName>
+            <MethodComment>/** 
+ * Privileged startup. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>factoryInterface</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serviceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>properties</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePersistentService</MethodName>
+            <MethodComment>/** 
+ * Privileged shutdown. Must be private so that user code can't call this entry point.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Monitor;removePersistentService;[name]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>privilegedGetLCC</MethodName>
+            <MethodComment>/** 
+ * Private, privileged lookup of the lcc..
+ */
+</MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

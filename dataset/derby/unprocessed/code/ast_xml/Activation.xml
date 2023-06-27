@@ -1,0 +1,1024 @@
+<Class>
+    <Id>2038</Id>
+    <Package>org.apache.derby.iapi.sql</Package>
+    <ClassName>Activation</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Dependent</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Activation  /** 
+ * An activation contains all the local state information necessary to execute a re-entrant PreparedStatement. The way it will actually work is that a PreparedStatement will have an executable plan, which will be a generated class. All of the local state will be variables in the class. Creating a new instance of the executable plan will create the local state variables. This means that an executable plan must implement this interface, and that the PreparedStatement.getActivation() method will do a "new" operation on the executable plan. &lt;p&gt; The fixed implementations of Activation in the Execution impl package are used as skeletons for the classes generated for statements when they are compiled. &lt;p&gt; There are no fixed implementations of Activation for statements; a statement has an activation generated for it when it is compiled.
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>reset</MethodName>
+            <MethodComment>/** 
+ * Resets the activation to the "pre-execution" state - that is, the state where it can be used to begin a new execution. Frees local buffers, stops scans, resets counters to zero, sets current date and time to an unitialized state, etc.
+ * @exception StandardException thrown on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCursorName</MethodName>
+            <MethodComment>/** 
+ * JDBC requires that all select statements be converted into cursors, and that the cursor name be settable for each execution of a select statement. The Language Module will support this, so that the JDBC driver will not have to parse JSQL text. This method will have no effect when called on non-select statements. &lt;p&gt; There will be a JSQL statement to disable the "cursorization" of all select statements. For non-cursorized select statements, this method will have no effect. &lt;p&gt; This has no effect if the activation has been closed. &lt;p&gt;
+ * @param cursorName  The cursor name to use.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cursorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkIfThisActivationHasHoldCursor</MethodName>
+            <MethodComment>/** 
+ * Temporary tables can be declared with ON COMMIT DELETE ROWS. But if the table has a held curosr open at commit time, data should not be deleted from the table. This method, (gets called at commit time) checks if this activation held cursor and if so, does that cursor reference the passed temp table name.
+ * @return	true if this activation has held cursor and if it references the passed temp table name
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParameterValueSet</MethodName>
+            <MethodComment>/** 
+ * Gets the ParameterValueSet for this execution of the statement.
+ * @return	The ParameterValueSet for this execution of thestatement. Returns NULL if there are no parameters.
+ */
+</MethodComment>
+            <ReturnType>ParameterValueSet</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParameters</MethodName>
+            <MethodComment>/** 
+ * Sets the parameter values for this execution of the statement. &lt;p&gt; Has no effect if the activation has been closed. &lt;p&gt; NOTE: The setParameters() method is currently unimplemented.  A statement with parameters will generate its own ParameterValueSet, which can be gotten with the getParameterValueSet() method (above). The idea behind setParameters() is to improve performance when operating across a network by allowing all the parameters to be set in one call, as opposed to one call per parameter.
+ * @param parameterValues	The values of the parameters.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parameterValues</ParamName>
+                    <ParamType>ParameterValueSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterTypes</ParamName>
+                    <ParamType>DataTypeDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execute</MethodName>
+            <MethodComment>/** 
+ * When the prepared statement is executed, it passes execution on to the activation execution was requested for.
+ * @return the ResultSet for further manipulation, if any.
+ * @exception StandardException		Thrown on failure
+ */
+</MethodComment>
+            <ReturnType>ResultSet</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Closing an activation statement marks it as unusable. Any other requests made on it will fail.  An activation should be marked closed when it is expected to not be used any longer, i.e. when the connection for it is closed, or it has suffered some sort of severe error. This will also close its result set and release any resources it holds e.g. for parameters. &lt;P&gt; Any class that implements this must be prepared to be executed from garbage collection, ie. there is no matching context stack.
+ * @exception StandardException		Thrown on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isClosed</MethodName>
+            <MethodComment>/** 
+ * Find out if the activation is closed or not.
+ * @return true if the Activation has been closed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSingleExecution</MethodName>
+            <MethodComment>/** 
+ * Set this Activation for a single execution. E.g. a java.sql.Statement execution.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSingleExecution</MethodName>
+            <MethodComment>/** 
+ * Returns true if this Activation is only going to be used for one execution.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWarnings</MethodName>
+            <MethodComment>/** 
+ * Returns the chained list of warnings. Returns null if there are no warnings.
+ */
+</MethodComment>
+            <ReturnType>SQLWarning</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addWarning</MethodName>
+            <MethodComment>/** 
+ * Add a warning to the activation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>w</ParamName>
+                    <ParamType>SQLWarning</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearWarnings</MethodName>
+            <MethodComment>/** 
+ * Clear the activation's warnings.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLanguageConnectionContext</MethodName>
+            <MethodComment>/** 
+ * Get the language connection context associated with this activation
+ */
+</MethodComment>
+            <ReturnType>LanguageConnectionContext</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransactionController</MethodName>
+            <MethodComment>/** 
+ * Get the Execution TransactionController associated with this  activation/lcc.
+ */
+</MethodComment>
+            <ReturnType>TransactionController</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultSet</MethodName>
+            <MethodComment>/** 
+ * Returns the current result set for this activation, i.e. the one returned by the last execute() call.  If there has been no execute call or the activation has been reset or closed, a null is returned.
+ * @return the current ResultSet of this activation.
+ */
+</MethodComment>
+            <ReturnType>ResultSet</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCurrentRow</MethodName>
+            <MethodComment>/** 
+ * Generated plans have a current row field for ease in defining the methods and finding them dynamically. The interface is used to set the row before a dynamic method that uses it is invoked. &lt;p&gt; When all processing on the currentRow has been completed, callers should call activation.clearCurrentRow(resultSetNumber) to ensure that no unnecessary references are retained to rows. This will allow the rows no longer in use to be collected by the garbage collecter.
+ * @param currentRow		The row to be operated upon.
+ * @param resultSetNumber	The resultSetNumber for the current ResultSet
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>currentRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentRow</MethodName>
+            <MethodComment>/** 
+ * Get the current row at the given index.
+ */
+</MethodComment>
+            <ReturnType>Row</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearCurrentRow</MethodName>
+            <MethodComment>/** 
+ * Generated plans have a current row field for ease in defining the methods and finding them dynamically. The interface is used to set the row before a dynamic method that uses it is invoked. &lt;p&gt; When all processing on the currentRow has been completed, callers should call activation.clearCurrentRow(resultSetNumber) to ensure that no unnecessary references are retained to rows. This will allow the rows no longer in use to be collected by the garbage collecter.
+ * @param resultSetNumber	The resultSetNumber for the current ResultSet
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPreparedStatement</MethodName>
+            <MethodComment>/** 
+ * Get the prepared statement that this activation is for.
+ * @return the prepared statement this activation is for.
+ */
+</MethodComment>
+            <ReturnType>ExecPreparedStatement</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkStatementValidity</MethodName>
+            <MethodComment>/** 
+ * Check the validity of the current executing statement. Needs to be called after a statement has obtained the relevant table locks on the 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultDescription</MethodName>
+            <MethodComment>/** 
+ * Get the result description for this activation, if it has one.
+ * @return result description for this activation, if it has one;otherwise, null.
+ */
+</MethodComment>
+            <ReturnType>ResultDescription</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataValueFactory</MethodName>
+            <MethodComment>/** 
+ * Get the DataValueFactory
+ * @return DataValueFactory
+ */
+</MethodComment>
+            <ReturnType>DataValueFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExecutionFactory</MethodName>
+            <MethodComment>/** 
+ * Get the ExecutionFactory
+ * @return ExecutionFactory
+ */
+</MethodComment>
+            <ReturnType>ExecutionFactory</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRowLocationTemplate</MethodName>
+            <MethodComment>/** 
+ * Get the saved RowLocation.
+ * @param itemNumber	The saved item number.
+ * @return	A RowLocation template for the conglomerate
+ */
+</MethodComment>
+            <ReturnType>RowLocation</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>itemNumber</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumSubqueries</MethodName>
+            <MethodComment>/** 
+ * Get the number of subqueries in the entire query.
+ * @return int	 The number of subqueries in the entire query.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCursorName</MethodName>
+            <MethodComment>/** 
+ * Return the cursor name of this activation. This will differ from its ResultSet's cursor name if it has been altered with setCursorName. Thus this always returns the cursor name of the next execution of this activation. The cursor name of the current execution must be obtained from the ResultSet. or this.getResultSet.getCursorName() [with null checking]. &lt;p&gt; Statements that do not support cursors will return a null. &lt;p&gt;
+ * @return The cursor name.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResultSetHoldability</MethodName>
+            <MethodComment>/** 
+ * Return the holdability of this activation. &lt;p&gt;
+ * @return The holdability of this activation.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setResultSetHoldability</MethodName>
+            <MethodComment>/** 
+ * Set current resultset holdability.
+ * @param resultSetHoldability	The new resultset holdability.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetHoldability</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAutoGeneratedKeysResultsetInfo</MethodName>
+            <MethodComment>/** 
+ * Set the auto-generated keys resultset mode to true for this activation. The specific columns for auto-generated keys resultset can be requested by passing column positions array The specific columns for auto-generated keys resultset can be requested by passing column names array Both the parameters would be null if user didn't request specific keys. Otherwise, the user could request specific columns by passing column positions or names array but not both.
+ * @param columnIndexes Request specific columns in auto-generated keysresultset by passing column positions. null means no specific columns requested by position
+ * @param columnNames Request specific columns in auto-generated keysresultset by passing column names.  null means no specific columns requested by position
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnIndexes</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnNames</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAutoGeneratedKeysResultsetMode</MethodName>
+            <MethodComment>/** 
+ * Returns true if auto-generated keys resultset request was made for this avtivation. &lt;p&gt;
+ * @return auto-generated keys resultset mode for this activation.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAutoGeneratedKeysColumnIndexes</MethodName>
+            <MethodComment>/** 
+ * Returns the column positions array of columns requested in auto-generated keys resultset for this avtivation. Returns null if no specific column requested by positions &lt;p&gt;
+ * @return column positions array of columns requested.
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAutoGeneratedKeysColumnNames</MethodName>
+            <MethodComment>/** 
+ * Returns the column names array of columns requested in auto-generated keys resultset for this avtivation. Returns null if no specific column requested by names &lt;p&gt;
+ * @return column names array of columns requested.
+ */
+</MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>markUnused</MethodName>
+            <MethodComment>/** 
+ * Mark the activation as unused.  
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInUse</MethodName>
+            <MethodComment>/** 
+ * Is the activation in use?
+ * @return true/false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>informOfRowCount</MethodName>
+            <MethodComment>/** 
+ * Tell this activation that the given ResultSet was found to have the given number of rows.  This is used during execution to determine whether a table has grown or shrunk.  If a table's size changes significantly, the activation may invalidate its PreparedStatement to force recompilation. Note that the association of row counts with ResultSets is kept in the activation class, not in the activation itself.  This means that this method must be synchronized. This method is not required to check the number of rows on each call.  Because of synchronization, this check is likely to be expensive, so it may only check every hundred calls or so.
+ * @exception StandardException		Thrown on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSet</ParamName>
+                    <ParamType>NoPutResultSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rowCount</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHeapConglomerateController</MethodName>
+            <MethodComment>/** 
+ * Get the ConglomerateController, if any, that has already been opened for the heap when scaning for an update or delete. (Saves opening the ConglomerateController twice.)
+ * @return The ConglomerateController, if available, to use for the update.
+ */
+</MethodComment>
+            <ReturnType>ConglomerateController</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setHeapConglomerateController</MethodName>
+            <MethodComment>/** 
+ * Set the ConglomerateController to be used for an update or delete. (Saves opening the ConglomerateController twice.)
+ * @param updateHeapCC	The ConglomerateController to reuse for the update or delete.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updateHeapCC</ParamName>
+                    <ParamType>ConglomerateController</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearHeapConglomerateController</MethodName>
+            <MethodComment>/** 
+ * Clear the ConglomerateController to be used for an update or delete. (Saves opening the ConglomerateController twice.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexScanController</MethodName>
+            <MethodComment>/** 
+ * Get the ScanController, if any, that has already been opened for the index when scaning for an update or delete. (Saves opening the ScanController twice.)
+ * @return The ScanController, if available, to use for the update.
+ */
+</MethodComment>
+            <ReturnType>ScanController</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndexScanController</MethodName>
+            <MethodComment>/** 
+ * Set the ScanController to be used for an update or delete, when scanning an index that will also be updated (Saves opening the ScanController twice.)
+ * @param indexSC	The ScanController to reuse for the update or delete.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexSC</ParamName>
+                    <ParamType>ScanController</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexConglomerateNumber</MethodName>
+            <MethodComment>/** 
+ * Get the conglomerate number of the index, if any, that has already been opened for scaning for an update or delete. (Saves opening the ScanController twice.)
+ * @return The conglomerate number, if available, to use for the update.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndexConglomerateNumber</MethodName>
+            <MethodComment>/** 
+ * Set the conglomerate number of the index to be used for an update or delete, when scanning an index that will also be updated (Saves opening the ScanController twice.)
+ * @param indexConglomerateNumber The conglomerate number of the index to reuse for the update or delete.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexConglomerateNumber</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearIndexScanInfo</MethodName>
+            <MethodComment>/** 
+ * Clear the info for the index to be re-used for update/delete. (ScanController and conglomerate number.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setForCreateTable</MethodName>
+            <MethodComment>/** 
+ * Mark the Activation as being for create table. (NOTE: We can do certain optimizations for create table that we can't do for other DDL.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForCreateTable</MethodName>
+            <MethodComment>/** 
+ * Get whether or not this activation is for create table. (NOTE: We can do certain optimizations for create table that we can't do for other DDL.)
+ * @return Whether or not this activation is forcreate table.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDDLTableDescriptor</MethodName>
+            <MethodComment>/** 
+ * Save the TableDescriptor for the target of  DDL so that it can be passed between the various ConstantActions during execution.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>td</ParamName>
+                    <ParamType>TableDescriptor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDDLTableDescriptor</MethodName>
+            <MethodComment>/** 
+ * Get the TableDescriptor for the target of DDL.
+ * @return The TableDescriptor for the target ofDDL.
+ */
+</MethodComment>
+            <ReturnType>TableDescriptor</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMaxRows</MethodName>
+            <MethodComment>/** 
+ * Set the maximum # of rows.  (# of rows that can be returned by a ResultSet.  0 means no limit.)
+ * @param maxRows Maximum # of rows. (0 means no limit.)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>maxRows</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxRows</MethodName>
+            <MethodComment>/** 
+ * Get the maximum # of rows.  (# of rows that can be returned by a ResultSet.  0 means no limit.)
+ * @return Maximum # of rows.  (0 means no limit.)
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCursorActivation</MethodName>
+            <MethodComment>/** 
+ * Is this Activation for a cursor?
+ * @return Whether or not this Activation is for a cursor.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTargetVTI</MethodName>
+            <MethodComment>/** 
+ * Save the ResultSet for the target of an update/delete to a VTI.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>targetVTI</ParamName>
+                    <ParamType>java.sql.ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTargetVTI</MethodName>
+            <MethodComment>/** 
+ * Get the ResultSet for the target of an update/delete to a VTI.
+ * @return The ResultSet for the targetof an update/delete to a VTI.
+ */
+</MethodComment>
+            <ReturnType>java.sql.ResultSet</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushConstantAction</MethodName>
+            <MethodComment>/** 
+ * Push a ConstantAction to be returned by getConstantAction(). Returns the newConstantAction.
+ */
+</MethodComment>
+            <ReturnType>ConstantAction</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newConstantAction</ParamName>
+                    <ParamType>ConstantAction</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>popConstantAction</MethodName>
+            <MethodComment>/** 
+ * Pop the ConstantAction stack, returning the element which was just popped off the stack.
+ */
+</MethodComment>
+            <ReturnType>ConstantAction</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConstantAction</MethodName>
+            <MethodComment>/** 
+ * Get the top ConstantAction on the stack without changing the stack. 
+ */
+</MethodComment>
+            <ReturnType>ConstantAction</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParentResultSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rs</ParamName>
+                    <ParamType>TemporaryRowHolder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resultSetId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParentResultSet</MethodName>
+            <MethodComment>/** 
+ * get the reference to parent table ResultSets, that will be needed by the  referential action dependent table scans.
+ */
+</MethodComment>
+            <ReturnType>TemporaryRowHolder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resultSetId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearParentResultSets</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParentResultSetKeys</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setForUpdateIndexScan</MethodName>
+            <MethodComment>/** 
+ * beetle 3865: updateable cursor using index.  A way of communication between cursor activation and update activation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forUpdateResultSet</ParamName>
+                    <ParamType>CursorResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForUpdateIndexScan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CursorResultSet</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDynamicResults</MethodName>
+            <MethodComment>/** 
+ * Return the set of dynamical created result sets, for procedures. Base implementation returns null, a generated class for a procedure overwrites this with a real implementation.
+ * @return null if no dynamic results exists. Otherwise an array of ResultSetarrays, each of length one containing null or a reference to a ResultSet.
+ */
+</MethodComment>
+            <ReturnType>java.sql.ResultSet[][]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxDynamicResults</MethodName>
+            <MethodComment>/** 
+ * Return the maximum number of dynamical created result sets from the procedure definition. Base implementation returns 0, a generated class for a procedure overwrites this with a real implementation.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSQLSessionContextForChildren</MethodName>
+            <MethodComment>/** 
+ * Get the current SQL session context if in a nested connection of a stored routine or in a substatement.
+ */
+</MethodComment>
+            <ReturnType>SQLSessionContext</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setupSQLSessionContextForChildren</MethodName>
+            <MethodComment>/** 
+ * Set up and return the current SQL session context for all immediately nested connections stemming from the call or function invocation of the statement corresponding to this activation (push=true) or for a substatement, which shares the parents statement's session context (push=false).
+ * @param push true if used to push a new connection context
+ */
+</MethodComment>
+            <ReturnType>SQLSessionContext</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>push</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setParentActivation</MethodName>
+            <MethodComment>/** 
+ * This activation is created in a dynamic call context or a substatement execution context, chain its parent statements activation..
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParentActivation</MethodName>
+            <MethodComment>/** 
+ * This activation is created in a dynamic call context, or substatement execution context; get its caller's or superstatement's activation.
+ * @return The caller's activation
+ */
+</MethodComment>
+            <ReturnType>Activation</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentValueAndAdvance</MethodName>
+            <MethodComment>/** 
+ * Called by generated code to get the next number in an ANSI/ISO sequence and advance the sequence. Raises an exception if the sequence was declared NO CYCLE and its range is exhausted.
+ * @param sequenceUUIDstring The string value of the sequence's UUID
+ * @param typeFormatID The format id of the data type to be returned. E.g., StoredFormatIds.SQL_INTEGER_ID.
+ * @return The next number in the sequence
+ */
+</MethodComment>
+            <ReturnType>NumberDataValue</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sequenceUUIDstring</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>typeFormatID</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

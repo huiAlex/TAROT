@@ -1,0 +1,109 @@
+/**
+    A PageBasicOperation changed the content of a page, this is the root class of all
+	page oriented operation. Each PageBasicOperation record change(s)
+	that apply to one and only one page.  The pageID that is changed
+	must be recorded in the log operation - in other words, redo
+	must be physical (or more correctly, in Gray's term, physiological, since
+	changes are logical within a page).
+	Undo can be logical, but the undo logic must be hidden in
+	generateUndo. By the time a compensation operation is logged as a
+	LogOperation, the page that needs roll back must be determined.
+
+	
+	@derby.formatId	no format id, an abstract class.
+	@derby.purpose	provide methods for logical undo
+	@derby.upgrade
+	@derby.diskLayout
+		pageId(PageKey)			the page this operation applies to
+		pageVersion(CompressedLong)	the page version this operation applied to
+		OptionalData	none
+	@derby.endFormat
+	
+
+	*/
+
+/** Returns true if this op should be redone during recovery redo,
+	    if so, get and latched the page.
+
+		@exception StandardException Standard Derby policy.
+	 */
+
+/** Release latched page and any other resources acquired during a previous
+		findpage, safe to call multiple times.
+
+		In this RawStore implementataion, resource is acquired by a log
+		operation in one of two places
+		
+		 during runtime or recovery undo in PageOperation.generateUndo()
+		 during recovery redo in PageBasicOperation.needsRedo()
+		
+	 */
+
+/**
+		A page operation is a RAWSTORE log record
+	*/
+
+/**
+		the default for optional data is set to null.  If an operation has optional data,
+		the operation need to prepare the optional data for this method.
+
+		WARNING: If a log operation extends this class, and the operation has optional data,
+		it MUST overwrite this method to return a ByteArray that contains the optional data. 
+
+		@exception StandardException Standard Derby policy.
+	*/
+
+/**************************************************************************
+     * Public Methods of RePreparable Interface:
+     **************************************************************************
+     */
+
+/**
+     * reclaim locks associated with the changes in this log record.
+     * 
+     *
+	 * @exception  StandardException  Standard exception policy.
+     **/
+
+/**
+		Reset the pageNumber
+	*/
+
+/** Find the page the operation applies to and latch it, this only
+	    uses the segmentId, containerId, and pageId stored in this log
+		record to find the page.
+
+		@return null if container is dropped and committed (possibly
+		stubbified), else return the latched page
+
+		@exception StandardException Standard Derby policy.
+	 */
+
+/**
+		Subclass (e.g., init page) that wishes to do something about missing
+		pages in load tran should override this method to return the page
+
+		@exception StandardException Derby Standard error policy
+	 */
+
+/**
+		Undo the change indicated by this log operation and optional data.
+		The page the undo should apply to is the latched undoPage.
+		The undoPage must be the same page as the doMe page and the undo
+		operation must restore the before image of the row that changed.  
+
+		 this can only be used under special circumstances: namely
+		table level locking, and no internal or nested transaction, and all
+		operations are rollec back with restoreMe instead of undoMe.
+
+		This method is here to support BeforeImageLogging
+
+		@param xact			the Transaction doing the rollback
+		@param undoPage		the page to rollback changes on
+		@param CLRinstant	the log instant of this (PageUndo) operation
+		@param in			optional data for the rollback operation
+
+		@exception IOException Can be thrown by any of the methods of ObjectInput.
+		@exception StandardException Standard Derby policy.		
+	*/
+

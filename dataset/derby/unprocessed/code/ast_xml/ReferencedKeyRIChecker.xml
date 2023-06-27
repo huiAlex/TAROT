@@ -1,0 +1,216 @@
+<Class>
+    <Id>785</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>ReferencedKeyRIChecker</ClassName>
+    <SuperClass>GenericRIChecker</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ReferencedKeyRIChecker  /** 
+ * A Referential Integrity checker for a change to a referenced key (primary or unique).   Makes sure that all the referenced key row is not referenced by any of its foreign keys.  see  ForeignKeyRIChecker for the code that validates changes to foreign keys.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>refKeyIndexScan</FieldName>
+            <FieldType>ScanController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>refKey</FieldName>
+            <FieldType>DataValueDescriptor[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deletedKeys</FieldName>
+            <FieldType>BackingStoreHashtable</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ReferencedKeyRIChecker</MethodName>
+            <MethodComment>/** 
+ * @param lcc       the language connection context
+ * @param tc		the xact controller
+ * @param fkinfo	the foreign key information 
+ * @exception StandardException		Thrown on failure
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lcc</ParamName>
+                    <ParamType>LanguageConnectionContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tc</ParamName>
+                    <ParamType>TransactionController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fkinfo</ParamName>
+                    <ParamType>FKInfo</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doCheck</MethodName>
+            <MethodComment>/** 
+ * Check that the row either has a null column(s), or has no corresponding foreign keys. &lt;p&gt;  If a foreign key is found, an exception is thrown. If not, the scan is closed.
+ * @param a     the activation
+ * @param row	the row to check
+ * @param restrictCheckOnly {@code true} if the check is relevant only for RESTRICTEDreferential action.
+ * @param deferredRowReq For referenced keys: The required number of duplicates that need to be present. Only used if  {@code postCheck==false}.
+ * @exception StandardException on unexpected error, oron a primary/unique key violation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>restrictCheckOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredRowReq</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScanController [scan]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rememberKey</MethodName>
+            <MethodComment>/** 
+ * Remember the deletion of this key, it may cause a RESTRICT foreign key violation, cf. logic in @{link #postCheck}.
+ * @param rememberRow
+ * @throws StandardException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rememberRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [row=rememberRow.getRowArray()]</InnerVar>
+                <InnerVar>Object [hashKey=KeyHasher.buildHashKey(refKey,identityMap)]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [savedRow=(DataValueDescriptor[])deletedKeys.remove(hashKey)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>deletedKeys;putRow;[false, savedRow, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>postCheck</MethodName>
+            <MethodComment>/** 
+ * Check that we have at least one more row in the referenced table table containing a key than the number of projected deletes of that key. Only used when the referenced constraint id deferred and with RESTRICT mode
+ * @throws StandardException Standard error policy
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [indexOfFirstRestrict=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDuplicated</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>row</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredRowReq</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [indexRowArray=row.getRowArray()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDuplicated</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferredRowReq</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [foundRow=refKeyIndexScan.next()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Clean up all scan controllers and other resources
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

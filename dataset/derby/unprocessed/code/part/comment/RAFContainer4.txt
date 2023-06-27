@@ -1,0 +1,156 @@
+/**
+     * This channel will be retrieved from RAFContainer's fileData
+     * member when fileData is set. We wrap a couple of RAFContainer's methods
+     * to accomplish this.
+     */
+
+/**
+     * For debugging - will be incremented when an IO is started, decremented
+     * when it is done. Should be == 0 when container state is changed.
+     */
+
+/**
+     * Return the {@code FileChannel} for the specified
+     * {@code StorageRandomAccessFile} if it is a {@code RandomAccessFile}.
+     * Otherwise, return {@code null}.
+     *
+     * @param file the file to get the channel for
+     * @return a {@code FileChannel} if {@code file} is an instance of
+     * {@code RandomAccessFile}, {@code null} otherwise
+     */
+
+/**
+     * 
+     * Return the file channel for the current value of the {@code fileData}
+     * field. If {@code fileData} doesn't support file channels, return
+     * {@code null}.
+     * 
+     *
+     * 
+     * Callers of this method must synchronize on the container object since
+     * two shared fields ({@code fileData} and {@code ourChannel}) are
+     * accessed.
+     * 
+     *
+     * @return a {@code FileChannel} object, if supported, or {@code null}
+     */
+
+/**
+     * override of RAFContainer#createContainer
+     */
+
+/**
+     * When the existing channel ({@code ourChannel}) has been closed due to
+     * interrupt, we need to reopen the underlying RAF to get a fresh channel
+     * so we can resume IO.
+     */
+
+/**
+     * override of RAFContainer#closeContainer
+     */
+
+/**
+     * These are the methods that were rewritten to use FileChannel.
+     **/
+
+/**
+     *  Read a page into the supplied array.
+     *  
+     *  override of RAFContainer#readPage
+     *  
+     *   MT - thread safe
+     *  @exception IOException exception reading page
+     *  @exception StandardException Standard Derby error policy
+     */
+
+/**
+     *  Read a page into the supplied array.
+     *  
+     *  override of RAFContainer#readPage
+     *  
+     *   MT - thread safe
+
+     *  @param pageNumber the page number to read data from, or -1 (called from
+     *                    getEmbryonicPage)
+     *  @param pageData  the buffer to read data into
+     *  @param offset -1 normally (not used since offset is computed from
+     *                   pageNumber), but used if pageNumber == -1
+     *                   (getEmbryonicPage)
+     *  @exception IOException exception reading page
+     *  @exception StandardException Standard Derby error policy
+     */
+
+/**
+     *  Write a page from the supplied array.
+     *  
+     *  override of RAFContainer#writePage
+     *  
+     *   MT - thread safe
+     *
+     *  @exception StandardException Standard Derby error policy
+     *  @exception IOException IO error accessing page
+     */
+
+/**
+     * Use this when the thread has received a ClosedByInterruptException (or,
+     * prior to JDK 1.7 it may also be AsynchronousCloseException - a bug)
+     * exception during IO and its interruped flag is also set. This makes this
+     * thread a likely candicate to do container recovery, unless another
+     * thread started it already, cf. return value.
+     *
+     * @param whence caller site (debug info)
+     * @param stealthMode don't update threadsInPageIO if true
+     * @return true if we did recovery, false if we saw someone else do it and
+     * abstained
+     */
+
+/**
+     * Write a sequence of bytes at the given offset in a file.  This method
+     * operates in stealth mode, see doc for {@link
+     * #handleClosedChannel handleClosedChannel}.
+     * This presumes that IO retry happens at a higher level, i.e. the
+     * caller(s) must be prepared to handle {@code InterruptDetectedException}.
+     * 
+     * This method overrides FileContainer#writeAtOffset.
+     * 
+     * @param file the file to write to
+     * @param bytes the bytes to write
+     * @param offset the offset to start writing at
+     *      */
+
+/**
+     * Read an embryonic page (that is, a section of the first alloc page that
+     * is so large that we know all the borrowed space is included in it) from
+     * the specified offset in a {@code StorageRandomAccessFile}.
+     * 
+     * override of FileContainer#getEmbryonicPage
+     * 
+     * @param file the file to read from
+     * @param offset where to start reading (normally
+     * {@code FileContainer.FIRST_ALLOC_PAGE_OFFSET})
+     * @return a byte array containing the embryonic page
+     *      *      */
+
+/**
+     * Attempts to fill buf completely from start until it's full.
+     * 
+     * FileChannel has no readFull() method, so we roll our own.
+     * 
+     * @param dstBuffer buffer to read into
+     * @param srcChannel channel to read from
+     * @param position file position from where to read
+     *
+     *      *      */
+
+/**
+     * Attempts to write buf completely from start until end, at the given
+     * position in the destination fileChannel.
+     * 
+     * FileChannel has no writeFull() method, so we roll our own.
+     * 
+     * @param srcBuffer buffer to write
+     * @param dstChannel channel to write to
+     * @param position file position to start writing at
+     *
+     *      *      */
+

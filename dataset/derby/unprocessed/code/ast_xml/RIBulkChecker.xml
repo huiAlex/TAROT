@@ -1,0 +1,317 @@
+<Class>
+    <Id>1044</Id>
+    <Package>org.apache.derby.impl.sql.execute</Package>
+    <ClassName>RIBulkChecker</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RIBulkChecker  /** 
+ * Do a merge run comparing all the foreign keys from the foreign key conglomerate against the referenced keys from the primary key conglomerate.  The scanControllers are passed in by the caller (caller controls locking on said conglomerates). &lt;p&gt; The comparision is done via a merge.  Consequently, it is imperative that the scans are on keyed conglomerates (indexes) and that the referencedKeyScan is a unique scan. &lt;p&gt; Performance is no worse than N + M where N is foreign key  rows and M is primary key rows.   &lt;p&gt; Bulk fetch is used to further speed performance.  The fetch size is LanguageProperties.BULK_FETCH_DEFAULT
+ * @see LanguageProperties
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>EQUAL</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GREATER_THAN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LESS_THAN</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fkCID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pkCID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemaName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tableName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>constraintId</FieldName>
+            <FieldType>UUID</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deferredRowsHashTable</FieldName>
+            <FieldType>BackingStoreHashtable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lcc</FieldName>
+            <FieldType>LanguageConnectionContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>deferred</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>referencedKeyScan</FieldName>
+            <FieldType>GroupFetchScanController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>referencedKeyRowArray</FieldName>
+            <FieldType>DataValueDescriptor[][]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foreignKeyScan</FieldName>
+            <FieldType>GroupFetchScanController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>foreignKeyRowArray</FieldName>
+            <FieldType>DataValueDescriptor[][]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>unreferencedCC</FieldName>
+            <FieldType>ConglomerateController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failedCounter</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>quitOnFirstFailure</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numColumns</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currRefRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currFKRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastRefRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastFKRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>firstRowToFail</FieldName>
+            <FieldType>ExecRow</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RIBulkChecker</MethodName>
+            <MethodComment>/** 
+ * Create a RIBulkChecker
+ * @param a                     the activation
+ * @param referencedKeyScan		scan of the referenced key'sbacking index.  must be unique
+ * @param foreignKeyScan		scan of the foreign key'sbacking index
+ * @param templateRow			a template row for the indexes.Will be cloned when it is used. Must be a full index row.
+ * @param quitOnFirstFailure	quit on first unreferenced key
+ * @param unreferencedCC	put unreferenced keys here
+ * @param firstRowToFail		the first row that fails the constraintis copied to this, if non-null
+ * @param schemaName            schema name of the table we insert into
+ * @param tableName             table name of the table we insert into
+ * @param constraintId          constraint id of the foreign constraint
+ * @param deferrable            {@code true} if the constraint is deferrable
+ * @param fkCID                 conglomerate id of the foreign keysupporting index
+ * @param pkCID                 conglomerate id of the referenced primarykey or unique index.
+ * @throws org.apache.derby.iapi.error.StandardException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>Activation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>referencedKeyScan</ParamName>
+                    <ParamType>GroupFetchScanController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>foreignKeyScan</ParamName>
+                    <ParamType>GroupFetchScanController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateRow</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>quitOnFirstFailure</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unreferencedCC</ParamName>
+                    <ParamType>ConglomerateController</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>firstRowToFail</ParamName>
+                    <ParamType>ExecRow</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>schemaName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tableName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constraintId</ParamName>
+                    <ParamType>UUID</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>deferrable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fkCID</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pkCID</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doCheck</MethodName>
+            <MethodComment>/** 
+ * Perform the check. If deferred constraint mode, the numbers of failed rows returned will be always be 0 (but any violating keys will have been saved for later checking).
+ * @return the number of failed rows
+ * @exception StandardException on error
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor[] [foreignKey]</InnerVar>
+                <InnerVar>DataValueDescriptor[] [referencedKey]</InnerVar>
+                <InnerVar>int [compareResult]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextFK</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextRef</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataValueDescriptor[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>failure</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>foreignKeyRow</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>anyNull</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fkRowArray</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor [fkCol]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>greaterThan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fkRowArray</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>refRowArray</ParamName>
+                    <ParamType>DataValueDescriptor[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DataValueDescriptor [fkCol]</InnerVar>
+                <InnerVar>DataValueDescriptor [refCol]</InnerVar>
+                <InnerVar>int [result]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

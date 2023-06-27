@@ -1,0 +1,163 @@
+<Class>
+    <Id>1435</Id>
+    <Package>org.apache.derby.iapi.store.replication.master</Package>
+    <ClassName>MasterFactory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MasterFactory  /** 
+ * &lt;p&gt;  This is the interface for the replication master controller service. The master controller service is booted when this instance of Derby will have the replication master role for this database. &lt;/p&gt;  &lt;p&gt;  The replication master service is responsible for managing all replication related functionality on the master side of replication. This includes connecting to the slave, setting up a log buffer to temporarily store log records from the LogFactory, and to ship these log records to the slave. &lt;/p&gt;  &lt;p&gt;  The master controller currently only supports asynchronous replication. This means that there are no guarantees that transactions that have committed here (the master side) are also reflected on the slave side. However, the slave version of the database IS guaranteed to be transaction consistent. This implies that: &lt;br&gt; &lt;ul&gt; &lt;li&gt;A transaction t that is committed on the master will either be fully reflected or not be reflected at all on the slave when the slave database is turned into a non-replicated database (that is, at failover time)&lt;/li&gt; &lt;li&gt;Slave execution of operations is in the same serial order as on the master because replication is based on redoing log records to the slave. By definition, log records are in serial order. This implies that if transaction t1 commits before t2 on the master, and t2 has been committed on the slave, t1 is also guaranteed to have committed on the slave.&lt;/li&gt; &lt;/ul&gt; &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MODULE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>REPLICATION_MODE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ASYNCHRONOUS_MODE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>startMaster</MethodName>
+            <MethodComment>/** 
+ * Will perform all the work that is needed to set up replication
+ * @param rawStore The RawStoreFactory for the database
+ * @param dataFac The DataFactory for this database
+ * @param logFac The LogFactory ensuring recoverability for this database
+ * @param slavehost The hostname for the slave
+ * @param slaveport The port the slave is listening on
+ * @param dbname The master database that is being replicated.
+ * @exception StandardException Standard Derby exception policy,thrown on replication startup error. 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rawStore</ParamName>
+                    <ParamType>RawStoreFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dataFac</ParamName>
+                    <ParamType>DataFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logFac</ParamName>
+                    <ParamType>LogFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slavehost</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>slaveport</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dbname</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopMaster</MethodName>
+            <MethodComment>/** 
+ * Will perform all work that is needed to shut down replication.
+ * @throws StandardException If the replication master has been stoppedalready.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startFailover</MethodName>
+            <MethodComment>/** 
+ * Will perform all work needed to failover
+ * @throws StandardException 1) If the failover succeeds, an exception isthrown to indicate that the master database was shutdown after a successful failover 2) If a failure occurs during network  communication with slave.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>StandardException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendLog</MethodName>
+            <MethodComment>/** 
+ * Append a chunk of log records to the log buffer.
+ * @param greatestInstant   the instant of the log record that wasadded last to this chunk of log
+ * @param log               the chunk of log records
+ * @param logOffset         offset in log to start copy from
+ * @param logLength         number of bytes to copy, startingfrom logOffset
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>greatestInstant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>log</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushedTo</MethodName>
+            <MethodComment>/** 
+ * Used by the LogFactory to notify the replication master controller that the log records up to this instant have been flushed to disk. The master controller takes action according to the current replication strategy when this method is called. When the asynchronous replication strategy is used, the method does not force log shipping to the slave; the log records may be shipped now or later at the MasterFactory's discretion. However, if another strategy like 2-safe replication is implemented in the future, a call to this method may force log shipment before returning control to the caller. Currently, only asynchronous replication is supported.
+ * @param instant The highest log instant that has been flushed todisk
+ * @see LogFactory#flush
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>instant</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>workToDo</MethodName>
+            <MethodComment>/** 
+ * Used to notify the log shipper that a log buffer element is full.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>
