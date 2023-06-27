@@ -1,0 +1,1424 @@
+<Class>
+    <Id>774</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.tez.plan</Package>
+    <ClassName>TezCompiler</ClassName>
+    <SuperClass>PhyPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>TezCompiler  /** 
+ * The compiler that compiles a given physical plan into a DAG of Tez operators which can then be converted into the JobControl structure.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigProperties</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+        <Field>
+            <FieldName>plan</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tezPlan</FieldName>
+            <FieldType>TezOperPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>curTezOp</FieldName>
+            <FieldType>TezOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compiledInputs</FieldName>
+            <FieldType>TezOperator[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>splitsSeen</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>splitsSeen</FieldName>
+            <FieldType>OperatorKey</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nig</FieldName>
+            <FieldType>NodeIdGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scope</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>udfFinder</FieldName>
+            <FieldType>UDFFinder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>phyToTezOpMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>phyToTezOpMap</FieldName>
+            <FieldType>PhysicalOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inputsMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inputsMap</FieldName>
+            <FieldType>TezOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>USER_COMPARATOR_MARKER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>FILE_CONCATENATION_THRESHOLD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OPTIMISTIC_FILE_CONCATENATION</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fileConcatenationThreshold</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>optimisticFileConcatenation</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readOnceLoadFuncs</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readOnceLoadFuncs</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conf</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>localRearrangeFactory</FieldName>
+            <FieldType>POLocalRearrangeTezFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyType</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>TezCompiler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [roots=plan.getRoots()]</InnerVar>
+                <InnerVar>String [loadFuncs=pigContext.getProperties().getProperty(PigConfiguration.PIG_SORT_READONCE_LOADFUNCS)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["File concatenation threshold: " + fileConcatenationThreshold + " optimistic? "+ optimisticFileConcatenation]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>TezCompilerException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTezPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TezOperPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPlanContainer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TezPlanContainer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TezPlanContainer [tezPlanContainer=new TezPlanContainer(pigContext)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezPlanContainer;addPlan;[tezPlan]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment>/** 
+ * The front-end method that the user calls to compile the plan. Assumes that all submitted plans have a Store operators as the leaf.
+ * @return A Tez plan
+ * @throws IOException
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>TezOperPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [leaves=plan.getLeaves()]</InnerVar>
+                <InnerVar>List&lt;POStore&gt; [stores=PlanHelper.getPhysicalOperators(plan,POStore.class)]</InnerVar>
+                <InnerVar>List&lt;PONative&gt; [nativeTezs=PlanHelper.getPhysicalOperators(plan,PONative.class)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [ops]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ops;addAll;[nativeTezs]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;sort;[ops]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;fixScalar;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixScalar</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Map&lt;POStore,POValueOutputTez&gt; [storeSeen=new HashMap&lt;POStore,POValueOutputTez&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment>/** 
+ * Compiles the plan below op into a Tez Operator and stores it in curTezOp.
+ * @param op
+ * @throws IOException
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator[] [prevCompInp=compiledInputs]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [predecessors=plan.getPredecessors(op)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>op;visit;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nonBlocking</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator [tezOp]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezOp.plan;addAsLeaf;[op]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>blocking</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TezOperator [newTezOp=getTezOp()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezPlan;add;[newTezOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findPOSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POSplit</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitKey</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POSplit [split=(POSplit)tezOp.plan.getOperator(splitKey)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>merge</MethodName>
+            <MethodComment>/** 
+ * Merges the TezOperators in the compiledInputs into a single merged TezOperator. Care is taken to remove the TezOperators that are merged from the TezPlan and their connections moved over to the merged map TezOperator. Merge is implemented as a sequence of binary merges. merge(PhyPlan finPlan, List&lt;PhyPlan&gt; lst) := finPlan, merge(p) foreach p in lst
+ * @param compiledInputs
+ * @return merged TezOperator
+ * @throws PlanException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>TezOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>compiledInputs</ParamName>
+                    <ParamType>TezOperator[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator [ret=getTezOp()]</InnerVar>
+                <InnerVar>Set&lt;TezOperator&gt; [toBeConnected=Sets.newHashSet()]</InnerVar>
+                <InnerVar>List&lt;TezOperator&gt; [toBeRemoved=Lists.newArrayList()]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [toBeMerged=Lists.newArrayList()]</InnerVar>
+                <InnerVar>Iterator&lt;TezOperator&gt; [it=toBeConnected.iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezPlan;add;[ret]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;merge;[ret.plan, toBeMerged]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>merge</MethodName>
+            <MethodComment>/** 
+ * The merge of a list of plans into a single plan
+ * @param &lt; O &gt;
+ * @param &lt; E &gt;
+ * @param finPlan - Final Plan into which the list of plans is merged
+ * @param plans - list of plans to be merged
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>finPlan</ParamName>
+                    <ParamType>E</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>plans</ParamName>
+                    <ParamType>E</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processUDFs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCollectedGroup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCollectedGroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [roots=curTezOp.plan.getRoots()]</InnerVar>
+                <InnerVar>PhysicalOperator [phyOp=roots.get(0)]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=((POLoad)phyOp).getLoadFunc()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCounter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCounter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCross</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCross</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitDistinct</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PODistinct</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDistinctPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POPackage [pkg=getPackage(1,DataType.TUPLE)]</InnerVar>
+                <InnerVar>POProject [project=new POProject(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>POForEach [forEach=TezCompilerUtil.getForEach(project,rp,scope,nig)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pkg.getPkgr();setDistinct;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>plan;addAsLeaf;[pkg]</InnerMethodInvoke>
+                <InnerMethodInvoke>project;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+                <InnerMethodInvoke>project;setStar;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>project;setColumn;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>project;setOverloaded;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>plan;addAsLeaf;[forEach]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POFilter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitFRJoin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POFRJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLimit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLimit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLoad</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLocalRearrange</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitGlobalRearrange</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POGlobalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMergeCoGroup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>poCoGrp</ParamName>
+                    <ParamType>POMergeCogroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;FuncSpec&gt; [funcSpecs=new ArrayList&lt;FuncSpec&gt;(compiledInputs.length - 1)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [fileSpecs=new ArrayList&lt;String&gt;(compiledInputs.length - 1)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [loaderSigns=new ArrayList&lt;String&gt;(compiledInputs.length - 1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexingJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>FileSpec</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexerTezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseTezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapperLRInnerPlans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [basePlan=baseTezOp.plan]</InnerVar>
+                <InnerVar>POLoad [baseLoader=(POLoad)basePlan.getRoots().get(0)]</InnerVar>
+                <InnerVar>FileSpec [origLoaderFileSpec=baseLoader.getLFile()]</InnerVar>
+                <InnerVar>FuncSpec [funcSpec=origLoaderFileSpec.getFuncSpec()]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=baseLoader.getLoadFunc()]</InnerVar>
+                <InnerVar>String[] [indexerArgs=new String[6]]</InnerVar>
+                <InnerVar>PhysicalPlan [phyPlan]</InnerVar>
+                <InnerVar>POLoad [idxJobLoader=new POLoad(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>TezOperator [indexAggrOper=getTezOp()]</InnerVar>
+                <InnerVar>POStore [st=TezCompilerUtil.getStore(scope,nig)]</InnerVar>
+                <InnerVar>FileSpec [strFile=getTempFileSpec(pigContext)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>idxJobLoader;setPc;[pigContext]</InnerMethodInvoke>
+                <InnerMethodInvoke>idxJobLoader;setIsTmpLoad;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>idxJobLoader;setLFile;[new FileSpec(origLoaderFileSpec.getFileName(),new FuncSpec(MergeJoinIndexer.class.getName(),indexerArgs))]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerTezOp.plan;add;[idxJobLoader]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerTezOp.UDFs;add;[baseLoader.getLFile().getFuncSpec().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>tezPlan;add;[indexAggrOper]</InnerMethodInvoke>
+                <InnerMethodInvoke>tezPlan;add;[indexerTezOp]</InnerMethodInvoke>
+                <InnerMethodInvoke>TezCompilerUtil;simpleConnectTwoVertex;[tezPlan, indexerTezOp, indexAggrOper, scope, nig]</InnerMethodInvoke>
+                <InnerMethodInvoke>TezCompilerUtil;connect;[tezPlan, indexAggrOper, baseTezOp]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerTezOp;setRequestedParallelism;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerTezOp;setDontEstimateParallelism;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;setSFile;[strFile]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexAggrOper.plan;addAsLeaf;[st]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexAggrOper;setClosed;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>TezCompilerException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMergeJoin</MethodName>
+            <MethodComment>/** 
+ * Since merge-join works on two inputs there are exactly two TezOper predecessors identified  as left and right. Right input generates index on-the-fly. This consists of two Tez vertexes. The first vertex generates index, and the second vertex sort them. Left input contains POMergeJoin which do the actual join. First right Tez oper is identified as rightTezOpr, second is identified as rightTezOpr2 Left Tez oper is identified as curTezOper. 1) RightTezOpr: It can be preceded only by POLoad. If there is anything else in physical plan, that is yanked and set as inner plans of joinOp. 2) LeftTezOper:  add the Join operator in it. We also need to segment the DAG into two, because POMergeJoin depends on the index file which loads with DefaultIndexableLoader. It is possible to convert the index as a broadcast input, but that is costly because a lot of logic is built into DefaultIndexableLoader. We can revisit it later.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>joinOp</ParamName>
+                    <ParamType>POMergeJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitNative</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PONative</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPackage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POPackage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addBloomToJoin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POPackage</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>curTezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;TezOperator&gt; [inputs=inputsMap.get(curTezOp)]</InnerVar>
+                <InnerVar>TezOperator [buildBloomOp]</InnerVar>
+                <InnerVar>List&lt;TezOperator&gt; [applyBloomOps=new ArrayList&lt;&gt;()]</InnerVar>
+                <InnerVar>String [strategy=conf.get(PigConfiguration.PIG_BLOOMJOIN_STRATEGY,POBuildBloomRearrangeTez.DEFAULT_BLOOM_STRATEGY)]</InnerVar>
+                <InnerVar>boolean [createBloomInMap="map".equals(strategy)]</InnerVar>
+                <InnerVar>int [numHash=conf.getInt(PigConfiguration.PIG_BLOOMJOIN_HASH_FUNCTIONS,POBuildBloomRearrangeTez.DEFAULT_NUM_BLOOM_HASH_FUNCTIONS)]</InnerVar>
+                <InnerVar>int [vectorSizeBytes=conf.getInt(PigConfiguration.PIG_BLOOMJOIN_VECTORSIZE_BYTES,POBuildBloomRearrangeTez.DEFAULT_BLOOM_VECTOR_SIZE_BYTES)]</InnerVar>
+                <InnerVar>int [numBloomFilters=POBuildBloomRearrangeTez.getNumBloomFilters(conf)]</InnerVar>
+                <InnerVar>int [hashType=Hash.parseHashType(conf.get(PigConfiguration.PIG_BLOOMJOIN_HASH_TYPE,POBuildBloomRearrangeTez.DEFAULT_BLOOM_HASH_TYPE))]</InnerVar>
+                <InnerVar>boolean[] [inner=op.getPkgr().getInner()]</InnerVar>
+                <InnerVar>boolean [skipNullKeys=true]</InnerVar>
+                <InnerVar>POLocalRearrangeTez [lr=(POLocalRearrangeTez)buildBloomOp.plan.getLeaves().get(0)]</InnerVar>
+                <InnerVar>POBuildBloomRearrangeTez [bbr=new POBuildBloomRearrangeTez(lr,createBloomInMap,numBloomFilters,vectorSizeBytes,numHash,hashType)]</InnerVar>
+                <InnerVar>TezOperator [combineBloomOp=getTezOp()]</InnerVar>
+                <InnerVar>String [combineBloomOpKey=combineBloomOp.getOperatorKey().toString()]</InnerVar>
+                <InnerVar>TezEdgeDescriptor [edge=new TezEdgeDescriptor()]</InnerVar>
+                <InnerVar>POPackage [pkg=new POPackage(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>BloomPackager [pkgr=new BloomPackager(createBloomInMap,vectorSizeBytes,numHash,hashType)]</InnerVar>
+                <InnerVar>POValueOutputTez [combineBloomOutput=new POValueOutputTez(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>POPackage [pkg_c=new POPackage(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>BloomPackager [combinerPkgr=new BloomPackager(createBloomInMap,vectorSizeBytes,numHash,hashType)]</InnerVar>
+                <InnerVar>POProject [prjKey=new POProject(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [clrInps=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>PhysicalPlan [pp=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POLocalRearrangeTez [clr=localRearrangeFactory.create(0,LocalRearrangeType.WITHPLAN,clrInps,DataType.INTEGER)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bbr;setSkipNullKeys;[skipNullKeys]</InnerMethodInvoke>
+                <InnerMethodInvoke>buildBloomOp.plan;remove;[lr]</InnerMethodInvoke>
+                <InnerMethodInvoke>buildBloomOp.plan;addAsLeaf;[bbr]</InnerMethodInvoke>
+                <InnerMethodInvoke>tezPlan;add;[combineBloomOp]</InnerMethodInvoke>
+                <InnerMethodInvoke>combineBloomOp;markBuildBloom;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>combineBloomOp;setEstimatedParallelism;[numBloomFilters]</InnerMethodInvoke>
+                <InnerMethodInvoke>combineBloomOp;setDontEstimateParallelism;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>TezCompilerUtil;connect;[tezPlan, buildBloomOp, combineBloomOp, edge]</InnerMethodInvoke>
+                <InnerMethodInvoke>bbr;setBloomOutputKey;[combineBloomOpKey]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setNumInps;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;setKeyType;[DataType.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setPkgr;[pkgr]</InnerMethodInvoke>
+                <InnerMethodInvoke>combineBloomOp.plan;addAsLeaf;[pkg]</InnerMethodInvoke>
+                <InnerMethodInvoke>combineBloomOp.plan;addAsLeaf;[combineBloomOutput]</InnerMethodInvoke>
+                <InnerMethodInvoke>edge;setIntermediateOutputKeyClass;[NullableIntWritable.class.getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>edge;setIntermediateOutputKeyComparatorClass;[PigWritableComparators.PigIntRawBytesComparator.class.getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>combinerPkgr;setCombiner;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>combinerPkgr;setKeyType;[DataType.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg_c;setPkgr;[combinerPkgr]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg_c;setNumInps;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>edge.combinePlan;addAsLeaf;[pkg_c]</InnerMethodInvoke>
+                <InnerMethodInvoke>prjKey;setResultType;[DataType.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>pp;add;[prjKey]</InnerMethodInvoke>
+                <InnerMethodInvoke>clrInps;add;[pp]</InnerMethodInvoke>
+                <InnerMethodInvoke>clr;setOutputKey;[combineBloomOpKey]</InnerMethodInvoke>
+                <InnerMethodInvoke>edge.combinePlan;addAsLeaf;[clr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPOForEach</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitRank</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PORank</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSkewedJoin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSkewedJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTempFileSpec</MethodName>
+            <MethodComment>/** 
+ * Returns a temporary DFS Path
+ * @return
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>FileSpec</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldWriteDataForPartitioner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>samplerOper</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [writeDataForPartitioner=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLocalRearrangeForSortInput</MethodName>
+            <MethodComment>/** 
+ * Get LocalRearrange for POSort input
+ */
+</MethodComment>
+            <ReturnType>POLocalRearrangeTez</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fields</ParamName>
+                    <ParamType>Pair&lt;POProject,Byte&gt;[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLocalRearrangeTez [lr=new POLocalRearrangeTez(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [eps=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>lr;setKeyType;[(fields == null || fields.length &gt; 1) ? DataType.TUPLE : keyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;setPlans;[eps]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;addOriginalLocation;[sort.getAlias(), sort.getOriginalLocations()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSamplingToSortInput</MethodName>
+            <MethodComment>/** 
+ * Add a sampler to the sort input
+ */
+</MethodComment>
+            <ReturnType>POLocalRearrangeTez</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oper</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fields</ParamName>
+                    <ParamType>Pair&lt;POProject,Byte&gt;[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLocalRearrangeTez [lrSample=localRearrangeFactory.create(LocalRearrangeType.NULL)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>oper;markSampler;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOrderbySamplingAggregationJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TezOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inpSort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POSort [sort=new POSort(inpSort.getOperatorKey(),inpSort.getRequestedParallelism(),null,inpSort.getSortPlans(),inpSort.getMAscCols(),inpSort.getMSortFunc())]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [ascCols=inpSort.getMAscCols()]</InnerVar>
+                <InnerVar>String[] [ascs=new String[ascCols.size()]]</InnerVar>
+                <InnerVar>String[] [ctorArgs=ascs]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sort;addOriginalLocation;[inpSort.getAlias(), inpSort.getOriginalLocations()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSamplingAggregationJob</MethodName>
+            <MethodComment>/** 
+ * Create a sampling job to collect statistics by sampling input data. The sequence of operations is as following: &lt;li&gt;Add an extra field &amp;quot;all&amp;quot; into the tuple &lt;/li&gt; &lt;li&gt;Package all tuples into one bag &lt;/li&gt; &lt;li&gt;Add constant field for number of reducers. &lt;/li&gt; &lt;li&gt;Sorting the bag &lt;/li&gt; &lt;li&gt;Invoke UDF with the number of reducers and the sorted bag.&lt;/li&gt; &lt;li&gt;Data generated by UDF is transferred via a broadcast edge.&lt;/li&gt;
+ * @param sort  the POSort operator used to sort the bag
+ * @param rp  configured parallemism
+ * @param sortKeyPlans  PhysicalPlans to be set into POSort operator to get sorting keys
+ * @param udfClassName  the class name of UDF
+ * @param udfArgs   the arguments of UDF
+ * @return pair&lt;tezoperator[],integer&gt;
+ * @throws PlanException
+ * @throws VisitorException
+ * @throws ExecException
+ */
+</MethodComment>
+            <ReturnType>TezOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sortKeyPlans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>udfClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>udfArgs</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator [oper=getTezOp()]</InnerVar>
+                <InnerVar>POPackage [pkg=getPackage(1,DataType.BYTEARRAY)]</InnerVar>
+                <InnerVar>PhysicalPlan [fe2Plan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [topPrj=new POProject(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [nesSortPlanLst=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>PhysicalPlan [rpep=new PhysicalPlan()]</InnerVar>
+                <InnerVar>ConstantExpression [rpce=new ConstantExpression(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [genEps=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [flattened2=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe2=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,genEps,flattened2)]</InnerVar>
+                <InnerVar>PhysicalPlan [ep4=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [prjStar4=new POProject(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [ufInps=new ArrayList&lt;PhysicalOperator&gt;()]</InnerVar>
+                <InnerVar>POUserFunc [uf=new POUserFunc(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,ufInps,new FuncSpec(udfClassName,udfArgs))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [ep4s=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [flattened3=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe3=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,ep4s,flattened3)]</InnerVar>
+                <InnerVar>POValueOutputTez [sampleOut=new POValueOutputTez(OperatorKey.genOpKey(scope))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezPlan;add;[oper]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;add;[pkg]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setColumn;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setResultType;[DataType.BAG]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setOverloaded;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>fe2Plan;add;[topPrj]</InnerMethodInvoke>
+                <InnerMethodInvoke>sort;setSortPlans;[nesSortPlanLst]</InnerMethodInvoke>
+                <InnerMethodInvoke>sort;setResultType;[DataType.BAG]</InnerMethodInvoke>
+                <InnerMethodInvoke>fe2Plan;add;[sort]</InnerMethodInvoke>
+                <InnerMethodInvoke>fe2Plan;connect;[topPrj, sort]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setRequestedParallelism;[rp]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setValue;[rp]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setResultType;[DataType.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpep;add;[rpce]</InnerMethodInvoke>
+                <InnerMethodInvoke>genEps;add;[rpep]</InnerMethodInvoke>
+                <InnerMethodInvoke>genEps;add;[fe2Plan]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened2;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened2;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;add;[nfe2]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;connect;[pkg, nfe2]</InnerMethodInvoke>
+                <InnerMethodInvoke>prjStar4;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+                <InnerMethodInvoke>prjStar4;setStar;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;add;[prjStar4]</InnerMethodInvoke>
+                <InnerMethodInvoke>ufInps;add;[prjStar4]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;add;[uf]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;connect;[prjStar4, uf]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4s;add;[ep4]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened3;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;add;[nfe3]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;connect;[nfe2, nfe3]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;add;[sampleOut]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper.plan;connect;[nfe3, sampleOut]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper;setClosed;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper;setRequestedParallelism;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper;setDontEstimateParallelism;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper;markSampleAggregation;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>FindKeyTypeVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitProject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>POProject</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortCols</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Pair&lt;POProject,Byte&gt;[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [errCode=2026]</InnerVar>
+                <InnerVar>String [msg="No expression plan found in POSort."]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortJobs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TezOperator[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputOper</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>partitionerPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputOperRearrange</ParamName>
+                    <ParamType>POLocalRearrangeTez</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fields</ParamName>
+                    <ParamType>Pair&lt;POProject,Byte&gt;[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator[] [opers=new TezOperator[2]]</InnerVar>
+                <InnerVar>TezOperator [oper1=getTezOp()]</InnerVar>
+                <InnerVar>POLocalRearrangeTez [partitionerLR=null]</InnerVar>
+                <InnerVar>TezOperator [oper2=getTezOp()]</InnerVar>
+                <InnerVar>long [limit=sort.getLimit()]</InnerVar>
+                <InnerVar>boolean[] [sortOrder]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [sortOrderList=sort.getMAscCols()]</InnerVar>
+                <InnerVar>POPackage [pkg=new POPackage(OperatorKey.genOpKey(scope))]</InnerVar>
+                <InnerVar>PhysicalPlan [ep=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [prj=new POProject(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [eps2=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [flattened=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe1=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,eps2,flattened)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tezPlan;add;[oper1]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper1;setClosed;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper1;markSampleBasedPartitioner;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>partitionerLR;setOutputKey;[oper2.getOperatorKey().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper2;markGlobalSort;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>tezPlan;add;[oper2]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setPkgr;[new LitePackager()]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg.getPkgr();setKeyType;[(fields == null || fields.length &gt; 1) ? DataType.TUPLE : keyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setNumInps;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper2.plan;add;[pkg]</InnerMethodInvoke>
+                <InnerMethodInvoke>prj;setColumn;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>prj;setOverloaded;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>prj;setResultType;[DataType.BAG]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep;add;[prj]</InnerMethodInvoke>
+                <InnerMethodInvoke>eps2;add;[ep]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened;add;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper2.plan;add;[nfe1]</InnerMethodInvoke>
+                <InnerMethodInvoke>oper2.plan;connect;[pkg, nfe1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSort</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POStore</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitStream</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitUnion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POUnion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPackage</MethodName>
+            <MethodComment>/** 
+ * Returns a POPackage with default packager. This method shouldn't be used if special packager such as LitePackager and CombinerPackager is needed.
+ */
+</MethodComment>
+            <ReturnType>POPackage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numOfInputs</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean[] [inner=new boolean[numOfInputs]]</InnerVar>
+                <InnerVar>POPackage [pkg=new POPackage(OperatorKey.genOpKey(scope))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pkg.getPkgr();setInner;[inner]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg.getPkgr();setKeyType;[keyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setNumInps;[numOfInputs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTezOp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TezOperator</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

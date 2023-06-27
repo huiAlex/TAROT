@@ -1,0 +1,223 @@
+<Class>
+    <Id>1118</Id>
+    <Package>org.infinispan.rest</Package>
+    <ClassName>Http11To2UpgradeHandler</ClassName>
+    <SuperClass>ApplicationProtocolNegotiationHandler</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Http11To2UpgradeHandler  /** 
+ * Handler responsible for TLS/ALPN negotiation as well as HTTP/1.1 Upgrade header handling
+ * @author Sebastian Łaskawiec
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MAX_INITIAL_LINE_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_HEADER_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>restServer</FieldName>
+            <FieldType>RestServer</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>Http11To2UpgradeHandler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>restServer</ParamName>
+                    <ParamType>RestServer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configurePipeline</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>ChannelHandlerContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>protocol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;configurePipeline;[ctx.pipeline(), protocol]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configurePipeline</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pipeline</ParamName>
+                    <ParamType>ChannelPipeline</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>protocol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configureHttp2</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pipeline</ParamName>
+                    <ParamType>ChannelPipeline</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pipeline;addLast;[getHttp11To2ConnectionHandler()]</InnerMethodInvoke>
+                <InnerMethodInvoke>pipeline;addLast;["rest-handler-http2", getHttp2Handler()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configureHttp1</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pipeline</ParamName>
+                    <ParamType>ChannelPipeline</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpServerCodec [httpCodec=new HttpServerCodec(MAX_INITIAL_LINE_SIZE,MAX_HEADER_SIZE,restServer.getConfiguration().maxContentLength())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pipeline;addLast;[httpCodec]</InnerMethodInvoke>
+                <InnerMethodInvoke>pipeline;addLast;[new HttpServerUpgradeHandler(httpCodec,protocol -&gt; {
+  if (AsciiString.contentEquals(Http2CodecUtil.HTTP_UPGRADE_PROTOCOL_NAME,protocol)) {
+    return new Http2ServerUpgradeCodec(getHttp11To2ConnectionHandler());
+  }
+ else {
+    return null;
+  }
+}
+)]</InnerMethodInvoke>
+                <InnerMethodInvoke>pipeline;addLast;[new HttpObjectAggregator(maxContentLength())]</InnerMethodInvoke>
+                <InnerMethodInvoke>pipeline;addLast;["rest-handler", getHttp1Handler()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>maxContentLength</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHttp11To2ConnectionHandler</MethodName>
+            <MethodComment>/** 
+ * Creates a handler for HTTP/1.1 -&gt; HTTP/2 upgrade
+ * @return
+ */
+</MethodComment>
+            <ReturnType>HttpToHttp2ConnectionHandler</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>DefaultHttp2Connection [connection=new DefaultHttp2Connection(true)]</InnerVar>
+                <InnerVar>InboundHttp2ToHttpAdapter [listener=new InboundHttp2ToHttpAdapterBuilder(connection).propagateSettings(true).validateHttpHeaders(false).maxContentLength(maxContentLength()).build()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHttp1Handler</MethodName>
+            <MethodComment>/** 
+ * Gets HTTP/1.1 handler.
+ * @return HTTP/1.1 handler.
+ */
+</MethodComment>
+            <ReturnType>Http11RequestHandler</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHttp2Handler</MethodName>
+            <MethodComment>/** 
+ * Gets HTTP/2 handler.
+ * @return HTTP/2 handler.
+ */
+</MethodComment>
+            <ReturnType>Http20RequestHandler</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

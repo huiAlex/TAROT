@@ -1,0 +1,343 @@
+<Class>
+    <Id>564</Id>
+    <Package>org.codehaus.groovy.transform</Package>
+    <ClassName>AutoCloneASTTransformation</ClassName>
+    <SuperClass>AbstractASTTransformation</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AutoCloneASTTransformation  /** 
+ * Handles generation of code for the @AutoClone annotation.
+ * @author Paul King
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MY_CLASS</FieldName>
+            <FieldType>Class</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MY_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MY_TYPE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CLONEABLE_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BAOS_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BAIS_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OOS_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OIS_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INVOKER_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <ParamType>ASTNode[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AnnotatedNode [parent=(AnnotatedNode)nodes[1]]</InnerVar>
+                <InnerVar>AnnotationNode [anno=(AnnotationNode)nodes[0]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;init;[nodes, source]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createCloneSerialization</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+                <InnerVar>Expression [baos=varX("baos")]</InnerVar>
+                <InnerVar>MethodCallExpression [writeObject=callX(castX(OOS_TYPE,varX("it")),"writeObject",varX("this"))]</InnerVar>
+                <InnerVar>ClosureExpression [writeClos=closureX(block(stmt(writeObject)))]</InnerVar>
+                <InnerVar>Expression [bais=varX("bais")]</InnerVar>
+                <InnerVar>MethodCallExpression [readObject=callX(castX(OIS_TYPE,varX("it")),"readObject")]</InnerVar>
+                <InnerVar>ClosureExpression [readClos=closureX(block(stmt(castX(GenericsUtils.nonGeneric(cNode),readObject))))]</InnerVar>
+                <InnerVar>Expression [classLoader=callX(callThisX("getClass"),"getClassLoader")]</InnerVar>
+                <InnerVar>ClassNode[] [exceptions={make(CloneNotSupportedException.class)}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[declS(baos,ctorX(BAOS_TYPE))]</InnerMethodInvoke>
+                <InnerMethodInvoke>writeObject;setImplicitThis;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>writeClos;setVariableScope;[new VariableScope()]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[stmt(callX(baos,"withObjectOutputStream",args(writeClos)))]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[declS(bais,ctorX(BAIS_TYPE,args(callX(baos,"toByteArray"))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>readObject;setImplicitThis;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>readClos;setVariableScope;[new VariableScope()]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[returnS(callX(bais,"withObjectInputStream",args(classLoader,readClos)))]</InnerMethodInvoke>
+                <InnerMethodInvoke>new VariableScopeVisitor(sourceUnit,true);visitClass;[cNode]</InnerMethodInvoke>
+                <InnerMethodInvoke>cNode;addMethod;["clone", ACC_PUBLIC, GenericsUtils.nonGeneric(cNode), Parameter.EMPTY_ARRAY, exceptions, body]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createCloneCopyConstructor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>FieldNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludes</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [hasThisCons=false]</InnerVar>
+                <InnerVar>ClassNode[] [exceptions={make(CloneNotSupportedException.class)}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cNode;addMethod;["clone", ACC_PUBLIC, GenericsUtils.nonGeneric(cNode), Parameter.EMPTY_ARRAY, exceptions, block(stmt(ctorX(cNode,args(varX("this")))))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isCloneableType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldType</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>possiblyCloneable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callCloneDynamicX</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>target</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>callCloneDirectX</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>direct</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSimpleClone</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNodes</ParamName>
+                    <ParamType>FieldNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludes</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [result=varX("_result",cNode)]</InnerVar>
+                <InnerVar>ClassNode[] [exceptions={make(CloneNotSupportedException.class)}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addSimpleCloneHelperMethod;[cNode, fieldNodes, excludes]</InnerMethodInvoke>
+                <InnerMethodInvoke>cNode;addMethod;["clone", ACC_PUBLIC, GenericsUtils.nonGeneric(cNode), Parameter.EMPTY_ARRAY, exceptions, block(declS(result,ctorX(cNode)),stmt(callThisX("cloneOrCopyMembers",args(result))),returnS(result))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSimpleCloneHelperMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNodes</ParamName>
+                    <ParamType>FieldNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludes</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Parameter [methodParam=new Parameter(GenericsUtils.nonGeneric(cNode),"other")]</InnerVar>
+                <InnerVar>Expression [other=varX(methodParam)]</InnerVar>
+                <InnerVar>boolean [hasParent=cNode.getSuperClass() != ClassHelper.OBJECT_TYPE]</InnerVar>
+                <InnerVar>BlockStatement [methodBody=new BlockStatement()]</InnerVar>
+                <InnerVar>ClassNode[] [exceptions={make(CloneNotSupportedException.class)}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cNode;addMethod;["cloneOrCopyMembers", ACC_PROTECTED, ClassHelper.VOID_TYPE, params(methodParam), exceptions, methodBody]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createClone</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNodes</ParamName>
+                    <ParamType>FieldNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludes</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+                <InnerVar>Expression [result=varX("_result",cNode)]</InnerVar>
+                <InnerVar>ClassNode[] [exceptions={make(CloneNotSupportedException.class)}]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[declS(result,castX(cNode,callSuperX("clone")))]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[returnS(result)]</InnerMethodInvoke>
+                <InnerMethodInvoke>cNode;addMethod;["clone", ACC_PUBLIC, GenericsUtils.nonGeneric(cNode), Parameter.EMPTY_ARRAY, exceptions, body]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStyle</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>AutoCloneStyle</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [member=node.getMember(name)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,268 @@
+<Class>
+    <Id>401</Id>
+    <Package>org.infinispan.multimap.api</Package>
+    <ClassName>MultimapCache</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MultimapCache  /** 
+ * MultimapCache provides the common building block for the two different types of multimap caches that Infinispan provides: embedded and remote. &lt;p&gt; Please see the &lt;a href="http://infinispan.org/documentation/"&gt;Infinispan documentation&lt;/a&gt; and/or the &lt;a href="http://infinispan.org/docs/dev/getting_started/getting_started.html"&gt;5 Minute Usage Tutorial&lt;/a&gt; for more details on Infinispan. &lt;p/&gt; &lt;p&gt; MutimapCache is a type of Infinispan Cache that maps keys to values, similar to  {@link org.infinispan.commons.api.AsyncCache} in which each key can contain multiple values.&lt;pre&gt; foo -&gt; 1 bar -&gt; 3, 4, 5 &lt;/pre&gt; &lt;p&gt; &lt;h2&gt;Example&lt;/h2&gt; &lt;pre&gt; multimapCache.put("k", "v1").join(); multimapCache.put("k", "v2").join(); multimapCache.put("k", "v3").join(); Collection&lt;String&gt; results = multimapCache.get("k").join(); &lt;/pre&gt; &lt;p&gt; &lt;h2&gt;Eviction&lt;/h2&gt; &lt;p&gt; Eviction works per key. This means all the values associated on a key will be evicted. &lt;/p&gt; &lt;p&gt; &lt;h2&gt;Views&lt;/h2&gt; &lt;p&gt; The returned collections when calling "get" are views of the values on the key. Any change on these collections won't affect the cache values on the key. &lt;p&gt; &lt;h2&gt;Null values&lt;/h2&gt; Null values are not supported. The multimap cache won't have a null key or any null value. &lt;p&gt; Example &lt;pre&gt; multimapCache.put(null, "v1").join() -&gt; fails multimapCache.put("k", null).join() -&gt; fails multimapCache.put("k", "v1").join() -&gt; works and add's v1 multimapCache.containsKey("k").join() -&gt; true multimapCache.remove("k", "v1").join() -&gt; works, removes v1 and as the remaining collection is empty, the key is removed multimapCache.containsKey("k").join() -&gt; false &lt;/pre&gt; &lt;p&gt; &lt;p&gt; &lt;h2&gt;Duplicates&lt;/h2&gt; The current implementation does not support duplicate values on keys.  {@link Object#equals(Object)}method is used to check if a value is already present in the key. This means that the following code &lt;pre&gt; multimapCache.put("k", "v1").join(); multimapCache.put("k", "v2").join(); multimapCache.put("k", "v2").join(); multimapCache.put("k", "v2").join(); multimapCache.get("k").thenAccept(values -&gt; System.out.println(values.size())); &lt;/pre&gt; prints the value 2. "k" -&gt; ["v1", "v"] &lt;p&gt; Future implementations might evolve to support duplicated values. &lt;p&gt; &lt;h2&gt;Transactions&lt;/h2&gt; MultimapCache supports implicit transactions without blocking. The following methods block when they are called in a explicit transaction context. This limitation could be improved in the following versions if technically possible. &lt;p&gt; &lt;ul&gt; &lt;li&gt; {@link MultimapCache#size()}&lt;li&gt; {@link MultimapCache#containsEntry(Object,Object)}&lt;li&gt; {@link MultimapCache#remove(Predicate)}&lt;/ul&gt; &lt;p&gt; More about transactions in : &lt;a href="http://infinispan.org/docs/dev/user_guide/user_guide.html#transactions"&gt;the Infinispan Documentation&lt;/a&gt;.
+ * @author Katia Aresti, karesti@redhat.com
+ * @see &lt;a href="http://infinispan.org/documentation/"&gt;Infinispan documentation&lt;/a&gt;
+ * @since 9.2
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>put</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Puts a key-value pair in this multimap cache. &lt;ul&gt; &lt;li&gt;If this multimap cache supports duplicates, the value will be always added.&lt;/li&gt; &lt;li&gt;If this multimap cache does &lt;i&gt;not support&lt;/i&gt; duplicates and the value exists on the key, nothing will be done.&lt;/li&gt; &lt;/ul&gt;
+ * @param key   the key to be put
+ * @param value the value to added
+ * @return {@link CompletableFuture} containing a {@link Void}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Returns a &lt;i&gt;view collection&lt;/i&gt; of the values associated with key in this multimap cache, if any. Any changes to the retrieved collection won't change the values in this multimap cache. &lt;b&gt;When this method returns an empty collection, it means the key was not found.&lt;/b&gt;
+ * @param key to be retrieved
+ * @return a {@link CompletableFuture} containing {@link Collection &lt;V&gt;} which is a view of the underlying values.
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Collection&lt;V&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEntry</MethodName>
+            <MethodComment>/** 
+ * Retrieves a CacheEntry corresponding to a specific key in this multimap cache.
+ * @param key the key whose associated cache entry is to be returned
+ * @return the cache entry to which the specified key is mapped, or {@link Optional#empty()} if this multimapcontains no mapping for the key
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Optional&lt;CacheEntry&lt;K,Collection&lt;V&gt;&gt;&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Removes the entry associated with the key from this multimap cache, if such exists.
+ * @param key to be removed
+ * @return a {@link CompletableFuture} containing {@link Boolean#TRUE} if the entry was removed, and {@link Boolean#FALSE} when the entry was not removed
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Removes a key-value pair from this multimap cache, if such exists. Returns true when the key-value pair has been removed from the key. &lt;p&gt; &lt;ul&gt; &lt;li&gt;In the case where duplicates are &lt;b&gt;not supported&lt;/b&gt;, &lt;b&gt;only one&lt;/b&gt; the key-value pair will be removed, if such exists.&lt;/li&gt; &lt;li&gt;In the case where duplicates are supported, &lt;b&gt;all the key-value pairs&lt;/b&gt; will be removed.&lt;/li&gt; &lt;li&gt;If the values remaining after the remove call are empty, the whole entry will be removed.&lt;/li&gt; &lt;/ul&gt;
+ * @param key   key to be removed
+ * @param value value to be removed
+ * @return {@link CompletableFuture} containing {@link Boolean#TRUE} if the key-value pair was removed, and {@link Boolean#FALSE} when the key-value pair was not removed
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Removes every value that match the  {@link Predicate}. &lt;p&gt; This method &lt;b&gt;is blocking&lt;/b&gt; used in a explicit transaction context.
+ * @param p the predicate to be tested on every value in this multimap cache
+ * @return {@link CompletableFuture} containing a {@link Void}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>? super V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Overloaded method of  {@link MultimapCache#remove(Predicate)} with {@link SerializablePredicate}. The compiler will pick up this method and make the given predicate  {@link java.io.Serializable}.
+ * @param p the predicate to be tested on every value in this multimap cache
+ * @return {@link CompletableFuture} containing a {@link Void}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>? super V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsKey</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method. Returns  {@link Boolean#TRUE} if this multimap cache contains the key.
+ * @param key the key tht might exists in this multimap cache
+ * @return {@link CompletableFuture} containing a {@link Boolean}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsValue</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method that returns  {@link Boolean#TRUE} if this multimap cache contains the value at any key.
+ * @param value the value that might exists in any entry
+ * @return {@link CompletableFuture} containing a {@link Boolean}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsEntry</MethodName>
+            <MethodComment>/** 
+ * Asynchronous method that returns  {@link Boolean#TRUE} if this multimap cache contains the key-value pair.
+ * @param key   the key of the key-value pair
+ * @param value the value of the key-value pair
+ * @return {@link CompletableFuture} containing a {@link Boolean}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>size</MethodName>
+            <MethodComment>/** 
+ * Returns the number of key-value pairs in this multimap cache. It doesn't return the distinct number of keys. &lt;p&gt; This method &lt;b&gt;is blocking&lt;/b&gt; in a explicit transaction context. &lt;p&gt; The  {@link CompletableFuture} is a
+ * @return {@link CompletableFuture} containing the size as {@link Long}
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supportsDuplicates</MethodName>
+            <MethodComment>/** 
+ * Multimap can support duplicates on the same key k -&gt; ['a', 'a', 'b'] or not k -&gt; ['a', 'b'] depending on configuration. &lt;p&gt; Returns duplicates are supported or not in this multimap cache.
+ * @return {@code true} if this multicache supports duplicate values for a given key.
+ * @since 9.2
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

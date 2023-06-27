@@ -1,0 +1,149 @@
+<Class>
+    <Id>502</Id>
+    <Package>org.infinispan.server.test.client.hotrod.security</Package>
+    <ClassName>SecuredScriptExecIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SecuredScriptExecIT  /** 
+ * Tests script execution over HotRod client on secured cache.
+ * @author vjuranek
+ * @since 9.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server2</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>adminRCM</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>prepareAdminRCM</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopAdminRCM</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>uploadScript</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scripts</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCache [scriptCache=adminRCM.getCache(ScriptingManager.SCRIPT_CACHE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testExecuteScript</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [execRCM=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [cache=execRCM.getCache(CACHE_NAME)]</InnerVar>
+                <InnerVar>Map&lt;String,String&gt; [params=new HashMap&lt;&gt;()]</InnerVar>
+                <InnerVar>int [result=(Integer)cache.execute("test.js",params)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;uploadScript;["test.js"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[EXECUTOR_LOGIN, EXECUTOR_PASSWORD]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[cache.size(), 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>params;put;["key", "test_key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>params;put;["value", "test_value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[result, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[cache.size(), 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[cache.get("test_key"), "test_value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>execRCM;stop;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testExecuteScriptWithoutExecPerm</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [writerRCM=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [cache=writerRCM.getCache(CACHE_NAME)]</InnerVar>
+                <InnerVar>Map&lt;String,String&gt; [params=new HashMap&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;uploadScript;["test.js"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[WRITER_LOGIN, WRITER_PASSWD]</InnerMethodInvoke>
+                <InnerMethodInvoke>params;put;["key", "test_key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>params;put;["value", "test_value"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testUploadScriptWithoutAdminPerm</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [execRCM=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [scriptCache=execRCM.getCache(ScriptingManager.SCRIPT_CACHE)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[EXECUTOR_LOGIN, EXECUTOR_PASSWORD]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

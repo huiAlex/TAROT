@@ -1,0 +1,499 @@
+<Class>
+    <Id>694</Id>
+    <Package>org.codehaus.groovy.transform</Package>
+    <ClassName>LogASTTransformation</ClassName>
+    <SuperClass>AbstractASTTransformation</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>CompilationUnitAware</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LogASTTransformation  /** 
+ * This class provides an AST Transformation to add a log field to a class.
+ * @author Guillaume Laforge
+ * @author Jochen Theodorou
+ * @author Dinko Srkoc
+ * @author Hamlet D'Arcy
+ * @author Raffaele Cigni
+ * @author Alberto Vilches Raton
+ * @author Tomasz Bujok
+ * @author Martin Ghados
+ * @author Matthias Cullmann
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_CATEGORY_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compilationUnit</FieldName>
+            <FieldType>CompilationUnit</FieldType>
+        </Field>
+        <Field>
+            <FieldName>logNode</FieldName>
+            <FieldType>FieldNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loader</FieldName>
+            <FieldType>GroovyClassLoader</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <ParamType>ASTNode[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AnnotatedNode [targetClass=(AnnotatedNode)nodes[1]]</InnerVar>
+                <InnerVar>AnnotationNode [logAnnotation=(AnnotationNode)nodes[0]]</InnerVar>
+                <InnerVar>GroovyClassLoader [classLoader=compilationUnit != null ? compilationUnit.getTransformLoader() : source.getClassLoader()]</InnerVar>
+                <InnerVar>LoggingStrategy [loggingStrategy=createLoggingStrategy(logAnnotation,classLoader)]</InnerVar>
+                <InnerVar>String [logFieldName=lookupLogFieldName(logAnnotation)]</InnerVar>
+                <InnerVar>String [categoryName=lookupCategoryName(logAnnotation)]</InnerVar>
+                <InnerVar>ClassNode [classNode=(ClassNode)targetClass]</InnerVar>
+                <InnerVar>ClassCodeExpressionTransformer [transformer=new ClassCodeExpressionTransformer(){
+  private FieldNode logNode;
+  @Override protected SourceUnit getSourceUnit(){
+    return source;
+  }
+  public Expression transform(  Expression exp){
+    if (exp == null)     return null;
+    if (exp instanceof MethodCallExpression) {
+      return transformMethodCallExpression(exp);
+    }
+    return super.transform(exp);
+  }
+  @Override public void visitClass(  ClassNode node){
+    FieldNode logField=node.getField(logFieldName);
+    if (logField != null &amp;&amp; logField.getOwner().equals(node)) {
+      addError("Class annotated with Log annotation cannot have log field declared",logField);
+    }
+ else     if (logField != null &amp;&amp; !Modifier.isPrivate(logField.getModifiers())) {
+      addError("Class annotated with Log annotation cannot have log field declared because the field exists in the parent class: " + logField.getOwner().getName(),logField);
+    }
+ else {
+      logNode=loggingStrategy.addLoggerFieldToClass(node,logFieldName,categoryName);
+    }
+    super.visitClass(node);
+  }
+  private Expression transformMethodCallExpression(  Expression exp){
+    MethodCallExpression mce=(MethodCallExpression)exp;
+    if (!(mce.getObjectExpression() instanceof VariableExpression)) {
+      return exp;
+    }
+    VariableExpression variableExpression=(VariableExpression)mce.getObjectExpression();
+    if (!variableExpression.getName().equals(logFieldName) || !(variableExpression.getAccessedVariable() instanceof DynamicVariable)) {
+      return exp;
+    }
+    String methodName=mce.getMethodAsString();
+    if (methodName == null)     return exp;
+    if (usesSimpleMethodArgumentsOnly(mce))     return exp;
+    variableExpression.setAccessedVariable(logNode);
+    if (!loggingStrategy.isLoggingMethod(methodName))     return exp;
+    return loggingStrategy.wrapLoggingMethodCall(variableExpression,methodName,exp);
+  }
+  private boolean usesSimpleMethodArgumentsOnly(  MethodCallExpression mce){
+    Expression arguments=mce.getArguments();
+    if (arguments instanceof TupleExpression) {
+      TupleExpression tuple=(TupleExpression)arguments;
+      for (      Expression exp : tuple.getExpressions()) {
+        if (!isSimpleExpression(exp))         return false;
+      }
+      return true;
+    }
+    return !isSimpleExpression(arguments);
+  }
+  private boolean isSimpleExpression(  Expression exp){
+    if (exp instanceof ConstantExpression)     return true;
+    if (exp instanceof VariableExpression)     return true;
+    return false;
+  }
+}
+]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;init;[nodes, source]</InnerMethodInvoke>
+                <InnerMethodInvoke>transformer;visitClass;[classNode]</InnerMethodInvoke>
+                <InnerMethodInvoke>new VariableScopeVisitor(sourceUnit,true);visitClass;[classNode]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSourceUnit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SourceUnit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transform</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exp</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FieldNode [logField=node.getField(logFieldName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transformMethodCallExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exp</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodCallExpression [mce=(MethodCallExpression)exp]</InnerVar>
+                <InnerVar>VariableExpression [variableExpression=(VariableExpression)mce.getObjectExpression()]</InnerVar>
+                <InnerVar>String [methodName=mce.getMethodAsString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>variableExpression;setAccessedVariable;[logNode]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>usesSimpleMethodArgumentsOnly</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mce</ParamName>
+                    <ParamType>MethodCallExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [arguments=mce.getArguments()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSimpleExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exp</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lookupLogFieldName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logAnnotation</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [member=logAnnotation.getMember("value")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lookupCategoryName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logAnnotation</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [member=logAnnotation.getMember("category")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createLoggingStrategy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LoggingStrategy</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logAnnotation</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <ParamType>GroovyClassLoader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [annotationName=logAnnotation.getClassNode().getName()]</InnerVar>
+                <InnerVar>Class [annotationClass]</InnerVar>
+                <InnerVar>Method [annotationMethod]</InnerVar>
+                <InnerVar>Object [defaultValue]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addLoggerFieldToClass</MethodName>
+            <MethodComment>/** 
+ * In this method, you are given a ClassNode, a field name and a category name, and you must add a new Field onto the class. Return the result of the ClassNode.addField operations.
+ * @param classNode    the class that was originally annotated with the Log transformation.
+ * @param fieldName    the name of the logger field
+ * @param categoryName the name of the logging category
+ * @return the FieldNode instance that was created and added to the class
+ */
+</MethodComment>
+            <ReturnType>FieldNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>categoryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isLoggingMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCategoryName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>categoryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapLoggingMethodCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>logVariable</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>originalExpression</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>AbstractLoggingStrategy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <ParamType>GroovyClassLoader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>AbstractLoggingStrategy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCategoryName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>categoryName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>classNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [cl=loader == null ? this.getClass().getClassLoader() : loader]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCompilationUnit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>CompilationUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

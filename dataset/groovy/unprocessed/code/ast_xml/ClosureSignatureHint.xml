@@ -1,0 +1,157 @@
+<Class>
+    <Id>846</Id>
+    <Package>groovy.transform.stc</Package>
+    <ClassName>ClosureSignatureHint</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClosureSignatureHint  /** 
+ * &lt;p&gt;A closure signature hint class is always used in conjunction with the  {@link ClosureParams} annotation. It iscalled at compile time (or may be used by IDEs) to infer the types of the parameters of a  {@link groovy.lang.Closure}.&lt;/p&gt; &lt;p&gt;A closure hint class is responsible for generating the list of arguments that a closure accepts. Since closures may accept several signatures,  {@link #getClosureSignatures(org.codehaus.groovy.ast.MethodNode,org.codehaus.groovy.control.SourceUnit,org.codehaus.groovy.control.CompilationUnit,String[],org.codehaus.groovy.ast.ASTNode)} shouldreturn a list.&lt;/p&gt; &lt;p&gt;Whenever the type checker encounters a method call that targets a method accepting a closure, it will search for the  {@link ClosureParams} annotation on the {@link groovy.lang.Closure} argument. If it is found, then itcreates an instance of the hint class and calls the  {@link #getClosureSignatures(org.codehaus.groovy.ast.MethodNode,org.codehaus.groovy.control.SourceUnit,org.codehaus.groovy.control.CompilationUnit,String[],org.codehaus.groovy.ast.ASTNode)}method, which will in turn return the list of signatures.&lt;/p&gt; &lt;p&gt;&lt;i&gt;Note that the signature concept here is used only to describe the parameter types, not the result type, which is found in the generic type argument of the  {@link groovy.lang.Closure} class.&lt;/i&gt;&lt;/p&gt;&lt;p&gt;Several predefined hints can be found, which should cover most of the use cases.&lt;/p&gt;
+ * @author Cédric Champeau
+ * @since 2.3.0
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>pickGenericType</MethodName>
+            <MethodComment>/** 
+ * A helper method which will extract the n-th generic type from a class node.
+ * @param type the class node from which to pick a generic type
+ * @param gtIndex the index of the generic type to extract
+ * @return the n-th generic type, or {@link org.codehaus.groovy.ast.ClassHelper#OBJECT_TYPE} if it doesn't exist.
+ */
+</MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gtIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GenericsType[] [genericsTypes=type.getGenericsTypes()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pickGenericType</MethodName>
+            <MethodComment>/** 
+ * A helper method which will extract the n-th generic type from the n-th parameter of a method node.
+ * @param node the method node from which the generic type should be picked
+ * @param parameterIndex the index of the parameter in the method parameter list
+ * @param gtIndex the index of the generic type to extract
+ * @return the generic type, or {@link org.codehaus.groovy.ast.ClassHelper#OBJECT_TYPE} if it doesn't exist.
+ */
+</MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameterIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>gtIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Parameter[] [parameters=node.getParameters()]</InnerVar>
+                <InnerVar>ClassNode [type=parameters[parameterIndex].getOriginType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClosureSignatures</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt;Subclasses should implement this method, which returns the list of accepted closure signatures.&lt;/p&gt; &lt;p&gt;The compiler will call this method each time, in a source file, a method call using a closure literal is encountered and that the target method has the corresponding  {@link groovy.lang.Closure} parameterannotated with  {@link groovy.transform.stc.ClosureParams}. So imagine the following code needs to be compiled:&lt;/p&gt; &lt;code&gt;@groovy.transform.TypeChecked void doSomething() { println ['a','b'].collect { it.toUpperCase() } }&lt;/code&gt; &lt;p&gt;The &lt;i&gt;collect&lt;/i&gt; method accepts a closure, but normally, the type checker doesn't have enough type information in the sole  {@link org.codehaus.groovy.runtime.DefaultGroovyMethods#collect(java.util.Collection,groovy.lang.Closure)} methodsignature to infer the type of &lt;i&gt;it&lt;/i&gt;. With the annotation, it will now try to find an annotation on the closure parameter. If it finds it, then an instance of the hint class is created and the type checker calls it with the following arguments:&lt;/p&gt; &lt;ul&gt; &lt;li&gt;the method node corresponding to the target method (here, the  {@link org.codehaus.groovy.runtime.DefaultGroovyMethods#collect(java.util.Collection,groovy.lang.Closure)} method&lt;/li&gt;&lt;li&gt;the (optional) list of options found in the annotation&lt;/li&gt; &lt;/ul&gt; &lt;p&gt;Now, the hint instance can return the list of expected parameters. Here, it would have to say that the collect method accepts a closure for which the only argument is of the type of the first generic type of the first argument.&lt;/p&gt; &lt;p&gt;With that type information, the type checker can now infer that the type of &lt;i&gt;it&lt;/i&gt; is &lt;i&gt;String&lt;/i&gt;, because the first argument (here the receiver of the collect method) is a &lt;i&gt;List&amp;lt;String&amp;gt;&lt;/i&gt;&lt;/p&gt; &lt;p&gt;&lt;/p&gt; &lt;p&gt;Subclasses are therefore expected to return the signatures according to the available context, which is only the target method and the potential options.&lt;/p&gt;
+ * @param node the method node for which a {@link groovy.lang.Closure} parameter was annotated with{@link ClosureParams}
+ * @param sourceUnit the source unit of the file being compiled
+ * @param compilationUnit the compilation unit of the file being compiled
+ * @param options the options, corresponding to the {@link ClosureParams#options()} found on the annotation  @return a non-null list of signature, where a signature corresponds to an array of class nodes, each of them matching a parameter.
+ * @param usage the AST node, in the compiled file, which triggered a call to this method. Normally only used for logging/error handling
+ */
+</MethodComment>
+            <ReturnType>ClassNode[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceUnit</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <ParamType>CompilationUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>usage</ParamName>
+                    <ParamType>ASTNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findClassNode</MethodName>
+            <MethodComment>/** 
+ * Finds a class node given a string representing the type. Performs a lookup in the compilation unit to check if it is done in the same source unit.
+ * @param sourceUnit source unit
+ * @param compilationUnit compilation unit
+ * @param className the name of the class we want to get a {@link org.codehaus.groovy.ast.ClassNode} for
+ * @return a ClassNode representing the type
+ */
+</MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceUnit</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <ParamType>CompilationUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>className</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [cn=compilationUnit.getClassNode(className)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

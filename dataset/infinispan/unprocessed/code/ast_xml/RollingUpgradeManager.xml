@@ -1,0 +1,184 @@
+<Class>
+    <Id>3048</Id>
+    <Package>org.infinispan.upgrade</Package>
+    <ClassName>RollingUpgradeManager</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RollingUpgradeManager  /** 
+ * This component handles the control hooks to handle migrating from one version of Infinispan to another.
+ * @author Manik Surtani
+ * @author Tristan Tarrant
+ * @since 5.2
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sourceMigrators</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sourceMigrators</FieldName>
+            <FieldType>SourceMigrator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>Cache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeService</FieldName>
+            <FieldType>TimeService</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cache</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>timeService</ParamName>
+                    <ParamType>TimeService</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>synchronizeData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>migratorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TargetMigrator [migrator=getMigrator(migratorName)]</InnerVar>
+                <InnerVar>long [start=timeService.time()]</InnerVar>
+                <InnerVar>long [count=migrator.synchronizeData(cache)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;entriesMigrated;[count, cache.getName(), Util.prettyPrintTime(timeService.timeDuration(start,TimeUnit.MILLISECONDS))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>synchronizeData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>migratorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>readBatch</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>threads</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TargetMigrator [migrator=getMigrator(migratorName)]</InnerVar>
+                <InnerVar>long [start=timeService.time()]</InnerVar>
+                <InnerVar>long [count=migrator.synchronizeData(cache,readBatch,threads)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;entriesMigrated;[count, cache.getName(), Util.prettyPrintTime(timeService.timeDuration(start,TimeUnit.MILLISECONDS))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>disconnectSource</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>migratorName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TargetMigrator [migrator=getMigrator(migratorName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>migrator;disconnectSource;[cache]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMigrator</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TargetMigrator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [cl=cache.getCacheManager().getCacheManagerConfiguration().classLoader()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSourceMigrator</MethodName>
+            <MethodComment>/** 
+ * Registers a migrator for a specific data format or endpoint. In the Infinispan ecosystem, we'd typically have one Migrator implementation for Hot Rod, one for memcached, one for REST and one for embedded/in-VM mode, and these would typically be added to the upgrade manager on first access via any of these protocols.
+ * @param migrator
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>migrator</ParamName>
+                    <ParamType>SourceMigrator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sourceMigrators;add;[migrator]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

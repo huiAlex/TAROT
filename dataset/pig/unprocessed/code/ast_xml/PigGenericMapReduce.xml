@@ -1,0 +1,484 @@
+<Class>
+    <Id>240</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>PigGenericMapReduce</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>PigGenericMapReduce  /** 
+ * This class is the static Mapper &amp;amp; Reducer classes that are used by Pig to execute Pig Map Reduce jobs. Since there is a reduce phase, the leaf is bound to be a POLocalRearrange. So the map phase has to separate the key and tuple and collect it into the output collector. The shuffle and sort phase sorts these keys &amp;amp; tuples and creates key, List&amp;lt;Tuple&amp;gt; and passes the key and iterator to the list. The deserialized POPackage operator is used to package the key, List&amp;lt;Tuple&amp;gt; into pigKey, Bag&amp;lt;Tuple&amp;gt; where pigKey is of the appropriate pig type and then the result of the package is attached to the reduce plan which is executed if its not empty. Either the result of the reduce plan or the package res is collected into the output collector. The index of the tuple (that is, which bag it should be placed in by the package) is packed into the key.  This is done so that hadoop sorts the keys in order of index for join. This class is the base class for PigMapReduce, which has slightly difference among different versions of hadoop. PigMapReduce implementation is located in $PIG_HOME/shims.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>sJobContext</FieldName>
+            <FieldType>JobContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sJobConf</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sJobConfInternal</FieldName>
+            <FieldType>ThreadLocal</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sJobConfInternal</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rp</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stores</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stores</FieldName>
+            <FieldType>POStore</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pack</FieldName>
+            <FieldType>POPackage</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigReporter</FieldName>
+            <FieldType>ProgressableReporter</FieldType>
+        </Field>
+        <Field>
+            <FieldName>outputCollector</FieldName>
+            <FieldType>Context</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errorInReduce</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>roots</FieldName>
+            <FieldType>PhysicalOperator[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leaf</FieldName>
+            <FieldType>PhysicalOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initialized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inIllustrator</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyType</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>staticDataCleanup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oc</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Byte [index=(Byte)tuple.get(0)]</InnerVar>
+                <InnerVar>PigNullableWritable [key=HDataType.getWritableComparableTypes(tuple.get(1),keyType)]</InnerVar>
+                <InnerVar>NullableTuple [val=new NullableTuple((Tuple)tuple.get(2))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>key;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>val;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>oc;write;[key, val]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oc</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [keyTuple=null]</InnerVar>
+                <InnerVar>Byte [index=(Byte)tuple.get(0)]</InnerVar>
+                <InnerVar>PigNullableWritable [key=HDataType.getWritableComparableTypes(keyTuple,DataType.TUPLE)]</InnerVar>
+                <InnerVar>NullableTuple [val=new NullableTuple((Tuple)tuple.get(2))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>key;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>val;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>oc;write;[key, val]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oc</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Byte [tupleKeyIdx=2]</InnerVar>
+                <InnerVar>Byte [tupleValIdx=3]</InnerVar>
+                <InnerVar>Byte [index=(Byte)tuple.get(0)]</InnerVar>
+                <InnerVar>Integer [partitionIndex=-1]</InnerVar>
+                <InnerVar>PigNullableWritable [key=HDataType.getWritableComparableTypes(tuple.get(tupleKeyIdx),keyType)]</InnerVar>
+                <InnerVar>NullablePartitionWritable [wrappedKey=new NullablePartitionWritable(key)]</InnerVar>
+                <InnerVar>NullableTuple [val=new NullableTuple((Tuple)tuple.get(tupleValIdx))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>wrappedKey;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>wrappedKey;setPartition;[partitionIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>val;setIndex;[index]</InnerMethodInvoke>
+                <InnerMethodInvoke>oc;write;[wrappedKey, val]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runPipeline</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setReducePlan</MethodName>
+            <MethodComment>/** 
+ * Set the reduce plan: to be used by local runner for illustrator
+ * @param plan Reduce plan
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment>/** 
+ * Configures the Reduce plan, the POPackage operator and the reporter thread
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [jConf=context.getConfiguration()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>SpillableMemoryManager.getInstance();configure;[jConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>context.getConfiguration();set;[PigConstants.TASK_INDEX, Integer.toString(context.getTaskAttemptID().getTaskID().getId())]</InnerMethodInvoke>
+                <InnerMethodInvoke>sJobConfInternal;set;[context.getConfiguration()]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;info;["Aliases being processed per job phase (AliasName[line,offset]): " + jConf.get("pig.alias.location")]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setDefaultTimeZone;[PigMapReduce.sJobConfInternal.get()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reduce</MethodName>
+            <MethodComment>/** 
+ * The reduce function which packages the key and List&amp;lt;Tuple&amp;gt; into key, Bag&amp;lt;Tuple&amp;gt; after converting Hadoop type key into Pig type. The package result is either collected as is, if the reduce plan is empty or after passing through the reduce plan.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>PigNullableWritable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tupIter</ParamName>
+                    <ParamType>NullableTuple</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processOnePackageOutput</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oc</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Result [res=pack.getNextTuple()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runPipeline</MethodName>
+            <MethodComment>/** 
+ * @param leaf
+ * @throws InterruptedException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanup</MethodName>
+            <MethodComment>/** 
+ * Will be called once all the intermediate keys and values are processed. So right place to stop the reporter thread.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UDFFinishVisitor [finisher=new UDFFinishVisitor(rp,new DependencyOrderWalker&lt;PhysicalOperator,PhysicalPlan&gt;(rp))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>PhysicalOperator;setReporter;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIllustratorContext</MethodName>
+            <MethodComment>/** 
+ * Get reducer's illustrator context
+ * @param input Input buffer as output by maps
+ * @param pkg package
+ * @return reducer's illustrator context
+ * @throws IOException
+ * @throws InterruptedException
+ */
+</MethodComment>
+            <ReturnType>Context</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>Pair&lt;PigNullableWritable,Writable&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pkg</ParamName>
+                    <ParamType>POPackage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inIllustrator</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POPackage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment>/** 
+ * Configures the Reduce plan, the POPackage operator and the reporter thread
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reduce</MethodName>
+            <MethodComment>/** 
+ * The reduce function which packages the key and List&amp;lt;Tuple&amp;gt; into key, Bag&amp;lt;Tuple&amp;gt; after converting Hadoop type key into Pig type. The package result is either collected as is, if the reduce plan is empty or after passing through the reduce plan.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>PigNullableWritable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>tupIter</ParamName>
+                    <ParamType>NullableTuple</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>Context</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Result [res=pack.getNextTuple()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pack;attachInput;[key, tupIter.iterator()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,224 @@
+<Class>
+    <Id>316</Id>
+    <Package>org.infinispan.persistence.manager</Package>
+    <ClassName>OrderedUpdatesManagerImpl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>OrderedUpdatesManager</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>dataContainer</FieldName>
+            <FieldType>DataContainer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dataContainer</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distributionManager</FieldName>
+            <FieldType>DistributionManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>persistenceManager</FieldName>
+            <FieldType>PersistenceManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>ConcurrentHashMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>locks</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>inject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataContainer</ParamName>
+                    <ParamType>DataContainer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>distributionManager</ParamName>
+                    <ParamType>DistributionManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>persistenceManager</ParamName>
+                    <ParamType>PersistenceManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>waitFuture</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>?</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lock</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lockedFuture</ParamName>
+                    <ParamType>CompletableFuture&lt;?&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>waitFuture</ParamName>
+                    <ParamType>CompletableFuture&lt;?&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CompletableFuture&lt;?&gt; [myFuture=new CompletableFuture&lt;&gt;()]</InnerVar>
+                <InnerVar>CompletableFuture&lt;?&gt; [prevFuture=locks.putIfAbsent(key,myFuture)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkLockAndStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>EntryVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>enableTimeout</ParamName>
+                    <ParamType>CompletableFuture&lt;?&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>store</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByRef&lt;CompletableFuture&lt;?&gt;&gt; [lockedFuture=new ByRef&lt;&gt;(null)]</InnerVar>
+                <InnerVar>ByRef&lt;CompletableFuture&lt;?&gt;&gt; [waitFuture=new ByRef&lt;&gt;(null)]</InnerVar>
+                <InnerVar>CompletableFuture&lt;?&gt; [wf=waitFuture.get()]</InnerVar>
+                <InnerVar>CompletableFuture&lt;?&gt; [lf=lockedFuture.get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dataContainer;compute;[key, (k,oldEntry,factory) -&gt; {
+  if (oldEntry == null) {
+    return null;
+  }
+  Metadata oldMetadata;
+  EntryVersion oldVersion;
+  if ((oldMetadata=oldEntry.getMetadata()) == null || (oldVersion=oldMetadata.version()) == null) {
+    lock(k,lockedFuture,waitFuture);
+  }
+ else {
+    InequalVersionComparisonResult result=oldVersion.compareTo(version);
+switch (result) {
+case AFTER:
+      break;
+case EQUAL:
+    lock(k,lockedFuture,waitFuture);
+  break;
+case BEFORE:
+case CONFLICTING:
+default :
+throw new IllegalStateException("DC version: " + oldVersion + ", cmd version "+ version);
+}
+}
+return oldEntry;
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>invalidate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>?</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;CompletableFuture&lt;?&gt;&gt; [futures=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkLockAndRemove</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>?</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByRef&lt;CompletableFuture&lt;?&gt;&gt; [lockedFuture=new ByRef&lt;&gt;(null)]</InnerVar>
+                <InnerVar>ByRef&lt;CompletableFuture&lt;?&gt;&gt; [waitFuture=new ByRef&lt;&gt;(null)]</InnerVar>
+                <InnerVar>CompletableFuture&lt;?&gt; [wf=waitFuture.get()]</InnerVar>
+                <InnerVar>CompletableFuture&lt;?&gt; [lf=lockedFuture.get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>dataContainer;compute;[key, (k,oldEntry,factory) -&gt; {
+  if (oldEntry == null) {
+    lock(k,lockedFuture,waitFuture);
+  }
+  return oldEntry;
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,353 @@
+<Class>
+    <Id>1016</Id>
+    <Package>groovy.beans</Package>
+    <ClassName>VetoableASTTransformation</ClassName>
+    <SuperClass>BindableASTTransformation</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>VetoableASTTransformation  /** 
+ * Handles generation of code for the  {@code @Vetoable} annotation, and {@code @Bindable}if also present. &lt;p&gt; Generally, it adds (if needed) a VetoableChangeSupport field and the needed add/removeVetoableChangeListener methods to support the listeners. &lt;p&gt; It also generates the setter and wires the setter through the VetoableChangeSupport. &lt;p&gt; If a  {@link Bindable} annotation is detected it also adds support similarto what  {@link BindableASTTransformation} would do.
+ * @author Danno Ferrin (shemnon)
+ * @author Chris Reeves
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>constrainedClassNode</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>hasVetoableAnnotation</MethodName>
+            <MethodComment>/** 
+ * Convenience method to see if an annotated node is  {@code @Vetoable}.
+ * @param node the node to check
+ * @return true if the node is constrained
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>AnnotatedNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment>/** 
+ * Handles the bulk of the processing, mostly delegating to other methods.
+ * @param nodes   the AST nodes
+ * @param source  the source unit for the nodes
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <ParamType>ASTNode[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AnnotationNode [node=(AnnotationNode)nodes[0]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addListenerToProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>AnnotatedNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=parent.getDeclaringClass()]</InnerVar>
+                <InnerVar>FieldNode [field=((FieldNode)parent)]</InnerVar>
+                <InnerVar>String [fieldName=field.getName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>source.getErrorCollector();addErrorAndContinue;[new SyntaxErrorMessage(new SyntaxException("@groovy.beans.Vetoable must be on a property, not a field.  Try removing the private, protected, or public modifier.",node.getLineNumber(),node.getColumnNumber(),node.getLastLineNumber(),node.getLastColumnNumber()),source)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addListenerToClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>classNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [bindable=BindableASTTransformation.hasBindableAnnotation(classNode)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapSetterMethod</MethodName>
+            <MethodComment>/** 
+ * Wrap an existing setter.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classNode</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>bindable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>propertyName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [getterName="get" + MetaClassHelper.capitalize(propertyName)]</InnerVar>
+                <InnerVar>MethodNode [setter=classNode.getSetterMethod("set" + MetaClassHelper.capitalize(propertyName))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createListenerSetter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>bindable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>propertyNode</ParamName>
+                    <ParamType>PropertyNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [setterName="set" + MetaClassHelper.capitalize(propertyNode.getName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createConstrainedStatement</MethodName>
+            <MethodComment>/** 
+ * Creates a statement body similar to: &lt;code&gt;this.fireVetoableChange("field", field, field = value)&lt;/code&gt;
+ * @param propertyNode           the field node for the property
+ * @param fieldExpression a field expression for setting the property value
+ * @return the created statement
+ */
+</MethodComment>
+            <ReturnType>Statement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>propertyNode</ParamName>
+                    <ParamType>PropertyNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldExpression</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSetStatement</MethodName>
+            <MethodComment>/** 
+ * Creates a statement body similar to: &lt;code&gt;field = value&lt;/code&gt;. &lt;p&gt; Used when the field is not also  {@code @Bindable}.
+ * @param fieldExpression a field expression for setting the property value
+ * @return the created statement
+ */
+</MethodComment>
+            <ReturnType>Statement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldExpression</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>needsVetoableChangeSupport</MethodName>
+            <MethodComment>/** 
+ * Snoops through the declaring class and all parents looking for a field of type VetoableChangeSupport.  Remembers the field and returns false if found otherwise returns true to indicate that such support should be added.
+ * @param declaringClass the class to search
+ * @return true if vetoable change support should be added
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceUnit</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [foundAdd=false, foundRemove=false, foundFire=false]</InnerVar>
+                <InnerVar>ClassNode [consideredClass=declaringClass]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSetterMethod</MethodName>
+            <MethodComment>/** 
+ * Creates a setter method with the given body. &lt;p&gt; This differs from normal setters in that we need to add a declared exception java.beans.PropertyVetoException
+ * @param declaringClass the class to which we will add the setter
+ * @param propertyNode          the field to back the setter
+ * @param setterName     the name of the setter
+ * @param setterBlock    the statement representing the setter block
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>propertyNode</ParamName>
+                    <ParamType>PropertyNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>setterName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>setterBlock</ParamName>
+                    <ParamType>Statement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode[] [exceptions={ClassHelper.make(PropertyVetoException.class)}]</InnerVar>
+                <InnerVar>MethodNode [setter=new MethodNode(setterName,propertyNode.getModifiers(),ClassHelper.VOID_TYPE,params(param(propertyNode.getType(),"value")),exceptions,setterBlock)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>setter;setSynthetic;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[setter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addVetoableChangeSupport</MethodName>
+            <MethodComment>/** 
+ * Adds the necessary field and methods to support vetoable change support. &lt;p&gt; Adds a new field: &lt;code&gt;"protected final java.beans.VetoableChangeSupport this$vetoableChangeSupport = new java.beans.VetoableChangeSupport(this)"&lt;/code&gt; &lt;p&gt; Also adds support methods: &lt;code&gt;public void addVetoableChangeListener(java.beans.VetoableChangeListener)&lt;/code&gt; &lt;code&gt;public void addVetoableChangeListener(String, java.beans.VetoableChangeListener)&lt;/code&gt; &lt;code&gt;public void removeVetoableChangeListener(java.beans.VetoableChangeListener)&lt;/code&gt; &lt;code&gt;public void removeVetoableChangeListener(String, java.beans.VetoableChangeListener)&lt;/code&gt; &lt;code&gt;public java.beans.VetoableChangeListener[] getVetoableChangeListeners()&lt;/code&gt;
+ * @param declaringClass the class to which we add the support field and methods
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>declaringClass</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [vcsClassNode=ClassHelper.make(VetoableChangeSupport.class)]</InnerVar>
+                <InnerVar>ClassNode [vclClassNode=ClassHelper.make(VetoableChangeListener.class)]</InnerVar>
+                <InnerVar>FieldNode [vcsField=declaringClass.addField("this$vetoableChangeSupport",ACC_FINAL | ACC_PRIVATE | ACC_SYNTHETIC,vcsClassNode,ctorX(vcsClassNode,args(varX("this"))))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("addVetoableChangeListener",ACC_PUBLIC,ClassHelper.VOID_TYPE,params(param(vclClassNode,"listener")),ClassNode.EMPTY_ARRAY,stmt(callX(fieldX(vcsField),"addVetoableChangeListener",args(varX("listener",vclClassNode)))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("addVetoableChangeListener",ACC_PUBLIC,ClassHelper.VOID_TYPE,params(param(ClassHelper.STRING_TYPE,"name"),param(vclClassNode,"listener")),ClassNode.EMPTY_ARRAY,stmt(callX(fieldX(vcsField),"addVetoableChangeListener",args(varX("name",ClassHelper.STRING_TYPE),varX("listener",vclClassNode)))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("removeVetoableChangeListener",ACC_PUBLIC,ClassHelper.VOID_TYPE,params(param(vclClassNode,"listener")),ClassNode.EMPTY_ARRAY,stmt(callX(fieldX(vcsField),"removeVetoableChangeListener",args(varX("listener",vclClassNode)))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("removeVetoableChangeListener",ACC_PUBLIC,ClassHelper.VOID_TYPE,params(param(ClassHelper.STRING_TYPE,"name"),param(vclClassNode,"listener")),ClassNode.EMPTY_ARRAY,stmt(callX(fieldX(vcsField),"removeVetoableChangeListener",args(varX("name",ClassHelper.STRING_TYPE),varX("listener",vclClassNode)))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("fireVetoableChange",ACC_PUBLIC,ClassHelper.VOID_TYPE,params(param(ClassHelper.STRING_TYPE,"name"),param(ClassHelper.OBJECT_TYPE,"oldValue"),param(ClassHelper.OBJECT_TYPE,"newValue")),new ClassNode[]{ClassHelper.make(PropertyVetoException.class)},stmt(callX(fieldX(vcsField),"fireVetoableChange",args(varX("name",ClassHelper.STRING_TYPE),varX("oldValue"),varX("newValue")))))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("getVetoableChangeListeners",ACC_PUBLIC,vclClassNode.makeArray(),Parameter.EMPTY_ARRAY,ClassNode.EMPTY_ARRAY,returnS(callX(fieldX(vcsField),"getVetoableChangeListeners")))]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass;addMethod;[new MethodNode("getVetoableChangeListeners",ACC_PUBLIC,vclClassNode.makeArray(),params(param(ClassHelper.STRING_TYPE,"name")),ClassNode.EMPTY_ARRAY,returnS(callX(fieldX(vcsField),"getVetoableChangeListeners",args(varX("name",ClassHelper.STRING_TYPE)))))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

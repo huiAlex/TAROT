@@ -1,0 +1,12 @@
+Note that this would affect both distributed and replicated cache modes.
+Currently clusters are always symmetric.  E.g., assume 5 nodes, N1 ~ N5.  Infinispan assumes that each node has the same set of named caches (e.g., C1 ~ C5) deployed on each node, and is designed accordingly.  This causes problems for applications where caches are defined and started lazily on each node.  For example:
+Considering a cache manager with 2 caches in DIST mode (C1 and C2) deployed on 2 nodes (N1 and N2).
+Currently, the DistributionManager does not properly handle the following scenarios:
+1. Stop C1 on N1.  This ought to trigger a rehash for the C1 cache.  Currently, rehashing is only triggered via view change.  Failure to rehash on stopping of a cache can inadvertently cause data loss, if all backups of a given cache entry have stopped.
+2. A new DIST mode cache, C3, is started on N2.  If N1 is the coordinator, the join request sent to N1 will get stuck in an infinite loop, since the cache manager on N1 does not contain a C3 cache.
+3. Less critically, a new node, N3 is started.  It does not yet have a C1 or C2 cache, though it s cache manager is started.  This prematurely triggers a rehash of C1 and C2, even though there are no new caches instances to consider.
+To solve this, one proposal would involve:
+1. Providing a  named cache coordinator  for each distributed named cache, which would coordinate rehashes.  This may or may not be the JGroups coordinator, and named caches may or may not share the same named cache coordinator.
+2. The DistManager would maintain a list of available members, which would be a subset of all of the members available in the RpcManager.
+3.  A concept of a LEAVE message, broadcast when a cache stops.  This would serve the same effect as a view change with a member removed, with the exception of affecting only a single named cache.
+With the above 3 in place, a proper solution could be devised to handle asymmetric distributed clusters.

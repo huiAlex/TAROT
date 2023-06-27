@@ -1,0 +1,666 @@
+<Class>
+    <Id>50</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark</Package>
+    <ClassName>SparkLauncher</ClassName>
+    <SuperClass>Launcher</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SparkLauncher  /** 
+ * Main class that launches pig for Spark
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkContext</FieldName>
+            <FieldType>JavaSparkContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jobMetricsListener</FieldName>
+            <FieldType>JobMetricsListener</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jobGroupID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jobConf</FieldName>
+            <FieldType>JobConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentDirectoryPath</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkEngineConf</FieldName>
+            <FieldType>SparkEngineConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PIG_WARNING_FQCN</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>launchPig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PigStats</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>grpName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperPlan [sparkplan=compile(physicalPlan,pigContext)]</InnerVar>
+                <InnerVar>SparkPigStats [sparkStats=(SparkPigStats)pigContext.getExecutionEngine().instantiatePigStats()]</InnerVar>
+                <InnerVar>Map&lt;Class&lt;? extends PhysicalOperator&gt;,RDDConverter&gt; [convertMap=new HashMap&lt;Class&lt;? extends PhysicalOperator&gt;,RDDConverter&gt;()]</InnerVar>
+                <InnerVar>Configuration [conf=ConfigurationUtil.toConfiguration(pigContext.getProperties())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;initialize;[physicalPlan]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkStats;initialize;[pigContext, sparkplan, jobConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigStats;start;[sparkStats]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;startSparkIfNeeded;[pigContext]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;[MRConfiguration.JOB_ID, jobGroupID]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkContext;setJobGroup;[jobGroupID, "Pig query to Spark cluster", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobMetricsListener;reset;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>new ParallelismSetter(sparkplan,jobConf);visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;prepareSparkCounters;[jobConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POLoad.class, new LoadConverter(pigContext,physicalPlan,sparkContext.sc(),jobConf,sparkEngineConf)]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POStore.class, new StoreConverter(jobConf)]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POForEach.class, new ForEachConverter(jobConf)]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POFilter.class, new FilterConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POPackage.class, new PackageConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POLocalRearrange.class, new LocalRearrangeConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POGlobalRearrangeSpark.class, new GlobalRearrangeConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POJoinGroupSpark.class, new JoinGroupSparkConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POLimit.class, new LimitConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[PODistinct.class, new DistinctConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POUnion.class, new UnionConverter(sparkContext.sc())]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POSort.class, new SortConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POSplit.class, new SplitConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POSkewedJoin.class, new SkewedJoinConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POMergeJoin.class, new MergeJoinConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POCollectedGroup.class, new CollectedGroupConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POCounter.class, new CounterConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[PORank.class, new RankConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POStream.class, new StreamConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POFRJoinSpark.class, new FRJoinConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POMergeCogroup.class, new MergeCogroupConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POReduceBySpark.class, new ReduceByConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POPreCombinerLocalRearrange.class, new LocalRearrangeConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POBroadcastSpark.class, new BroadcastConverter(sparkContext)]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POSampleSortSpark.class, new SparkSampleSortConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>convertMap;put;[POPoissonSampleSpark.class, new PoissonSampleConverter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;uploadResources;[sparkplan]</InnerMethodInvoke>
+                <InnerMethodInvoke>new JobGraphBuilder(sparkplan,convertMap,sparkStats,sparkContext,jobMetricsListener,jobGroupID,jobConf,pigContext);visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanUpSparkJob;[sparkStats]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkStats;finish;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;resetUDFContext;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetUDFContext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>UDFContext.getUDFContext();addJobConf;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>uploadResources</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkPlan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addFilesToSparkJob;[sparkPlan]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addJarsToSparkJob;[sparkPlan]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>optimize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=ConfigurationUtil.toConfiguration(pigContext.getProperties())]</InnerVar>
+                <InnerVar>boolean [noCombiner=conf.getBoolean(PigConfiguration.PIG_EXEC_NO_COMBINER,false)]</InnerVar>
+                <InnerVar>boolean [noSecondaryKey=conf.getBoolean(PigConfiguration.PIG_EXEC_NO_SECONDARY_KEY,false)]</InnerVar>
+                <InnerVar>boolean [isAccum=conf.getBoolean(PigConfiguration.PIG_OPT_ACCUMULATOR,true)]</InnerVar>
+                <InnerVar>NoopFilterRemover [fRem=new NoopFilterRemover(plan)]</InnerVar>
+                <InnerVar>boolean [isMultiQuery=conf.getBoolean(PigConfiguration.PIG_OPT_MULTIQUERY,true)]</InnerVar>
+                <InnerVar>JoinGroupOptimizerSpark [joinOptimizer=new JoinGroupOptimizerSpark(plan)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fRem;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>joinOptimizer;visit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanUpSparkJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkStats</ParamName>
+                    <ParamType>SparkPigStats</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isLocal=System.getenv("SPARK_MASTER") != null ? System.getenv("SPARK_MASTER").equalsIgnoreCase("LOCAL") : true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Clean up Spark Job"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addFilesToSparkJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkPlan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [shipFiles=pigContext.getProperties().getProperty("pig.streaming.ship.files")]</InnerVar>
+                <InnerVar>String [cacheFiles=pigContext.getProperties().getProperty("pig.streaming.cache.files")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Add files Spark Job"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;shipFiles;[shipFiles]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cacheFiles;[cacheFiles]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addUdfResourcesToSparkJob;[sparkPlan]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addUdfResourcesToSparkJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkPlan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkPOUserFuncVisitor [sparkPOUserFuncVisitor=new SparkPOUserFuncVisitor(sparkPlan)]</InnerVar>
+                <InnerVar>Joiner [joiner=Joiner.on(",")]</InnerVar>
+                <InnerVar>String [shipFiles=joiner.join(sparkPOUserFuncVisitor.getShipFiles())]</InnerVar>
+                <InnerVar>String [cacheFiles=joiner.join(sparkPOUserFuncVisitor.getCacheFiles())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sparkPOUserFuncVisitor;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;shipFiles;[shipFiles]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cacheFiles;[cacheFiles]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shipFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>shipFiles</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cacheFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheFiles</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addJarsToSparkJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkPlan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [allJars=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>UDFJarsFinder [udfJarsFinder=new UDFJarsFinder(sparkPlan,pigContext)]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [udfJars=udfJarsFinder.getUdfJars()]</InnerVar>
+                <InnerVar>File [scriptUDFJarFile=JarManager.createPigScriptUDFJar(pigContext)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Add default jars to Spark Job"]</InnerMethodInvoke>
+                <InnerMethodInvoke>allJars;addAll;[JarManager.getDefaultJars()]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;info;["Add script jars to Spark Job"]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;info;["Add udf jars to Spark Job"]</InnerMethodInvoke>
+                <InnerMethodInvoke>udfJarsFinder;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;info;["Add extra jars to Spark job"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addResourceToSparkJobWorkingDirectory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resourcePath</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resourceName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resourceType</ParamName>
+                    <ParamType>ResourceType</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isLocal=System.getenv("SPARK_MASTER") != null ? System.getenv("SPARK_MASTER").equalsIgnoreCase("LOCAL") : true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractFileName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheFileUrl</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [tmpAry=cacheFileUrl.split("#")]</InnerVar>
+                <InnerVar>String [fileName=tmpAry != null &amp;&amp; tmpAry.length == 2 ? tmpAry[1] : null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractFileUrl</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheFileUrl</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [tmpAry=cacheFileUrl.split("#")]</InnerVar>
+                <InnerVar>String [fileName=tmpAry != null &amp;&amp; tmpAry.length == 2 ? tmpAry[0] : null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkCompiler [sparkCompiler=new SparkCompiler(physicalPlan,pigContext)]</InnerVar>
+                <InnerVar>SparkOperPlan [sparkPlan=sparkCompiler.getSparkPlan()]</InnerVar>
+                <InnerVar>SparkPOPackageAnnotator [pkgAnnotator=new SparkPOPackageAnnotator(sparkPlan)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sparkCompiler;compile;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkCompiler;connectSoftLink;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgAnnotator;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;optimize;[sparkPlan, pigContext]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startSparkIfNeeded</MethodName>
+            <MethodComment>/** 
+ * Only one SparkContext may be active per JVM (SPARK-2243). When multiple threads start SparkLaucher, the static member sparkContext should be initialized only once
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PigException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkAndConfigureDynamicAllocation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>master</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sparkConf</ParamName>
+                    <ParamType>SparkConf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopSpark</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>explain</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pp</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>PrintStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>format</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>verbose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperPlan [sparkPlan=compile(pp,pc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;explain;[sparkPlan, ps, format, verbose]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>explain</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkPlan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>PrintStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>format</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>verbose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Map&lt;OperatorKey,SparkOperator&gt; [allOperKeys=sparkPlan.getKeys()]</InnerVar>
+                <InnerVar>List&lt;OperatorKey&gt; [operKeyList=new ArrayList&lt;&gt;(allOperKeys.keySet())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[operKeyList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>kill</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>BackendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>killJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jobID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>BackendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>saveUdfImportList</MethodName>
+            <MethodComment>/** 
+ * We store the value of udf.import.list in SparkEngineConf#properties Later we will serialize it in SparkEngineConf#writeObject and deserialize in SparkEngineConf#readObject. More detail see PIG-4920
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [udfImportList=Joiner.on(",").join(PigContext.getPackageImportList())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sparkEngineConf;setSparkUdfImportListStr;[udfImportList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [parallelism=pigContext.getProperties().getProperty("spark.default.parallelism")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;saveUdfImportList;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>SchemaTupleBackend;initialize;[jobConf, pigContext]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setDefaultTimeZone;[jobConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigMapReduce.sJobConfInternal;set;[jobConf]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareSparkCounters</MethodName>
+            <MethodComment>/** 
+ * Creates new SparkCounters instance for the job, initializes aggregate warning counters if required
+ * @param jobConf
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jobConf</ParamName>
+                    <ParamType>JobConf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkPigStatusReporter [statusReporter=SparkPigStatusReporter.getInstance()]</InnerVar>
+                <InnerVar>SparkCounters [counters=new SparkCounters(sparkContext)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>statusReporter;setCounters;[counters]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;["pig.spark.counters", ObjectSerializer.serialize(counters)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

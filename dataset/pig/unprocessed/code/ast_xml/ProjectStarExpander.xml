@@ -1,0 +1,438 @@
+<Class>
+    <Id>901</Id>
+    <Package>org.apache.pig.newplan.logical.visitor</Package>
+    <ClassName>ProjectStarExpander</ClassName>
+    <SuperClass>LogicalRelationalNodesVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ProjectStarExpander  /** 
+ * A visitor to walk operators that contain a nested plan and translate project( * ) operators to a list of projection operators, i.e.,  project( * ) -&gt; project(0), project(1), ... project(n-2), project(n-1) If input schema is null, project(*) is not expanded. It also expands project range ( eg $1 .. $5). It won't expand project-range-to-end (eg $3 ..) if the input schema is null.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>projs</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>projs</FieldName>
+            <FieldType>ProjectExpression</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ProjectStarExpander</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>OperatorPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>LOSort</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=sort.getSortColPlans()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [ascOrder=sort.getAscendingCols()]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [newExpPlans=new ArrayList&lt;LogicalExpressionPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [newAscOrder=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sort;setSortColPlans;[newExpPlans]</InnerMethodInvoke>
+                <InnerMethodInvoke>sort;setAscendingCols;[newAscOrder]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rank</ParamName>
+                    <ParamType>LORank</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=rank.getRankColPlans()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [ascOrder=rank.getAscendingCol()]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [newExpPlans=new ArrayList&lt;LogicalExpressionPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [newAscOrder=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rank;setRankColPlan;[newExpPlans]</InnerMethodInvoke>
+                <InnerMethodInvoke>rank;setAscendingCol;[newAscOrder]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandPlan</MethodName>
+            <MethodComment>/** 
+ * Expand plan into multiple plans if the plan contains a project star, if there is no project star the returned list contains the plan argument.
+ * @param plan
+ * @return
+ * @throws FrontendException
+ */
+</MethodComment>
+            <ReturnType>LogicalExpressionPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expandedPlans]</InnerVar>
+                <InnerVar>ProjectExpression [projStar=getProjectStar(plan)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cg</ParamName>
+                    <ParamType>LOCogroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MultiMap&lt;Integer,LogicalExpressionPlan&gt; [inpExprPlans=cg.getExpressionPlans()]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [inputs=cg.getInputs((LogicalPlan)cg.getPlan())]</InnerVar>
+                <InnerVar>int [arity=inpExprPlans.get(0).size()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;expandPlans;[inpExprPlans]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cu</ParamName>
+                    <ParamType>LOCube</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MultiMap&lt;Integer,LogicalExpressionPlan&gt; [inpExprPlans=cu.getExpressionPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;expandPlans;[inpExprPlans]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>join</ParamName>
+                    <ParamType>LOJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;expandPlans;[join.getExpressionPlans()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>foreach</ParamName>
+                    <ParamType>LOForEach</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalPlan [innerPlan=foreach.getInnerPlan()]</InnerVar>
+                <InnerVar>PlanWalker [newWalker=currentWalker.spawnChildWalker(innerPlan)]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [feOutputs=innerPlan.getSinks()]</InnerVar>
+                <InnerVar>LOGenerate [gen=null]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=gen.getOutputPlans()]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [newExpPlans=new ArrayList&lt;LogicalExpressionPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [loGenPreds=innerPlan.getPredecessors(gen)]</InnerVar>
+                <InnerVar>List&lt;LogicalSchema&gt; [userSchema=gen.getUserDefinedSchema()]</InnerVar>
+                <InnerVar>List&lt;LogicalSchema&gt; [newUserSchema=null]</InnerVar>
+                <InnerVar>boolean[] [flattens=gen.getFlattenFlags()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [newFlattens=new ArrayList&lt;Boolean&gt;(flattens.length)]</InnerVar>
+                <InnerVar>Map&lt;Integer,LogicalRelationalOperator&gt; [oldPos2Rel=new HashMap&lt;Integer,LogicalRelationalOperator&gt;()]</InnerVar>
+                <InnerVar>LogicalRelationalOperator [pred=(LogicalRelationalOperator)foreach.getPlan().getPredecessors(foreach).get(0)]</InnerVar>
+                <InnerVar>LogicalSchema [inpSch=pred.getSchema()]</InnerVar>
+                <InnerVar>Map&lt;ProjectExpression,LogicalRelationalOperator&gt; [proj2InpRel=new HashMap&lt;ProjectExpression,LogicalRelationalOperator&gt;()]</InnerVar>
+                <InnerVar>Map&lt;LogicalRelationalOperator,Integer&gt; [rel2pos=new HashMap&lt;LogicalRelationalOperator,Integer&gt;()]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [newGenPreds=innerPlan.getPredecessors(gen)]</InnerVar>
+                <InnerVar>int [numNewGenPreds=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;pushWalker;[newWalker]</InnerMethodInvoke>
+                <InnerMethodInvoke>currentWalker;walk;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popWalker;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>gen;setOutputPlans;[newExpPlans]</InnerMethodInvoke>
+                <InnerMethodInvoke>gen;setFlattenFlags;[Booleans.toArray(newFlattens)]</InnerMethodInvoke>
+                <InnerMethodInvoke>gen;setUserDefinedSchema;[newUserSchema]</InnerMethodInvoke>
+                <InnerMethodInvoke>gen;resetSchema;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>foreach;resetSchema;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>FindProjects</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>ProjectExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>projs;add;[proj]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProjs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ProjectExpression</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProjectLonelyStar</MethodName>
+            <MethodComment>/** 
+ * Find project-star in foreach statement. The LOInnerLoad corresponding to the project-star also needs to have a project-star
+ * @param expPlan - expression plan
+ * @param oldPos2Rel - inner relational plan of foreach
+ * @return ProjectExpression that satisfies the conditions
+ * @throws FrontendException 
+ */
+</MethodComment>
+            <ReturnType>ProjectExpression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expPlan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldPos2Rel</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Operator [outputOp=expPlan.getOperators().next()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandPlans</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inpExprPlans</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandPlan</MethodName>
+            <MethodComment>/** 
+ * expand this plan containing project star to multiple plans  each projecting a single column
+ * @param expPlan
+ * @param proj
+ * @return
+ * @throws FrontendException 
+ */
+</MethodComment>
+            <ReturnType>LogicalExpressionPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expPlan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>ProjectExpression</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Pair&lt;Integer,Integer&gt; [startAndEndProjs=ProjectStarExpanderUtil.getProjectStartEndCols(expPlan,proj)]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [newPlans=new ArrayList&lt;LogicalExpressionPlan&gt;()]</InnerVar>
+                <InnerVar>int [firstProjCol=startAndEndProjs.first]</InnerVar>
+                <InnerVar>int [lastProjCol=startAndEndProjs.second]</InnerVar>
+                <InnerVar>LogicalRelationalOperator [relOp=proj.getAttachedRelationalOp()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createExpPlanWithProj</MethodName>
+            <MethodComment>/** 
+ * Create new logical plan with a project that is attached to LogicalRelation attachRel and projects i'th column from input
+ * @param attachRel 
+ * @param inputNum
+ * @param colNum 
+ * @return
+ */
+</MethodComment>
+            <ReturnType>LogicalExpressionPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>attachRel</ParamName>
+                    <ParamType>LogicalRelationalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colNum</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalExpressionPlan [newExpPlan=new LogicalExpressionPlan()]</InnerVar>
+                <InnerVar>ProjectExpression [newProj=new ProjectExpression(newExpPlan,inputNum,colNum,attachRel)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newExpPlan;add;[newProj]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProjectStar</MethodName>
+            <MethodComment>/** 
+ * if LogicalExpressionPlan argument has a project star output then return it, otherwise return null
+ * @param expPlan
+ * @return
+ * @throws FrontendException 
+ */
+</MethodComment>
+            <ReturnType>ProjectExpression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expPlan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Operator&gt; [outputs=expPlan.getSources()]</InnerVar>
+                <InnerVar>ProjectExpression [projStar=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

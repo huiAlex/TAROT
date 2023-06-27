@@ -1,0 +1,381 @@
+<Class>
+    <Id>1018</Id>
+    <Package>org.infinispan.container.offheap</Package>
+    <ClassName>OffHeapEntryFactoryImpl</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>OffHeapEntryFactory</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>OffHeapEntryFactoryImpl  /** 
+ * Factory that can create CacheEntry instances from off-heap memory.
+ * @author wburns
+ * @since 9.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>MEMORY</FieldName>
+            <FieldType>OffHeapMemory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_BYTES</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>marshaller</FieldName>
+            <FieldType>Marshaller</FieldType>
+        </Field>
+        <Field>
+            <FieldName>allocator</FieldName>
+            <FieldType>OffHeapMemoryAllocator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>timeService</FieldName>
+            <FieldType>TimeService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>internalEntryFactory</FieldName>
+            <FieldType>InternalEntryFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>evictionEnabled</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CUSTOM</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HAS_VERSION</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IMMORTAL</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MORTAL</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TRANSIENT</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TRANSIENT_MORTAL</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_LENGTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>inject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>marshaller</ParamName>
+                    <ParamType>Marshaller</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>allocator</ParamName>
+                    <ParamType>OffHeapMemoryAllocator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>timeService</ParamName>
+                    <ParamType>TimeService</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>internalEntryFactory</ParamName>
+                    <ParamType>InternalEntryFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>configuration</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>create</MethodName>
+            <MethodComment>/** 
+ * Create an entry off-heap.  The first 8 bytes will always be 0, reserved for a future reference to another entry
+ * @param key the key to use
+ * @param value the value to use
+ * @param metadata the metadata to use
+ * @return the address of the entry created off heap
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>WrappedBytes</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>WrappedBytes</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>metadata</ParamName>
+                    <ParamType>Metadata</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte [type]</InnerVar>
+                <InnerVar>byte[] [metadataBytes]</InnerVar>
+                <InnerVar>int [keySize=key.getLength()]</InnerVar>
+                <InnerVar>int [metadataSize=metadataBytes.length]</InnerVar>
+                <InnerVar>int [valueSize=value.getLength()]</InnerVar>
+                <InnerVar>int [headerOffset=evictionEnabled ? 8 : 0]</InnerVar>
+                <InnerVar>long [totalSize=8 + headerOffset + HEADER_LENGTH+ keySize+ metadataSize+ valueSize]</InnerVar>
+                <InnerVar>long [memoryAddress=allocator.allocate(totalSize + headerOffset)]</InnerVar>
+                <InnerVar>int [offset=evictionEnabled ? 8 : 0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MEMORY;putLong;[memoryAddress, offset, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putInt;[memoryAddress, offset, key.hashCode()]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putInt;[memoryAddress, offset, key.getLength()]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putInt;[memoryAddress, offset, metadataBytes.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putInt;[memoryAddress, offset, value.getLength()]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putByte;[memoryAddress, offset, type]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putBytes;[key.getBytes(), key.backArrayOffset(), memoryAddress, offset, keySize]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putBytes;[metadataBytes, 0, memoryAddress, offset, metadataSize]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;putBytes;[value.getBytes(), value.backArrayOffset(), memoryAddress, offset, valueSize]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [headerOffset=evictionEnabled ? 16 : 8]</InnerVar>
+                <InnerVar>int [keyLength=MEMORY.getInt(entryAddress,headerOffset + 4)]</InnerVar>
+                <InnerVar>int [metadataLength=MEMORY.getInt(entryAddress,headerOffset + 8)]</InnerVar>
+                <InnerVar>int [valueLength=MEMORY.getInt(entryAddress,headerOffset + 12)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MEMORY;putLong;[entryAddress, evictionEnabled ? 8 : 0, value]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLruNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLruNode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MEMORY;putLong;[entryAddress, 0, value]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHashCode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryAddress</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [headerOffset=evictionEnabled ? 16 : 8]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromMemory</MethodName>
+            <MethodComment>/** 
+ * Assumes the address doesn't contain the linked pointer at the beginning
+ * @param address the address to read the entry from
+ * @return the entry at the memory location
+ */
+</MethodComment>
+            <ReturnType>WrappedBytes</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [headerOffset=evictionEnabled ? 16 : 8]</InnerVar>
+                <InnerVar>int [offset=headerOffset]</InnerVar>
+                <InnerVar>int [hashCode=MEMORY.getInt(address,offset)]</InnerVar>
+                <InnerVar>byte[] [keyBytes=new byte[MEMORY.getInt(address,offset)]]</InnerVar>
+                <InnerVar>byte[] [metadataBytes=new byte[MEMORY.getInt(address,offset)]]</InnerVar>
+                <InnerVar>byte[] [valueBytes=new byte[MEMORY.getInt(address,offset)]]</InnerVar>
+                <InnerVar>byte [metadataType=MEMORY.getByte(address,offset)]</InnerVar>
+                <InnerVar>Metadata [metadata]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MEMORY;getBytes;[address, offset, keyBytes, 0, keyBytes.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;getBytes;[address, offset, metadataBytes, 0, metadataBytes.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>MEMORY;getBytes;[address, offset, valueBytes, 0, valueBytes.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>WrappedBytes</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [headerOffset=(evictionEnabled ? 16 : 8)]</InnerVar>
+                <InnerVar>int [keyLength=MEMORY.getInt(address,headerOffset + 4)]</InnerVar>
+                <InnerVar>byte[] [keyBytes=new byte[keyLength]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MEMORY;getBytes;[address, headerOffset + HEADER_LENGTH, keyBytes, 0, keyBytes.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>equalsKey</MethodName>
+            <MethodComment>/** 
+ * Assumes the address points to the entry excluding the pointer reference at the beginning
+ * @param address the address of an entry to read
+ * @param wrappedBytes the key to check if it equals
+ * @return whether the key and address are equal
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wrappedBytes</ParamName>
+                    <ParamType>WrappedBytes</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [headerOffset=evictionEnabled ? 16 : 8]</InnerVar>
+                <InnerVar>int [hashCode=wrappedBytes.hashCode()]</InnerVar>
+                <InnerVar>int [keyLength=MEMORY.getInt(address,headerOffset + 4)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

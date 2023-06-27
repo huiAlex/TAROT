@@ -1,0 +1,131 @@
+<Class>
+    <Id>1506</Id>
+    <Package>org.infinispan.server.test.task</Package>
+    <ClassName>DistributedAuthServerTaskIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DistributedAuthServerTaskIT  /** 
+ * Tests in distributed mode the server task execution in case if authentication is required.
+ * @author amanukya
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server2</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exceptionRule</FieldName>
+            <FieldType>ExpectedException</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>before</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String[] [serverDirs=new String[]{System.getProperty("server1.dist"),System.getProperty("server2.dist")}]</InnerVar>
+                <InnerVar>JavaArchive [jar=ShrinkWrap.create(JavaArchive.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jar;addClass;[DistributedAuthServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[LocalAuthTestServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addAsServiceProvider;[ServerTask.class, DistributedAuthServerTask.class, LocalAuthTestServerTask.class]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>undeploy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [serverDir=System.getProperty("server1.dist")]</InnerVar>
+                <InnerVar>File [jar=new File(serverDir,"/standalone/deployments/custom-distributed-task-with-auth.jar")]</InnerVar>
+                <InnerVar>File [f=new File(serverDir,"/standalone/deployments/custom-distributed-task-with-auth.jar.deployed")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldRunLocalAuthTest</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache(LocalAuthTestServerTask.CACHE_NAME)]</InnerVar>
+                <InnerVar>String [result=(String)remoteCache.execute(LocalAuthTestServerTask.NAME,Collections.emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[EXECUTOR_LOGIN, EXECUTOR_PASSWORD]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[LocalAuthTestServerTask.EXECUTED_VALUE, result]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[true, remoteCache.get(LocalAuthTestServerTask.KEY)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm;stop;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldRunDistAuthTest</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache(DistributedAuthServerTask.CACHE_NAME)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [result=(List&lt;String&gt;)remoteCache.execute(DistributedAuthServerTask.NAME,Collections.emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[EXECUTOR_LOGIN, EXECUTOR_PASSWORD]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, result.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["result list does not contain expected items.", result.containsAll(asList("node0","node1"))]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm;stop;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldThrowException</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SecurityConfigurationHelper [config=new SecurityConfigurationHelper("DIGEST-MD5")]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(config.build(),true)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache(DistributedAuthServerTask.CACHE_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>config.forIspnServer(server1);withServerName;["node0"]</InnerMethodInvoke>
+                <InnerMethodInvoke>config;forCredentials;[ADMIN_LOGIN, ADMIN_PASSWD]</InnerMethodInvoke>
+                <InnerMethodInvoke>exceptionRule;expect;[HotRodClientException.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>exceptionRule;expectMessage;["lacks 'EXEC' permission"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;execute;[DistributedAuthServerTask.NAME, Collections.emptyMap()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm;stop;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

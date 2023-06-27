@@ -1,0 +1,123 @@
+<Class>
+    <Id>1198</Id>
+    <Package>org.infinispan.server.test.cache.clustered</Package>
+    <ClassName>ClusteredCacheConfigurationIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClusteredCacheConfigurationIT  /** 
+ * Test queue-size, queue-flush-interval, remote-timeout and owners attributes of a cache. Please note that the queue related attributes are only aplicable to replicated-cache and remote-timeout only for SYNC mode. Using hotrod client except for the queue-flush-interval, where it's more convenient to use memcached.
+ * @author &lt;a href="mailto:mgencur@redhat.com"&gt;Martin Gencur&lt;/a&gt;
+ * @author &lt;a href="mailto:jmarkos@redhat.com"&gt;Jakub Markos&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server2</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcm1</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcm2</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testReplicationTimeout</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [rc1=rcm1.getCache("remoteTimeoutCache")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testNumOwners</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [rc1=rcm1.getCache("numOwners1")]</InnerVar>
+                <InnerVar>long [server1Entries=server1.getCacheManager("clustered").getCache("numOwners1").getNumberOfEntries()]</InnerVar>
+                <InnerVar>long [server2Entries=server2.getCacheManager("clustered").getCache("numOwners1").getNumberOfEntries()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rc1;put;["entry1", "value1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc1;put;["entry2", "value2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, (server1Entries + server2Entries)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testAsyncReplicationMemcached</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>MemcachedClient [mc1=new MemcachedClient(server1.getMemcachedEndpoint().getInetAddress().getHostName(),server1.getMemcachedEndpoint().getPort())]</InnerVar>
+                <InnerVar>MemcachedClient [mc2=new MemcachedClient(server2.getMemcachedEndpoint().getInetAddress().getHostName(),server2.getMemcachedEndpoint().getPort())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc1;set;["k1", "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;eventually;[new ITestUtils.Condition(){
+  @Override public boolean isSatisfied() throws Exception {
+    return mc1.get("k1") != null &amp;&amp; mc2.get("k1") != null;
+  }
+}
+, 1000]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v1", mc1.get("k1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v1", mc2.get("k1")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSatisfied</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

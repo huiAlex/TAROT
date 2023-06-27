@@ -1,0 +1,305 @@
+<Class>
+    <Id>1146</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.tez.runtime</Package>
+    <ClassName>PigProcessor</ClassName>
+    <SuperClass>AbstractLogicalIOProcessor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PLAN</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COMBINE_PLAN</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ESTIMATE_PARALLELISM</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ESTIMATED_NUM_PARALLELISM</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SAMPLE_VERTEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SORT_VERTEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>execPlan</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fileOutputs</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fileOutputs</FieldName>
+            <FieldType>MROutput</FieldType>
+        </Field>
+        <Field>
+            <FieldName>leaf</FieldName>
+            <FieldType>PhysicalOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conf</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigHadoopLogger</FieldName>
+            <FieldType>PigHadoopLogger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sampleVertex</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sampleMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sampleMap</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>PigProcessor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>ProcessorContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ObjectCache.getInstance();setObjectRegistry;[context.getObjectRegistry()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>UserPayload [payload=getContext().getUserPayload()]</InnerVar>
+                <InnerVar>Properties [log4jProperties=(Properties)ObjectSerializer.deserialize(conf.get(PigImplConstants.PIG_LOG4J_PROPERTIES))]</InnerVar>
+                <InnerVar>boolean [isMapperOutput=conf.getBoolean(MRConfig.IS_MAP_PROCESSOR,false)]</InnerVar>
+                <InnerVar>TaskAttemptID [taskAttemptId=org.apache.tez.mapreduce.hadoop.mapreduce.TaskAttemptContextImpl.createMockTaskAttemptID(getContext().getApplicationId().getClusterTimestamp(),getContext().getTaskVertexIndex(),getContext().getApplicationId().getId(),getContext().getTaskIndex(),getContext().getTaskAttemptNumber(),isMapperOutput)]</InnerVar>
+                <InnerVar>String [execPlanString=conf.get(PLAN)]</InnerVar>
+                <InnerVar>boolean [aggregateWarning="true".equalsIgnoreCase(conf.get("aggregate.warning"))]</InnerVar>
+                <InnerVar>PigStatusReporter [pigStatusReporter=PigStatusReporter.getInstance()]</InnerVar>
+                <InnerVar>LinkedList&lt;TezTaskConfigurable&gt; [tezTCs=PlanHelper.getPhysicalOperators(execPlan,TezTaskConfigurable.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>new JVMReuseImpl();cleanupStaticData;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>PhysicalOperator;setReporter;[new ProgressableReporter()]</InnerMethodInvoke>
+                <InnerMethodInvoke>SpillableMemoryManager.getInstance();configure;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigContext;setPackageImportList;[(ArrayList&lt;String&gt;)ObjectSerializer.deserialize(conf.get("udf.import.list"))]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[MRConfiguration.JOB_APPLICATION_ATTEMPT_ID, getContext().getUniqueIdentifier()]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[JobContext.TASK_ATTEMPT_ID, taskAttemptId.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[JobContext.TASK_ID, taskAttemptId.getTaskID().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;setBoolean;[JobContext.TASK_ISMAP, isMapperOutput]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;setInt;[JobContext.TASK_PARTITION, taskAttemptId.getTaskID().getId()]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[JobContext.ID, taskAttemptId.getJobID().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[PigConstants.TASK_INDEX, Integer.toString(getContext().getTaskIndex())]</InnerMethodInvoke>
+                <InnerMethodInvoke>UDFContext.getUDFContext();addJobConf;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>UDFContext.getUDFContext();deserialize;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>SchemaTupleBackend;initialize;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigMapReduce.sJobConfInternal;set;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setDefaultTimeZone;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigStatusReporter;setContext;[new TezTaskContext(getContext())]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigHadoopLogger;setReporter;[pigStatusReporter]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigHadoopLogger;setAggregate;[aggregateWarning]</InnerMethodInvoke>
+                <InnerMethodInvoke>PhysicalOperator;setPigLogger;[pigHadoopLogger]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleEvents</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>processorEvents</ParamName>
+                    <ParamType>Event</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>new JVMReuseImpl();cleanupStaticData;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>UDFContext;staticDataCleanup;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>abortOutput</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeInputs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [inputsToSkip=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>LinkedList&lt;TezInput&gt; [tezInputs=PlanHelper.getPhysicalOperators(execPlan,TezInput.class)]</InnerVar>
+                <InnerVar>LinkedList&lt;ReadScalarsTez&gt; [scalarInputs=new LinkedList&lt;ReadScalarsTez&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeOutputs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outputs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LinkedList&lt;TezOutput&gt; [tezOuts=PlanHelper.getPhysicalOperators(execPlan,TezOutput.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runPipeline</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collectSample</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sampleVertex</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>logicalInput</ParamName>
+                    <ParamType>LogicalInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [quantileMapCacheKey="sample-" + sampleVertex + ".quantileMap"]</InnerVar>
+                <InnerVar>KeyValueReader [reader=(KeyValueReader)logicalInput.getReader()]</InnerVar>
+                <InnerVar>Object [val=reader.getCurrentValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Starting fetch of input " + logicalInput + " from vertex "+ sampleVertex]</InnerMethodInvoke>
+                <InnerMethodInvoke>logicalInput;start;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>reader;next;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

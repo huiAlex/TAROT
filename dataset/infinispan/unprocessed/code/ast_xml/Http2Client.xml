@@ -1,0 +1,208 @@
+<Class>
+    <Id>1881</Id>
+    <Package>org.infinispan.rest.http2</Package>
+    <ClassName>Http2Client</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Http2Client  /** 
+ * HTTP/2 client based on Netty. &lt;p&gt; Unfortunately it is very hard to get a good HTTP/2 client with ALPN support. All major implementations require using Jetty Java Agent (which needs to be applied into bootclasspath. This is very inconvenient. Thankfully Netty can use OpenSSL but the downside is that it contains lots and lots of bolerplate code. It might be a good idea to replace this implementation once JDK9 is mainstream and use something better. &lt;/p&gt;
+ * @author Sebastian Łaskawiec
+ * @see https://github.com/fstab/http2-examples/tree/master/multiplexing-examples/netty-client/src/main/java/de/consol/labs/h2c/examples/client/netty
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>sslCtx</FieldName>
+            <FieldType>SslContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>workerGroup</FieldName>
+            <FieldType>EventLoopGroup</FieldType>
+        </Field>
+        <Field>
+            <FieldName>channel</FieldName>
+            <FieldType>Channel</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initializer</FieldName>
+            <FieldType>Http2ClientInitializer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>streamCounter</FieldName>
+            <FieldType>AtomicInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hostname</FieldName>
+            <FieldType>AsciiString</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>Http2Client</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sslCtx</ParamName>
+                    <ParamType>SslContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newClientWithHttp11Upgrade</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Http2Client</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newClientWithAlpn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Http2Client</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keystorePath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keystorePassword</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>KeyStore [ks=KeyStore.getInstance("JKS")]</InnerVar>
+                <InnerVar>KeyManagerFactory [kmf=KeyManagerFactory.getInstance(KeyManagerFactory.getDefaultAlgorithm())]</InnerVar>
+                <InnerVar>SslProvider [provider=OpenSsl.isAlpnSupported() ? SslProvider.OPENSSL : SslProvider.JDK]</InnerVar>
+                <InnerVar>SslContext [sslCtx=SslContextBuilder.forClient().sslProvider(provider).keyManager(kmf).ciphers(Http2SecurityUtil.CIPHERS,SupportedCipherSuiteFilter.INSTANCE).trustManager(InsecureTrustManagerFactory.INSTANCE).applicationProtocolConfig(new ApplicationProtocolConfig(ApplicationProtocolConfig.Protocol.ALPN,ApplicationProtocolConfig.SelectorFailureBehavior.CHOOSE_MY_LAST_PROTOCOL,ApplicationProtocolConfig.SelectedListenerFailureBehavior.ACCEPT,ApplicationProtocolNames.HTTP_2)).build()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ks;load;[new FileInputStream(keystorePath), keystorePassword.toCharArray()]</InnerMethodInvoke>
+                <InnerMethodInvoke>kmf;init;[ks, "secret".toCharArray()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>host</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>port</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Bootstrap [b=new Bootstrap()]</InnerVar>
+                <InnerVar>Http2SettingsHandler [http2SettingsHandler=initializer.settingsHandler()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>b;group;[workerGroup]</InnerMethodInvoke>
+                <InnerMethodInvoke>b;channel;[NioSocketChannel.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>b;option;[ChannelOption.SO_KEEPALIVE, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>b;remoteAddress;[host, port]</InnerMethodInvoke>
+                <InnerMethodInvoke>b;handler;[initializer]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Connected to [" + host + ':'+ port+ ']']</InnerMethodInvoke>
+                <InnerMethodInvoke>http2SettingsHandler;awaitSettings;[15, TimeUnit.SECONDS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>workerGroup;shutdownGracefully;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>awaitForResponses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HttpResponseHandler [responseHandler=initializer.responseHandler()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>responseHandler;awaitResponses;[60, TimeUnit.SECONDS]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getResponses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>FullHttpResponse</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HttpResponseHandler [responseHandler=initializer.responseHandler()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;awaitForResponses;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sendRequest</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>FullHttpRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponseHandler [responseHandler=initializer.responseHandler()]</InnerVar>
+                <InnerVar>int [streamId=streamCounter.getAndAdd(2)]</InnerVar>
+                <InnerVar>HttpScheme [scheme=sslCtx != null ? HttpScheme.HTTPS : HttpScheme.HTTP]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>request.headers();add;[HttpHeaderNames.HOST, hostname]</InnerMethodInvoke>
+                <InnerMethodInvoke>request.headers();add;[HttpConversionUtil.ExtensionHeaderNames.SCHEME.text(), scheme.name()]</InnerMethodInvoke>
+                <InnerMethodInvoke>request.headers();add;[HttpConversionUtil.ExtensionHeaderNames.STREAM_ID.text(), streamId]</InnerMethodInvoke>
+                <InnerMethodInvoke>responseHandler;put;[streamId, channel.write(request), channel.newPromise()]</InnerMethodInvoke>
+                <InnerMethodInvoke>channel;flush;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

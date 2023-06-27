@@ -1,0 +1,48 @@
+USAGE
+The Action Params feature allows you to specify parameters when using the EL to call an action.  So I can have something like this:
+&lt;s:commandButton action= #
+{hotelBooking.bookHotel(hotel, user)}
+class= button  value= Book Hotel  /&gt;
+The parameters hotel and user will be evaluated as ValueExpressions and passed into the bookHotel method of your managed bean.  This gives you an alternative to @In which forces injection to happen on every action method called.
+You can also pass in literal Strings using single or double quotes:
+&lt;s:commandLink action= #
+{foo.bar(  Here is my message  )}
+value= Click Here  /&gt;
+&lt;s:commandLink action= #
+{foo.bar(  Here is my message  )}
+value= Click Here  /&gt;
+You might want to use this notation for all of your action methods, even when you don t have params to pass.  This improves readability by making it clear that the expression is a MethodExpression and not a ValueExpression:
+&lt;s:link value= Cancel  action= #
+{ hotelBooking.cancel() }
+buttonClass= button  linkStyle= button /&gt;
+This is very handy for passing in JSF implicit objects:
+&lt;page view-id= /mypage.jsp  action= #
+{foo.myMethod(facesContext, view)}
+/&gt;
+If you desire, you can still use the  operator for your method as defined in the EL spec.  If you do, you should put both the method and the params inside the :
+&lt;s:commandLink action= #
+{ foo[ bar( facesContext ) ] }
+value= Click Here  /&gt;
+NEW TAGS
+As seen in the examples, Seam now has two new tags:
+&lt;s:commandButton&gt;
+&lt;s:commandLink&gt;
+These are drop-in replacements for &lt;h:commandButton&gt; and &lt;h:commandLink&gt;.  For Facelets, the  class  attribute is added just as it is in the Facelets implementation of the corresponding tag.
+Note that these are JSF 1.1 style tags so they will not always work properly with &lt;c:forEach&gt;.  Fixing this requires that the tags be written in the JSF 1.2 style.  So, this can be fixed if and when we can assume JSF 1.2 is present.
+OLD TAGS
+&lt;s:link&gt; now supports action params.
+Actions defined in pages.xml now support action params as well.
+FACELETS SUPPORT
+To enable action params in Facelets, you will need to use the new SeamFaceletViewHandler instead of FaceletViewHandler.  So, in faces-config.xml you will have:
+&lt;application&gt;
+&lt;view-handler&gt;org.jboss.seam.ui.facelet.SeamFaceletViewHandler&lt;/view-handler&gt;
+&lt;/application&gt;
+ISSUES
+Normally, when a MethodExpression or MethodBinding is created, the parameter types are passed in by hand.  In the case of an action, JSF assumes that there are no params to pass.  With action params in an expression, you can t know the param types until the parameters are evaluated.  Evaluation of the params doesn t happen until the MethodExpression is invoked.  This has two minor consequences:
+1)       If you call invoke on the MethodExpression by hand, any params you pass may be ignored.  Params defined in the expression will take precedence.
+2)       Since Facelets uses MethodExpression instead of MethodBinding, you would normally be able to call myMethodExpression.getMethodInfo().getParamTypes() at any time.  For an expression containing action params, you will only be able to do this after the method has been invoked at least once.
+Both of these cases are exceedingly rare and only apply when you want to invoke the MethodExpression by hand.
+Unlike other MethodExpressions and MethodBindings, with action params the method to invoke must be determined from the expression itself.  It determines the right method based on these criteria:
+1)       The method name must match the method name in the expression
+2)       The number of parameters must match the number of params in the expression.
+It is possible, though unlikely, that more than one method will match the criteria.  In that case, an exception is thrown explaining the criteria.  I can probably fix this at some point, but it gets a little hairy. .

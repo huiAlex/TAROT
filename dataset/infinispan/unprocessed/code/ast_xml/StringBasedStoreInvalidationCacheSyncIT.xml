@@ -1,0 +1,180 @@
+<Class>
+    <Id>2628</Id>
+    <Package>org.infinispan.server.test.cs.jdbc.multinode</Package>
+    <ClassName>StringBasedStoreInvalidationCacheSyncIT</ClassName>
+    <SuperClass>AbstractJdbcStoreMultinodeIT</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>StringBasedStoreInvalidationCacheSyncIT  /** 
+ * Tests cache operations in Invalidation mode. There's a cluster of 2 nodes backed by a common database (shared) accessed via jdbc string-based cache store.
+ * @author Martin Gencur
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>TABLE_NAME_PREFIX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MANAGER_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertCleanCache;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testResurrectEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc1;set;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNotNull;[dbServer1.stringTable.getValueByKey("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc1;set;["key", "newValue1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["newValue1", mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["newValue1", mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc2;set;["key", "newValue2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["newValue2", mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server1.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["newValue2", mc1.get("key")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRemoveEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc1;set;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc2;delete;["key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, dbServer1.stringTable.getValueByKey("key")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRemoveNonExistentEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc1;set;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, server1.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc2;delete;["key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, mc1.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, mc2.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[null, dbServer1.stringTable.getValueByKey("key")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>assertCleanCache</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc1;delete;["key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc2;delete;["key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server1.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(MANAGER_NAME).getCache(CACHE_NAME).getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, server1.getCacheManager(MANAGER_NAME).getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, server2.getCacheManager(MANAGER_NAME).getClusterSize()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dBServers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>managerName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cacheName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

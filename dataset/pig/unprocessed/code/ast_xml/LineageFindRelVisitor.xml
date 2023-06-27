@@ -1,0 +1,884 @@
+<Class>
+    <Id>59</Id>
+    <Package>org.apache.pig.newplan.logical.visitor</Package>
+    <ClassName>LineageFindRelVisitor</ClassName>
+    <SuperClass>LogicalRelationalNodesVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LineageFindRelVisitor  /** 
+ * Create mapping between uid and Load FuncSpec when the LogicalExpression  associated with it is known to hold an unmodified element of data returned by the load function. This information is used to find the LoadCaster to be used to cast bytearrays into other other types. 
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>uid2LoadFuncMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uid2LoadFuncMap</FieldName>
+            <FieldType>Long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rel2InputFuncMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rel2InputFuncMap</FieldName>
+            <FieldType>LogicalRelationalOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>func2casterMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>func2casterMap</FieldName>
+            <FieldType>FuncSpec</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uid2LoadFuncMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>uid2LoadFuncMap</FieldName>
+            <FieldType>Long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LineageFindRelVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>OperatorPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUid2LoadFuncMap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>load</ParamName>
+                    <ParamType>LOLoad</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalSchema [schema=load.getSchema()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setLoadFuncForUids;[schema, load.getFileSpec().getFuncSpec()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rel2InputFuncMap;put;[load, load.getFileSpec().getFuncSpec()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stream</ParamName>
+                    <ParamType>LOStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StreamingCommand [command=((LOStream)stream).getStreamingCommand()]</InnerVar>
+                <InnerVar>HandleSpec [streamOutputSpec=command.getOutputSpec()]</InnerVar>
+                <InnerVar>FuncSpec [streamLoaderSpec=new FuncSpec(streamOutputSpec.getSpec())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[stream]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setLoadFuncForUids;[stream.getSchema(), streamLoaderSpec]</InnerMethodInvoke>
+                <InnerMethodInvoke>rel2InputFuncMap;put;[stream, streamLoaderSpec]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>innerLoad</ParamName>
+                    <ParamType>LOInnerLoad</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LOForEach [foreach=innerLoad.getLOForEach()]</InnerVar>
+                <InnerVar>LogicalRelationalOperator [pred=((LogicalRelationalOperator)foreach.getPlan().getPredecessors(foreach).get(0))]</InnerVar>
+                <InnerVar>LogicalSchema [predSchema=pred.getSchema()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLoadFuncForUids</MethodName>
+            <MethodComment>/** 
+ * map all uids in schema to funcSpec 
+ * @param schema
+ * @param funcSpec
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schema</ParamName>
+                    <ParamType>LogicalSchema</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>funcSpec</ParamName>
+                    <ParamType>FuncSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filter</ParamName>
+                    <ParamType>LOFilter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[filter]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitExpression;[filter.getFilterPlan()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapToPredLoadFunc</MethodName>
+            <MethodComment>/** 
+ * If all predecessors of relOp are associated with same load  func , then map reOp to it.
+ * @param relOp
+ * @throws FrontendException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LogicalRelationalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperatorPlan [lp=relOp.getPlan()]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [preds=lp.getPredecessors(relOp)]</InnerVar>
+                <InnerVar>FuncSpec [loadFuncSpec=getAssociatedLoadFunc((LogicalRelationalOperator)preds.get(0))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rel2InputFuncMap;put;[relOp, loadFuncSpec]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAssociatedLoadFunc</MethodName>
+            <MethodComment>/** 
+ * Find single load func spec associated with this relation. If the relation has schema, all uids in schema should be associated with same load func spec. if it does not have schema check the existing mapping
+ * @param relOp
+ * @return
+ * @throws FrontendException
+ */
+</MethodComment>
+            <ReturnType>FuncSpec</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LogicalRelationalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalSchema [schema=relOp.getSchema()]</InnerVar>
+                <InnerVar>FuncSpec [funcSpec=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapRelToPredLoadFunc</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LogicalRelationalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pred</ParamName>
+                    <ParamType>Operator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expPlan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LineageFindExpVisitor [findLineageExp=new LineageFindExpVisitor(expPlan,uid2LoadFuncMap)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>findLineageExp;visit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>group</ParamName>
+                    <ParamType>LOCogroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Operator&gt; [inputs=group.getInputs((LogicalPlan)plan)]</InnerVar>
+                <InnerVar>List&lt;LogicalFieldSchema&gt; [groupPlanSchemas=new ArrayList&lt;LogicalFieldSchema&gt;()]</InnerVar>
+                <InnerVar>MultiMap&lt;Integer,LogicalExpressionPlan&gt; [plans=group.getExpressionPlans()]</InnerVar>
+                <InnerVar>LogicalSchema [sch=group.getSchema()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[group]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>join</ParamName>
+                    <ParamType>LOJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MultiMap&lt;Integer,LogicalExpressionPlan&gt; [plans=join.getExpressionPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[join]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fe</ParamName>
+                    <ParamType>LOForEach</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalPlan [innerPlan=fe.getInnerPlan()]</InnerVar>
+                <InnerVar>PlanWalker [newWalker=currentWalker.spawnChildWalker(innerPlan)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[fe]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;pushWalker;[newWalker]</InnerMethodInvoke>
+                <InnerMethodInvoke>currentWalker;walk;[this]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;popWalker;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>gen</ParamName>
+                    <ParamType>LOGenerate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=gen.getOutputPlans()]</InnerVar>
+                <InnerVar>boolean[] [flattens=gen.getFlattenFlags()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[gen]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>LOSort</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=sort.getSortColPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[sort]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rank</ParamName>
+                    <ParamType>LORank</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [expPlans=rank.getRankColPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[rank]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LODistinct</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[relOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loLimit</ParamName>
+                    <ParamType>LOLimit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[loLimit]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LOSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[relOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LOStore</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[relOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LOCross</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[relOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>relOp</ParamName>
+                    <ParamType>LOUnion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalSchema [schema=relOp.getSchema()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[relOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>split</ParamName>
+                    <ParamType>LOSplitOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalSchema [inputSch=((LogicalRelationalOperator)split.getPlan().getPredecessors(split).get(0)).getSchema()]</InnerVar>
+                <InnerVar>LogicalSchema [outSchema=split.getSchema()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mapToPredLoadFunc;[split]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitExpression;[split.getFilterPlan()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addUidLoadFuncToMap</MethodName>
+            <MethodComment>/** 
+ * Add given uid, loadFuncSpec to mapping
+ * @param uid
+ * @param loadFuncSpec
+ * @throws VisitorException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uid</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>loadFuncSpec</ParamName>
+                    <ParamType>FuncSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FuncSpec [curFuncSpec=uid2LoadFuncMap.get(uid)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mapMatchLoadFuncToUid</MethodName>
+            <MethodComment>/** 
+ * if uid in input field schemas or their inner schemas map to same  load function, then map the new uid in bincond also to same load function in uid2LoadFuncMap
+ * @param outFS
+ * @param inputFieldSchemas
+ * @throws VisitorException 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>outFS</ParamName>
+                    <ParamType>LogicalFieldSchema</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputFieldSchemas</ParamName>
+                    <ParamType>LogicalFieldSchema</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalFieldSchema [inpFS1=inputFieldSchemas.get(0)]</InnerVar>
+                <InnerVar>FuncSpec [funcSpec1=uid2LoadFuncMap.get(inpFS1.uid)]</InnerVar>
+                <InnerVar>boolean [allInnerSchemaMatch=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>LineageFindExpVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uid2LoadFuncMap</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>ProjectExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalRelationalOperator [inputRel=proj.findReferent()]</InnerVar>
+                <InnerVar>long [uid=proj.getFieldSchema().uid]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>deref</ParamName>
+                    <ParamType>DereferenceExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;updateUidMap;[deref, deref.getReferredExpression()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapLookup</ParamName>
+                    <ParamType>MapLookupExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;updateUidMap;[mapLookup, mapLookup.getMap()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateUidMap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exp</ParamName>
+                    <ParamType>LogicalExpression</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inp</ParamName>
+                    <ParamType>LogicalExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [inpUid=inp.getFieldSchema().uid]</InnerVar>
+                <InnerVar>FuncSpec [inpLoadFuncSpec=uid2LoadFuncMap.get(inpUid)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addUidLoadFuncToMap;[exp.getFieldSchema().uid, inpLoadFuncSpec]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>binCond</ParamName>
+                    <ParamType>BinCondExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalExpression [lhs=binCond.getLhs()]</InnerVar>
+                <InnerVar>LogicalExpression [rhs=binCond.getRhs()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scalarExp</ParamName>
+                    <ParamType>ScalarExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LogicalRelationalOperator [inputRel=(LogicalRelationalOperator)scalarExp.getAttachedLogicalOperator()]</InnerVar>
+                <InnerVar>LogicalPlan [relPlan=(LogicalPlan)inputRel.getPlan()]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [softPreds=relPlan.getSoftLinkPredecessors(inputRel)]</InnerVar>
+                <InnerVar>Integer [inputColNum=(Integer)((ConstantExpression)scalarExp.getArguments().get(0)).getValue()]</InnerVar>
+                <InnerVar>String [inputFile=(String)((ConstantExpression)scalarExp.getArguments().get(1)).getValue()]</InnerVar>
+                <InnerVar>long [outputUid=scalarExp.getFieldSchema().uid]</InnerVar>
+                <InnerVar>boolean [foundInput=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>UserFuncExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FuncSpec [funcSpec=null]</InnerVar>
+                <InnerVar>Class [loader=instantiateCaster(op.getFuncSpec())]</InnerVar>
+                <InnerVar>List&lt;LogicalExpression&gt; [arguments=op.getArguments()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNULLConstantInCast</MethodName>
+            <MethodComment>/** 
+ * if there is a null constant under casts, return it
+ * @param rel
+ * @return
+ * @throws FrontendException
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rel</ParamName>
+                    <ParamType>LogicalExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>instantiateCaster</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>funcSpec</ParamName>
+                    <ParamType>FuncSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LoadCaster [caster=null]</InnerVar>
+                <InnerVar>Object [obj=PigContext.instantiateFuncFromSpec(funcSpec)]</InnerVar>
+                <InnerVar>Class [retval=(caster == null) ? null : caster.getClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>func2casterMap;put;[funcSpec, retval]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>haveIdenticalCasters</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f1</ParamName>
+                    <ParamType>FuncSpec</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f2</ParamName>
+                    <ParamType>FuncSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Class [caster1=instantiateCaster(f1)]</InnerVar>
+                <InnerVar>Class [caster2=instantiateCaster(f2)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

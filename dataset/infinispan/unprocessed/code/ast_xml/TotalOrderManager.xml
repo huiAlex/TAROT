@@ -1,0 +1,200 @@
+<Class>
+    <Id>2192</Id>
+    <Package>org.infinispan.transaction.totalorder</Package>
+    <ClassName>TotalOrderManager</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>TotalOrderManager  /** 
+ * This class behaves as a synchronization point between incoming transactions (totally ordered) and between incoming transactions and state transfer. &lt;p/&gt; Main functions: &lt;ul&gt; &lt;li&gt; ensure an order between prepares before sending them to the thread pool, i.e. non-conflicting prepares can be processed concurrently; &lt;/li&gt; &lt;li&gt; ensure that the state transfer waits for the previous delivered prepares; &lt;/li&gt; &lt;li&gt; ensure that the prepare waits for state transfer in progress. &lt;/li&gt; &lt;/ul&gt;
+ * @author Pedro Ruivo
+ * @since 5.3
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>trace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keysLocked</FieldName>
+            <FieldType>ConcurrentMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keysLocked</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stateTransferInProgress</FieldName>
+            <FieldType>AtomicReference</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stateTransferInProgress</FieldName>
+            <FieldType>TotalOrderLatch</FieldType>
+        </Field>
+        <Field>
+            <FieldName>totalOrderExecutor</FieldName>
+            <FieldType>BlockingTaskAwareExecutorService</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>TotalOrderManager</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>inject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>totalOrderExecutor</ParamName>
+                    <ParamType>BlockingTaskAwareExecutorService</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureOrder</MethodName>
+            <MethodComment>/** 
+ * It ensures the validation order for the transaction corresponding to the prepare command. This allow the prepare command to be moved to a thread pool.
+ * @param state the total order prepare state
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>state</ParamName>
+                    <ParamType>TotalOrderRemoteTransactionState</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysModified</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TotalOrderLatch [transactionSynchronizedBlock=new TotalOrderLatchImpl(state.getGlobalTransaction().globalId())]</InnerVar>
+                <InnerVar>TotalOrderLatch [stateTransfer=stateTransferInProgress.get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>state;awaitUntilReset;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>state;setTransactionSynchronizedBlock;[transactionSynchronizedBlock]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>release</MethodName>
+            <MethodComment>/** 
+ * Release the locked key possibly unblock waiting prepares.
+ * @param state the state
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>state</ParamName>
+                    <ParamType>TotalOrderRemoteTransactionState</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TotalOrderLatch [synchronizedBlock=state.getTransactionSynchronizedBlock()]</InnerVar>
+                <InnerVar>Collection&lt;Object&gt; [lockedKeys=state.getLockedKeys()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>synchronizedBlock;unBlock;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>state;reset;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notifyStateTransferStart</MethodName>
+            <MethodComment>/** 
+ * It notifies that a state transfer is about to start.
+ * @param topologyId the new topology ID
+ * @return the current pending prepares
+ */
+</MethodComment>
+            <ReturnType>TotalOrderLatch</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>topologyId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRebalance</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;TotalOrderLatch&gt; [preparingTransactions=new ArrayList&lt;&gt;(keysLocked.size())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>preparingTransactions;addAll;[keysLocked.values()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notifyStateTransferEnd</MethodName>
+            <MethodComment>/** 
+ * It notifies the end of the state transfer possibly unblock waiting prepares.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>TotalOrderLatch [block=stateTransferInProgress.getAndSet(null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>totalOrderExecutor;checkForReadyTasks;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasAnyLockAcquired</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

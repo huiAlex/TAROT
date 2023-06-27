@@ -1,0 +1,156 @@
+<Class>
+    <Id>667</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>InputSizeReducerEstimator</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>PigReducerEstimator</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>InputSizeReducerEstimator  /** 
+ * Class that estimates the number of reducers based on input size. Number of reducers is based on two properties: &lt;ul&gt; &lt;li&gt;pig.exec.reducers.bytes.per.reducer - how many bytes of input per reducer (default is 1000*1000*1000)&lt;/li&gt; &lt;li&gt;pig.exec.reducers.max - constrain the maximum number of reducer task (default is 999)&lt;/li&gt; &lt;/ul&gt; If using a loader that implements LoadMetadata the reported input size is used, otherwise attempt to determine size from the filesystem. &lt;p&gt; e.g. the following is your pig script &lt;pre&gt; a = load '/data/a'; b = load '/data/b'; c = join a by $0, b by $0; store c into '/tmp'; &lt;/pre&gt; and the size of /data/a is 1000*1000*1000, and the size of /data/b is 2*1000*1000*1000 then the estimated number of reducer to use will be (1000*1000*1000+2*1000*1000*1000)/(1000*1000*1000)=3
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>estimateNumberOfReducers</MethodName>
+            <MethodComment>/** 
+ * Determines the number of reducers to be used.
+ * @param job job instance
+ * @param mapReduceOper
+ * @throws java.io.IOException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapReduceOper</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=job.getConfiguration()]</InnerVar>
+                <InnerVar>long [bytesPerReducer=conf.getLong(BYTES_PER_REDUCER_PARAM,DEFAULT_BYTES_PER_REDUCER)]</InnerVar>
+                <InnerVar>int [maxReducers=conf.getInt(MAX_REDUCER_COUNT_PARAM,DEFAULT_MAX_REDUCER_COUNT_PARAM)]</InnerVar>
+                <InnerVar>List&lt;POLoad&gt; [poLoads=PlanHelper.getPhysicalOperators(mapReduceOper.mapPlan,POLoad.class)]</InnerVar>
+                <InnerVar>long [totalInputFileSize=getTotalInputFileSize(conf,poLoads,job)]</InnerVar>
+                <InnerVar>int [reducers=(int)Math.ceil((double)totalInputFileSize / bytesPerReducer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;info;["BytesPerReducer=" + bytesPerReducer + " maxReducers="+ maxReducers+ " totalInputFileSize="+ totalInputFileSize]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTotalInputFileSize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lds</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTotalInputFileSize</MethodName>
+            <MethodComment>/** 
+ * Get the input size for as many inputs as possible. Inputs that do not report their size nor can pig look that up itself are excluded from this size.
+ * @param conf Configuration
+ * @param lds List of POLoads
+ * @param job Job
+ * @param max Maximum value of total input size that will trigger exit. Manytimes we're only interested whether the total input size is greater than X or not. In such case, we can exit the function early as soon as the max is reached.
+ * @return
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lds</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>max</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [totalInputFileSize=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInputSizeFromLoader</MethodName>
+            <MethodComment>/** 
+ * Get the total input size in bytes by looking at statistics provided by loaders that implement @{link LoadMetadata}.
+ * @param ld
+ * @param job
+ * @return total input size in bytes, or -1 if unknown or incomplete
+ * @throws IOException on error
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ld</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResourceStatistics [statistics]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

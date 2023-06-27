@@ -1,0 +1,806 @@
+<Class>
+    <Id>3225</Id>
+    <Package>org.infinispan.functional</Package>
+    <ClassName>FunctionalMap</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>AutoCloseable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FunctionalMap  /** 
+ * Top level functional map interface offering common functionality for the read-only, read-write, and write-only operations that can be run against a functional map asynchronously. &lt;p&gt;Lambdas passed in as parameters to functional map methods define the type of operation that is executed, but since lambdas are transparent to the internal logic, it was decided to separate the API into three types of operation: read-only, write-only, and read-write. This separation helps the user understand the group of functions and their possibilities. &lt;p&gt;This conscious decision to separate read-only, write-only and read-write interfaces helps type safety. So, if a user gets a read-only map, it can't write to it by mistake since no such APIs are exposed. The same happens with write-only maps, the user can only write and cannot make the mistake of reading from the entry view because read operations are not exposed. &lt;p&gt;Lambdas passed in to read-write and write-only operations, when running in a cluster, must be marshallable. One option to do so is to mark them as being  {@link java.io.Serializable} but this is expensivein terms of payload size. Alternatively, you can provide an Infinispan {@link org.infinispan.commons.marshall.Externalizer} for it whichdrastically reduces the payload size. Marshallable lambdas for some of the most popular lambda functions used by  {@link ConcurrentMap} andjavax.cache.Cache are available via the {@link MarshallableFunctions} helper class.&lt;p&gt;Being an asynchronous API, all methods that return a single result, return a  {@link CompletableFuture} which wraps the result. To avoidblocking, it offers the possibility to receive callbacks when the {@link CompletableFuture} has completed, or it can be chained or composeswith other  {@link CompletableFuture} instances.&lt;p&gt;For those operations that return multiple results, the API returns instances of a  {@link Traversable} interface which offers a lazy pull­styleAPI for working with multiple results. Although push­style interfaces for handling multiple results, such as RxJava, are fully asynchronous, they're harder to use from a user’s perspective.  {@link Traversable},​ being a lazy pull­style API, can still be asynchronous underneath since the user can decide to work on the  {@link Traversable} at a later stage, and theimplementation itself can decide when to compute those results.
+ * @since 8.0
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>withParams</MethodName>
+            <MethodComment>/** 
+ * Tweak functional map executions providing  {@link Param} instances.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getName</MethodName>
+            <MethodComment>/** 
+ * Functional map's name.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStatus</MethodName>
+            <MethodComment>/** 
+ * Functional map's status.
+ */
+</MethodComment>
+            <ReturnType>ComponentStatus</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEncoded</MethodName>
+            <MethodComment>/** 
+ * Tells if the underlying cache is using encoding or not
+ * @return true if the underlying cache is encoded
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withParams</MethodName>
+            <MethodComment>/** 
+ * Tweak read-only functional map executions providing  {@link Param} instances.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-only function on the value associated with the key and return a  {@link CompletableFuture} with the return type of the function.If the user is not sure if the key is present,  {@link ReadEntryView#find()}can be used to find out for sure. Typically, function implementations would return value or  {@link MetaParam} information from the cacheentry in the functional map. &lt;p&gt;By returning  {@link CompletableFuture} instead of the function'sreturn type directly, the method hints at the possibility that to execute the function might require to go remote to retrieve data in persistent store or another clustered node. &lt;p&gt;This method can be used to implement read-only single-key based operations in  {@link ConcurrentMap} and javax.cache.Cachesuch as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#get(Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#containsKey(Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#get(Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#containsKey(Object)}&lt;/li&gt; &lt;/ul&gt; &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param key the key associated with the {@link ReadEntryView} to bepassed to the function.
+ * @param f function that takes a {@link ReadEntryView} associated withthe key, and returns a value.
+ * @param &lt; R &gt; function return type
+ * @return a {@link CompletableFuture} which will be completed with thereturned value from the function
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #eval(Object,Function)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-only function on a key and potential value associated in the functional map, for each of the keys in the set passed in, and returns an  {@link Traversable} to work on each computed function's result.&lt;p&gt;The function passed in will be executed for as many keys present in keys collection set. Similar to  {@link #eval(Object,Function)}, if the user is not sure whether a particular key is present, {@link ReadEntryView#find()} can be used to find out for sure.&lt;p&gt;This method can be used to implement operations such as {@code javax.cache.Cache#getAll(Set)}. DESIGN RATIONALE: &lt;ul&gt; &lt;li&gt;It makes sense to expose global operation like this instead of forcing users to iterate over the keys to lookup and call get individually since Infinispan can do things more efficiently. &lt;/li&gt; &lt;/ul&gt; &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param keys the keys associated with each of the {@link ReadEntryView}passed in the function callbacks
+ * @param f function that takes a {@link ReadEntryView} associated withthe key, and returns a value. It'll be invoked once for each key passed in
+ * @param &lt; R &gt; function return type
+ * @return a sequential {@link Traversable} that can be navigated toretrieve each function return value
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalMany(Set,Function)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>keys</MethodName>
+            <MethodComment>/** 
+ * Provides a  {@link Traversable} that allows clients to navigate all cached keys.&lt;p&gt;This method can be used to implement operations such as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#size()}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#keySet()}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#isEmpty()}&lt;/li&gt; &lt;/ul&gt;
+ * @return a sequential {@link Traversable} to navigate each cached key
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>entries</MethodName>
+            <MethodComment>/** 
+ * Provides a  {@link Traversable} that allows clients to navigate all cached entries.&lt;p&gt;This method can be used to implement operations such as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#containsValue(Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#values()}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#entrySet()}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#iterator()}&lt;/li&gt; &lt;/ul&gt;
+ * @return a sequential {@link Traversable} to navigate each cached entry
+ */
+</MethodComment>
+            <ReturnType>ReadEntryView&lt;K,V&gt;</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withParams</MethodName>
+            <MethodComment>/** 
+ * Tweak write-only functional map executions providing  {@link Param} instances.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Evaluate a write-only  {@link BiConsumer} operation, with a valuepassed in and a  {@link WriteEntryView} of the value associated withthe key, and return a  {@link CompletableFuture} which will becompleted when the operation completes. &lt;p&gt;Since this is a write-only operation, no entry attributes can be queried, hence the only reasonable thing can be returned is Void. &lt;p&gt;This method can be used to implement single-key write-only operations which do not need to query previous value, such as {@code javax.cache.Cache#put(Object, Object)}&lt;p&gt;This operation is very similar to  {@link #eval(Object,Consumer)}and in fact, the functionality provided by this function could indeed be implemented with  {@link #eval(Object,Consumer)}, but there's a crucial difference. If you want to store a value and reference the value to be stored from the passed in operation, {@link #eval(Object,Consumer)} needs to capture that value.Capturing means that each time the operation is called, a new lambda needs to be instantiated. By offering a  {@link BiConsumer} thattakes user provided value as first parameter, the operation does not capture any external objects when implementing simple operations such as  {@code javax.cache.Cache#put(Object, Object)}, and hence, the {@link BiConsumer} could be cached and reused each time it's invoked.
+ * @param key the key associated with the {@link WriteEntryView} to bepassed to the operation
+ * @param value value to write, passed in as first parameter to the{@link BiConsumer} operation.
+ * @param f operation that takes a user defined value, and a{@link WriteEntryView} associated with the key, and writesto the  {@link WriteEntryView} passed in without returning anything
+ * @return a {@link CompletableFuture} which will be completed when theoperation completes
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #eval(Object,Object,BiConsumer)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Evaluate a write-only  {@link Consumer} operation with a{@link WriteEntryView} of the value associated with the key,and return a  {@link CompletableFuture} which will becompleted with the object returned by the operation. &lt;p&gt;Since this is a write-only operation, no entry attributes can be queried, hence the only reasonable thing can be returned is Void. &lt;p&gt;This operation can be used to either remove a cached entry, or to write a constant value along with optional metadata parameters.
+ * @param key the key associated with the {@link WriteEntryView} to bepassed to the operation
+ * @param f operation that takes a {@link WriteEntryView} associated withthe key and writes to the it without returning anything
+ * @return a {@link CompletableFuture} which will be completed when theoperation completes
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #eval(Object,Consumer)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Evaluate a write-only  {@link BiConsumer} operation, with a valuepassed in and a  {@link WriteEntryView} of the value associated withthe key, for each of the keys in the set passed in, and returns a {@link CompletableFuture} that will be completed when the write-onlyoperation has been executed against all the entries. This method can be used to implement operations such as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#putAll(Map)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#putAll(Map)}&lt;/li&gt; &lt;/ul&gt; &lt;p&gt;These kind of operations are preferred to traditional end user iterations because the internal logic can often iterate more efficiently since it knows more about the system. &lt;p&gt;Since this is a write-only operation, no entry attributes can be queried, hence the only reasonable thing can be returned is Void.
+ * @param entries the key/value pairs associated with each of the{@link WriteEntryView} passed in the function callbacks
+ * @param f operation that consumes a value associated with a key in theentries collection and the  {@link WriteEntryView} associatedwith that key in the cache
+ * @return a {@link CompletableFuture} which will be completed whenthe  {@link BiConsumer} operation  has been executed againstall entries
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entries</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalMany(Map,BiConsumer)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entries</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Evaluate a write-only  {@link Consumer} operation with the{@link WriteEntryView} of the value associated with the key, for eachof the keys in the set passed in, and returns a {@link CompletableFuture} that will be completed when the write-onlyoperation has been executed against all the entries. &lt;p&gt;This method can be used to implement operations such as {@code javax.cache.Cache#removeAll(Set)}. &lt;p&gt;These kind of operations are preferred to traditional end user iterations because the internal logic can often iterate more efficiently since it knows more about the system. &lt;p&gt;Since this is a write-only operation, no entry attributes can be queried, hence the only reasonable thing can be returned is Void.
+ * @param keys the keys associated with each of the {@link WriteEntryView}passed in the function callbacks
+ * @param f operation that the {@link WriteEntryView} associated withone of the keys passed in
+ * @return a {@link CompletableFuture} which will be completed whenthe  {@link Consumer} operation has been executed against allentries
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalMany(Set,Consumer)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalAll</MethodName>
+            <MethodComment>/** 
+ * Evaluate a write-only  {@link Consumer} operation with the{@link WriteEntryView} of the value associated with the key, for allexisting keys in functional map, and returns a  {@link CompletableFuture}that will be completed when the write-only operation has been executed against all the entries. &lt;p&gt;This method can be used to implement operations such as {@code javax.cache.Cache#removeAll()}.
+ * @param f operation that the {@link WriteEntryView} associated withone of the keys passed in
+ * @return a {@link CompletableFuture} which will be completed whenthe  {@link Consumer} operation has been executed against allentries
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalAll</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalAll(Consumer)} except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>WriteEntryView&lt;V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>truncate</MethodName>
+            <MethodComment>/** 
+ * Truncate the contents of the cache, returning a  {@link CompletableFuture}that will be completed when the truncate process completes. This method can be used to implement: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#clear()}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#clear()}&lt;/li&gt; &lt;/ul&gt;
+ * @return a {@link CompletableFuture} that completes when the truncathas finished
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>listeners</MethodName>
+            <MethodComment>/** 
+ * Allows to write-only listeners to be registered.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withParams</MethodName>
+            <MethodComment>/** 
+ * Tweak read-write functional map executions providing  {@link Param} instances.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-write function on the value and metadata associated with the key and return a  {@link CompletableFuture} with the returntype of the function. If the user is not sure if the key is present, {@link ReadWriteEntryView#find()} can be used to find out for sure.This method can be used to implement single-key read-write operations in  {@link ConcurrentMap} and {@code javax.cache.Cache} that do notdepend on value information given by the user such as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#remove(Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#remove(Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#getAndRemove(Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#invoke(Object, EntryProcessor, Object...)}&lt;/li&gt; &lt;/ul&gt; &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param key the key associated with the {@link ReadWriteEntryView} to bepassed to the function.
+ * @param f function that takes a {@link ReadWriteEntryView} associated withthe key, and returns a value.
+ * @param &lt; R &gt; function return type
+ * @return a {@link CompletableFuture} which will be completed with thereturned value from the function
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #eval(Object,Function)}  except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-write function, with a value passed in and a {@link WriteEntryView} of the value associated with the key, andreturn a  {@link CompletableFuture} which will be completed with thereturned value by the function. &lt;p&gt;This method provides the the capability to both update the value and metadata associated with that key, and return previous value or metadata. &lt;p&gt;This method can be used to implement the vast majority of single-key read-write operations in  {@link ConcurrentMap} and {@code javax.cache.Cache}such as: &lt;ul&gt; &lt;li&gt; {@link ConcurrentMap#put(Object,Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#putIfAbsent(Object,Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#replace(Object,Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#replace(Object,Object,Object)}&lt;/li&gt; &lt;li&gt; {@link ConcurrentMap#remove(Object,Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#getAndPut(Object, Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#putIfAbsent(Object, Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#remove(Object, Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#replace(Object, Object, Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#replace(Object, Object)}&lt;/li&gt; &lt;li&gt; {@code javax.cache.Cache#getAndReplace(Object, Object)}&lt;/li&gt; &lt;/ul&gt; &lt;p&gt; The functionality provided by this function could indeed be implemented with  {@link #eval(Object,Function)}, but there's a crucial difference. If you want to store a value and reference the value to be stored from the passed in operation, {@link #eval(Object,Function)} needs to capture that value.Capturing means that each time the operation is called, a new lambda needs to be instantiated. By offering a  {@link BiFunction} thattakes user provided value as first parameter, the operation does not capture any external objects when implementing simple operations such as  {@code javax.cache.Cache#getAndPut(Object, Object)}, and hence, the  {@link BiFunction} could be cached and reused eachtime it's invoked. &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param key the key associated with the {@link ReadWriteEntryView} to bepassed to the operation
+ * @param value value to write, passed in as first parameter to the {@link BiFunction}.
+ * @param f operation that takes a user defined value, and a{@link ReadWriteEntryView} associated with the key, and writesto the  {@link ReadWriteEntryView} passed in, possiblyreturning previously stored value or metadata information
+ * @param &lt; R &gt; type of the function's return
+ * @return a {@link CompletableFuture} which will be completed with thereturned value from the function
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>eval</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #eval(Object,Object,BiFunction)}  except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-write  {@link BiFunction}, with a value passed in and a  {@link ReadWriteEntryView} of the value associated withthe key, for each of the keys in the set passed in, and returns an  {@link Traversable} to navigate each of the{@link BiFunction} invocation returns.&lt;p&gt;This method can be used to implement operations that store a set of keys and return previous values or metadata parameters. &lt;p&gt;These kind of operations are preferred to traditional end user iterations because the internal logic can often iterate more efficiently since it knows more about the system. &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param entries the key/value pairs associated with each of the{@link ReadWriteEntryView} passed in the function callbacks
+ * @param f function that takes in a value associated with a key in theentries collection and the  {@link ReadWriteEntryView} associatedwith that key in the cache
+ * @return a {@link Traversable} to navigate each {@link BiFunction} return
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entries</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalMany(Map,BiFunction)}  except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entries</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-write  {@link Function} operation with the{@link ReadWriteEntryView} of the value associated with the key, for eachof the keys in the set passed in, and returns a  {@link Traversable}to navigate each of the  {@link Function} invocation returns.&lt;p&gt;This method can be used to implement operations such as {@code javax.cache.Cache#invokeAll(Set, EntryProcessor, Object...)}, or a remove a set of keys returning previous values or metadata parameters. &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @param keys the keys associated with each of the {@link ReadWriteEntryView}passed in the function callbacks
+ * @param f function that the {@link ReadWriteEntryView} associated withone of the keys passed in, and returns a value
+ * @return a {@link Traversable} to navigate each {@link Function} return
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalMany</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalMany(Set,Function)}  except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalAll</MethodName>
+            <MethodComment>/** 
+ * Evaluate a read-write  {@link Function} operation with the{@link ReadWriteEntryView} of the value associated with the key, for allexisting keys, and returns a  {@link Traversable} to navigate each ofthe  {@link Function} invocation returns.&lt;p&gt;This method can be used to an operation that removes all cached entries individually, and returns previous value and/or metadata parameters. &lt;p&gt;The function must not mutate neither the key returned through {@link ReadEntryView#key()} nor the internally stored value providedthrough  {@link ReadEntryView#get()} or {@link ReadEntryView#find()}.
+ * @return a {@link Traversable} to navigate each {@link Function} return
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>evalAll</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #evalAll(Function)}   except that the function must alsoimplement &lt;code&gt;Serializable&lt;/code&gt; &lt;p&gt; The compiler will pick this overload for lambda parameters, making them &lt;code&gt;Serializable&lt;/code&gt;
+ */
+</MethodComment>
+            <ReturnType>R</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>ReadWriteEntryView&lt;K,V&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>listeners</MethodName>
+            <MethodComment>/** 
+ * Allows to read-write listeners to be registered.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

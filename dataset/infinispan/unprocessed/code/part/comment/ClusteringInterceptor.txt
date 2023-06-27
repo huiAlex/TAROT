@@ -1,0 +1,17 @@
+/**
+ * Base class for distribution interceptors.
+ *
+ *  *  */
+
+/**
+    * {@link #completeExceptionally(Throwable)} must be called from synchronized block since we must not complete
+    * the future (exceptionally) when we're accessing the context - if there was an exception and we would retry,
+    * the context could be accessed concurrently by dangling handlers and retry execution (that does not synchronize
+    * on the same future).
+    *
+    * When completeExceptionally executes before the other responses processing, the future will be marked as done
+    * and as soon as the other responses get into the synchronized block, these will check isDone and return.
+    * If the response is being processed in sync block, running completeExceptionally and the related callbacks
+    * will be blocked until we finish the processing.
+    */
+

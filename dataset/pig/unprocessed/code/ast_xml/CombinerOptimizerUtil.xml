@@ -1,0 +1,888 @@
+<Class>
+    <Id>0</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.util</Package>
+    <ClassName>CombinerOptimizerUtil</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DISTINCT_UDF_CLASSNAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sawNonAlgebraic</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sawDistinctAgg</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sawForeach</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distinct</FieldName>
+            <FieldType>PODistinct</FieldType>
+        </Field>
+        <Field>
+            <FieldName>distinct</FieldName>
+            <FieldType>POUserFunc</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CombinerOptimizerUtil</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addCombiner</MethodName>
+            <MethodComment>/** 
+ * Algebraic functions and distinct in nested plan of a foreach are partially computed in the map and combine phase. A new foreach statement with initial and intermediate forms of algebraic functions are added to map and combine plans respectively. If bag portion of group-by result is projected or a non algebraic expression/udf has bag as input, combiner will not be used. This is because the use of combiner in such case is likely to degrade performance as there will not be much reduction in data size in combine stage to offset the cost of the additional number of times (de)serialization is done. Major areas for enhancement: 1. use of combiner in cogroup 2. queries with order-by, limit or sort in a nested foreach after group-by 3. case where group-by is followed by filter that has algebraic expression
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>reducePlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>combinePlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>messageCollector</ParamName>
+                    <ParamType>CompilationMessageCollector</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>doMapAgg</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [mapLeaves=mapPlan.getLeaves()]</InnerVar>
+                <InnerVar>PhysicalOperator [mapLeaf=mapLeaves.get(0)]</InnerVar>
+                <InnerVar>POLocalRearrange [rearrange=(POLocalRearrange)mapLeaf]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [reduceRoots=reducePlan.getRoots()]</InnerVar>
+                <InnerVar>PhysicalOperator [root=reduceRoots.get(0)]</InnerVar>
+                <InnerVar>POPackage [pack=(POPackage)root]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [packSuccessors=reducePlan.getSuccessors(root)]</InnerVar>
+                <InnerVar>PhysicalOperator [successor=packSuccessors.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isGroupAll</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lr</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isGroupAll=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPartialAgg</MethodName>
+            <MethodComment>/** 
+ * Translate POForEach in combiner into a POPartialAgg
+ * @param combineFE
+ * @return partial aggregate operator
+ * @throws CloneNotSupportedException
+ */
+</MethodComment>
+            <ReturnType>POPartialAgg</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>combineFE</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isGroupAll</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [scope=combineFE.getOperatorKey().scope]</InnerVar>
+                <InnerVar>POPartialAgg [poAgg=new POPartialAgg(new OperatorKey(scope,NodeIdGenerator.getGenerator().getNextNodeId(scope)),isGroupAll)]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [valuePlans=Lists.newArrayList()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>poAgg;addOriginalLocation;[combineFE.getAlias(), combineFE.getOriginalLocations()]</InnerMethodInvoke>
+                <InnerMethodInvoke>poAgg;setResultType;[combineFE.getResultType()]</InnerMethodInvoke>
+                <InnerMethodInvoke>poAgg;setKeyPlan;[combineFE.getInputPlans().get(0).clone()]</InnerMethodInvoke>
+                <InnerMethodInvoke>poAgg;setValuePlans;[valuePlans]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findAlgebraicOps</MethodName>
+            <MethodComment>/** 
+ * find algebraic operators and also check if the foreach statement is suitable for combiner use
+ * @param feInners inner plans of foreach
+ * @return null if plan is not combinable, otherwise list of combinable operators
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>Pair&lt;PhysicalOperator,PhysicalPlan&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>feInners</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Pair&lt;PhysicalOperator,PhysicalPlan&gt;&gt; [algebraicOps=Lists.newArrayList()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAlgebraicSuccessor</MethodName>
+            <MethodComment>/** 
+ * Look for a algebraic POUserFunc as successor to this project, called recursively to skip any other projects seen on the way.
+ * @param proj project
+ * @param pplan physical plan
+ * @return null if any operator other POProject or algebraic POUserFunc isfound while going down the plan, otherwise algebraic POUserFunc is returned
+ */
+</MethodComment>
+            <ReturnType>POUserFunc</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>POProject</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pplan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [succs=pplan.getSuccessors(proj)]</InnerVar>
+                <InnerVar>PhysicalOperator [succ=succs.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createForEachWithGrpProj</MethodName>
+            <MethodComment>/** 
+ * Create a new foreach with same scope,alias as given foreach add an inner plan that projects the group column, which is going to be the first input
+ * @param foreach source foreach
+ * @param keyType type for group-by key
+ * @return new POForeach
+ */
+</MethodComment>
+            <ReturnType>POForEach</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>foreach</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [scope=foreach.getOperatorKey().scope]</InnerVar>
+                <InnerVar>POForEach [newFE=new POForEach(createOperatorKey(scope),new ArrayList&lt;PhysicalPlan&gt;())]</InnerVar>
+                <InnerVar>PhysicalPlan [grpProjPlan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [proj=new POProject(createOperatorKey(scope),1,0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newFE;addOriginalLocation;[foreach.getAlias(), foreach.getOriginalLocations()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newFE;setResultType;[foreach.getResultType()]</InnerMethodInvoke>
+                <InnerMethodInvoke>proj;setResultType;[keyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>grpProjPlan;add;[proj]</InnerMethodInvoke>
+                <InnerMethodInvoke>newFE;addInputPlan;[grpProjPlan, false]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPlanWithPredecessors</MethodName>
+            <MethodComment>/** 
+ * Create new plan and  add to it the clones of operator algeOp  and its predecessors from the physical plan pplan .
+ * @param algeOp algebraic operator
+ * @param pplan physical plan that has algeOp
+ * @return new plan
+ * @throws CloneNotSupportedException
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>algeOp</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pplan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [newplan=new PhysicalPlan()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addPredecessorsToPlan;[algeOp, pplan, newplan]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPredecessorsToPlan</MethodName>
+            <MethodComment>/** 
+ * Recursively clone op and its predecessors from pplan and add them to newplan
+ * @param op
+ * @param pplan
+ * @param newplan
+ * @return
+ * @throws CloneNotSupportedException
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>PhysicalOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pplan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newplan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalOperator [newOp=op.clone()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newplan;add;[newOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addAlgebraicFuncToCombineFE</MethodName>
+            <MethodComment>/** 
+ * add algebraic functions with appropriate projection to new foreach in combiner
+ * @param cfe - the new foreach in combiner
+ * @param op2newpos - mapping of physical operator to position in input
+ * @throws CloneNotSupportedException
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cfe</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>op2newpos</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalOperator[] [opsInOrder=new PhysicalOperator[op2newpos.size() + 1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>patchUpMap</MethodName>
+            <MethodComment>/** 
+ * Replace old POLocalRearrange with new pre-combine LR, add new map foreach, new map-local-rearrange, and connect them
+ * @param mapPlan
+ * @param preCombinerLR
+ * @param mfe
+ * @param mapAgg
+ * @param mlr
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>preCombinerLR</ParamName>
+                    <ParamType>POPreCombinerLocalRearrange</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mfe</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapAgg</ParamName>
+                    <ParamType>POPartialAgg</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mlr</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLocalRearrange [oldLR=(POLocalRearrange)mapPlan.getLeaves().get(0)]</InnerVar>
+                <InnerVar>PhysicalOperator [opBeforeLR=mfe]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mapPlan;replace;[oldLR, preCombinerLR]</InnerMethodInvoke>
+                <InnerMethodInvoke>mapPlan;add;[mfe]</InnerMethodInvoke>
+                <InnerMethodInvoke>mapPlan;connect;[preCombinerLR, mfe]</InnerMethodInvoke>
+                <InnerMethodInvoke>mapPlan;add;[mlr]</InnerMethodInvoke>
+                <InnerMethodInvoke>mapPlan;connect;[opBeforeLR, mlr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPreCombinerLR</MethodName>
+            <MethodComment>/** 
+ * @param rearrange
+ * @return
+ */
+</MethodComment>
+            <ReturnType>POPreCombinerLocalRearrange</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rearrange</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [scope=rearrange.getOperatorKey().scope]</InnerVar>
+                <InnerVar>POPreCombinerLocalRearrange [pclr=new POPreCombinerLocalRearrange(createOperatorKey(scope),rearrange.getRequestedParallelism(),rearrange.getInputs())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pclr;setPlans;[rearrange.getPlans()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createOperatorKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OperatorKey</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scope</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setProjectInput</MethodName>
+            <MethodComment>/** 
+ * @param op
+ * @param index
+ * @param plan
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [scope=op.getOperatorKey().scope]</InnerVar>
+                <InnerVar>POProject [proj=new POProject(new OperatorKey(scope,NodeIdGenerator.getGenerator().getNextNodeId(scope)),op.getRequestedParallelism(),index)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [inputs=Lists.newArrayList()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>proj;setResultType;[DataType.BAG]</InnerMethodInvoke>
+                <InnerMethodInvoke>plan;trimAbove;[op]</InnerMethodInvoke>
+                <InnerMethodInvoke>plan;add;[proj]</InnerMethodInvoke>
+                <InnerMethodInvoke>plan;connect;[proj, op]</InnerMethodInvoke>
+                <InnerMethodInvoke>inputs;add;[proj]</InnerMethodInvoke>
+                <InnerMethodInvoke>op;setInputs;[inputs]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>changeFunc</MethodName>
+            <MethodComment>/** 
+ * Change the algebriac function type for algebraic functions in map and combine In map and combine the algebraic functions will be leaf of the plan
+ * @param fe
+ * @param type
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fe</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewRearrange</MethodName>
+            <MethodComment>/** 
+ * create new Local rearrange by cloning existing rearrange and add plan for projecting the key
+ * @param rearrange
+ * @return
+ * @throws PlanException
+ * @throws CloneNotSupportedException
+ */
+</MethodComment>
+            <ReturnType>POLocalRearrange</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rearrange</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLocalRearrange [newRearrange=rearrange.clone()]</InnerVar>
+                <InnerVar>PhysicalPlan [newPlan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>String [scope=newRearrange.getOperatorKey().scope]</InnerVar>
+                <InnerVar>POProject [proj=new POProject(new OperatorKey(scope,NodeIdGenerator.getGenerator().getNextNodeId(scope)),-1,0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [plans=new ArrayList&lt;PhysicalPlan&gt;(1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>proj;setResultType;[newRearrange.getKeyType()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newPlan;add;[proj]</InnerMethodInvoke>
+                <InnerMethodInvoke>plans;add;[newPlan]</InnerMethodInvoke>
+                <InnerMethodInvoke>newRearrange;setPlansFromCombiner;[plans]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>AlgebraicPlanChecker</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitDistinct</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>distinct</ParamName>
+                    <ParamType>PODistinct</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalOperator [leaf=mPlan.getLeaves().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDistinct</MethodName>
+            <MethodComment>/** 
+ * @return the distinct
+ */
+</MethodComment>
+            <ReturnType>PODistinct</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLimit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>limit</ParamName>
+                    <ParamType>POLimit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkSuccessorIsLeaf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>opToCheck</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [succs=mPlan.getSuccessors(opToCheck)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filter</ParamName>
+                    <ParamType>POFilter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPOForEach</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fe</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSort</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DistinctPatcher</MethodName>
+            <MethodComment>/** 
+ * @param plan
+ * @param walker
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>walker</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DistinctPatcher</MethodName>
+            <MethodComment>/** 
+ * @param physicalPlan
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitProject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>POProject</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [preds=mPlan.getPredecessors(proj)]</InnerVar>
+                <InnerVar>PhysicalOperator [pred=preds.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDistinct</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POUserFunc</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixMapProjects</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixMapProjects</MethodName>
+            <MethodComment>/** 
+ * @param plan
+ * @param walker
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>walker</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitProject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proj</ParamName>
+                    <ParamType>POProject</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

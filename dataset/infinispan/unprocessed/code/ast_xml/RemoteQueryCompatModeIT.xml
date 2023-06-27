@@ -1,0 +1,95 @@
+<Class>
+    <Id>1038</Id>
+    <Package>org.infinispan.server.test.query</Package>
+    <ClassName>RemoteQueryCompatModeIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RemoteQueryCompatModeIT  /** 
+ * Tests for remote query using jboss marshalling and Hibernate Search annotated classes. Protobuf is not used!
+ * @author anistor@redhat.com
+ * @since 9.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>remoteCacheManager</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>before</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>JavaArchive [entityArchive=ShrinkWrap.create(JavaArchive.class).addClasses(TestEntity.class).add(new StringAsset("Dependencies: org.hibernate.search.engine"),"META-INF/MANIFEST.MF")]</InnerVar>
+                <InnerVar>JavaArchive [marshallerArchive=ShrinkWrap.create(JavaArchive.class).addClasses(CustomCompatModeMarshaller.class).add(new StringAsset("Dependencies: org.jboss.marshalling, " + "org.infinispan.commons, " + "org.infinispan.remote-query.client, "+ "deployment.custom-test-entity.jar"),"META-INF/MANIFEST.MF").addAsServiceProvider(Marshaller.class,CustomCompatModeMarshaller.class)]</InnerVar>
+                <InnerVar>String [serverDir=System.getProperty("server1.dist")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>entityArchive.as(ZipExporter.class);exportTo;[new File(serverDir,"/standalone/deployments/custom-test-entity.jar"), true]</InnerMethodInvoke>
+                <InnerMethodInvoke>marshallerArchive.as(ZipExporter.class);exportTo;[new File(serverDir,"/standalone/deployments/custom-compat-marshaller.jar"), true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>release</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testCompatQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;Integer,TestEntity&gt; [remoteCache=remoteCacheManager.getCache()]</InnerVar>
+                <InnerVar>QueryFactory [queryFactory=Search.getQueryFactory(remoteCache)]</InnerVar>
+                <InnerVar>Query [query=queryFactory.from(TestEntity.class).build()]</InnerVar>
+                <InnerVar>List&lt;?&gt; [list=query.list()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[10, list.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[list.get(0) instanceof TestEntity]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CustomCompatModeMarshaller</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseCfg;setClassResolver;[new DefaultContextClassResolver(getClass().getClassLoader())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

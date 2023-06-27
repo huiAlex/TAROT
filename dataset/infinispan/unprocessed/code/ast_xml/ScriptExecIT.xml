@@ -1,0 +1,223 @@
+<Class>
+    <Id>781</Id>
+    <Package>org.infinispan.server.test.client.hotrod</Package>
+    <ClassName>ScriptExecIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ScriptExecIT  /** 
+ * @author gustavonalle
+ * @since 8.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SCRIPT_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COMPATIBILITY_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>STREAM</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>remoteCacheManager</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>remoteCache</FieldName>
+            <FieldType>RemoteCache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>remoteCache</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptCache</FieldName>
+            <FieldType>RemoteCache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptCache</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exceptionRule</FieldName>
+            <FieldType>ExpectedException</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearCache</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCacheManager.getCache(COMPATIBILITY_CACHE_NAME);clear;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createRemoteCacheManagerConfiguration</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Configuration</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ConfigurationBuilder [config=new ConfigurationBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>config.addServer().host(server1.getHotrodEndpoint().getInetAddress().getHostName());port;[server1.getHotrodEndpoint().getPort()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRemovingNonExistentScript</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>exceptionRule;expect;[HotRodClientException.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>exceptionRule;expectMessage;["Unknown task"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;execute;["nonExistent.js", new HashMap&lt;&gt;()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testSimpleScriptExecutionWithParams</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [remoteCache=remoteCacheManager.getCache(COMPATIBILITY_CACHE_NAME)]</InnerVar>
+                <InnerVar>Map&lt;String,Object&gt; [parameters=new HashMap&lt;&gt;()]</InnerVar>
+                <InnerVar>int [result=remoteCache.execute("test.js",parameters)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addScripts;["test.js"]</InnerMethodInvoke>
+                <InnerMethodInvoke>parameters;put;["key", "parameter"]</InnerMethodInvoke>
+                <InnerMethodInvoke>parameters;put;["value", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, result]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", remoteCache.get("parameter")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testMapReduceScriptExecution</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [remoteCache=remoteCacheManager.getCache(COMPATIBILITY_CACHE_NAME)]</InnerVar>
+                <InnerVar>Map&lt;String,Long&gt; [results=remoteCache.execute("stream_serverTask.js",emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addScripts;["stream_serverTask.js"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;["1", "word1 word2 word3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;["2", "word1 word2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;["3", "word1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, results.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word1").equals(Long.valueOf(3))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word2").equals(Long.valueOf(2))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word3").equals(Long.valueOf(1))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testScriptExecution</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Map&lt;String,Long&gt; [results=remoteCache.execute(STREAM,emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[1, "word1 word2 word3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[2, "word1 word2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[3, "word1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addScripts;[STREAM]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, results.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word1").equals(Long.valueOf(3))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word2").equals(Long.valueOf(2))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[results.get("word3").equals(Long.valueOf(1))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addScripts</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scripts</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>release</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

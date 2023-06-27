@@ -1,0 +1,1222 @@
+<Class>
+    <Id>890</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark.plan</Package>
+    <ClassName>SparkCompiler</ClassName>
+    <SuperClass>PhyPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SparkCompiler  /** 
+ * The compiler that compiles a given physical physicalPlan into a DAG of Spark operators
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigProperties</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+        <Field>
+            <FieldName>physicalPlan</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkPlan</FieldName>
+            <FieldType>SparkOperPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>curSparkOp</FieldName>
+            <FieldType>SparkOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scope</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compiledInputs</FieldName>
+            <FieldType>SparkOperator[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>splitsSeen</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>splitsSeen</FieldName>
+            <FieldType>OperatorKey</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nig</FieldName>
+            <FieldType>NodeIdGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>phyToSparkOpMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>phyToSparkOpMap</FieldName>
+            <FieldType>PhysicalOperator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>udfFinder</FieldName>
+            <FieldType>UDFFinder</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyType</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SparkCompiler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [roots=physicalPlan.getRoots()]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [leaves=physicalPlan.getLeaves()]</InnerVar>
+                <InnerVar>List&lt;POStore&gt; [stores=PlanHelper.getPhysicalOperators(physicalPlan,POStore.class)]</InnerVar>
+                <InnerVar>List&lt;PONative&gt; [nativeSparks=PlanHelper.getPhysicalOperators(physicalPlan,PONative.class)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [ops]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ops;addAll;[nativeSparks]</InnerMethodInvoke>
+                <InnerMethodInvoke>Collections;sort;[ops]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment>/** 
+ * Compiles the physicalPlan below op into a Spark Operator and stores it in curSparkOp.
+ * @param op
+ * @throws IOException
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperator[] [prevCompInp=compiledInputs]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [predecessors=physicalPlan.getPredecessors(op)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>op;visit;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSparkOp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>SparkOperator [op=new SparkOperator(OperatorKey.genOpKey(scope))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSparkPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>connectSoftLink</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startNew</MethodName>
+            <MethodComment>/** 
+ * @param fSpec
+ * @param old
+ * @param operatorKey: If operatorKey is not null, we assign the operatorKey to POLoad in the new SparkOperator,otherwise the operatorKey of POLoad will be created by the program. Detail see PIG-5212
+ * @return
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fSpec</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>old</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operatorKey</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLoad [ld=getLoad(operatorKey)]</InnerVar>
+                <InnerVar>SparkOperator [ret=getSparkOp()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ld;setLFile;[fSpec]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;add;[ld]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkPlan;add;[ret]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkPlan;connect;[old, ret]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLoad</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POLoad</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>operatorKey</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POLoad [ld=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ld;setPc;[pigContext]</InnerMethodInvoke>
+                <InnerMethodInvoke>ld;setIsTmpLoad;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitDistinct</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PODistinct</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>endSingleInputPlanWithStr</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fSpec</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperator [sparkOp=compiledInputs[0]]</InnerVar>
+                <InnerVar>POStore [str=getStore()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>str;setSFile;[fSpec]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkOp.physicalPlan;addAsLeaf;[str]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POStore</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>POStore [st=new POStore(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>st;setIsTmpStore;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLoad</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitNative</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PONative</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNativeSparkOp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>NativeSparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkJar</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parameters</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POStore</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POFilter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCross</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCross</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitStream</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSort</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLimit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLimit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitLocalRearrange</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCollectedGroup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCollectedGroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [roots=curSparkOp.physicalPlan.getRoots()]</InnerVar>
+                <InnerVar>PhysicalOperator [phyOp=roots.get(0)]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=((POLoad)phyOp).getLoadFunc()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPOForEach</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCounter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POCounter</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitRank</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PORank</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitGlobalRearrange</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POGlobalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPackage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POPackage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitUnion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POUnion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSkewedJoin</MethodName>
+            <MethodComment>/** 
+ * currently use regular join to replace skewedJoin Skewed join currently works with two-table inner join. More info about pig SkewedJoin, See https://wiki.apache.org/pig/PigSkewedJoinSpec
+ * @param op
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POSkewedJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitFRJoin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POFRJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMergeJoin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>joinOp</ParamName>
+                    <ParamType>POMergeJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processUDFs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addToPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperator [sparkOp=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sparkOp.physicalPlan;addAsLeaf;[op]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>merge</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>compiledInputs</ParamName>
+                    <ParamType>SparkOperator[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperator [ret=getSparkOp()]</InnerVar>
+                <InnerVar>Set&lt;SparkOperator&gt; [toBeConnected=new HashSet&lt;SparkOperator&gt;()]</InnerVar>
+                <InnerVar>List&lt;SparkOperator&gt; [toBeRemoved=new ArrayList&lt;SparkOperator&gt;()]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [toBeMerged=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>Iterator&lt;SparkOperator&gt; [it=toBeConnected.iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sparkPlan;add;[ret]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;merge;[ret.physicalPlan, toBeMerged]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>merge</MethodName>
+            <MethodComment>/** 
+ * The merge of a list of plans into a single physicalPlan
+ * @param &lt; O &gt;
+ * @param &lt; E &gt;
+ * @param finPlan - Final Plan into which the list of plans is merged
+ * @param plans - list of plans to be merged
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>finPlan</ParamName>
+                    <ParamType>E</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>plans</ParamName>
+                    <ParamType>E</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;sort;[finPlan.getLeaves()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMergeCoGroup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>poCoGrp</ParamName>
+                    <ParamType>POMergeCogroup</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;FuncSpec&gt; [funcSpecs=new ArrayList&lt;FuncSpec&gt;(compiledInputs.length - 1)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [fileSpecs=new ArrayList&lt;String&gt;(compiledInputs.length - 1)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [loaderSigns=new ArrayList&lt;String&gt;(compiledInputs.length - 1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexingJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>FileSpec</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexerSparkOp</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>baseSparkOp</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapperLRInnerPlans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [baseMapPlan=baseSparkOp.physicalPlan]</InnerVar>
+                <InnerVar>POLoad [baseLoader=(POLoad)baseMapPlan.getRoots().get(0)]</InnerVar>
+                <InnerVar>FileSpec [origLoaderFileSpec=baseLoader.getLFile()]</InnerVar>
+                <InnerVar>FuncSpec [funcSpec=origLoaderFileSpec.getFuncSpec()]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=baseLoader.getLoadFunc()]</InnerVar>
+                <InnerVar>String[] [indexerArgs=new String[6]]</InnerVar>
+                <InnerVar>PhysicalPlan [phyPlan]</InnerVar>
+                <InnerVar>POLoad [idxJobLoader=getLoad(null)]</InnerVar>
+                <InnerVar>POStore [st=getStore()]</InnerVar>
+                <InnerVar>FileSpec [strFile=getTempFileSpec()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>idxJobLoader;setLFile;[new FileSpec(origLoaderFileSpec.getFileName(),new FuncSpec(MergeJoinIndexer.class.getName(),indexerArgs))]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerSparkOp.physicalPlan;add;[idxJobLoader]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerSparkOp.UDFs;add;[baseLoader.getLFile().getFuncSpec().toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>SparkUtil;createIndexerSparkNode;[indexerSparkOp, scope, nig]</InnerMethodInvoke>
+                <InnerMethodInvoke>st;setSFile;[strFile]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexerSparkOp.physicalPlan;addAsLeaf;[st]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SparkCompilerException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTempFileSpec</MethodName>
+            <MethodComment>/** 
+ * Returns a temporary DFS Path
+ * @return
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>FileSpec</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>FindKeyTypeVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitProject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>POProject</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSampleOperatorForSkewedJoin</MethodName>
+            <MethodComment>/** 
+ * build a POPoissonSampleSpark operator for SkewedJoin's sampling job
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sampleSparkOp</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=ConfigurationUtil.toConfiguration(pigProperties)]</InnerVar>
+                <InnerVar>int [sampleRate=conf.getInt(PigConfiguration.PIG_POISSON_SAMPLER_SAMPLE_RATE,POPoissonSampleSpark.DEFAULT_SAMPLE_RATE)]</InnerVar>
+                <InnerVar>float [heapPerc=conf.getFloat(PigConfiguration.PIG_SKEWEDJOIN_REDUCE_MEMUSAGE,PartitionSkewedKeys.DEFAULT_PERCENT_MEMUSAGE)]</InnerVar>
+                <InnerVar>long [totalMemory=conf.getLong(PigConfiguration.PIG_SKEWEDJOIN_REDUCE_MEM,-1)]</InnerVar>
+                <InnerVar>POPoissonSampleSpark [poSample=new POPoissonSampleSpark(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,sampleRate,heapPerc,totalMemory)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sampleSparkOp.physicalPlan;addAsLeaf;[poSample]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>quantJob</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lFile</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>quantFile</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fields</ParamName>
+                    <ParamType>Pair&lt;POProject,Byte&gt;[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SparkOperator [sparkOper=startNew(lFile,quantJob,null)]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [eps1=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>byte [keyType=DataType.UNKNOWN]</InnerVar>
+                <InnerVar>POLocalRearrange [lr=new POLocalRearrange(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>long [limit=sort.getLimit()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>lr;setKeyType;[(fields == null || fields.length &gt; 1) ? DataType.TUPLE : keyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;setPlans;[eps1]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+                <InnerMethodInvoke>lr;addOriginalLocation;[sort.getAlias(), sort.getOriginalLocations()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkOper.physicalPlan;addAsLeaf;[lr]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkOper;setGlobalSort;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigContext.getProperties();setProperty;["pig.reduce.keytype", Byte.toString(lr.getKeyType())]</InnerMethodInvoke>
+                <InnerMethodInvoke>sparkOper.physicalPlan;addAsLeaf;[sort]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSamplingJob</MethodName>
+            <MethodComment>/** 
+ * Create a sampling job to collect statistics by sampling an input file. The sequence of operations is as following: &lt;li&gt;Transform input sample tuples into another tuple.&lt;/li&gt; &lt;li&gt;Add an extra field &amp;quot;all&amp;quot; into the tuple &lt;/li&gt; &lt;li&gt;Package all tuples into one bag &lt;/li&gt; &lt;li&gt;Add constant field for number of reducers. &lt;/li&gt; &lt;li&gt;Sorting the bag &lt;/li&gt; &lt;li&gt;Invoke UDF with the number of reducers and the sorted bag.&lt;/li&gt; &lt;li&gt;Data generated by UDF is stored into a file.&lt;/li&gt;
+ * @param sort           the POSort operator used to sort the bag
+ * @param sampleOperator current sampling job
+ * @param rp             configured parallemism
+ * @param udfClassName   the class name of UDF
+ * @param udfArgs        the arguments of UDF
+ * @return pair&lt;SparkOper,integer&gt;
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>POSort</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sampleOperator</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>transformPlans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>udfClassName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>udfArgs</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Boolean&gt; [flat1=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [eps1=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe1=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,eps1,flat1)]</InnerVar>
+                <InnerVar>POSampleSortSpark [poSparkSampleSort=new POSampleSortSpark(sort)]</InnerVar>
+                <InnerVar>PhysicalPlan [fe2Plan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [topPrj=new POProject(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>PhysicalPlan [rpep=new PhysicalPlan()]</InnerVar>
+                <InnerVar>ConstantExpression [rpce=new ConstantExpression(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [genEps=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [flattened2=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe2=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,genEps,flattened2)]</InnerVar>
+                <InnerVar>PhysicalPlan [ep4=new PhysicalPlan()]</InnerVar>
+                <InnerVar>POProject [prjStar4=new POProject(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [ufInps=new ArrayList&lt;PhysicalOperator&gt;()]</InnerVar>
+                <InnerVar>POUserFunc [uf=new POUserFunc(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,ufInps,new FuncSpec(udfClassName,udfArgs))]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [ep4s=new ArrayList&lt;PhysicalPlan&gt;()]</InnerVar>
+                <InnerVar>List&lt;Boolean&gt; [flattened3=new ArrayList&lt;Boolean&gt;()]</InnerVar>
+                <InnerVar>POForEach [nfe3=new POForEach(new OperatorKey(scope,nig.getNextNodeId(scope)),-1,ep4s,flattened3)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addSampleOperatorForSkewedJoin;[sampleOperator]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleOperator.physicalPlan;addAsLeaf;[nfe1]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleOperator.physicalPlan;addAsLeaf;[poSparkSampleSort]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setColumn;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setResultType;[DataType.BAG]</InnerMethodInvoke>
+                <InnerMethodInvoke>topPrj;setOverloaded;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>fe2Plan;add;[topPrj]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setRequestedParallelism;[rp]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setValue;[rp]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpce;setResultType;[DataType.INTEGER]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpep;add;[rpce]</InnerMethodInvoke>
+                <InnerMethodInvoke>genEps;add;[rpep]</InnerMethodInvoke>
+                <InnerMethodInvoke>genEps;add;[fe2Plan]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened2;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened2;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleOperator.physicalPlan;addAsLeaf;[nfe2]</InnerMethodInvoke>
+                <InnerMethodInvoke>prjStar4;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+                <InnerMethodInvoke>prjStar4;setStar;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;add;[prjStar4]</InnerMethodInvoke>
+                <InnerMethodInvoke>ufInps;add;[prjStar4]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;add;[uf]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4;connect;[prjStar4, uf]</InnerMethodInvoke>
+                <InnerMethodInvoke>ep4s;add;[ep4]</InnerMethodInvoke>
+                <InnerMethodInvoke>flattened3;add;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleOperator.physicalPlan;addAsLeaf;[nfe3]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleOperator;markSampler;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSortCols</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Pair&lt;POProject,Byte&gt;[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plans</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [errCode=2026]</InnerVar>
+                <InnerVar>String [msg="No expression plan found in POSort."]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildBroadcastForSkewedJoin</MethodName>
+            <MethodComment>/** 
+ * Add POBroadcastSpark operator to broadcast key distribution for SkewedJoin's sampling job
+ * @param sampleSparkOp
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sampleSparkOp</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigKeyDistFile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POBroadcastSpark [poBroadcast=new POBroadcastSpark(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>poBroadcast;setBroadcastedVariableName;[pigKeyDistFile]</InnerMethodInvoke>
+                <InnerMethodInvoke>sampleSparkOp.physicalPlan;addAsLeaf;[poBroadcast]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSkewedJoinSampleJob</MethodName>
+            <MethodComment>/** 
+ * Create Sampling job for skewed join.
+ */
+</MethodComment>
+            <ReturnType>SparkOperator</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>skewedJoin</ParamName>
+                    <ParamType>POSkewedJoin</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

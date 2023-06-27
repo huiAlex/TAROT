@@ -1,0 +1,179 @@
+<Class>
+    <Id>1746</Id>
+    <Package>org.infinispan.security.impl</Package>
+    <ClassName>ClusterRoleMapper</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>PrincipalRoleMapper</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClusterRoleMapper  /** 
+ * ClusterRoleMapper.
+ * @author Tristan Tarrant
+ * @since 7.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>cacheManager</FieldName>
+            <FieldType>EmbeddedCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CLUSTER_ROLE_MAPPER_CACHE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clusterRoleMap</FieldName>
+            <FieldType>Cache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clusterRoleMap</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getClusterRoleMap</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>principalToRoles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>principal</ParamName>
+                    <ParamType>Principal</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setContext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>PrincipalRoleMapperContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GlobalConfiguration [globalConfiguration=cacheManager.getGlobalComponentRegistry().getGlobalConfiguration()]</InnerVar>
+                <InnerVar>CacheMode [cacheMode=globalConfiguration.isClustered() ? CacheMode.REPL_SYNC : CacheMode.LOCAL]</InnerVar>
+                <InnerVar>ConfigurationBuilder [cfg=new ConfigurationBuilder()]</InnerVar>
+                <InnerVar>InternalCacheRegistry [internalCacheRegistry=cacheManager.getGlobalComponentRegistry().getComponent(InternalCacheRegistry.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cfg.clustering().cacheMode(cacheMode).sync().stateTransfer().fetchInMemoryState(true).awaitInitialTransfer(false).security().authorization();disable;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>internalCacheRegistry;registerInternalCache;[CLUSTER_ROLE_MAPPER_CACHE, cfg.build(), EnumSet.of(InternalCacheRegistry.Flag.PERSISTENT)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>grant</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>roleName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>principalName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [roleSet=getClusterRoleMap().computeIfAbsent(principalName,n -&gt; new HashSet&lt;&gt;())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>roleSet;add;[roleName]</InnerMethodInvoke>
+                <InnerMethodInvoke>clusterRoleMap;put;[principalName, roleSet]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deny</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>roleName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>principalName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [roleSet=getClusterRoleMap().computeIfAbsent(principalName,n -&gt; new HashSet&lt;&gt;())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>roleSet;remove;[roleName]</InnerMethodInvoke>
+                <InnerMethodInvoke>clusterRoleMap;put;[principalName, roleSet]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>list</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>principalName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [roleSet=getClusterRoleMap().get(principalName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>listAll</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,355 @@
+<Class>
+    <Id>1009</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>PigInputFormat</ClassName>
+    <SuperClass>InputFormat</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PIG_INPUTS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PIG_INPUT_TARGETS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PIG_INPUT_SIGNATURES</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PIG_INPUT_LIMITS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inputFormat</FieldName>
+            <FieldType>InputFormat</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigSplit</FieldName>
+            <FieldType>PigSplit</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loadFunc</FieldName>
+            <FieldType>LoadFunc</FieldType>
+        </Field>
+        <Field>
+            <FieldName>context</FieldName>
+            <FieldType>TaskAttemptContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>limit</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>createRecordReader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Text</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>split</ParamName>
+                    <ParamType>org.apache.hadoop.mapreduce.InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RecordReaderFactory [factory=new RecordReaderFactory(split,context)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>RecordReaderFactory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>split</ParamName>
+                    <ParamType>org.apache.hadoop.mapreduce.InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PigSplit [pigSplit=(PigSplit)split]</InnerVar>
+                <InnerVar>int [n=pigSplit.getTotalSplits()]</InnerVar>
+                <InnerVar>Configuration [conf=context.getConfiguration()]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=getLoadFunc(pigSplit.getInputIndex(),conf)]</InnerVar>
+                <InnerVar>InputFormat [inputFormat=loadFunc.getInputFormat()]</InnerVar>
+                <InnerVar>List&lt;Long&gt; [inpLimitLists=(ArrayList&lt;Long&gt;)ObjectSerializer.deserialize(conf.get(PIG_INPUT_LIMITS))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>context.getConfiguration();setInt;["pig.mapsplits.count", n]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigContext;setPackageImportList;[(ArrayList&lt;String&gt;)ObjectSerializer.deserialize(conf.get("udf.import.list"))]</InnerMethodInvoke>
+                <InnerMethodInvoke>MapRedUtil;setupUDFContext;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;passLoadSignature;[loadFunc, pigSplit.getInputIndex(), conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigInputFormat;mergeSplitSpecificConf;[loadFunc, pigSplit, conf]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createRecordReader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Text</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeSplitSpecificConf</MethodName>
+            <MethodComment>/** 
+ * get the corresponding configuration for the input on which the split is based and merge it with the Conf supplied package level access so that this is not publicly used elsewhere
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loadFunc</ParamName>
+                    <ParamType>LoadFunc</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigSplit</ParamName>
+                    <ParamType>PigSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>originalConf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Job [job=new Job(originalConf)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>loadFunc;setLocation;[getLoadLocation(pigSplit.getInputIndex(),originalConf), job]</InnerMethodInvoke>
+                <InnerMethodInvoke>ConfigurationUtil;mergeConf;[originalConf, job.getConfiguration()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLoadFunc</MethodName>
+            <MethodComment>/** 
+ * @param inputIndex
+ * @param conf
+ * @return
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>LoadFunc</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;FileSpec&gt; [inputs=(ArrayList&lt;FileSpec&gt;)ObjectSerializer.deserialize(conf.get(PIG_INPUTS))]</InnerVar>
+                <InnerVar>FuncSpec [loadFuncSpec=inputs.get(inputIndex).getFuncSpec()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLoadLocation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inputIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;FileSpec&gt; [inputs=(ArrayList&lt;FileSpec&gt;)ObjectSerializer.deserialize(conf.get(PIG_INPUTS))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>passLoadSignature</MethodName>
+            <MethodComment>/** 
+ * Pass loader signature to LoadFunc and to InputFormat through the conf
+ * @param loadFunc the Loadfunc to set the signature on
+ * @param inputIndex the index of the input corresponding to the loadfunc
+ * @param conf the Configuration object into which the signature should beset
+ * @throws IOException on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loadFunc</ParamName>
+                    <ParamType>LoadFunc</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [inpSignatureLists=(ArrayList&lt;String&gt;)ObjectSerializer.deserialize(conf.get(PIG_INPUT_SIGNATURES))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>MapRedUtil;setupUDFContext;[conf]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSplits</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InputSplit</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jobcontext</ParamName>
+                    <ParamType>JobContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=jobcontext.getConfiguration()]</InnerVar>
+                <InnerVar>ArrayList&lt;FileSpec&gt; [inputs]</InnerVar>
+                <InnerVar>ArrayList&lt;ArrayList&lt;OperatorKey&gt;&gt; [inpTargets]</InnerVar>
+                <InnerVar>ArrayList&lt;InputSplit&gt; [splits=new ArrayList&lt;InputSplit&gt;()]</InnerVar>
+                <InnerVar>int [n=splits.size()]</InnerVar>
+                <InnerVar>int [m=inputs.size()]</InnerVar>
+                <InnerVar>boolean [disableCounter=conf.getBoolean("pig.disable.counter",false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPigSplits</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InputSplit</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oneInputSplits</ParamName>
+                    <ParamType>InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetOps</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>blockSize</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>combinable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;InputSplit&gt; [pigSplits=new ArrayList&lt;InputSplit&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createPigSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InputSplit</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>combinedSplits</ParamName>
+                    <ParamType>InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inputIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>targetOps</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PigSplit [pigSplit=new PigSplit(combinedSplits.toArray(new InputSplit[0]),inputIndex,targetOps,splitIndex)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pigSplit;setConf;[conf]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

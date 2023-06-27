@@ -1,0 +1,24 @@
+Ages ago i wrote a spell checker for groovy, that gives more helpful information in case a MissingMethodExeption or Missing Property Exception is thrown.
+I recently picked it up and finished the patch.
+It uses reflection to find missing methods with a low edit distance relative to the requested method. It also use the edit distance
+as a method to rank the method so that the most probable solution is displayed first.
+The performance impact is isolated to exception.getMessage for properties and Methods, but not for constructors.
+I don t know of a case where this should impact a working program but it should be taken into consideration.
+The unit tests are only partial(they era complete for the string/array metrics) but the other coverage is currently weak.
+Missing method     ================================================================
+groovy:000&gt; Integer.vallueOf( 10 )
+ERROR groovy.lang.MissingMethodException: No signature of method: static java.lang.Integer.vallueOf() is applicable for argument types: (java.lang.String) values:  &#91;10&#93;
+Possible solutions: valueOf(java.lang.String), valueOf(java.lang.String, int), valueOf(int)
+at groovysh_evaluate.run (groovysh_evaluate:2)
+groovy:000&gt;
+Missing Constructor     ================================================================
+new Integer(new Object())
+ERROR groovy.lang.GroovyRuntimeException: Could not find matching constructor for: java.lang.Integer(java.lang.Object)
+Possible solutions: java.lang.Integer(int), java.lang.Integer(java.lang.String)
+at groovysh_evaluate.run (groovysh_evaluate:2)
+Missing Constructor     ================================================================
+new java.awt.Point().xy
+ERROR groovy.lang.MissingPropertyException: No such property: xy for class: java.awt.Point
+Possible solutions: x, y
+at groovysh_evaluate.run (groovysh_evaluate:2)
+.

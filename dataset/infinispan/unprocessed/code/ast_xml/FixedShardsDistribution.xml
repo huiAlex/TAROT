@@ -1,0 +1,248 @@
+<Class>
+    <Id>876</Id>
+    <Package>org.infinispan.query.affinity</Package>
+    <ClassName>FixedShardsDistribution</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ShardDistribution</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FixedShardsDistribution  /** 
+ * {@link ShardDistribution} that maintain a fixed number of index shards.The minimum number of shards is 1 and the maximum is the number of segments.
+ * @since 9.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOGGER</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shardPerSegmentMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shardPerSegmentMap</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shardsPerAddressMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>shardsPerAddressMap</FieldName>
+            <FieldType>Address</FieldType>
+        </Field>
+        <Field>
+            <FieldName>addressPerShardMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>addressPerShardMap</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numShards</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>FixedShardsDistribution</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>consistentHash</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numShards</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;calculate;[consistentHash, numShards]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>calculate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>consistentHash</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numShards</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Address&gt; [nodes=consistentHash.getMembers()]</InnerVar>
+                <InnerVar>int [numNodes=nodes.size()]</InnerVar>
+                <InnerVar>List&lt;Set&lt;Integer&gt;&gt; [segmentsPerServer=nodes.stream().map(consistentHash::getPrimarySegmentsForOwner).collect(toList())]</InnerVar>
+                <InnerVar>int[] [shardsNumPerServer=allocateShardsToNodes(numShards,numNodes,segmentsPerServer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;populateSegments;[shardsNumPerServer, segmentsPerServer, nodes]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOGGER;tracef;["Calculated shard distribution shardPerSegmentMap: %s", shardPerSegmentMap]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOGGER;tracef;["Calculated shard distribution shardsPerAddressMap: %s", shardsPerAddressMap]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOGGER;tracef;["Calculated shard distribution addressPerShardMap: %s", addressPerShardMap]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populateSegments</MethodName>
+            <MethodComment>/** 
+ * Associates segments to each shard.
+ * @param shardsNumPerServer numbers of shards allocated for each server
+ * @param segmentsPerServer  the primary owned segments of each server
+ * @param nodes              the members of the cluster
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>shardsNumPerServer</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segmentsPerServer</ParamName>
+                    <ParamType>Set&lt;Integer&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [shardId=0]</InnerVar>
+                <InnerVar>int [n=0]</InnerVar>
+                <InnerVar>Set&lt;Integer&gt; [remainingSegments=new HashSet&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allocateShardsToNodes</MethodName>
+            <MethodComment>/** 
+ * Allocates shards in a round robin fashion for the servers, ignoring those without segments.
+ * @return int[] with the number of shards per server
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numShards</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numNodes</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>weightPerServer</ParamName>
+                    <ParamType>Set&lt;Integer&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [shardsPerServer=new int[numNodes]]</InnerVar>
+                <InnerVar>Iterator&lt;Integer&gt; [cyclicNodeIterator=Stream.iterate(0,i -&gt; (i + 1) % numNodes).iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getShardsIdentifiers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getShards</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getShardFromSegment</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>segment</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOwner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Address</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>shardId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

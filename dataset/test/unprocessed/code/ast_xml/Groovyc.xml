@@ -1,0 +1,1835 @@
+<Class>
+    <Id>1148</Id>
+    <Package>org.codehaus.groovy.ant</Package>
+    <ClassName>Groovyc</ClassName>
+    <SuperClass>MatchingTask</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Groovyc  /** 
+ * Compiles Groovy source files using Ant. &lt;p&gt; Typically involves using Ant from the command-line and an Ant build file such as: &lt;pre&gt; &amp;lt;?xml version="1.0"?&amp;gt; &amp;lt;project name="MyGroovyBuild" default="compile"&amp;gt; &amp;lt;property name="groovy.home" value="/Path/To/Groovy"/&amp;gt; &amp;lt;property name="groovy.version" value="X.Y.Z"/&amp;gt; &amp;lt;path id="groovy.classpath"&amp;gt; &amp;lt;fileset dir="${groovy.home}/embeddable"&amp;gt; &amp;lt;include name="groovy-all-${groovy.version}.jar" /&amp;gt; &amp;lt;/fileset&amp;gt; &amp;lt;/path&amp;gt; &amp;lt;taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="groovy.classpath"/&amp;gt; &amp;lt;target name="compile" description="compile groovy sources"&amp;gt; &amp;lt;groovyc srcdir="src" listfiles="true" classpathref="groovy.classpath"/&amp;gt; &amp;lt;/target&amp;gt; &amp;lt;/project&amp;gt; &lt;/pre&gt; &lt;p&gt; This task can take the following arguments: &lt;ul&gt; &lt;li&gt;srcdir&lt;/li&gt; &lt;li&gt;scriptExtension&lt;/li&gt; &lt;li&gt;targetBytecode&lt;/li&gt; &lt;li&gt;destdir&lt;/li&gt; &lt;li&gt;sourcepath&lt;/li&gt; &lt;li&gt;sourcepathRef&lt;/li&gt; &lt;li&gt;classpath&lt;/li&gt; &lt;li&gt;classpathRef&lt;/li&gt; &lt;li&gt;listfiles&lt;/li&gt; &lt;li&gt;failonerror&lt;/li&gt; &lt;li&gt;proceed&lt;/li&gt; &lt;li&gt;memoryInitialSize&lt;/li&gt; &lt;li&gt;memoryMaximumSize&lt;/li&gt; &lt;li&gt;encoding&lt;/li&gt; &lt;li&gt;verbose&lt;/li&gt; &lt;li&gt;includeantruntime&lt;/li&gt; &lt;li&gt;includejavaruntime&lt;/li&gt; &lt;li&gt;fork&lt;/li&gt; &lt;li&gt;javaHome&lt;/li&gt; &lt;li&gt;executable&lt;/li&gt; &lt;li&gt;updatedProperty&lt;/li&gt; &lt;li&gt;errorProperty&lt;/li&gt; &lt;li&gt;includeDestClasses&lt;/li&gt; &lt;li&gt;jointCompilationOptions&lt;/li&gt; &lt;li&gt;stacktrace&lt;/li&gt; &lt;li&gt;indy&lt;/li&gt; &lt;li&gt;scriptBaseClass&lt;/li&gt; &lt;li&gt;stubdir&lt;/li&gt; &lt;li&gt;keepStubs&lt;/li&gt; &lt;li&gt;forceLookupUnnamedFiles&lt;/li&gt; &lt;li&gt;configscript&lt;/li&gt; &lt;/ul&gt; And these nested tasks: &lt;ul&gt; &lt;li&gt;javac&lt;/li&gt; &lt;/ul&gt; Of these arguments, the &lt;b&gt;srcdir&lt;/b&gt; and &lt;b&gt;destdir&lt;/b&gt; are required. &lt;p&gt; &lt;p&gt;When this task executes, it will recursively scan srcdir and destdir looking for Groovy source files to compile. This task makes its compile decision based on timestamp. &lt;p&gt; A more elaborate build file showing joint compilation: &lt;pre&gt; &amp;lt;?xml version="1.0"?&amp;gt; &amp;lt;project name="MyJointBuild" default="compile"&amp;gt; &amp;lt;property name="groovy.home" value="/Path/To/Groovy"/&amp;gt; &amp;lt;property name="groovy.version" value="X.Y.Z"/&amp;gt; &amp;lt;path id="groovy.classpath"&amp;gt; &amp;lt;fileset dir="${groovy.home}/embeddable"&amp;gt; &amp;lt;include name="groovy-all-${groovy.version}.jar" /&amp;gt; &amp;lt;/fileset&amp;gt; &amp;lt;/path&amp;gt; &amp;lt;target name="clean" description="remove all built files"&amp;gt; &amp;lt;delete dir="classes" /&amp;gt; &amp;lt;/target&amp;gt; &amp;lt;target name="compile" depends="init" description="compile java and groovy sources"&amp;gt; &amp;lt;mkdir dir="classes" /&amp;gt; &amp;lt;groovyc destdir="classes" srcdir="src" listfiles="true" keepStubs="true" stubdir="stubs"&amp;gt; &amp;lt;javac debug="on" deprecation="true"/&amp;gt; &amp;lt;classpath&amp;gt; &amp;lt;fileset dir="classes"/&amp;gt; &amp;lt;path refid="groovy.classpath"/&amp;gt; &amp;lt;/classpath&amp;gt; &amp;lt;/groovyc&amp;gt; &amp;lt;/target&amp;gt; &amp;lt;target name="init"&amp;gt; &amp;lt;taskdef name="groovyc" classname="org.codehaus.groovy.ant.Groovyc" classpathref="groovy.classpath"/&amp;gt; &amp;lt;/target&amp;gt; &amp;lt;/project&amp;gt; &lt;/pre&gt; &lt;p&gt; Based heavily on the Javac implementation in Ant. &lt;p&gt; Can also be used from  {@link groovy.util.AntBuilder} to allow the build file to be scripted in Groovy.
+ * @author &lt;a href="mailto:james@coredevelopers.net"&gt;James Strachan&lt;/a&gt;
+ * @author Hein Meling
+ * @author &lt;a href="mailto:russel.winder@concertant.com"&gt;Russel Winder&lt;/a&gt;
+ * @author Danno Ferrin
+ * @author Paul King
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>EMPTY_URL_ARRAY</FieldName>
+            <FieldType>URL[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>LoggingHelper</FieldType>
+        </Field>
+        <Field>
+            <FieldName>src</FieldName>
+            <FieldType>Path</FieldType>
+        </Field>
+        <Field>
+            <FieldName>destDir</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compileClasspath</FieldName>
+            <FieldType>Path</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compileSourcepath</FieldName>
+            <FieldType>Path</FieldType>
+        </Field>
+        <Field>
+            <FieldName>encoding</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stacktrace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>verbose</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>includeAntRuntime</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>includeJavaRuntime</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fork</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forkJavaHome</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forkedExecutable</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>memoryInitialSize</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>memoryMaximumSize</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptExtension</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>targetBytecode</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failOnError</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>listFiles</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>compileList</FieldName>
+            <FieldType>File[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>updatedProperty</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>errorProperty</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>taskSuccess</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>includeDestClasses</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>configuration</FieldName>
+            <FieldType>CompilerConfiguration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>javac</FieldName>
+            <FieldType>Javac</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jointCompilation</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>temporaryFiles</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>temporaryFiles</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stubDir</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keepStubs</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>forceLookupUnnamedFiles</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>useIndy</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptBaseClass</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>configscript</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptExtensions</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptExtensions</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>createSrc</MethodName>
+            <MethodComment>/** 
+ * Adds a path for source compilation.
+ * @return a nested src element.
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>recreateSrc</MethodName>
+            <MethodComment>/** 
+ * Recreate src.
+ * @return a nested src element.
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSrcdir</MethodName>
+            <MethodComment>/** 
+ * Set the source directories to find the source Java files.
+ * @param srcDir the source directories as a path
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>srcDir</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSrcdir</MethodName>
+            <MethodComment>/** 
+ * Gets the source dirs to find the source java files.
+ * @return the source directories as a path
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setScriptExtension</MethodName>
+            <MethodComment>/** 
+ * Set the extension to use when searching for Groovy source files. Accepts extensions in the form *.groovy, .groovy or groovy
+ * @param scriptExtension the extension of Groovy source files
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scriptExtension</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScriptExtension</MethodName>
+            <MethodComment>/** 
+ * Get the extension to use when searching for Groovy source files.
+ * @return the extension of Groovy source files
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setTargetBytecode</MethodName>
+            <MethodComment>/** 
+ * Sets the bytecode compatibility mode
+ * @param version the bytecode compatibility mode
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTargetBytecode</MethodName>
+            <MethodComment>/** 
+ * Retrieves the compiler bytecode compatibility mode.
+ * @return bytecode compatibility mode. Can be either &lt;tt&gt;1.5&lt;/tt&gt; or &lt;tt&gt;1.4&lt;/tt&gt;.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDestdir</MethodName>
+            <MethodComment>/** 
+ * Set the destination directory into which the Java source files should be compiled.
+ * @param destDir the destination director
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>destDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDestdir</MethodName>
+            <MethodComment>/** 
+ * Gets the destination directory into which the java source files should be compiled.
+ * @return the destination directory
+ */
+</MethodComment>
+            <ReturnType>File</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSourcepath</MethodName>
+            <MethodComment>/** 
+ * Set the sourcepath to be used for this compilation.
+ * @param sourcepath the source path
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourcepath</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSourcepath</MethodName>
+            <MethodComment>/** 
+ * Gets the sourcepath to be used for this compilation.
+ * @return the source path
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSourcepath</MethodName>
+            <MethodComment>/** 
+ * Adds a path to sourcepath.
+ * @return a sourcepath to be configured
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSourcepathRef</MethodName>
+            <MethodComment>/** 
+ * Adds a reference to a source path defined elsewhere.
+ * @param r a reference to a source path
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Reference</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>createSourcepath();setRefid;[r]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setClasspath</MethodName>
+            <MethodComment>/** 
+ * Set the classpath to be used for this compilation.
+ * @param classpath an Ant Path object containing the compilation classpath.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classpath</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClasspath</MethodName>
+            <MethodComment>/** 
+ * Gets the classpath to be used for this compilation.
+ * @return the class path
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createClasspath</MethodName>
+            <MethodComment>/** 
+ * Adds a path to the classpath.
+ * @return a class path to be configured
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setClasspathRef</MethodName>
+            <MethodComment>/** 
+ * Adds a reference to a classpath defined elsewhere.
+ * @param r a reference to a classpath
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Reference</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>createClasspath();setRefid;[r]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setListfiles</MethodName>
+            <MethodComment>/** 
+ * If true, list the source files being handed off to the compiler. Default is false.
+ * @param list if true list the source files
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getListfiles</MethodName>
+            <MethodComment>/** 
+ * Get the listfiles flag.
+ * @return the listfiles flag
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setFailonerror</MethodName>
+            <MethodComment>/** 
+ * Indicates whether the build will continue even if there are compilation errors; defaults to true.
+ * @param fail if true halt the build on failure
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fail</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setProceed</MethodName>
+            <MethodComment>/** 
+ * @param proceed inverse of failonerror
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>proceed</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFailonerror</MethodName>
+            <MethodComment>/** 
+ * Gets the failonerror flag.
+ * @return the failonerror flag
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMemoryInitialSize</MethodName>
+            <MethodComment>/** 
+ * The initial size of the memory for the underlying VM if javac is run externally; ignored otherwise. Defaults to the standard VM memory setting. (Examples: 83886080, 81920k, or 80m)
+ * @param memoryInitialSize string to pass to VM
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>memoryInitialSize</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMemoryInitialSize</MethodName>
+            <MethodComment>/** 
+ * Gets the memoryInitialSize flag.
+ * @return the memoryInitialSize flag
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMemoryMaximumSize</MethodName>
+            <MethodComment>/** 
+ * The maximum size of the memory for the underlying VM if javac is run externally; ignored otherwise. Defaults to the standard VM memory setting. (Examples: 83886080, 81920k, or 80m)
+ * @param memoryMaximumSize string to pass to VM
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>memoryMaximumSize</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMemoryMaximumSize</MethodName>
+            <MethodComment>/** 
+ * Gets the memoryMaximumSize flag.
+ * @return the memoryMaximumSize flag
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setEncoding</MethodName>
+            <MethodComment>/** 
+ * Sets the file encoding for generated files.
+ * @param encoding the file encoding to be used
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>encoding</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEncoding</MethodName>
+            <MethodComment>/** 
+ * Returns the encoding to be used when creating files.
+ * @return the file encoding to use
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setVerbose</MethodName>
+            <MethodComment>/** 
+ * Enable verbose compiling which will display which files are being compiled. Default is false.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>verbose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVerbose</MethodName>
+            <MethodComment>/** 
+ * Gets the verbose flag.
+ * @return the verbose flag
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIncludeantruntime</MethodName>
+            <MethodComment>/** 
+ * If true, includes Ant's own classpath in the classpath. Default is true. If setting to false and using groovyc in conjunction with AntBuilder you might need to explicitly add the Groovy jar(s) to the groovyc classpath using a nested classpath task.
+ * @param include if true, includes Ant's own classpath in the classpath
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>include</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIncludeantruntime</MethodName>
+            <MethodComment>/** 
+ * Gets whether or not the ant classpath is to be included in the classpath.
+ * @return whether or not the ant classpath is to be included in the classpath
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIncludejavaruntime</MethodName>
+            <MethodComment>/** 
+ * If true, includes the Java runtime libraries in the classpath. Default is false.
+ * @param include if true, includes the Java runtime libraries in the classpath
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>include</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIncludejavaruntime</MethodName>
+            <MethodComment>/** 
+ * Gets whether or not the java runtime should be included in this task's classpath.
+ * @return the includejavaruntime attribute
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setFork</MethodName>
+            <MethodComment>/** 
+ * If true forks the Groovy compiler. Default is false.
+ * @param f "true|false|on|off|yes|no"
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>f</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setJavaHome</MethodName>
+            <MethodComment>/** 
+ * The JDK Home to use when forked. Ignored if "executable" is specified.
+ * @param home the java.home value to use, default is the current JDK's home
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>home</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setExecutable</MethodName>
+            <MethodComment>/** 
+ * Sets the name of the java executable to use when invoking the compiler in forked mode, ignored otherwise.
+ * @param forkExecPath the name of the executable
+ * @since Groovy 1.8.7
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forkExecPath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExecutable</MethodName>
+            <MethodComment>/** 
+ * The value of the executable attribute, if any.
+ * @return the name of the java executable
+ * @since Groovy 1.8.7
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUpdatedProperty</MethodName>
+            <MethodComment>/** 
+ * The property to set on compilation success. This property will not be set if the compilation fails, or if there are no files to compile.
+ * @param updatedProperty the property name to use.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>updatedProperty</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setErrorProperty</MethodName>
+            <MethodComment>/** 
+ * The property to set on compilation failure. This property will be set if the compilation fails.
+ * @param errorProperty the property name to use.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>errorProperty</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIncludeDestClasses</MethodName>
+            <MethodComment>/** 
+ * This property controls whether to include the destination classes directory in the classpath given to the compiler. The default value is "true".
+ * @param includeDestClasses the value to use.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>includeDestClasses</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isIncludeDestClasses</MethodName>
+            <MethodComment>/** 
+ * Get the value of the includeDestClasses property.
+ * @return the value.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTaskSuccess</MethodName>
+            <MethodComment>/** 
+ * Get the result of the groovyc task (success or failure).
+ * @return true if compilation succeeded, orwas not necessary, false if the compilation failed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addConfiguredJavac</MethodName>
+            <MethodComment>/** 
+ * Add the configured nested javac task if present to initiate joint compilation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>javac</ParamName>
+                    <ParamType>Javac</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setStacktrace</MethodName>
+            <MethodComment>/** 
+ * Enable compiler to report stack trace information if a problem occurs during compilation. Default is false.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stacktrace</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndy</MethodName>
+            <MethodComment>/** 
+ * Set the indy flag.
+ * @param useIndy the indy flag
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>useIndy</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndy</MethodName>
+            <MethodComment>/** 
+ * Get the value of the indy flag.
+ * @return if to use indy
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setScriptBaseClass</MethodName>
+            <MethodComment>/** 
+ * Set the base script class name for the scripts (must derive from Script)
+ * @param scriptBaseClass Base class name for scripts (must derive from Script)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scriptBaseClass</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScriptBaseClass</MethodName>
+            <MethodComment>/** 
+ * Get the base script class name for the scripts (must derive from Script)
+ * @return Base class name for scripts (must derive from Script)
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConfigscript</MethodName>
+            <MethodComment>/** 
+ * Get the configuration file used to customize the compilation configuration.
+ * @return a path to a configuration script
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setConfigscript</MethodName>
+            <MethodComment>/** 
+ * Set the configuration file used to customize the compilation configuration.
+ * @param configscript a path to a configuration script
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>configscript</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setStubdir</MethodName>
+            <MethodComment>/** 
+ * Set the stub directory into which the Java source stub files should be generated. The directory need not exist and will not be deleted automatically - though its contents will be cleared unless 'keepStubs' is true. Ignored when forked.
+ * @param stubDir the stub directory
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stubDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStubdir</MethodName>
+            <MethodComment>/** 
+ * Gets the stub directory into which the Java source stub files should be generated
+ * @return the stub directory
+ */
+</MethodComment>
+            <ReturnType>File</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setKeepStubs</MethodName>
+            <MethodComment>/** 
+ * Set the keepStubs flag. Defaults to false. Set to true for debugging. Ignored when forked.
+ * @param keepStubs should stubs be retained
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keepStubs</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeepStubs</MethodName>
+            <MethodComment>/** 
+ * Gets the keepStubs flag.
+ * @return the keepStubs flag
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setForceLookupUnnamedFiles</MethodName>
+            <MethodComment>/** 
+ * Set the forceLookupUnnamedFiles flag. Defaults to false. The Groovyc Ant task is frequently used in the context of a build system that knows the complete list of source files to be compiled. In such a context, it is wasteful for the Groovy compiler to go searching the classpath when looking for source files and hence by default the Groovyc Ant task calls the compiler in a special mode with such searching turned off. If you wish the compiler to search for source files then you need to set this flag to  {@code true}.
+ * @param forceLookupUnnamedFiles should unnamed source files be searched for on the classpath
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forceLookupUnnamedFiles</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForceLookupUnnamedFiles</MethodName>
+            <MethodComment>/** 
+ * Gets the forceLookupUnnamedFiles flag.
+ * @return the forceLookupUnnamedFiles flag
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execute</MethodName>
+            <MethodComment>/** 
+ * Executes the task.
+ * @throws BuildException if an error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String[] [list=src.list()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkParameters;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;resetFileLists;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;loadRegisteredScriptExtensions;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;compile;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>BuildException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetFileLists</MethodName>
+            <MethodComment>/** 
+ * Clear the list of files to be compiled and copied.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scanDir</MethodName>
+            <MethodComment>/** 
+ * Scans the directory looking for source files to be compiled. The results are returned in the class variable compileList
+ * @param srcDir  The source directory
+ * @param destDir The destination directory
+ * @param files   An array of filenames
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>srcDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destDir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>files</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GlobPatternMapper [m=new GlobPatternMapper()]</InnerVar>
+                <InnerVar>SourceFileScanner [sfs=new SourceFileScanner(this)]</InnerVar>
+                <InnerVar>File[] [newFiles]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addToCompileList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newFiles</ParamName>
+                    <ParamType>File[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFileList</MethodName>
+            <MethodComment>/** 
+ * Gets the list of files to be compiled.
+ * @return the list of files as an array
+ */
+</MethodComment>
+            <ReturnType>File[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkParameters</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>BuildException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>listFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractJointOptions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>classpath</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [jointOptions=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>RuntimeConfigurable [rc=javac.getRuntimeConfigurableWrapper()]</InnerVar>
+                <InnerVar>Enumeration [children=rc.getChildren()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doForkCommandLineList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLineList</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>classpath</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>separator</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [fileEncodingProp=System.getProperty("file.encoding")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>commandLineList;add;["-classpath"]</InnerMethodInvoke>
+                <InnerMethodInvoke>commandLineList;add;[classpath.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>commandLineList;add;[FileSystemCompilerFacade.class.getName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doNormalCommandLineList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLineList</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>jointOptions</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>classpath</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>commandLineList;add;["--classpath"]</InnerMethodInvoke>
+                <InnerMethodInvoke>commandLineList;add;[classpath.toString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSourceFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLineList</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [count=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeCommandLine</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLineList</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [commandLine=new String[commandLineList.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;verbose;["Compilation arguments:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;verbose;[DefaultGroovyMethods.join(commandLine,"\n")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runForked</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLine</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Execute [executor=new Execute()]</InnerVar>
+                <InnerVar>int [returnCode=executor.getExitValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>executor;setAntRun;[getProject()]</InnerMethodInvoke>
+                <InnerMethodInvoke>executor;setWorkingDirectory;[getProject().getBaseDir()]</InnerMethodInvoke>
+                <InnerMethodInvoke>executor;setCommandline;[commandLine]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runCompiler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>commandLine</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeCompileUnit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CompilationUnit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Map&lt;String,Object&gt; [options=configuration.getJointCompilationOptions()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildClassLoaderFor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>GroovyClassLoader</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ClassLoader [parent=getIncludeantruntime() ? getClass().getClassLoader() : new AntClassLoader(new RootLoader(EMPTY_URL_ARRAY,null),getProject(),getClasspath())]</InnerVar>
+                <InnerVar>GroovyClassLoader [loader=new GroovyClassLoader(parent,configuration)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadGroovySource</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>URL</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>MalformedURLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScriptExtensions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadRegisteredScriptExtensions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

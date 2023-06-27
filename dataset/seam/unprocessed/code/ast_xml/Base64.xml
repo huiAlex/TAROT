@@ -1,0 +1,1242 @@
+<Class>
+    <Id>225</Id>
+    <Package>org.jboss.seam.util</Package>
+    <ClassName>Base64</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Base64  /** 
+ * &lt;p&gt;Encodes and decodes to and from Base64 notation.&lt;/p&gt; &lt;p&gt;Homepage: &lt;a href="http://iharder.net/base64"&gt;http://iharder.net/base64&lt;/a&gt;.&lt;/p&gt; &lt;p&gt; Change Log: &lt;/p&gt; &lt;ul&gt; &lt;li&gt;v2.2.1 - Fixed bug using URL_SAFE and ORDERED encodings. Fixed bug when using very small files (~&lt; 40 bytes).&lt;/li&gt; &lt;li&gt;v2.2 - Added some helper methods for encoding/decoding directly from one file to the next. Also added a main() method to support command line encoding/decoding from one file to the next. Also added these Base64 dialects: &lt;ol&gt; &lt;li&gt;The default is RFC3548 format.&lt;/li&gt; &lt;li&gt;Calling Base64.setFormat(Base64.BASE64_FORMAT.URLSAFE_FORMAT) generates URL and file name friendly format as described in Section 4 of RFC3548. http://www.faqs.org/rfcs/rfc3548.html&lt;/li&gt; &lt;li&gt;Calling Base64.setFormat(Base64.BASE64_FORMAT.ORDERED_FORMAT) generates URL and file name friendly format that preserves lexical ordering as described in http://www.faqs.org/qa/rfcc-1940.html&lt;/li&gt; &lt;/ol&gt; Special thanks to Jim Kellerman at &lt;a href="http://www.powerset.com/"&gt;http://www.powerset.com/&lt;/a&gt; for contributing the new Base64 dialects. &lt;/li&gt; &lt;li&gt;v2.1 - Cleaned up javadoc comments and unused variables and methods. Added some convenience methods for reading and writing to and from files.&lt;/li&gt; &lt;li&gt;v2.0.2 - Now specifies UTF-8 encoding in places where the code fails on systems with other encodings (like EBCDIC).&lt;/li&gt; &lt;li&gt;v2.0.1 - Fixed an error when decoding a single byte, that is, when the encoded data was a single byte.&lt;/li&gt; &lt;li&gt;v2.0 - I got rid of methods that used booleans to set options.  Now everything is more consolidated and cleaner. The code now detects when data that's being decoded is gzip-compressed and will decompress it automatically. Generally things are cleaner. You'll probably have to change some method calls that you were making to support the new options format (&lt;tt&gt;int&lt;/tt&gt;s that you "OR" together).&lt;/li&gt; &lt;li&gt;v1.5.1 - Fixed bug when decompressing and decoding to a              byte[] using &lt;tt&gt;decode( String s, boolean gzipCompressed )&lt;/tt&gt;.       Added the ability to "suspend" encoding in the Output Stream so         you can turn on and off the encoding if you need to embed base64        data in an otherwise "normal" stream (like an XML file).&lt;/li&gt;   &lt;li&gt;v1.5 - Output stream pases on flush() command but doesn't do anything itself. This helps when using GZIP streams. Added the ability to GZip-compress objects before encoding them.&lt;/li&gt; &lt;li&gt;v1.4 - Added helper methods to read/write files.&lt;/li&gt; &lt;li&gt;v1.3.6 - Fixed OutputStream.flush() so that 'position' is reset.&lt;/li&gt; &lt;li&gt;v1.3.5 - Added flag to turn on and off line breaks. Fixed bug in input stream where last buffer being read, if not completely full, was not returned.&lt;/li&gt; &lt;li&gt;v1.3.4 - Fixed when "improperly padded stream" error was thrown at the wrong time.&lt;/li&gt; &lt;li&gt;v1.3.3 - Fixed I/O streams which were totally messed up.&lt;/li&gt; &lt;/ul&gt; &lt;p&gt; I am placing this code in the Public Domain. Do with it as you will. This software comes with no guarantees or warranties but with plenty of well-wishing instead! Please visit &lt;a href="http://iharder.net/base64"&gt;http://iharder.net/base64&lt;/a&gt; periodically to check for updates or to contribute improvements. &lt;/p&gt;
+ * @author Robert Harder
+ * @author rob@iharder.net
+ * @version 2.2.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>NO_OPTIONS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ENCODE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DECODE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GZIP</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DONT_BREAK_LINES</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>URL_SAFE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ORDERED</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_LINE_LENGTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EQUALS_SIGN</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NEW_LINE</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PREFERRED_ENCODING</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>WHITE_SPACE_ENC</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EQUALS_SIGN_ENC</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_STANDARD_ALPHABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_STANDARD_DECODABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_URL_SAFE_ALPHABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_URL_SAFE_DECODABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_ORDERED_ALPHABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_ORDERED_DECODABET</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>encode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>position</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numSigBytes</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lineLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>breakLines</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>options</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>decodabet</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>encode</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>position</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lineLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>breakLines</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>b4</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>suspendEncoding</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>options</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>decodabet</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getAlphabet</MethodName>
+            <MethodComment>/** 
+ * Returns one of the _SOMETHING_ALPHABET byte arrays depending on the options specified. It's possible, though silly, to specify ORDERED and URLSAFE in which case one of them will be picked, though there is no guarantee as to which one will be picked.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDecodabet</MethodName>
+            <MethodComment>/** 
+ * Returns one of the _SOMETHING_DECODABET byte arrays depending on the options specified. It's possible, though silly, to specify ORDERED and URL_SAFE in which case one of them will be picked, though there is no guarantee as to which one will be picked.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Base64</MethodName>
+            <MethodComment>/** 
+ * Defeats instantiation. 
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment>/** 
+ * Encodes or decodes two files from the command line; &lt;strong&gt;feel free to delete this method (in fact you probably should) if you're embedding this code into a larger program.&lt;/strong&gt;
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>usage</MethodName>
+            <MethodComment>/** 
+ * Prints command line usage.
+ * @param msg A message to include with usage info.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System.err;println;[msg]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.err;println;["Usage: java Base64 -e|-d inputfile outputfile"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encode3to4</MethodName>
+            <MethodComment>/** 
+ * Encodes up to the first three bytes of array &lt;var&gt;threeBytes&lt;/var&gt; and returns a four-byte array in Base64 notation. The actual number of significant bytes in your array is given by &lt;var&gt;numSigBytes&lt;/var&gt;. The array &lt;var&gt;threeBytes&lt;/var&gt; needs only be as big as &lt;var&gt;numSigBytes&lt;/var&gt;. Code can reuse a byte array by passing a four-byte array as &lt;var&gt;b4&lt;/var&gt;.
+ * @param b4 A reusable byte array to reduce array instantiation
+ * @param threeBytes the array to convert
+ * @param numSigBytes the number of significant bytes in your array
+ * @return four byte array in Base64 notation.
+ * @since 1.5.1
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b4</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>threeBytes</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numSigBytes</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;encode3to4;[threeBytes, 0, numSigBytes, b4, 0, options]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encode3to4</MethodName>
+            <MethodComment>/** 
+ * &lt;p&gt;Encodes up to three bytes of the array &lt;var&gt;source&lt;/var&gt; and writes the resulting four Base64 bytes to &lt;var&gt;destination&lt;/var&gt;. The source and destination arrays can be manipulated anywhere along their length by specifying  &lt;var&gt;srcOffset&lt;/var&gt; and &lt;var&gt;destOffset&lt;/var&gt;. This method does not check to make sure your arrays are large enough to accomodate &lt;var&gt;srcOffset&lt;/var&gt; + 3 for the &lt;var&gt;source&lt;/var&gt; array or &lt;var&gt;destOffset&lt;/var&gt; + 4 for the &lt;var&gt;destination&lt;/var&gt; array. The actual number of significant bytes in your array is given by &lt;var&gt;numSigBytes&lt;/var&gt;.&lt;/p&gt; &lt;p&gt;This is the lowest level of the encoding methods with all possible parameters.&lt;/p&gt;
+ * @param source the array to convert
+ * @param srcOffset the index where conversion begins
+ * @param numSigBytes the number of significant bytes in your array
+ * @param destination the array to hold the conversion
+ * @param destOffset the index where output will be put
+ * @return the &lt;var&gt;destination&lt;/var&gt; array
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>srcOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numSigBytes</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destination</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [ALPHABET=getAlphabet(options)]</InnerVar>
+                <InnerVar>int [inBuff=(numSigBytes &gt; 0 ? ((source[srcOffset] &lt;&lt; 24) &gt;&gt;&gt; 8) : 0) | (numSigBytes &gt; 1 ? ((source[srcOffset + 1] &lt;&lt; 24) &gt;&gt;&gt; 16) : 0) | (numSigBytes &gt; 2 ? ((source[srcOffset + 2] &lt;&lt; 24) &gt;&gt;&gt; 24) : 0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeObject</MethodName>
+            <MethodComment>/** 
+ * Serializes an object and returns the Base64-encoded version of that serialized object. If the object cannot be serialized or there is another error, the method will return &lt;tt&gt;null&lt;/tt&gt;. The object is not GZip-compressed before being encoded.
+ * @param serializableObject The object to encode
+ * @return The Base64-encoded object
+ * @since 1.4
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serializableObject</ParamName>
+                    <ParamType>java.io.Serializable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeObject</MethodName>
+            <MethodComment>/** 
+ * Serializes an object and returns the Base64-encoded version of that serialized object. If the object cannot be serialized or there is another error, the method will return &lt;tt&gt;null&lt;/tt&gt;. &lt;p&gt; Valid options:&lt;pre&gt; GZIP: gzip-compresses object before encoding it. DONT_BREAK_LINES: don't break lines at 76 characters &lt;i&gt;Note: Technically, this makes your encoding non-compliant.&lt;/i&gt; &lt;/pre&gt; &lt;p&gt; Example: &lt;code&gt;encodeObject( myObj, Base64.GZIP )&lt;/code&gt; or &lt;p&gt; Example: &lt;code&gt;encodeObject( myObj, Base64.GZIP | Base64.DONT_BREAK_LINES )&lt;/code&gt;
+ * @param serializableObject The object to encode
+ * @param options Specified options
+ * @return The Base64-encoded object
+ * @see Base64#GZIP
+ * @see Base64#DONT_BREAK_LINES
+ * @since 2.0
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serializableObject</ParamName>
+                    <ParamType>java.io.Serializable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>java.io.ByteArrayOutputStream [baos=null]</InnerVar>
+                <InnerVar>java.io.OutputStream [b64os=null]</InnerVar>
+                <InnerVar>java.io.ObjectOutputStream [oos=null]</InnerVar>
+                <InnerVar>java.util.zip.GZIPOutputStream [gzos=null]</InnerVar>
+                <InnerVar>int [gzip=(options &amp; GZIP)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeBytes</MethodName>
+            <MethodComment>/** 
+ * Encodes a byte array into Base64 notation. Does not GZip-compress data.
+ * @param source The data to convert
+ * @since 1.4
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeBytes</MethodName>
+            <MethodComment>/** 
+ * Encodes a byte array into Base64 notation. &lt;p&gt; Valid options:&lt;pre&gt; GZIP: gzip-compresses object before encoding it. DONT_BREAK_LINES: don't break lines at 76 characters &lt;i&gt;Note: Technically, this makes your encoding non-compliant.&lt;/i&gt; &lt;/pre&gt; &lt;p&gt; Example: &lt;code&gt;encodeBytes( myData, Base64.GZIP )&lt;/code&gt; or &lt;p&gt; Example: &lt;code&gt;encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )&lt;/code&gt;
+ * @param source The data to convert
+ * @param options Specified options
+ * @see Base64#GZIP
+ * @see Base64#DONT_BREAK_LINES
+ * @since 2.0
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeBytes</MethodName>
+            <MethodComment>/** 
+ * Encodes a byte array into Base64 notation. Does not GZip-compress data.
+ * @param source The data to convert
+ * @param off Offset in array where conversion should begin
+ * @param len Length of data to convert
+ * @since 1.4
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeBytes</MethodName>
+            <MethodComment>/** 
+ * Encodes a byte array into Base64 notation. &lt;p&gt; Valid options:&lt;pre&gt; GZIP: gzip-compresses object before encoding it. DONT_BREAK_LINES: don't break lines at 76 characters &lt;i&gt;Note: Technically, this makes your encoding non-compliant.&lt;/i&gt; &lt;/pre&gt; &lt;p&gt; Example: &lt;code&gt;encodeBytes( myData, Base64.GZIP )&lt;/code&gt; or &lt;p&gt; Example: &lt;code&gt;encodeBytes( myData, Base64.GZIP | Base64.DONT_BREAK_LINES )&lt;/code&gt;
+ * @param source The data to convert
+ * @param off Offset in array where conversion should begin
+ * @param len Length of data to convert
+ * @param options Specified options, alphabet type is pulled from this (standard, url-safe, ordered)
+ * @see Base64#GZIP
+ * @see Base64#DONT_BREAK_LINES
+ * @since 2.0
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [dontBreakLines=(options &amp; DONT_BREAK_LINES)]</InnerVar>
+                <InnerVar>int [gzip=(options &amp; GZIP)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decode4to3</MethodName>
+            <MethodComment>/** 
+ * Decodes four bytes from array &lt;var&gt;source&lt;/var&gt; and writes the resulting bytes (up to three of them) to &lt;var&gt;destination&lt;/var&gt;. The source and destination arrays can be manipulated anywhere along their length by specifying  &lt;var&gt;srcOffset&lt;/var&gt; and &lt;var&gt;destOffset&lt;/var&gt;. This method does not check to make sure your arrays are large enough to accomodate &lt;var&gt;srcOffset&lt;/var&gt; + 4 for the &lt;var&gt;source&lt;/var&gt; array or &lt;var&gt;destOffset&lt;/var&gt; + 3 for the &lt;var&gt;destination&lt;/var&gt; array. This method returns the actual number of bytes that  were converted from the Base64 encoding. &lt;p&gt;This is the lowest level of the decoding methods with all possible parameters.&lt;/p&gt;
+ * @param source the array to convert
+ * @param srcOffset the index where conversion begins
+ * @param destination the array to hold the conversion
+ * @param destOffset the index where output will be put
+ * @param options alphabet type is pulled from this (standard, url-safe, ordered)
+ * @return the number of decoded bytes converted
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>srcOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destination</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>destOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [DECODABET=getDecodabet(options)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decode</MethodName>
+            <MethodComment>/** 
+ * Very low-level access to decoding ASCII characters in the form of a byte array. Does not support automatically gunzipping or any other "fancy" features.
+ * @param source The Base64 encoded data
+ * @param off    The offset of where to begin decoding
+ * @param len    The length of characters to decode
+ * @return decoded data
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [DECODABET=getDecodabet(options)]</InnerVar>
+                <InnerVar>int [len34=len * 3 / 4]</InnerVar>
+                <InnerVar>byte[] [outBuff=new byte[len34]]</InnerVar>
+                <InnerVar>int [outBuffPosn=0]</InnerVar>
+                <InnerVar>byte[] [b4=new byte[4]]</InnerVar>
+                <InnerVar>int [b4Posn=0]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+                <InnerVar>byte [sbiCrop=0]</InnerVar>
+                <InnerVar>byte [sbiDecode=0]</InnerVar>
+                <InnerVar>byte[] [out=new byte[outBuffPosn]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[outBuff, 0, out, 0, outBuffPosn]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decode</MethodName>
+            <MethodComment>/** 
+ * Decodes data from Base64 notation, automatically detecting gzip-compressed data and decompressing it.
+ * @param s the string to decode
+ * @return the decoded data
+ * @since 1.4
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decode</MethodName>
+            <MethodComment>/** 
+ * Decodes data from Base64 notation, automatically detecting gzip-compressed data and decompressing it.
+ * @param s the string to decode
+ * @param options encode options such as URL_SAFE
+ * @return the decoded data
+ * @since 1.4
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [bytes]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decodeToObject</MethodName>
+            <MethodComment>/** 
+ * Attempts to decode Base64 data and deserialize a Java Object within. Returns &lt;tt&gt;null&lt;/tt&gt; if there was an error.
+ * @param encodedObject The Base64 data to decode
+ * @return The decoded and deserialized object
+ * @since 1.5
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>encodedObject</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [objBytes=decode(encodedObject)]</InnerVar>
+                <InnerVar>java.io.ByteArrayInputStream [bais=null]</InnerVar>
+                <InnerVar>java.io.ObjectInputStream [ois=null]</InnerVar>
+                <InnerVar>Object [obj=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeToFile</MethodName>
+            <MethodComment>/** 
+ * Convenience method for encoding data to a file.
+ * @param dataToEncode byte array of data to encode in base64 form
+ * @param filename Filename for saving encoded data
+ * @return &lt;tt&gt;true&lt;/tt&gt; if successful, &lt;tt&gt;false&lt;/tt&gt; otherwise
+ * @since 2.1
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataToEncode</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [success=false]</InnerVar>
+                <InnerVar>Base64.OutputStream [bos=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decodeToFile</MethodName>
+            <MethodComment>/** 
+ * Convenience method for decoding data to a file.
+ * @param dataToDecode Base64-encoded data as a string
+ * @param filename Filename for saving decoded data
+ * @return &lt;tt&gt;true&lt;/tt&gt; if successful, &lt;tt&gt;false&lt;/tt&gt; otherwise
+ * @since 2.1
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataToDecode</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [success=false]</InnerVar>
+                <InnerVar>Base64.OutputStream [bos=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decodeFromFile</MethodName>
+            <MethodComment>/** 
+ * Convenience method for reading a base64-encoded file and decoding it.
+ * @param filename Filename for reading encoded data
+ * @return decoded byte array or null if unsuccessful
+ * @since 2.1
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [decodedData=null]</InnerVar>
+                <InnerVar>Base64.InputStream [bis=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeFromFile</MethodName>
+            <MethodComment>/** 
+ * Convenience method for reading a binary file and base64-encoding it.
+ * @param filename Filename for reading binary data
+ * @return base64-encoded string or null if unsuccessful
+ * @since 2.1
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [encodedData=null]</InnerVar>
+                <InnerVar>Base64.InputStream [bis=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>encodeFileToFile</MethodName>
+            <MethodComment>/** 
+ * Reads &lt;tt&gt;infile&lt;/tt&gt; and encodes it to &lt;tt&gt;outfile&lt;/tt&gt;.
+ * @param infile Input file
+ * @param outfile Output file
+ * @since 2.2
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outfile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [encoded=Base64.encodeFromFile(infile)]</InnerVar>
+                <InnerVar>java.io.OutputStream [out=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>decodeFileToFile</MethodName>
+            <MethodComment>/** 
+ * Reads &lt;tt&gt;infile&lt;/tt&gt; and decodes it to &lt;tt&gt;outfile&lt;/tt&gt;.
+ * @param infile Input file
+ * @param outfile Output file
+ * @since 2.2
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>infile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outfile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [decoded=Base64.decodeFromFile(infile)]</InnerVar>
+                <InnerVar>java.io.OutputStream [out=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>InputStream</MethodName>
+            <MethodComment>/** 
+ * Constructs a  {@link Base64.InputStream} in DECODE mode.
+ * @param in the &lt;tt&gt;java.io.InputStream&lt;/tt&gt; from which to read data.
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>java.io.InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>InputStream</MethodName>
+            <MethodComment>/** 
+ * Constructs a  {@link Base64.InputStream} ineither ENCODE or DECODE mode. &lt;p&gt; Valid options:&lt;pre&gt; ENCODE or DECODE: Encode or Decode as data is read. DONT_BREAK_LINES: don't break lines at 76 characters (only meaningful when encoding) &lt;i&gt;Note: Technically, this makes your encoding non-compliant.&lt;/i&gt; &lt;/pre&gt; &lt;p&gt; Example: &lt;code&gt;new Base64.InputStream( in, Base64.DECODE )&lt;/code&gt;
+ * @param in the &lt;tt&gt;java.io.InputStream&lt;/tt&gt; from which to read data.
+ * @param options Specified options
+ * @see Base64#ENCODE
+ * @see Base64#DECODE
+ * @see Base64#DONT_BREAK_LINES
+ * @since 2.0
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>java.io.InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>read</MethodName>
+            <MethodComment>/** 
+ * Reads enough of the input stream to convert to/from Base64 and returns the next byte.
+ * @return next byte
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>read</MethodName>
+            <MethodComment>/** 
+ * Calls  {@link #read()} repeatedly until the end of streamis reached or &lt;var&gt;len&lt;/var&gt; bytes are read. Returns number of bytes read into array or -1 if end of stream is encountered.
+ * @param dest array to hold values
+ * @param off offset for array
+ * @param len max number of bytes to read into array
+ * @return bytes read into array or -1 if end of stream is encountered.
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dest</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i]</InnerVar>
+                <InnerVar>int [b]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>OutputStream</MethodName>
+            <MethodComment>/** 
+ * Constructs a  {@link Base64.OutputStream} in ENCODE mode.
+ * @param out the &lt;tt&gt;java.io.OutputStream&lt;/tt&gt; to which data will be written.
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>java.io.OutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>OutputStream</MethodName>
+            <MethodComment>/** 
+ * Constructs a  {@link Base64.OutputStream} ineither ENCODE or DECODE mode. &lt;p&gt; Valid options:&lt;pre&gt; ENCODE or DECODE: Encode or Decode as data is read. DONT_BREAK_LINES: don't break lines at 76 characters (only meaningful when encoding) &lt;i&gt;Note: Technically, this makes your encoding non-compliant.&lt;/i&gt; &lt;/pre&gt; &lt;p&gt; Example: &lt;code&gt;new Base64.OutputStream( out, Base64.ENCODE )&lt;/code&gt;
+ * @param out the &lt;tt&gt;java.io.OutputStream&lt;/tt&gt; to which data will be written.
+ * @param options Specified options.
+ * @see Base64#ENCODE
+ * @see Base64#DECODE
+ * @see Base64#DONT_BREAK_LINES
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>java.io.OutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>options</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>write</MethodName>
+            <MethodComment>/** 
+ * Writes the byte to the output stream after converting to/from Base64 notation. When encoding, bytes are buffered three at a time before the output stream actually gets a write() call. When decoding, bytes are buffered four at a time.
+ * @param theByte the byte to write
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theByte</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>write</MethodName>
+            <MethodComment>/** 
+ * Calls  {@link #write(int)} repeatedly until &lt;var&gt;len&lt;/var&gt; bytes are written.
+ * @param theBytes array from which to read bytes
+ * @param off offset for array
+ * @param len max number of bytes to read into array
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>theBytes</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>off</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>len</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flushBase64</MethodName>
+            <MethodComment>/** 
+ * Method added by PHIL. [Thanks, PHIL. -Rob] This pads the buffer without closing the stream.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Flushes and closes (I think, in the superclass) the stream. 
+ * @since 1.3
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;flushBase64;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>suspendEncoding</MethodName>
+            <MethodComment>/** 
+ * Suspends encoding of the stream. May be helpful if you need to embed a piece of base640-encoded data in a stream.
+ * @since 1.5.1
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;flushBase64;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>java.io.IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resumeEncoding</MethodName>
+            <MethodComment>/** 
+ * Resumes encoding of the stream. May be helpful if you need to embed a piece of base640-encoded data in a stream.
+ * @since 1.5.1
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

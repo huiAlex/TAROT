@@ -1,0 +1,898 @@
+<Class>
+    <Id>618</Id>
+    <Package>org.codehaus.groovy.classgen.asm.sc</Package>
+    <ClassName>StaticTypesCallSiteWriter</ClassName>
+    <SuperClass>CallSiteWriter</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Opcodes</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>StaticTypesCallSiteWriter  /** 
+ * A call site writer which replaces call site caching with static calls. This means that the generated code looks more like Java code than dynamic Groovy code. Best effort is made to use JVM instructions instead of calls to helper methods.
+ * @author Cedric Champeau
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>INVOKERHELPER_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROOVYOBJECT_GETPROPERTY_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INVOKERHELPER_GETPROPERTY_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>INVOKERHELPER_GETPROPERTYSAFE_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CLOSURE_GETTHISOBJECT_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COLLECTION_TYPE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COLLECTION_SIZE_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAP_GET_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>controller</FieldName>
+            <FieldType>StaticTypesWriterController</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>StaticTypesCallSiteWriter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>controller</ParamName>
+                    <FieldType>StaticTypesWriterController</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateCallSiteArray</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>CallSiteWriter [regularCallSiteWriter=controller.getRegularCallSiteWriter()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeCallSite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callCurrent</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callStatic</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeGetPropertySite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [dynamic=receiver.getNodeMetaData(StaticCompilationMetadataKeys.RECEIVER_OF_DYNAMIC_PROPERTY)]</InnerVar>
+                <InnerVar>TypeChooser [typeChooser=controller.getTypeChooser()]</InnerVar>
+                <InnerVar>ClassNode [classNode=controller.getClassNode()]</InnerVar>
+                <InnerVar>ClassNode [receiverType=receiver.getNodeMetaData(StaticCompilationMetadataKeys.PROPERTY_OWNER)]</InnerVar>
+                <InnerVar>Object [type=receiver.getNodeMetaData(StaticTypesMarker.INFERRED_TYPE)]</InnerVar>
+                <InnerVar>boolean [isClassReceiver=false]</InnerVar>
+                <InnerVar>MethodVisitor [mv=controller.getMethodVisitor()]</InnerVar>
+                <InnerVar>String [getterName="get" + MetaClassHelper.capitalize(methodName)]</InnerVar>
+                <InnerVar>List&lt;MethodNode&gt; [methods=findDGMMethodsByNameAndArguments(controller.getSourceUnit().getClassLoader(),receiverType,getterName,ClassNode.EMPTY_ARRAY)]</InnerVar>
+                <InnerVar>boolean [isStaticProperty=receiver instanceof ClassExpression &amp;&amp; (receiverType.isDerivedFrom(receiver.getType()) || receiverType.implementsInterface(receiver.getType()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller.getSourceUnit();addError;[new SyntaxException("Access to " + (receiver instanceof ClassExpression ? receiver.getType() : receiverType).toString(false) + "#"+ methodName+ " is forbidden",receiver.getLineNumber(),receiver.getColumnNumber(),receiver.getLastLineNumber(),receiver.getLastColumnNumber())]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getMethodVisitor();visitInsn;[ACONST_NULL]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();push;[OBJECT_TYPE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeDynamicGetProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodNode [target=safe ? INVOKERHELPER_GETPROPERTYSAFE_METHOD : INVOKERHELPER_GETPROPERTY_METHOD]</InnerVar>
+                <InnerVar>MethodCallExpression [mce=new MethodCallExpression(new ClassExpression(INVOKERHELPER_TYPE),target.getName(),new ArgumentListExpression(receiver,new ConstantExpression(methodName)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mce;setSafe;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>mce;setImplicitThis;[false]</InnerMethodInvoke>
+                <InnerMethodInvoke>mce;setMethodTarget;[target]</InnerMethodInvoke>
+                <InnerMethodInvoke>mce;visit;[controller.getAcg()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeMapDotProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Label [exit=new Label()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>receiver;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLdcInsn;[methodName]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();replace;[OBJECT_TYPE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeListDotProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [componentType=(ClassNode)receiver.getNodeMetaData(StaticCompilationMetadataKeys.COMPONENT_TYPE)]</InnerVar>
+                <InnerVar>CompileStack [compileStack=controller.getCompileStack()]</InnerVar>
+                <InnerVar>Label [exit=new Label()]</InnerVar>
+                <InnerVar>Variable [tmpList=new VariableExpression("tmpList",make(ArrayList.class))]</InnerVar>
+                <InnerVar>int [var=compileStack.defineTemporaryVariable(tmpList,false)]</InnerVar>
+                <InnerVar>Variable [iterator=new VariableExpression("iterator",Iterator_TYPE)]</InnerVar>
+                <InnerVar>int [it=compileStack.defineTemporaryVariable(iterator,false)]</InnerVar>
+                <InnerVar>Variable [nextVar=new VariableExpression("next",componentType)]</InnerVar>
+                <InnerVar>int [next=compileStack.defineTemporaryVariable(nextVar,false)]</InnerVar>
+                <InnerVar>Label [l1=new Label()]</InnerVar>
+                <InnerVar>Label [l2=new Label()]</InnerVar>
+                <InnerVar>Label [l3=new Label()]</InnerVar>
+                <InnerVar>Label [l4=new Label()]</InnerVar>
+                <InnerVar>ClassNode [finalComponentType=componentType]</InnerVar>
+                <InnerVar>PropertyExpression [pexp=new PropertyExpression(new BytecodeExpression(){
+  @Override public void visit(  final MethodVisitor mv){
+    mv.visitVarInsn(ALOAD,next);
+  }
+  @Override public ClassNode getType(){
+    return finalComponentType;
+  }
+}
+,methodName)]</InnerVar>
+                <InnerVar>Label [l5=new Label()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitTypeInsn;[NEW, "java/util/ArrayList"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[DUP]</InnerMethodInvoke>
+                <InnerMethodInvoke>receiver;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/List", "size", "()I", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();remove;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESPECIAL, "java/util/ArrayList", "&lt;init&gt;", "(I)V", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, var]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[l1]</InnerMethodInvoke>
+                <InnerMethodInvoke>receiver;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/List", "iterator", "()Ljava/util/Iterator;", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();remove;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, it]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[l2]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, it]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/Iterator", "hasNext", "()Z", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitJumpInsn;[IFEQ, l3]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, it]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/Iterator", "next", "()Ljava/lang/Object;", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitTypeInsn;[CHECKCAST, BytecodeHelper.getClassInternalName(componentType)]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, next]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[l4]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, var]</InnerMethodInvoke>
+                <InnerMethodInvoke>pexp;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();box;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();remove;[1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/List", "add", "(Ljava/lang/Object;)Z", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[POP]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[l5]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitJumpInsn;[GOTO, l2]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[l3]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, var]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();push;[make(ArrayList.class)]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getCompileStack();removeVar;[next]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getCompileStack();removeVar;[it]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getCompileStack();removeVar;[var]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, next]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeGetPrivateFieldWithBridgeMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>receiverType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FieldNode [field=receiverType.getField(fieldName)]</InnerVar>
+                <InnerVar>ClassNode [outerClass=receiverType.getOuterClass()]</InnerVar>
+                <InnerVar>ClassNode [classNode=controller.getClassNode()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeGroovyObjectGetPropertySite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TypeChooser [typeChooser=controller.getTypeChooser()]</InnerVar>
+                <InnerVar>ClassNode [classNode=controller.getClassNode()]</InnerVar>
+                <InnerVar>ClassNode [receiverType=typeChooser.resolveType(receiver,classNode)]</InnerVar>
+                <InnerVar>String [property=methodName]</InnerVar>
+                <InnerVar>MethodCallExpression [call=new MethodCallExpression(receiver,"getProperty",new ArgumentListExpression(new ConstantExpression(property)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>call;setImplicitThis;[implicitThis]</InnerMethodInvoke>
+                <InnerMethodInvoke>call;setSafe;[safe]</InnerMethodInvoke>
+                <InnerMethodInvoke>call;setMethodTarget;[GROOVYOBJECT_GETPROPERTY_METHOD]</InnerMethodInvoke>
+                <InnerMethodInvoke>call;visit;[controller.getAcg()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeCallSiteArrayInitializer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeGetPropertyWithGetter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>receiverType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [getterName="get" + MetaClassHelper.capitalize(methodName)]</InnerVar>
+                <InnerVar>MethodNode [getterNode=receiverType.getGetterMethod(getterName)]</InnerVar>
+                <InnerVar>PropertyNode [propertyNode=receiverType.getProperty(methodName)]</InnerVar>
+                <InnerVar>ClassNode [superClass=receiverType.getSuperClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeGetField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>receiverType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>safe</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>implicitThis</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>samePackage</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FieldNode [field=receiverType.getField(fieldName)]</InnerVar>
+                <InnerVar>ClassNode [superClass=receiverType.getSuperClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>samePackages</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pkg1</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pkg2</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDirectAccessAllowed</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isSamePackage</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=a.getDeclaringClass().redirect()]</InnerVar>
+                <InnerVar>ClassNode [receiverType=receiver.redirect()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeSiteEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareCallSite</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeSingleArgumentCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TypeChooser [typeChooser=controller.getTypeChooser()]</InnerVar>
+                <InnerVar>ClassNode [classNode=controller.getClassNode()]</InnerVar>
+                <InnerVar>ClassNode [rType=typeChooser.resolveType(receiver,classNode)]</InnerVar>
+                <InnerVar>ClassNode [aType=typeChooser.resolveType(arguments,classNode)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trySubscript</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeArrayGet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperandStack [operandStack=controller.getOperandStack()]</InnerVar>
+                <InnerVar>int [m1=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>int [m2=operandStack.getStackLength()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>receiver;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>arguments;visit;[controller.getAcg()]</InnerMethodInvoke>
+                <InnerMethodInvoke>operandStack;doGroovyCast;[int_TYPE]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getMethodVisitor();visitInsn;[AALOAD]</InnerMethodInvoke>
+                <InnerMethodInvoke>operandStack;replace;[rType.getComponentType(), m2 - m1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeModCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodVisitor [mv=controller.getMethodVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;prepareSiteAndReceiver;[receiver, "mod", false, controller.getCompileStack().isLHS()]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();doGroovyCast;[Number_TYPE]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitBoxedArgument;[arguments]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();doGroovyCast;[Number_TYPE]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, "org/codehaus/groovy/runtime/typehandling/NumberMath", "mod", "(Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();replace;[Number_TYPE, 2]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writePowerCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aType</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperandStack [operandStack=controller.getOperandStack()]</InnerVar>
+                <InnerVar>int [m1=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>int [m2=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>MethodVisitor [mv=controller.getMethodVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;prepareSiteAndReceiver;[receiver, "power", false, controller.getCompileStack().isLHS()]</InnerMethodInvoke>
+                <InnerMethodInvoke>operandStack;doGroovyCast;[getWrapper(rType)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitBoxedArgument;[arguments]</InnerMethodInvoke>
+                <InnerMethodInvoke>operandStack;doGroovyCast;[getWrapper(aType)]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();replace;[Number_TYPE, m2 - m1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeStringPlusCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperandStack [operandStack=controller.getOperandStack()]</InnerVar>
+                <InnerVar>int [m1=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>int [m2=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>MethodVisitor [mv=controller.getMethodVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;prepareSiteAndReceiver;[receiver, message, false, controller.getCompileStack().isLHS()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitBoxedArgument;[arguments]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, "org/codehaus/groovy/runtime/DefaultGroovyMethods", "plus", "(Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/String;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();replace;[STRING_TYPE, m2 - m1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeNumberNumberCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>message</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arguments</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperandStack [operandStack=controller.getOperandStack()]</InnerVar>
+                <InnerVar>int [m1=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>int [m2=operandStack.getStackLength()]</InnerVar>
+                <InnerVar>MethodVisitor [mv=controller.getMethodVisitor()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;prepareSiteAndReceiver;[receiver, message, false, controller.getCompileStack().isLHS()]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();doGroovyCast;[Number_TYPE]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;visitBoxedArgument;[arguments]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();doGroovyCast;[Number_TYPE]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, "org/codehaus/groovy/runtime/dgmimpl/NumberNumber" + MetaClassHelper.capitalize(message), message, "(Ljava/lang/Number;Ljava/lang/Number;)Ljava/lang/Number;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller.getOperandStack();replace;[Number_TYPE, m2 - m1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

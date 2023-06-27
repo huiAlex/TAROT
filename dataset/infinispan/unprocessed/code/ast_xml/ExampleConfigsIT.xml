@@ -1,0 +1,809 @@
+<Class>
+    <Id>2649</Id>
+    <Package>org.infinispan.server.test.configs</Package>
+    <ClassName>ExampleConfigsIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ExampleConfigsIT  /** 
+ * Tests for example configurations.
+ * @author Jakub Markos (jmarkos@redhat.com)
+ * @author Galder Zamarreño (galderz@redhat.com)
+ * @author Michal Linhard (mlinhard@redhat.com)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Logger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>serverManager</FieldName>
+            <FieldType>RemoteInfinispanServers</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NAMED_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>controller</FieldName>
+            <FieldType>ContainerController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcmFactory</FieldName>
+            <FieldType>RemoteCacheManagerFactory</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testHotRodRollingUpgrades</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>MBeanServerConnectionProvider [provider1]</InnerVar>
+                <InnerVar>MBeanServerConnectionProvider [provider2]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s2=createRemotes("example-hotrod-rolling-upgrade-2","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [c2=createCache(s2)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s1=createRemotes("example-hotrod-rolling-upgrade-1","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [c1=createCache(s1)]</InnerVar>
+                <InnerVar>ObjectName [rollMan=new ObjectName("jboss." + InfinispanSubsystem.SUBSYSTEM_NAME + ":type=Cache,"+ "name=\"default(local)\","+ "manager=\"local\","+ "component=RollingUpgradeManager")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>c2;put;["key1", "value1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value1", c2.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;start;["example-hotrod-rolling-upgrade-1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["Can't access etries stored in source node (target's RemoteCacheStore).", "value1", c1.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeOperation;[provider1, rollMan.toString(), "synchronizeData", new Object[]{"hotrod"}, new String[]{"java.lang.String"}]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeOperation;[provider1, rollMan.toString(), "disconnectSource", new Object[]{"hotrod"}, new String[]{"java.lang.String"}]</InnerMethodInvoke>
+                <InnerMethodInvoke>c2;put;["disconnected", "source"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["Can't obtain value from cache1 (source node).", "source", c2.get("disconnected")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNull;["Source node entries should NOT be accessible from target node (after RCS disconnection)", c1.get("disconnected")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["Entry was not successfully migrated.", "value1", c1.get("key1")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRestRollingUpgrades</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [PORT_OFFSET=100]</InnerVar>
+                <InnerVar>MBeanServerConnectionProvider [provider1]</InnerVar>
+                <InnerVar>MBeanServerConnectionProvider [provider2]</InnerVar>
+                <InnerVar>RESTHelper [rest=new RESTHelper()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller;start;["rest-rolling-upgrade-2"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testCompatibilityModeConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>MemcachedClient [memcachedClient=null]</InnerVar>
+                <InnerVar>CloseableHttpClient [restClient=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testFileCacheStoreConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doPutGetCheckPath;[createRemotes("standalone-fcs-local","local",DEFAULT_CACHE_NAME), "dc", -1.0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doPutGetCheckPath;[createRemotes("standalone-fcs-local","local",NAMED_CACHE_NAME), "nc", 2.1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testJDBCCacheStoreConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [sDefault=createRemotes("clustered-jdbc","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [sNamed=createRemotes("clustered-jdbc","clustered",NAMED_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [sDefaultCache=createCache(sDefault)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [sNamedCache=createCache(sNamed)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sNamedCache;put;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>sNamedCache;put;["key2", "value2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value", sNamedCache.get("key")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value2", sNamedCache.get("key2")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRocksDBCacheStoreConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doPutGetCheckPath;[createRemotes("standalone-rocksdb-cs-local","local",DEFAULT_CACHE_NAME), "rocksdb-dcdefault", -1.0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doPutGetCheckPath;[createRemotes("standalone-rocksdb-cs-local","local",NAMED_CACHE_NAME), "rocksdb-ncnamedCache", 2.1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testHotrodMultipleConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s=createRemotes("standalone-hotrod-multiple","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [c1=createCache(s,ITestUtils.createConfigBuilder(s.server.getHotrodEndpoint("external").getInetAddress().getHostName(),s.server.getHotrodEndpoint("external").getPort()))]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [c2=createCache(s,ITestUtils.createConfigBuilder(s.server.getHotrodEndpoint("internal").getInetAddress().getHostName(),s.server.getHotrodEndpoint("internal").getPort()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, s.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[s.cache.getNumberOfEntries() &lt;= 10]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testRemoteCacheStoreConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [sRemoteStoreDefault=createRemotes("standalone-rcs-local-2","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [sRemoteStoreNamed=createRemotes("standalone-rcs-local-2","local",NAMED_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s1Default=createRemotes("standalone-rcs-local-1","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s1Named=createRemotes("standalone-rcs-local-1","local",NAMED_CACHE_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doPutGetRemove;[s1Default, sRemoteStoreDefault]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doPutGetWithExpiration;[s1Named, sRemoteStoreNamed]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testSSLHotRodConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s=createRemotes("standalone-hotrod-ssl","local",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [c=createCache(s,securityConfig("keystore_client.jks","ca.jks",s.server))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doPutGet;[s, c]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testStorageOnlyConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s1=createRemotes("clustered-storage-only-1","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s1Cache=createCache(s1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s1.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k", "v"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k2", "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k"), "v"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k2"), "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k3", "v3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v", s1Cache.get("k")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", s1Cache.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", s1Cache.get("k3")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testTopologyConfigMachineAttribute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testTopologyConfigRackAttribute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testTopologyConfigSiteAttribute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>verifyTopologyHinting</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>container1</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container2</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>container3</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>manager</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cache</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s1=createRemotes(container1,manager,cache)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s2=createRemotes(container2,manager,cache)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s3=createRemotes(container3,manager,cache)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s1Cache=createCache(s1)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s2Cache=createCache(s2)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s3Cache=createCache(s3)]</InnerVar>
+                <InnerVar>int [total_elements=0]</InnerVar>
+                <InnerVar>long [s0Entries=0]</InnerVar>
+                <InnerVar>long [s1Entries=0]</InnerVar>
+                <InnerVar>long [s2Entries=0]</InnerVar>
+                <InnerVar>List&lt;String&gt; [s1Bulk=new ArrayList&lt;&gt;()]</InnerVar>
+                <InnerVar>List&lt;String&gt; [s2Bulk=new ArrayList&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[3, s1.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, s2.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, s3.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s2Cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>s3Cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Unexpected number of entries in server1: " + s0Entries, s0Entries &gt; 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Unexpected number of entries in server2: " + s1Entries, s1Entries &gt; 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Instead of " + total_elements * 2 + " total elements there were " + (s0Entries + s1Entries + s2Entries), s0Entries + s1Entries + s2Entries == total_elements * 2]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["Server 1 elements are not contained in server 2", s2Bulk.containsAll(s1Bulk)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["There were " + s1Entries + " left in the 2nd server", 0, s1Entries]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s0Entries, s2Entries]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNotEquals;[s0Entries, s1Entries]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.getBulk(), s3Cache.getBulk()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testTwoNodesConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s1=createRemotes("clustered-1","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s2=createRemotes("clustered-2","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s1Cache=createCache(s1)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s2Cache=createCache(s2)]</InnerVar>
+                <InnerVar>RESTHelper [rest=new RESTHelper()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addServer;[rest, s1.server]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addServer;[rest, s2.server]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, s2.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;eventually;[() -&gt; s1.manager.getClusterSize() == 2, 30000, 300]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertEquals;[2, s1.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>Assert;assertEquals;[2, s2.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k", "v"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k2", "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k"), "v"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k2"), "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s2Cache;put;["k3", "v3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, s2.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v", s1Cache.get("k")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v", s2Cache.get("k")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", s1Cache.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", s2Cache.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", s1Cache.get("k3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", s2Cache.get("k3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;put;[rest.fullPathKey(0,KEY_A), "data", "text/plain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;get;[rest.fullPathKey(1,KEY_A), "data"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;post;[rest.fullPathKey(0,KEY_A), "data", "text/plain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;get;[rest.fullPathKey(1,KEY_A), "data"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;post;[rest.fullPathKey(0,KEY_A), "data", "text/plain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;get;[rest.fullPathKey(1,KEY_A), "data"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;delete;[rest.fullPathKey(0,KEY_A)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(1,KEY_A), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;post;[rest.fullPathKey(0,KEY_A), "data", "text/plain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;post;[rest.fullPathKey(0,KEY_B), "data", "text/plain"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(0,KEY_A)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(0,KEY_B)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;delete;[rest.fullPathKey(0,null)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(1,KEY_A), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(1,KEY_B), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cleanRESTServer;[rest]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;post;[rest.fullPathKey(0,KEY_A), "data", "application/text", HttpStatus.SC_OK, "Content-Type", "application/text", "timeToLiveSeconds", "2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(1,KEY_A)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;sleepForSecs;[2.1]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(1,KEY_A), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testXsiteConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanMBeans [s1=createRemotes("clustered-xsite-1","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s2=createRemotes("clustered-xsite-2","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s3=createRemotes("clustered-xsite-3","clustered",DEFAULT_CACHE_NAME)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s1Cache=createCache(s1)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s2Cache=createCache(s2)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s3Cache=createCache(s3)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, s2.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s1.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s2.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, s3.manager.getClusterSize()]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k1", "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>s1Cache;put;["k2", "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s1.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s2.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, s3.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k1"), "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s2Cache.get("k1"), "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s3Cache.get("k1"), "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s1Cache.get("k2"), "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s2Cache.get("k2"), "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[s3Cache.get("k2"), "v2"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanRESTServer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rest</ParamName>
+                    <ParamType>RESTHelper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rest;delete;[rest.fullPathKey(KEY_A)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;delete;[rest.fullPathKey(KEY_B)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;delete;[rest.fullPathKey(KEY_C)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(KEY_A), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(KEY_B), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+                <InnerMethodInvoke>rest;head;[rest.fullPathKey(KEY_C), HttpStatus.SC_NOT_FOUND]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addServer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rest</ParamName>
+                    <ParamType>RESTHelper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>RemoteInfinispanServer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RESTEndpoint [endpoint=server.getRESTEndpoint()]</InnerVar>
+                <InnerVar>String [inetHostName=endpoint.getInetAddress().getHostName()]</InnerVar>
+                <InnerVar>String [realHostName=endpoint.getInetAddress() instanceof Inet6Address ? "[" + inetHostName + "]" : inetHostName]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rest;addServer;[realHostName, endpoint.getContextPath()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>securityConfig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ConfigurationBuilder</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keystoreName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>truststoreName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>RemoteInfinispanServer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ConfigurationBuilder [builder=ITestUtils.createConfigBuilder(server.getHotrodEndpoint().getInetAddress().getHostName(),server.getHotrodEndpoint().getPort())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>builder.security().ssl().enable().keyStoreFileName(ITestUtils.SERVER_CONFIG_DIR + File.separator + keystoreName).keyStorePassword("secret".toCharArray()).trustStoreFileName(ITestUtils.SERVER_CONFIG_DIR + File.separator + truststoreName).trustStorePassword("secret".toCharArray());maxRetries;[3]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doPutGetRemove</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sMain</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sRemoteStore</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [sMainCache=createCache(sMain)]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [sRemoteStoreCache=createCache(sRemoteStore)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, sMain.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, sRemoteStore.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[sMain.cache.getNumberOfEntriesInMemory() &lt;= 1000]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;eventually;[() -&gt; {
+  log.debug("Num entries: Main cache: " + sMain.cache.getNumberOfEntries() + " Remote store: "+ sRemoteStore.cache.getNumberOfEntriesInMemory()+ " Total: "+ (sMain.cache.getNumberOfEntriesInMemory() + sRemoteStore.cache.getNumberOfEntriesInMemory()));
+  return sMain.cache.getNumberOfEntriesInMemory() + sRemoteStore.cache.getNumberOfEntriesInMemory() == 1100;
+}
+, 10000]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, sMain.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, sRemoteStore.cache.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sMainCache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>sRemoteStoreCache;clear;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doPutGetWithExpiration</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s1</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>s2</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [s1Cache=createCache(s1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, s2.cache.getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;doPutGet;[s1, s1Cache]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[10, s2.cache.getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;sleepForSecs;[3.1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, s2.cache.getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doPutGet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>c</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, s.cache.getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[10, s.cache.getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doPutGetCheckPath</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filePath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sleepTime</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [sCache=createCache(s)]</InnerVar>
+                <InnerVar>File [f=new File(ITestUtils.SERVER_DATA_DIR,filePath)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;doPutGet;[s, sCache]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[f.isDirectory()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readWithMemcachedAndDeserialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>memcachedClient</ParamName>
+                    <ParamType>MemcachedClient</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayInputStream [bais=new ByteArrayInputStream(memcachedClient.getBytes(key))]</InnerVar>
+                <InnerVar>ObjectInputStream [ois=new ObjectInputStream(bais)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createCache</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheBeans</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>configBuilder</ParamName>
+                    <ParamType>ConfigurationBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createCache</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheBeans</ParamName>
+                    <ParamType>RemoteInfinispanMBeans</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createRemotes</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RemoteInfinispanMBeans</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>serverName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>managerName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cacheName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>startContainerWithTopology</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>containerName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>nodeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>portOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>site</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rack</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>machine</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller;start;[containerName, new Config().add("javaVmArguments",System.getProperty("server.jvm.args") + " -Djboss.node.name=" + nodeName+ " -Djboss.socket.binding.port-offset="+ portOffset+ " -Djboss.jgroups.topology.site="+ site+ " -Djboss.jgroups.topology.rack="+ rack+ " -Djboss.jgroups.topology.machine="+ machine).map()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

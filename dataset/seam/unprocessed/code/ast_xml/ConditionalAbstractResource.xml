@@ -1,0 +1,267 @@
+<Class>
+    <Id>751</Id>
+    <Package>org.jboss.seam.web</Package>
+    <ClassName>ConditionalAbstractResource</ClassName>
+    <SuperClass>AbstractResource</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ConditionalAbstractResource  /** 
+ * Subclass this resource if you want to be able to send the right response automatically to any conditional &lt;tt&gt;GET&lt;/tt&gt; or &lt;tt&gt;HEAD&lt;/tt&gt; request. The typically usecase is as follows: &lt;p/&gt; &lt;pre&gt; public class MyResource extends ConditionalAbstractResource { public void getResource(final HttpServletRequest request, final HttpServletResponse response) { String resourceVersion = ... // Calculate current state as string or byte[] resourceVersion = ... // Calculate current state as bytes String resourcePath = ... // Get the relative (to servlet) path of the requested resource if ( !sendConditional(request, response, createdEntityTag(resourceVersion, false), getLastModifiedTimestamp(resourcePath) ) { // Send the regular resource representation with 200 OK etc. } } } &lt;/pre&gt; &lt;p/&gt; Note that the &lt;tt&gt;getLastModifiedTimestamp()&lt;/tt&gt; method is only supplied for convenience; it may not return what you expect as the "last modification timestamp" of the given resource. In many cases you'd rather calculate that timestamp yourself. &lt;p/&gt;
+ * @author Christian Bauer
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>HEADER_LAST_MODIFIED</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_IF_MODIFIED_SINCE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_ETAG</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_IF_NONE_MATCH</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>LogProvider</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>sendConditional</MethodName>
+            <MethodComment>/** 
+ * Validates the request headers &lt;tt&gt;If-Modified-Since&lt;/tt&gt; and &lt;tt&gt;If-None-Match&lt;/tt&gt; to determine if a &lt;tt&gt;304 NOT MODIFIED&lt;/tt&gt; response can be send. If that is the case, this method will automatically send the response and return &lt;tt&gt;true&lt;/tt&gt;. If condition validation fails, it will not change the response and return &lt;tt&gt;false&lt;/tt&gt;. &lt;p/&gt; Note that both &lt;tt&gt;entityTag&lt;/tt&gt; and &lt;tt&gt;lastModified&lt;/tt&gt; arguments can be &lt;tt&gt;null&lt;/tt&gt;. The validation procedure and the outcome depends on what the client requested. If the client requires that both entity tags and modification timestamps be validated, both arguments must be supplied to the method and they must match, for a 304 response to be send. &lt;p/&gt; In addition to responding with &lt;tt&gt;304 NOT MODIFIED&lt;/tt&gt; when conditions match, this method will also, if arguments are not &lt;tt&gt;null&lt;/tt&gt;, send the right entity tag and last modification timestamps with the response, so that future requests from the client can be made conditional. &lt;p/&gt;
+ * @param request         The usual HttpServletRequest for header retrieval.
+ * @param response        The usual HttpServletResponse for header manipulation.
+ * @param entityTag       An entity tag (weak or strong, in doublequotes), typically produced by hashing the contentof the resource representation. If &lt;tt&gt;null&lt;/tt&gt;, no entity tag will be send and if validation is requested by the client, no match for a NOT MODIFIED response will be possible.
+ * @param lastModified    The timestamp in number of milliseconds since unix epoch when the resource waslast modified. If &lt;tt&gt;null&lt;/tt&gt;, no last modification timestamp will be send  and if validation is requested by the client, no match for a NOT MODIFIED response will be possible.
+ * @return &lt;tt&gt;true&lt;/tt&gt; if a &lt;tt&gt;304 NOT MODIFIED&lt;/tt&gt; response status has been set, &lt;tt&gt;false&lt;/tt&gt; if requestedconditions were invalid given the current state of the resource.
+ * @throws IOException If setting the response status failed.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>response</ParamName>
+                    <ParamType>HttpServletResponse</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>entityTag</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastModified</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [noneMatchHeader=request.getHeader(HEADER_IF_NONE_MATCH)]</InnerVar>
+                <InnerVar>Long [modifiedSinceHeader=request.getDateHeader(HEADER_IF_MODIFIED_SINCE)]</InnerVar>
+                <InnerVar>boolean [noneMatchValid=false]</InnerVar>
+                <InnerVar>boolean [modifiedSinceValid=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debug;["None of the cache conditions match, not sending 304"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isNoneMatchConditionValid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>noneMatchHeader</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>entityTag</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [entityTagsArray=noneMatchHeader.trim().split(",")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debug;["Resource has different entity tag than requested"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isModifiedSinceConditionValid</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>modifiedSinceHeader</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastModified</ParamName>
+                    <ParamType>Long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debug;["Resource has been modified since requested timestamp"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLastModifiedTimestamp</MethodName>
+            <MethodComment>/** 
+ * Tries to get last modification timestamp of the resource by obtaining a &lt;tt&gt;URLConnection&lt;/tt&gt; to the file in the filesystem or JAR.
+ * @param resourcePath The relative (to the servlet) resource path.
+ * @return Either the last modified filestamp or if an error occurs, the JVM system startup timestamp.
+ */
+</MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>resourcePath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createEntityTag</MethodName>
+            <MethodComment>/** 
+ * Generates a (globally) unique identifier of the current state of the resource. The string will be hashed with MD5 and the hash result is then formatted before it is returned. If &lt;tt&gt;null&lt;/tt&gt;, a &lt;tt&gt;null&lt;/tt&gt; will be returned.
+ * @param hashSource The string source for hashing or the already hashed (strong or weak) entity tag.
+ * @param weak       Set to &lt;tt&gt;true&lt;/tt&gt; if you want a weak entity tag.
+ * @return The hashed and formatted entity tag result.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>hashSource</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>weak</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createEntityTag</MethodName>
+            <MethodComment>/** 
+ * Generates a (globally) unique identifier of the current state of the resource. The bytes will be hashed with MD5 and the hash result is then formatted before it is returned. If &lt;tt&gt;null&lt;/tt&gt;, a &lt;tt&gt;null&lt;/tt&gt; will be returned.
+ * @param hashSource The string source for hashing.
+ * @param weak       Set to &lt;tt&gt;true&lt;/tt&gt; if you want a weak entity tag.
+ * @return The hashed and formatted entity tag result.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>hashSource</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>weak</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hash</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>text</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>charset</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>algorithm</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hash</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bytes</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>algorithm</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

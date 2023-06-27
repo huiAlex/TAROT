@@ -1,0 +1,238 @@
+<Class>
+    <Id>2854</Id>
+    <Package>org.infinispan.server.jgroups.subsystem</Package>
+    <ClassName>StackResourceDefinition</ClassName>
+    <SuperClass>SimpleResourceDefinition</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>StackResourceDefinition  /** 
+ * Resource description for the addressable resource /subsystem=jgroups/stack=X
+ * @author Richard Achmatowicz (c) 2011 Red Hat Inc.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>WILDCARD_PATH</FieldName>
+            <FieldType>PathElement</FieldType>
+        </Field>
+        <Field>
+            <FieldName>allowRuntimeOnlyRegistration</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TRANSPORT</FieldName>
+            <FieldType>ObjectTypeAttributeDefinition</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROTOCOL</FieldName>
+            <FieldType>ObjectTypeAttributeDefinition</FieldType>
+        </Field>
+        <Field>
+            <FieldName>PROTOCOLS</FieldName>
+            <FieldType>AttributeDefinition</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>pathElement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PathElement</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>StackResourceDefinition</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>allowRuntimeOnlyRegistration</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerOperations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>registration</ParamName>
+                    <ParamType>ManagementResourceRegistration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OperationDefinition [addOperation=new SimpleOperationDefinitionBuilder(ModelDescriptionConstants.ADD,this.getResourceDescriptionResolver()).addParameter(TRANSPORT).addParameter(PROTOCOLS).setAttributeResolver(new JGroupsResourceDescriptionResolver(ModelKeys.STACK,ModelDescriptionConstants.ADD)).build()]</InnerVar>
+                <InnerVar>OperationStepHandler [addHandler=new StackAddHandler(){
+  @Override protected void populateModel(  OperationContext context,  ModelNode operation,  Resource resource) throws OperationFailedException {
+    PathAddress address=context.getCurrentAddress();
+    ModelNode transport=null;
+    if (operation.hasDefined(TRANSPORT.getName())) {
+      transport=operation.remove(TRANSPORT.getName());
+    }
+    List&lt;ModelNode&gt; protocols=Collections.emptyList();
+    if (operation.hasDefined(PROTOCOLS.getName())) {
+      protocols=operation.remove(PROTOCOLS.getName()).asList();
+    }
+    if (transport != null) {
+      String type=ProtocolResourceDefinition.TYPE.resolveModelAttribute(context,transport).asString();
+      PathAddress transportAddress=address.append(TransportResourceDefinition.pathElement(type));
+      ModelNode transportOperation=Util.createAddOperation(transportAddress);
+      for (      AttributeDefinition attribute : TransportResourceDefinition.ATTRIBUTES) {
+        String name=attribute.getName();
+        if (transport.hasDefined(name)) {
+          transportOperation.get(name).set(transport.get(name));
+        }
+      }
+      context.addStep(transportOperation,new ReloadRequiredAddStepHandler(TransportResourceDefinition.ATTRIBUTES),OperationContext.Stage.MODEL);
+      if (transport.hasDefined(ProtocolResourceDefinition.PROPERTIES.getName())) {
+        for (        Property property : operation.get(ProtocolResourceDefinition.PROPERTIES.getName()).asPropertyList()) {
+          ModelNode propertyOperation=Util.createAddOperation(transportAddress.append(property.getName()));
+          propertyOperation.set(PropertyResourceDefinition.VALUE.getName()).set(property.getValue());
+          context.addStep(propertyOperation,new ReloadRequiredAddStepHandler(PropertyResourceDefinition.VALUE),OperationContext.Stage.MODEL);
+        }
+      }
+    }
+    if (!protocols.isEmpty()) {
+      for (      ModelNode protocol : protocols) {
+        String type=ProtocolResourceDefinition.TYPE.resolveModelAttribute(context,protocol).asString();
+        PathAddress protocolAddress=address.append(ProtocolResourceDefinition.pathElement(type));
+        ModelNode protocolOperation=Util.createAddOperation(protocolAddress);
+        for (        AttributeDefinition attribute : ProtocolResourceDefinition.ATTRIBUTES) {
+          String name=attribute.getName();
+          if (protocol.hasDefined(name)) {
+            protocolOperation.get(name).set(protocol.get(name));
+          }
+        }
+        context.addStep(protocolOperation,new ReloadRequiredAddStepHandler(ProtocolResourceDefinition.ATTRIBUTES),OperationContext.Stage.MODEL);
+        if (protocol.hasDefined(ProtocolResourceDefinition.PROPERTIES.getName())) {
+          for (          Property property : operation.get(ProtocolResourceDefinition.PROPERTIES.getName()).asPropertyList()) {
+            ModelNode propertyOperation=Util.createAddOperation(protocolAddress.append(property.getName()));
+            propertyOperation.set(PropertyResourceDefinition.VALUE.getName()).set(property.getValue());
+            context.addStep(propertyOperation,new ReloadRequiredAddStepHandler(PropertyResourceDefinition.VALUE),OperationContext.Stage.MODEL);
+          }
+        }
+      }
+    }
+  }
+}
+]</InnerVar>
+                <InnerVar>OperationDefinition [legacyAddProtocolOperation=new SimpleOperationDefinitionBuilder(ModelKeys.ADD_PROTOCOL,this.getResourceDescriptionResolver()).setParameters(ProtocolResourceDefinition.SOCKET_BINDING).addParameter(ProtocolResourceDefinition.TYPE).addParameter(ProtocolResourceDefinition.PROPERTIES).setDeprecated(JGroupsModel.VERSION_3_0_0.getVersion()).build()]</InnerVar>
+                <InnerVar>OperationStepHandler [legacyAddProtocolHandler=(context,operation) -&gt; {
+  PathAddress address=context.getCurrentAddress();
+  String protocol=operation.require(ProtocolResourceDefinition.TYPE.getName()).asString();
+  PathAddress protocolAddress=address.append(ProtocolResourceDefinition.pathElement(protocol));
+  ModelNode protocolOperation=Util.createAddOperation(protocolAddress);
+  for (  AttributeDefinition attribute : ProtocolResourceDefinition.ATTRIBUTES) {
+    String name=attribute.getName();
+    if (operation.hasDefined(name)) {
+      protocolOperation.get(name).set(operation.get(name));
+    }
+  }
+  context.addStep(protocolOperation,new ReloadRequiredAddStepHandler(ProtocolResourceDefinition.ATTRIBUTES),OperationContext.Stage.MODEL);
+  if (operation.hasDefined(ProtocolResourceDefinition.PROPERTIES.getName())) {
+    for (    Property property : operation.get(ProtocolResourceDefinition.PROPERTIES.getName()).asPropertyList()) {
+      ModelNode addPropertyOperation=Util.createAddOperation(protocolAddress.append(PropertyResourceDefinition.pathElement(property.getName())));
+      addPropertyOperation.get(PropertyResourceDefinition.VALUE.getName()).set(property.getValue());
+      context.addStep(addPropertyOperation,new ReloadRequiredAddStepHandler(PropertyResourceDefinition.VALUE),OperationContext.Stage.MODEL);
+    }
+  }
+}
+]</InnerVar>
+                <InnerVar>OperationDefinition [legacyRemoveProtocolOperation=new SimpleOperationDefinitionBuilder(ModelKeys.REMOVE_PROTOCOL,this.getResourceDescriptionResolver()).setParameters(ProtocolResourceDefinition.TYPE).setDeprecated(JGroupsModel.VERSION_3_0_0.getVersion()).build()]</InnerVar>
+                <InnerVar>OperationStepHandler [legacyRemoveProtocolHandler=(context,operation) -&gt; {
+  PathAddress address=context.getCurrentAddress();
+  String protocol=operation.require(ProtocolResourceDefinition.TYPE.getName()).asString();
+  PathAddress protocolAddress=address.append(ProtocolResourceDefinition.pathElement(protocol));
+  ModelNode removeOperation=Util.createRemoveOperation(protocolAddress);
+  context.addStep(removeOperation,ReloadRequiredRemoveStepHandler.INSTANCE,context.getCurrentStage());
+}
+]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>registration;registerOperationHandler;[addOperation, addHandler]</InnerMethodInvoke>
+                <InnerMethodInvoke>registration;registerOperationHandler;[legacyAddProtocolOperation, legacyAddProtocolHandler]</InnerMethodInvoke>
+                <InnerMethodInvoke>registration;registerOperationHandler;[legacyRemoveProtocolOperation, legacyRemoveProtocolHandler]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>populateModel</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>OperationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>ModelNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>resource</ParamName>
+                    <ParamType>Resource</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PathAddress [address=context.getCurrentAddress()]</InnerVar>
+                <InnerVar>ModelNode [transport=null]</InnerVar>
+                <InnerVar>List&lt;ModelNode&gt; [protocols=Collections.emptyList()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>OperationFailedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerChildren</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>registration</ParamName>
+                    <ParamType>ManagementResourceRegistration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>registration;registerSubModel;[new TransportResourceDefinition()]</InnerMethodInvoke>
+                <InnerMethodInvoke>registration;registerSubModel;[new ProtocolResourceDefinition()]</InnerMethodInvoke>
+                <InnerMethodInvoke>registration;registerSubModel;[new RelayResourceDefinition()]</InnerMethodInvoke>
+                <InnerMethodInvoke>registration;registerSubModel;[new SaslResourceDefinition()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

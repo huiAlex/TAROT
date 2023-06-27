@@ -1,0 +1,34 @@
+This JIRA explains what improvements to the DRL parser could be very useful in the IDE.
+Currently, the eclipse IDE uses the rule parser to
+create an outline view based on the PackageDescr returned when parsing the DRL file
+retrieve all imports, all functions, all queries, all templates and the package of a DRL file (so they can be used later, for example when performing auto-completion)
+determine the location of the cursor when requesting auto-completion (the part of the rule before the cursor is parsed, and based on the (unsually partically incomplete) PackageDescr returned by the parser, I try to determine in what kind of location the cursor is situation, e.g. the beginning of a column constraint, or inside an eval statement)
+retrieve all parameters defined in a rule (possibly before a certain location) when auto-completion has been requested
+retrieve errors and warnings that signal certain syntax errors in the DRL file
+Other places were the results of the DRL parser could be used:
+determine which element is selected based on a character selection range
+provide real-time syntax checking
+determine what has changed after the DRL has been changed
+do refactoring
+automatic error solving
+Although the info returned by the parser is very useful, I think we are kind of reaching the boundary of what we can do with the info that is currently returned.  I ll try to describe possible enhancements that could allow us to do more advanced IDE features as well.
+Use of character number in addition with line number + column
+Eclipse uses character numbers instead of line + column numbers in almost all situations.  A character number describes at which location a certain character occurs since the beginning of the file (and not like column since the beginning of the line).  Although we could try to create a mapping between character number and line + column number, this has resulted in some annoying errors related to the newline character which is different on different platforms.  Using character numbers would eliminate this problem.
+All elements in the PackageDescr should have a start location
+Currently, most do (PatternDescr has a getLine() and getColumn()), but some elements in the PackageDescr returned by the parser still don t:
+FunctionDescr has no line and column
+imports are just strings
+the package has no location
+To be able to use this information for more advanced features, it would be necessary that all elements contain a start location (now the IDE usually does additional parsing to determine the location of these elements).
+All elements should also have an end location
+Although PatternDescr has a getEndLine() and getEndColumn(), currently, only the end location of ColumnDescr is stored (thx mic for adding this already since it was necessary for code completion).  To be able to use this information for more advanced features, it would be necessary that all elements contain an end location (now the IDE usually does additional parsing to determine the end location of these elements).
+For nested elements, this should be the same as much as possible
+Like RuleDescr contains ColumnDescr contains FieldConstraintDescrs, each of these elements should contain a start and end location (where the start and end of the sub-descriptions are of course located inside the start and end location of its parent.  I believe that this is already working quite well in the current implementation for the start location of elements.
+The parser should return as much info as possible, even if the rule is incomplete
+This is very important since the DrlParser is used a lot when the DRL is not yet completely finished (for example when performing auto-completion).  It would be crucial that the parser does not just return an error when it encounters an error, but tries to parse the remainder of the file as well, and tries to return as much info as possible.  For example, when trying to parse the following incomplete rule:
+rule MyRule
+MyClass (
+the parser should ideally return a RuleDescr with name MyRule, containing as lhs one ColumnDescr, with name MyClass, a start location, but no end location (since the end of the ColumnDescr has not been reached yet, since the closing bracket is missing).  This used to work like this in the 3.0.x release.  I have noticed though that the 3.1 branch now returns null as only sub-description.  Similarly, when using an eval, currently the EvalDescr is only added to the RuleDescr once the eval has been closed.  As a result, the IDE has to redo a lot of parsing to check for these situations as well.  If the parser always returns as much info as available (by for example adding subdescr once they are started, not only when they are finished), the IDE would not have to do as much parsing itself.
+All errors and warnings try to give exact locations in the drl
+Although previous improvements have made the errors returned by the parser already very useful, more precise feedback could be given when the exact location of the errors could be returned, preferably as character start and end, but line numbers can be used here as well.  Currently, the error is mostly indicated on the start line of the rule that contains the error.  More precise error determination is necessary for more precise error visualization, automatic error solving, etc.
+I hope this kind of explains what improvements to the parser could be very useful to the IDE and why.

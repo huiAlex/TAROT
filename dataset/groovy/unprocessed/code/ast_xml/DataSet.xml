@@ -1,0 +1,855 @@
+<Class>
+    <Id>36</Id>
+    <Package>groovy.sql</Package>
+    <ClassName>DataSet</ClassName>
+    <SuperClass>Sql</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DataSet  /** 
+ * An enhancement of Groovy's Sql class providing support for accessing and querying databases using POGO fields and operators rather than JDBC-level API calls and RDBMS column names. So, instead of a query like: &lt;pre&gt; def db = // an instance of groovy.sql.Sql def sql = '''select * from Person where (purchaseCount &gt; ? and birthMonth = ?) and (lastName &amp;lt; ? or lastName &gt; ?) and age &amp;lt; ? and age &gt; ? and firstName != ? order by firstName DESC, age''' def params = [10, "January", "Zulu", "Alpha", 99, 5, "Bert"] def sortedPeopleOfInterest = db.rows(sql, params) &lt;/pre&gt; You can write code like this: &lt;pre&gt; def person = new DataSet(db, 'Person') // or db.dataSet('Person'), or db.dataSet(Person) def janFrequentBuyers = person.findAll { it.purchaseCount &gt; 10 &amp;&amp; it.lastName == "January" } def sortedPeopleOfInterest = janFrequentBuyers. findAll{ it.lastName &amp;lt; 'Zulu' || it.lastName &gt; 'Alpha' }. findAll{ it.age &amp;lt; 99 }. findAll{ it.age &gt; 5 }. sort{ it.firstName }.reverse(). findAll{ it.firstName != 'Bert' }. sort{ it.age } &lt;/pre&gt; Currently, the Groovy source code for any accessed POGO must be on the classpath at runtime. Also, at the moment, the expressions (or nested expressions) can only contain references to fields of the POGO or literals (i.e. constant Strings or numbers). This limitation may be removed in a future version of Groovy.
+ * @author Chris Stevenson
+ * @author Paul King
+ * @author &lt;a href="mailto:james@coredevelopers.net"&gt;James Strachan&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>EMPTY_INT_ARRAY</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>where</FieldName>
+            <FieldType>Closure</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sort</FieldName>
+            <FieldType>Closure</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reversed</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>parent</FieldName>
+            <FieldType>DataSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>table</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>visitor</FieldName>
+            <FieldType>SqlWhereVisitor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sortVisitor</FieldName>
+            <FieldType>SqlOrderByVisitor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sql</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>params</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>params</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>batchData</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>batchData</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>batchKeys</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>batchKeys</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>delegate</FieldName>
+            <FieldType>Sql</FieldType>
+        </Field>
+        <Field>
+            <FieldName>withinDataSetBatch</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DataSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>Sql</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>Class</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [table=type.getName()]</InnerVar>
+                <InnerVar>int [idx=table.lastIndexOf('.')]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DataSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sql</ParamName>
+                    <ParamType>Sql</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>table</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DataSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>DataSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>where</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DataSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>DataSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>where</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>DataSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>DataSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Connection</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeResources</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>connection</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>java.sql.Statement</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>results</ParamName>
+                    <ParamType>ResultSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;closeResources;[connection, statement, results]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>closeResources</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>connection</ParamName>
+                    <ParamType>Connection</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>java.sql.Statement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;closeResources;[connection, statement]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cacheConnection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;cacheConnection;[closure]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withTransaction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;withTransaction;[closure]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>commit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;commit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rollback</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;rollback;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withBatch</MethodName>
+            <MethodComment>/** 
+ * Performs the closure (containing batch operations) within a batch. Uses a batch size of zero, i.e. no automatic partitioning of batches.
+ * @param closure the closure containing batch and optionally other statements
+ * @return an array of update counts containing one element for eachcommand in the batch.  The elements of the array are ordered according to the order in which commands were added to the batch.
+ * @throws SQLException if a database access error occurs,or this method is called on a closed &lt;code&gt;Statement&lt;/code&gt;, or the driver does not support batch statements. Throws  {@link java.sql.BatchUpdateException}(a subclass of &lt;code&gt;SQLException&lt;/code&gt;) if one of the commands sent to the database fails to execute properly or attempts to return a result set.
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withBatch</MethodName>
+            <MethodComment>/** 
+ * Performs the closure (containing batch operations) within a batch. For example: &lt;pre&gt; dataSet.withBatch(3) { add(anint: 1, astring: "Groovy") add(anint: 2, astring: "rocks") add(anint: 3, astring: "the") add(anint: 4, astring: "casbah") } &lt;/pre&gt;
+ * @param batchSize partition the batch into batchSize pieces, i.e. after batchSize&lt;code&gt;addBatch()&lt;/code&gt; invocations, call &lt;code&gt;executeBatch()&lt;/code&gt; automatically; 0 means manual calls to executeBatch are required
+ * @param closure   the closure containing batch and optionally other statements
+ * @return an array of update counts containing one element for eachcommand in the batch.  The elements of the array are ordered according to the order in which commands were added to the batch.
+ * @throws SQLException if a database access error occurs, or the driver does not support batch statements.Throws  {@link java.sql.BatchUpdateException} (a subclass of &lt;code&gt;SQLException&lt;/code&gt;)if one of the commands sent to the database fails to execute properly.
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Closure [transformedClosure=new Closure(null){
+  public void doCall(  BatchingPreparedStatementWrapper stmt) throws SQLException {
+    for (    Object next : batchData) {
+      stmt.addBatch(new Object[]{next});
+    }
+  }
+}
+]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>closure;call;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stmt</ParamName>
+                    <ParamType>BatchingPreparedStatementWrapper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>add</MethodName>
+            <MethodComment>/** 
+ * Adds the provided map of key-value pairs as a new row in the table represented by this DataSet.
+ * @param map the key (column-name), value pairs to add as a new row
+ * @throws SQLException if a database error occurs
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [answer=executeUpdate(buildListQuery(map),new ArrayList&lt;Object&gt;(map.values()))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildListQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [buffer=new StringBuilder("insert into ")]</InnerVar>
+                <InnerVar>StringBuilder [paramBuffer=new StringBuilder()]</InnerVar>
+                <InnerVar>boolean [first=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>buffer;append;[table]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[" ("]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[") values ("]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[paramBuffer.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildMapQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [buffer=new StringBuilder("insert into ")]</InnerVar>
+                <InnerVar>StringBuilder [paramBuffer=new StringBuilder()]</InnerVar>
+                <InnerVar>boolean [first=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>buffer;append;[table]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[" ("]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[") values ("]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[paramBuffer.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>buffer;append;[")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findAll</MethodName>
+            <MethodComment>/** 
+ * Return a lazy-implemented filtered view of this DataSet.
+ * @param where the filtering Closure
+ * @return the view DataSet
+ */
+</MethodComment>
+            <ReturnType>DataSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>where</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sort</MethodName>
+            <MethodComment>/** 
+ * Return a lazy-implemented re-ordered view of this DataSet.
+ * @param sort the ordering Closure
+ * @return the view DataSet
+ */
+</MethodComment>
+            <ReturnType>DataSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sort</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reverse</MethodName>
+            <MethodComment>/** 
+ * Return a lazy-implemented reverse-ordered view of this DataSet.
+ * @return the view DataSet
+ */
+</MethodComment>
+            <ReturnType>DataSet</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>each</MethodName>
+            <MethodComment>/** 
+ * Calls the provided closure for each of the rows of the table represented by this DataSet.
+ * @param closure called for each row with a GroovyResultSet
+ * @throws SQLException if a database access error occurs
+ * @see groovy.sql.Sql#eachRow(String,java.util.List,groovy.lang.Closure)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;eachRow;[getSql(), getParameters(), closure]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>each</MethodName>
+            <MethodComment>/** 
+ * Calls the provided closure for a "page" of rows from the table represented by this DataSet. A page is defined as starting at a 1-based offset, and containing a maximum number of rows.
+ * @param offset  the 1-based offset for the first row to be processed
+ * @param maxRows the maximum number of rows to be processed
+ * @param closure called for each row with a GroovyResultSet
+ * @throws SQLException if a database access error occurs
+ * @see groovy.sql.Sql#eachRow(String,java.util.List,int,int,groovy.lang.Closure)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxRows</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;eachRow;[getSql(), getParameters(), offset, maxRows, closure]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSqlWhere</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [whereClaus=""]</InnerVar>
+                <InnerVar>String [parentClaus=""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSqlOrderBy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [sortByClaus=""]</InnerVar>
+                <InnerVar>String [parentClaus=""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSql</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParameters</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSqlWhereVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SqlWhereVisitor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSqlOrderByVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SqlOrderByVisitor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closure</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>visitor</ParamName>
+                    <ParamType>CodeVisitorSupport</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createView</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>DataSet</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>criteria</ParamName>
+                    <ParamType>Closure</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rows</MethodName>
+            <MethodComment>/** 
+ * Returns a List of all of the rows from the table a DataSet represents.
+ * @return Returns a list of GroovyRowResult objects from the dataset
+ * @throws SQLException if a database error occurs
+ */
+</MethodComment>
+            <ReturnType>List</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>rows</MethodName>
+            <MethodComment>/** 
+ * Returns a "page" of the rows from the table a DataSet represents. A page is defined as starting at a 1-based offset, and containing a maximum number of rows.
+ * @param offset the 1-based offset for the first row to be processed
+ * @param maxRows the maximum number of rows to be processed
+ * @return a list of GroovyRowResult objects from the dataset
+ * @throws SQLException if a database error occurs
+ */
+</MethodComment>
+            <ReturnType>List</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxRows</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>firstRow</MethodName>
+            <MethodComment>/** 
+ * Returns the first row from a DataSet's underlying table
+ * @return Returns the first GroovyRowResult object from the dataset
+ * @throws SQLException if a database error occurs
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>List [rows=rows()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SQLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>delegate;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,169 @@
+<Class>
+    <Id>499</Id>
+    <Package>edu.ncsu.csc.itrust.action</Package>
+    <ClassName>ReportAdverseEventAction</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>loggedInMID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>emailer</FieldName>
+            <FieldType>EmailUtil</FieldType>
+        </Field>
+        <Field>
+            <FieldName>patientDAO</FieldName>
+            <FieldType>PatientDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>personnelDAO</FieldName>
+            <FieldType>PersonnelDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>adverseEventDAO</FieldName>
+            <FieldType>AdverseEventDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hcpID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>validator</FieldName>
+            <FieldType>AdverseEventValidator</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ReportAdverseEventAction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <ParameterType>String hcpID</ParameterType>
+                <ParameterType>DAOFactory factory</ParameterType>
+                <ParameterType>long loggedInMID</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReportAdverseEventAction</MethodName>
+            <MethodComment>/** 
+ * Constructor used to send e-mails only
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <ParameterType>DAOFactory factory</ParameterType>
+                <ParameterType>long loggedInMID</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sendMails</MethodName>
+            <MethodComment>/** 
+ * Method that sends exactly one e-mail to each MID in the list of Adverse Events
+ * @param aeList The list of adverse Event Beans that need to be acted upon
+ * @return EList The list of e-mails sent for testing purposes
+ */
+</MethodComment>
+            <ReturnType>Email</ReturnType>
+            <ParameterList>
+                <ParameterType>AdverseEventBean aeList</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [MIDlist=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>String [patientID=""]</InnerVar>
+                <InnerVar>Email [email=new Email()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+                <ExceptionType>FormValidationException</ExceptionType>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sendMail</MethodName>
+            <MethodComment>/** 
+ * A method used to send a single e-mail. Used in immunizations.
+ * @param aeBean
+ * @return Email returns the Email for testing purposes.
+ */
+</MethodComment>
+            <ReturnType>Email</ReturnType>
+            <ParameterList>
+                <ParameterType>AdverseEventBean aeBean</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Email [email=new Email()]</InnerVar>
+                <InnerVar>String [fromEmail]</InnerVar>
+                <InnerVar>List&lt;String&gt; [toList=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>PatientBean [sender=patientDAO.getPatient(loggedInMID)]</InnerVar>
+                <InnerVar>PersonnelBean [receiver=personnelDAO.getPersonnel(hcpID)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>email;setFrom;["noreply@itrust.com"]</InnerMethodInvoke>
+                <InnerMethodInvoke>toList;add;[receiver.getEmail()]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setToList;[toList]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setFrom;[fromEmail]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setSubject;[String.format("Adverse Event Report (Immunization)")]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setBody;[String.format(" Patient: " + patientDAO.getName(Long.parseLong(aeBean.getMID())) + " (MID "+ aeBean.getMID()+ ") Has Reported the following adverse event"+ " Drug: "+ aeBean.getDrug()+ "("+ aeBean.getCode()+ ") Description: "+ aeBean.getDescription())]</InnerMethodInvoke>
+                <InnerMethodInvoke>emailer;sendEmail;[email]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+                <ExceptionType>FormValidationException</ExceptionType>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addReport</MethodName>
+            <MethodComment>/** 
+ * Method used to add a report to the data base
+ * @param aeBean The adverse event to add
+ * @return a string for testing purposes only
+ * @throws iTrustException
+ * @throws FormValidationException
+ * @throws DBException
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <ParameterType>AdverseEventBean aeBean</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+                <ExceptionType>FormValidationException</ExceptionType>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

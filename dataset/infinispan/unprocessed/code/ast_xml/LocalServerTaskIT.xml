@@ -1,0 +1,186 @@
+<Class>
+    <Id>738</Id>
+    <Package>org.infinispan.server.test.task</Package>
+    <ClassName>LocalServerTaskIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>exceptionRule</FieldName>
+            <FieldType>ExpectedException</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>before</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [serverDir=System.getProperty("server1.dist")]</InnerVar>
+                <InnerVar>JavaArchive [jar=ShrinkWrap.create(JavaArchive.class)]</InnerVar>
+                <InnerVar>File [f=new File(serverDir,"/standalone/deployments/custom-task.jar")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jar;addClass;[LocalTestServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[LocalExceptionalServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[LocalMapReduceServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[JSExecutingServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[GreetingServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addClass;[Greeting.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addAsServiceProvider;[ServerTask.class, LocalTestServerTask.class, LocalExceptionalServerTask.class, LocalMapReduceServerTask.class, JSExecutingServerTask.class, GreetingServerTask.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addAsResource;[new File("/stream_serverTask.js")]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar;addAsManifestResource;["MANIFEST.MF"]</InnerMethodInvoke>
+                <InnerMethodInvoke>jar.as(ZipExporter.class);exportTo;[f, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>undeploy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [serverDir=System.getProperty("server1.dist")]</InnerVar>
+                <InnerVar>File [jar=new File(serverDir,"/standalone/deployments/custom-task.jar")]</InnerVar>
+                <InnerVar>File [f=new File(serverDir,"/standalone/deployments/custom-task.jar.deployed")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldModifyCacheInViaTask</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+                <InnerVar>String [value="value"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rcm.getCache();put;[LocalTestServerTask.TASK_EXECUTED, value]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm.getCache();execute;[LocalTestServerTask.NAME, Collections.emptyMap()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[LocalTestServerTask.MODIFIED_PREFIX + value, rcm.getCache().get(LocalTestServerTask.TASK_EXECUTED)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[LocalTestServerTask.MODIFIED_PREFIX + value, rcm.getCache(LocalTestServerTask.CACHE_NAME).get(LocalTestServerTask.TASK_EXECUTED)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldThrowExceptionInViaTask</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>exceptionRule;expect;[HotRodClientException.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>exceptionRule;expectMessage;[LocalExceptionalServerTask.EXCEPTION_MESSAGE]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm.getCache();execute;[LocalExceptionalServerTask.NAME, Collections.emptyMap()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldExecuteMapReduceViaTask</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache()]</InnerVar>
+                <InnerVar>Map&lt;String,Long&gt; [result=(Map&lt;String,Long&gt;)remoteCache.execute(LocalMapReduceServerTask.NAME,Collections.emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;put;[1, "word1 word2 word3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[2, "word1 word2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[3, "word1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, result.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, result.get("word1").intValue()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, result.get("word2").intValue()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, result.get("word3").intValue()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldExecuteMapReduceViaJavaScriptInTask</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache()]</InnerVar>
+                <InnerVar>Map&lt;String,Long&gt; [result=(Map&lt;String,Long&gt;)remoteCache.execute(JSExecutingServerTask.NAME,Collections.emptyMap())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;put;[1, "word1 word2 word3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[2, "word1 word2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[3, "word1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, result.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, result.get("word1").intValue()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, result.get("word2").intValue()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, result.get("word3").intValue()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldWorkWithCustomMojo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+                <InnerVar>RemoteCache [remoteCache=rcm.getCache()]</InnerVar>
+                <InnerVar>Map [params=new HashMap()]</InnerVar>
+                <InnerVar>String [result=(String)remoteCache.execute(GreetingServerTask.NAME,params)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>params;put;["greeting", toBytes(new Greeting("hello, good morning :)"))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["hello, good morning :)", result]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toBytes</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

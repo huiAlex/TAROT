@@ -1,0 +1,287 @@
+<Class>
+    <Id>538</Id>
+    <Package>org.apache.pig.backend.hadoop.accumulo</Package>
+    <ClassName>Utils</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Logger</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>addDependencyJars</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>classes</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FileSystem [localFs=FileSystem.getLocal(conf)]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [jars=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>Map&lt;String,String&gt; [packagedClasses=new HashMap&lt;String,String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jars;addAll;[conf.getStringCollection("tmpjars")]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;["tmpjars", StringUtils.arrayToString(jars.toArray(new String[jars.size()]))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findOrCreateJar</MethodName>
+            <MethodComment>/** 
+ * If org.apache.hadoop.util.JarFinder is available (0.23+ hadoop), finds the Jar for a class or creates it if it doesn't exist. If the class is in a directory in the classpath, it creates a Jar on the fly with the contents of the directory and returns the path to that Jar. If a Jar is created, it is created in the system temporary directory. Otherwise, returns an existing jar that contains a class of the same name. Maintains a mapping from jar contents to the tmp jar created.
+ * @param my_class the class to find.
+ * @param fs the FileSystem with which to qualify the returned path.
+ * @param packagedClasses a map of class name to path.
+ * @return a jar file that contains the class.
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>my_class</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fs</ParamName>
+                    <ParamType>FileSystem</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>packagedClasses</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [jar=findContainingJar(my_class,packagedClasses)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debug;[String.format("For class %s, using jar %s",my_class.getName(),jar)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateMap</MethodName>
+            <MethodComment>/** 
+ * Add entries to &lt;code&gt;packagedClasses&lt;/code&gt; corresponding to class files contained in &lt;code&gt;jar&lt;/code&gt;.
+ * @param jar The jar who's content to list.
+ * @param packagedClasses map[class -&gt; jar]
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jar</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>packagedClasses</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ZipFile [zip=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findContainingJar</MethodName>
+            <MethodComment>/** 
+ * Find a jar that contains a class of the same name, if any. It will return a jar file, even if that is not the first thing on the class path that has a class with the same name. Looks first on the classpath and then in the &lt;code&gt;packagedClasses&lt;/code&gt; map.
+ * @param my_class the class to find.
+ * @return a jar file that contains the class, or null.
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>my_class</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>packagedClasses</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [loader=my_class.getClassLoader()]</InnerVar>
+                <InnerVar>String [class_file=my_class.getName().replaceAll("\\.","/") + ".class"]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>jarFinderGetJar</MethodName>
+            <MethodComment>/** 
+ * Returns the full path to the Jar containing the class. It always return a JAR.
+ * @param klass class.
+ * @return path to the Jar containing the class.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>klass</ParamName>
+                    <ParamType>Class</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [loader=klass.getClassLoader()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Preconditions;checkNotNull;[klass, "klass"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyToZipStream</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>is</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>ZipEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>zos</ParamName>
+                    <ParamType>ZipOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [arr=new byte[4096]]</InnerVar>
+                <InnerVar>int [read=is.read(arr)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>zos;putNextEntry;[entry]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>jarDir</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativePath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>zos</ParamName>
+                    <ParamType>ZipOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>File [manifestFile=new File(dir,JarFile.MANIFEST_NAME)]</InnerVar>
+                <InnerVar>ZipEntry [manifestEntry=new ZipEntry(JarFile.MANIFEST_NAME)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Preconditions;checkNotNull;[relativePath, "relativePath"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Preconditions;checkNotNull;[zos, "zos"]</InnerMethodInvoke>
+                <InnerMethodInvoke>zos;closeEntry;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;zipDir;[dir, relativePath, zos, true]</InnerMethodInvoke>
+                <InnerMethodInvoke>zos;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>zipDir</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativePath</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>zos</ParamName>
+                    <ParamType>ZipOutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>start</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [dirList=dir.list()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createJar</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>jarFile</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>File [jarDir=jarFile.getParentFile()]</InnerVar>
+                <InnerVar>JarOutputStream [zos=new JarOutputStream(new FileOutputStream(jarFile))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Preconditions;checkNotNull;[dir, "dir"]</InnerMethodInvoke>
+                <InnerMethodInvoke>Preconditions;checkNotNull;[jarFile, "jarFile"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;jarDir;[dir, "", zos]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

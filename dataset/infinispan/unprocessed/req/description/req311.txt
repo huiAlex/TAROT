@@ -1,0 +1,7 @@
+Queryable classes are currently auto-detected on the fly by the QueryInterceptor on each write operation. The set of discovered classes is replicated by means of ClusterRegistry.
+This approach creates a lot of technical complexity and the implementation has a number of flaws; some have been fixed after several iterations but the solution is still brittle and can lead to locking issues. It also forces Hibernate Search to reconfigure the factory which is rather messy. Instead of continuing to patch and  improve  this we should consider pre-declaring the indexable classes in the cache configuration (indexing configuration actually).
+Given the impact of this change to existing codebase I would propose an approach that allows an easy transition:
+1. Introduction of a new config in indexing configuration to be able to specify the classes.
+2. If cache is indexed but no indexable classes were defined fallback to on-demand auto-detection as it worked in 8.1.
+3. If cache is indexed and classes were specified use them and do not perform on-demand auto-detection anymore. Also do not use ClusterRegistry to propagate the set of classes anymore.
+This is how it should work in 8.2. Auto-detection should also be documented as deprecated in 8.2 and should be removed completely in 9.0. In 9.0, marking a cache as indexed but not specifying which exact classes should result in an error at config time validation.

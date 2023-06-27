@@ -1,0 +1,8 @@
+I recently came across a situation where I wanted to initialize a JCE Certificate directly from a URL. I wanted to do this:
+def cfUrl = args.toURL()
+def cf = CertificateFactory.getInstance(  X.509  )
+def newRootCert = cfUrl.withInputStream { cf.generateCertificate(it) }
+Putting aside the fact that the with* methods don t return the closure return value (which I m going to create a separate JIRA for), there is not currently a withInputStream method for URL.
+I could do something like this to work around it, but I d rather do it the Groovier way:
+def newRootCert = cfUrl.openStream().withStream { cf.generateCertificate(it) }
+I ve attached a patch to add URL.newInputStream and URL.withInputStream. It doesn t have any tests because I couldn t find any existing tests for URL.withReader (or File.withInputStream for that matter) and wasn t sure what the best way to handle it would be. .

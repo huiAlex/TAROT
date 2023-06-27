@@ -1,0 +1,211 @@
+<Class>
+    <Id>985</Id>
+    <Package>org.infinispan.server.hotrod</Package>
+    <ClassName>AbstractTopologyAwareEncoder1x</ClassName>
+    <SuperClass>AbstractEncoder1x</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AbstractTopologyAwareEncoder1x  /** 
+ * Hot Rod encoder for protocol version 1.1
+ * @author Galder Zamarreño
+ * @since 5.2
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>createHashDistAwareResp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>AbstractHashDistAwareResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>topologyId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>serverEndpointsMap</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cfg</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeHashTopologyUpdate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>h</ParamName>
+                    <ParamType>AbstractHashDistAwareResponse</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>HotRodServer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Response</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>ByteBuf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeHashTopologyUpdate11</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>h</ParamName>
+                    <ParamType>HashDistAware11Response</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>server</ParamName>
+                    <ParamType>HotRodServer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Response</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>buf</ParamName>
+                    <ParamType>ByteBuf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AdvancedCache&lt;byte[],byte[]&gt; [cache=server.getCacheInstance(r.cacheName,server.getCacheManager(),false,true)]</InnerVar>
+                <InnerVar>DistributionManager [distManager=cache.getDistributionManager()]</InnerVar>
+                <InnerVar>ConsistentHash [ch=distManager.getReadConsistentHash()]</InnerVar>
+                <InnerVar>int [numSegments=ch.getNumSegments()]</InnerVar>
+                <InnerVar>List&lt;KeyValuePair&lt;ServerAddress,Integer&gt;&gt; [hashIds=new ArrayList&lt;&gt;(numSegments)]</InnerVar>
+                <InnerVar>List&lt;Integer&gt;[] [allDenormalizedHashIds=denormalizeSegmentHashIds(ch)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;tracef;["Write hash distribution change response header %s", h]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writeCommonHashTopologyHeader;[buf, h.topologyId, h.numOwners, h.hashFunction, h.hashSpace, hashIds.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ExtendedByteBuf;writeUnsignedInt;[1, buf]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeLimitedHashTopologyUpdate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>AbstractTopologyResponse</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>buffer</ParamName>
+                    <ParamType>ByteBuf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;tracef;["Return limited hash distribution aware header in spite of having a hash aware client %s", t]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;writeCommonHashTopologyHeader;[buffer, t.topologyId, 0, (byte)0, 0, t.serverEndpointsMap.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ExtendedByteBuf;writeUnsignedInt;[1, buffer]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>denormalizeSegmentHashIds</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>List&lt;Integer&gt;[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ch</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>double [leewayFraction=0.0002]</InnerVar>
+                <InnerVar>int [numOwners=ch.getNumOwners()]</InnerVar>
+                <InnerVar>int [numSegments=ch.getNumSegments()]</InnerVar>
+                <InnerVar>int [segmentSize=(int)Math.ceil((double)Integer.MAX_VALUE / numSegments)]</InnerVar>
+                <InnerVar>int [leeway=(int)(leewayFraction * segmentSize)]</InnerVar>
+                <InnerVar>Map&lt;Integer,Integer&gt;[] [ownerHashes=new Map[numSegments]]</InnerVar>
+                <InnerVar>KeyPartitioner [keyPartitioner=((PartitionerConsistentHash)ch).getKeyPartitioner()]</InnerVar>
+                <InnerVar>List&lt;Integer&gt;[] [results=new List[ownerHashes.length]]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>extractHash(keyPartitioner);ifPresent;[h -&gt; {
+  int i=0;
+  int segmentsLeft=numSegments;
+  while (segmentsLeft != 0) {
+    int normalizedHash=h.hash(i) &amp; Integer.MAX_VALUE;
+    if (normalizedHash % segmentSize &lt; leeway) {
+      int nextSegmentIdx=normalizedHash / segmentSize;
+      int segmentIdx=(nextSegmentIdx - 1 + numSegments) % numSegments;
+      Map&lt;Integer,Integer&gt; segmentHashes=ownerHashes[segmentIdx];
+      if (segmentHashes.size() &lt; numOwners) {
+        segmentHashes.put(normalizedHash,i);
+        if (segmentHashes.size() == numOwners) {
+          segmentsLeft-=1;
+        }
+      }
+    }
+    i+=1;
+  }
+}
+]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;tracef;["Found denormalized hashes: %s", ownerHashes]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractHash</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Hash</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyPartitioner</ParamName>
+                    <ParamType>KeyPartitioner</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

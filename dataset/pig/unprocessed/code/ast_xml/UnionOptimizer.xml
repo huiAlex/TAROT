@@ -1,0 +1,431 @@
+<Class>
+    <Id>475</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.tez.plan.optimizer</Package>
+    <ClassName>UnionOptimizer</ClassName>
+    <SuperClass>TezOpPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>UnionOptimizer  /** 
+ * Optimizes union by removing the intermediate union vertex and making the successor get input from the predecessor vertices directly using VertexGroup. This should be run after MultiQueryOptimizer so that it handles cases like union followed by split and then store. For eg: 1) Union followed by store Vertex 1 (Load), Vertex 2 (Load) -&gt; Vertex 3 (Union + Store) will be optimized to Vertex 1 (Load + Store), Vertex 2 (Load + Store). Both the vertices will be writing output to same store location directly which is supported by Tez. 2) Union followed by groupby Vertex 1 (Load), Vertex 2 (Load) -&gt; Vertex 3 (Union + POLocalRearrange) -&gt; Vertex 4 (Group by) will be optimized to Vertex 1 (Load + POLR), Vertex 2 (Load + POLR) -&gt; Vertex 4 (Group by)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tezPlan</FieldName>
+            <FieldType>TezOperPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>builtinSupportedStoreFuncs</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>builtinSupportedStoreFuncs</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>supportedStoreFuncs</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>supportedStoreFuncs</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>unsupportedStoreFuncs</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>unsupportedStoreFuncs</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>UnionOptimizer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>TezOperPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>supportedStoreFuncs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unsupportedStoreFuncs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOptimizable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isOptimizableStoreFunc</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>supportedStoreFuncs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unsupportedStoreFuncs</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;POStoreTez&gt; [stores=PlanHelper.getPhysicalOperators(tezOp.plan,POStoreTez.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitTezOp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tezOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TezOperator [unionOp=tezOp]</InnerVar>
+                <InnerVar>String [scope=unionOp.getOperatorKey().scope]</InnerVar>
+                <InnerVar>PhysicalPlan [unionOpPlan=unionOp.plan]</InnerVar>
+                <InnerVar>Set&lt;OperatorKey&gt; [uniqueUnionMembers=new HashSet&lt;OperatorKey&gt;(unionOp.getUnionMembers())]</InnerVar>
+                <InnerVar>List&lt;TezOperator&gt; [predecessors=new ArrayList&lt;TezOperator&gt;(tezPlan.getPredecessors(unionOp))]</InnerVar>
+                <InnerVar>List&lt;TezOperator&gt; [successors=tezPlan.getSuccessors(unionOp) == null ? null : new ArrayList&lt;TezOperator&gt;(tezPlan.getSuccessors(unionOp))]</InnerVar>
+                <InnerVar>List&lt;POStoreTez&gt; [unionStoreOutputs=PlanHelper.getPhysicalOperators(unionOpPlan,POStoreTez.class)]</InnerVar>
+                <InnerVar>TezOperator[] [storeVertexGroupOps=new TezOperator[unionStoreOutputs.size()]]</InnerVar>
+                <InnerVar>List&lt;TezOutput&gt; [unionOutputs=PlanHelper.getPhysicalOperators(unionOpPlan,TezOutput.class)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [unionOutputKeys=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>TezOperator[] [outputVertexGroupOps=new TezOperator[unionOutputKeys.size()]]</InnerVar>
+                <InnerVar>String[] [newOutputKeys=new String[unionOutputKeys.size()]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>connectUnionNonMemberPredecessorsToSplit</MethodName>
+            <MethodComment>/** 
+ * Connect the predecessors of the union which are not members of the union (usually FRJoin replicated table orSkewedJoin sample) to the Split op which is the only member of the union. Disconnect those predecessors from the union. Replace the output keys of those predecessors with the split operator key instead of the union operator key.
+ * @param unionOp Union operator
+ * @param splitPredOp Split operator which is the only member of the union and its predecessor
+ * @param unionPredecessors Predecessors of the union including the split operator
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitPredOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unionPredecessors</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [unionOpKey=unionOp.getOperatorKey().toString()]</InnerVar>
+                <InnerVar>OperatorKey [splitPredKey=splitPredOp.getOperatorKey()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>connectSplitOpToUnionSuccessors</MethodName>
+            <MethodComment>/** 
+ * Connect the split operator to the successors of the union operators and update the edges. Also change the inputs of the successor from the union operator to the split operator.
+ * @param unionOp Union operator
+ * @param splitPredOp Split operator which is the only member of the union
+ * @param successors Successors of the union operator
+ * @throws PlanException
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitPredOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>successors</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [unionOpKey=unionOp.getOperatorKey().toString()]</InnerVar>
+                <InnerVar>String [splitPredOpKey=splitPredOp.getOperatorKey().toString()]</InnerVar>
+                <InnerVar>List&lt;TezOperator&gt; [splitSuccessors=tezPlan.getSuccessors(splitPredOp)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cloneAndMergeUnionPlan</MethodName>
+            <MethodComment>/** 
+ * Clone plan of union and merge it into the predecessor operator
+ * @param unionOp Union operator
+ * @param predOp Predecessor operator of union to which union plan should be merged to
+ */
+</MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>connectPredecessorsToVertexGroups</MethodName>
+            <MethodComment>/** 
+ * Connects the unionOp predecessor to the store vertex groups and the output vertex groups and disconnects it from the unionOp.
+ * @param pred Predecessor of union which will be made part of the vertex group
+ * @param unionOp Union operator
+ * @param predClonedUnionPlan Cloned plan of the union merged to the predecessor
+ * @param storeVertexGroupOps Store vertex groups to connect to
+ * @param outputVertexGroupOps Tez LogicalOutput vertex groups to connect to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pred</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predClonedUnionPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>storeVertexGroupOps</ParamName>
+                    <ParamType>TezOperator[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputVertexGroupOps</ParamName>
+                    <ParamType>TezOperator[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;POStoreTez&gt; [clonedUnionStoreOutputs=PlanHelper.getPhysicalOperators(predClonedUnionPlan,POStoreTez.class)]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;copyOperatorProperties;[pred, unionOp]</InnerMethodInvoke>
+                <InnerMethodInvoke>tezPlan;disconnect;[pred, unionOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>connectVertexGroupsToSuccessors</MethodName>
+            <MethodComment>/** 
+ * Connect vertexgroup operator to successor operator in the plan. Copy the output edge between union operator and successor to between predecessors and successor. Predecessor output key and output edge points to successor so that we have all the edge configuration, but they are connected to the vertex group in the plan.
+ * @param unionOp Union operator
+ * @param successors Successors of the union operator
+ * @param unionOutputKeys Output keys of union
+ * @param outputVertexGroupOp  Tez LogicalOutput vertex groups corresponding to the output keys
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>successors</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unionOutputKeys</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputVertexGroupOps</ParamName>
+                    <ParamType>TezOperator[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceSuccessorInputsAndDisconnect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>successors</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unionOutputKeys</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newOutputKeys</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyOperatorProperties</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pred</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unionOp</ParamName>
+                    <ParamType>TezOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pred.UDFs;addAll;[unionOp.UDFs]</InnerMethodInvoke>
+                <InnerMethodInvoke>pred.scalars;addAll;[unionOp.scalars]</InnerMethodInvoke>
+                <InnerMethodInvoke>pred;copyFeatures;[unionOp, Arrays.asList(new OPER_FEATURE[]{OPER_FEATURE.UNION})]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUnionPredPlanFromSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unionOpKey</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;POSplit&gt; [splits=PlanHelper.getPhysicalOperators(plan,POSplit.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

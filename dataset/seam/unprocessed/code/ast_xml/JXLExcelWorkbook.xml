@@ -1,0 +1,584 @@
+<Class>
+    <Id>269</Id>
+    <Package>org.jboss.seam.excel.jxl</Package>
+    <ClassName>JXLExcelWorkbook</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ExcelWorkbook</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>JXLExcelWorkbook  /** 
+ * Class that encapsulates the JExcelApi Workbook and Worksheet concepts and internal state
+ * @author Nicklas Karlsson (nickarls@gmail.com)
+ * @author Daniel Roth (danielc.roth@gmail.com)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>CELL_DEFAULT_HEIGHT</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CELL_DEFAULT_WIDTH</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_COLUMNS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>MAX_ROWS</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_WORKSHEET_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>byteStream</FieldName>
+            <FieldType>ByteArrayOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>workbook</FieldName>
+            <FieldType>WritableWorkbook</FieldType>
+        </Field>
+        <Field>
+            <FieldName>worksheet</FieldName>
+            <FieldType>WritableSheet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>startRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>startColumnIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentColumnIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentWorksheetIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxRowIndex</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jxlHelper</FieldName>
+            <FieldType>JXLHelper</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>nextRow</MethodName>
+            <MethodComment>/** 
+ * Moves the row pointer to the next row. Used internally when adding data
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextColumn</MethodName>
+            <MethodComment>/** 
+ * Moves the internal column pointer to the next column, called by the tag to indicate that a new column has been started. If the pointer exceeds the maximum allowed, throws an exception. Resets the styles and row indexes etc.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>workbookContainsSheet</MethodName>
+            <MethodComment>/** 
+ * Checks if the workbook contains a sheet
+ * @param name The name to look for
+ * @return true if found, false otherwise
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [found=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createOrSelectWorksheet</MethodName>
+            <MethodComment>/** 
+ * Creates a new worksheet (or selects one if it exists) in the workbook. Will require a rework for auto-renaming when support for auto-adding of new worksheets if there are more than 65k rows. Resets the internal state (row- and column indexes, current styles etc)
+ * @param uiWorksheet The worksheet to create or select in the workbook
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiWorksheet</ParamName>
+                    <ParamType>UIWorksheet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jxlHelper;applyWorksheetSettings;[worksheet, uiWorksheet]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addCell</MethodName>
+            <MethodComment>/** 
+ * Creates and adds a data cell to the worksheet using the data cell format. If the cell format is null, initializes the cell format. Finally moves the internal pointer to the next row.
+ * @param uiCell The cell to be created and added to the workbook
+ * @param the type (header or data) of the cell
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiCell</ParamName>
+                    <ParamType>UICell</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [useRow=uiCell.getRow() != null ? uiCell.getRow() : currentRowIndex]</InnerVar>
+                <InnerVar>int [useColumn=uiCell.getColumn() != null ? uiCell.getColumn() : currentColumnIndex]</InnerVar>
+                <InnerVar>CellInfo [cellInfo=jxlHelper.getCellInfo(uiCell)]</InnerVar>
+                <InnerVar>WritableCell [cell=JXLHelper.createCell(useColumn,useRow,cellInfo.getCellType(),uiCell.getValue(),cellInfo.getCellFormat())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBytes</MethodName>
+            <MethodComment>/** 
+ * Returns the binary data from the internal representation of the workbook
+ * @return the data
+ * @throws ExcelWorkbookException If there is a problem producing the binary data
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createWorkbook</MethodName>
+            <MethodComment>/** 
+ * Intitializes a new workbook. Must be called first. Not that pretty but the API has different constructors for all permutations of workbook settings and template usage
+ * @param uiWorkbook UIn Workbook to create
+ * @throws ExcelWorkbookException if there were any errors creating the workbook
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiWorkbook</ParamName>
+                    <ParamType>UIWorkbook</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [urlString=uiWorkbook.getTemplateURI()]</InnerVar>
+                <InnerVar>InputStream [templateStream=null]</InnerVar>
+                <InnerVar>WorkbookSettings [workbookSettings=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDocumentType</MethodName>
+            <MethodComment>/** 
+ * Gets the document type of the data for the DocumentStore
+ * @return the document type (Excel workbook)
+ */
+</MethodComment>
+            <ReturnType>DocumentType</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>applyColumnSettings</MethodName>
+            <MethodComment>/** 
+ * Applies column settings for the current column
+ * @param uiColumn the UI column to inspect for settings
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiColumn</ParamName>
+                    <ParamType>UIColumn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jxlHelper;applyColumnSettings;[uiColumn, worksheet, currentColumnIndex]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addImage</MethodName>
+            <MethodComment>/** 
+ * Adds an image to the worksheet. First converts it to PNG since it's what the library wants. If starting rows or columns are given, uses them, otherwise uses the current indexes. If column- and rowspannings are given, uses them, otherwise tries to determine them from the image dimensions and default cell dimensions.
+ * @param uiImage The image to add
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiImage</ParamName>
+                    <ParamType>UIImage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BufferedImage [image=null]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [pngStream=null]</InnerVar>
+                <InnerVar>int [useStartColumn=uiImage.getStartColumn() == null ? currentColumnIndex : uiImage.getStartRow()]</InnerVar>
+                <InnerVar>int [useStartRow=uiImage.getStartRow() == null ? currentRowIndex : uiImage.getStartRow()]</InnerVar>
+                <InnerVar>double [estimatedRowSpan=(double)image.getHeight() / (double)CELL_DEFAULT_HEIGHT]</InnerVar>
+                <InnerVar>double [estimatedColSpan=(double)image.getWidth() / (double)CELL_DEFAULT_WIDTH]</InnerVar>
+                <InnerVar>double [useColumnSpan=uiImage.getColumnSpan() == null ? estimatedRowSpan : uiImage.getColumnSpan()]</InnerVar>
+                <InnerVar>double [useRowSpan=uiImage.getRowSpan() == null ? estimatedColSpan : uiImage.getRowSpan()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>worksheet;addImage;[new WritableImage(useStartColumn,useStartRow,useColumnSpan,useRowSpan,pngStream.toByteArray())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addHyperlink</MethodName>
+            <MethodComment>/** 
+ * Creates a hyperlink to an URL in the worksheet
+ * @param column The target column of the link (if null, defaults to current column)
+ * @param row The target row of the link (if null, defaults to current row)
+ * @param url The target URL
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>uiHyperlink</ParamName>
+                    <ParamType>UIHyperlink</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [useStartColumn=uiHyperlink.getStartColumn() == null ? currentColumnIndex : uiHyperlink.getStartColumn()]</InnerVar>
+                <InnerVar>int [useStartRow=uiHyperlink.getStartRow() == null ? currentRowIndex : uiHyperlink.getStartRow()]</InnerVar>
+                <InnerVar>int [useEndColumn=uiHyperlink.getEndColumn() == null ? useStartColumn : uiHyperlink.getEndColumn()]</InnerVar>
+                <InnerVar>int [useEndRow=uiHyperlink.getEndRow() == null ? useStartRow : uiHyperlink.getEndRow()]</InnerVar>
+                <InnerVar>String [useDescription=uiHyperlink.getDescription() == null ? uiHyperlink.getURL() : uiHyperlink.getDescription()]</InnerVar>
+                <InnerVar>URL [useURL=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addItem</MethodName>
+            <MethodComment>/** 
+ * Adds an item (cell, image, hyperlink) to add to the worksheet
+ * @param item The item to add
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>WorksheetItem</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>executeCommand</MethodName>
+            <MethodComment>/** 
+ * Executes a command for a worksheet
+ * @param command The command to execute
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>Command</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addRowPageBreak</MethodName>
+            <MethodComment>/** 
+ * Adds a row page break to the worksheet
+ * @param command the page break command to interpret
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>UIRowPageBreak</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [useRow=command.getRow() != null ? command.getRow() : currentRowIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>worksheet;addRowPageBreak;[useRow]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>groupRows</MethodName>
+            <MethodComment>/** 
+ * Groups worksheet rows
+ * @param command The group command to interpret
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>UIGroupRows</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [collapse=command.getCollapse() == null ? false : command.getCollapse()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>groupColumns</MethodName>
+            <MethodComment>/** 
+ * Groups columns in the worksheet
+ * @param command The group command to interpret
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>UIGroupColumns</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [collapse=command.getCollapse() == null ? false : command.getCollapse()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeCells</MethodName>
+            <MethodComment>/** 
+ * Merge cells in the worksheet
+ * @param command The merge command to interpret
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>UIMergeCells</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addWorksheetFooter</MethodName>
+            <MethodComment>/** 
+ * Places an item in the worksheet footer
+ * @param item The item to add
+ * @param colspan The number of columns to span
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>WorksheetItem</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colspan</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UIMergeCells [mergeCommand=new UIMergeCells()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mergeCommand;setStartColumn;[currentColumnIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setStartRow;[currentRowIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setEndColumn;[currentColumnIndex + colspan - 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setEndRow;[currentRowIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeCommand;[mergeCommand]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addItem;[item]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addWorksheetHeader</MethodName>
+            <MethodComment>/** 
+ * Places an item in the worksheet header
+ * @param item The item to add
+ * @param colspan The number of columns to span
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>item</ParamName>
+                    <ParamType>WorksheetItem</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colspan</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UIMergeCells [mergeCommand=new UIMergeCells()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mergeCommand;setStartColumn;[currentColumnIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setStartRow;[currentRowIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setEndColumn;[currentColumnIndex + colspan - 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mergeCommand;setEndRow;[currentRowIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;executeCommand;[mergeCommand]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addItem;[item]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setStylesheets</MethodName>
+            <MethodComment>/** 
+ * Sets stylesheets for the workbook
+ * @param stylesheets The stylesheet to register
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stylesheets</ParamName>
+                    <ParamType>UILink</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

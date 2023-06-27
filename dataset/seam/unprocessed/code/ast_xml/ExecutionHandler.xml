@@ -1,0 +1,236 @@
+<Class>
+    <Id>21</Id>
+    <Package>org.jboss.seam.remoting</Package>
+    <ClassName>ExecutionHandler</ClassName>
+    <SuperClass>BaseRequestHandler</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>RequestHandler</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ExecutionHandler  /** 
+ * Unmarshals the calls from an HttpServletRequest, executes them in order and marshals the responses.
+ * @author Shane Bryzak
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>LogProvider</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_OPEN</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>HEADER_CLOSE</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONVERSATION_ID_TAG_OPEN</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONVERSATION_ID_TAG_CLOSE</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTEXT_TAG_OPEN</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTEXT_TAG_CLOSE</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>handle</MethodName>
+            <MethodComment>/** 
+ * The entry point for handling a request.
+ * @param request HttpServletRequest
+ * @param response HttpServletResponse
+ * @throws Exception
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>HttpServletRequest</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>response</ParamName>
+                    <ParamType>HttpServletResponse</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [out=new ByteArrayOutputStream()]</InnerVar>
+                <InnerVar>byte[] [buffer=new byte[256]]</InnerVar>
+                <InnerVar>int [read=request.getInputStream().read(buffer)]</InnerVar>
+                <InnerVar>String [requestData=new String(out.toByteArray())]</InnerVar>
+                <InnerVar>SAXReader [xmlReader=XML.getSafeSaxReader()]</InnerVar>
+                <InnerVar>Document [doc=xmlReader.read(new StringReader(requestData))]</InnerVar>
+                <InnerVar>Element [env=doc.getRootElement()]</InnerVar>
+                <InnerVar>RequestContext [ctx=unmarshalContext(env)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>response;setContentType;["text/xml"]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;debug;["Processing remote request: " + requestData]</InnerMethodInvoke>
+                <InnerMethodInvoke>RemotingLifecycle;restorePageContext;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>new ContextualHttpServletRequest(request){
+  @Override public void process() throws Exception {
+    List&lt;Call&gt; calls=unmarshalCalls(env);
+    for (    Call call : calls) {
+      call.execute();
+    }
+    ctx.setConversationId(Manager.instance().getCurrentConversationId());
+    marshalResponse(calls,ctx,response.getOutputStream());
+  }
+  @Override protected void restoreConversationId(){
+    ConversationPropagation.instance().setConversationId(ctx.getConversationId());
+  }
+  @Override protected void handleConversationPropagation(){
+  }
+}
+;run;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>process</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>List&lt;Call&gt; [calls=unmarshalCalls(env)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ctx;setConversationId;[Manager.instance().getCurrentConversationId()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;marshalResponse;[calls, ctx, response.getOutputStream()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>restoreConversationId</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ConversationPropagation.instance();setConversationId;[ctx.getConversationId()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleConversationPropagation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unmarshalContext</MethodName>
+            <MethodComment>/** 
+ * Unmarshals the context from the request envelope header.
+ * @param env Element
+ * @return RequestContext
+ */
+</MethodComment>
+            <ReturnType>RequestContext</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>env</ParamName>
+                    <ParamType>Element</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RequestContext [ctx=new RequestContext()]</InnerVar>
+                <InnerVar>Element [header=env.element("header")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unmarshalCalls</MethodName>
+            <MethodComment>/** 
+ * Unmarshal the request into a list of Calls.
+ * @param env Element
+ * @throws Exception
+ */
+</MethodComment>
+            <ReturnType>Call</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>env</ParamName>
+                    <ParamType>Element</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>marshalResponse</MethodName>
+            <MethodComment>/** 
+ * Write the results to the output stream.
+ * @param calls List The list of calls to write
+ * @param out OutputStream The stream to write to
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>calls</ParamName>
+                    <ParamType>Call</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>RequestContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>OutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[ENVELOPE_TAG_OPEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[BODY_TAG_OPEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[BODY_TAG_CLOSE]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[ENVELOPE_TAG_CLOSE]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;flush;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

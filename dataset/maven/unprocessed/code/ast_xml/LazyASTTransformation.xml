@@ -1,0 +1,355 @@
+<Class>
+    <Id>365</Id>
+    <Package>org.codehaus.groovy.transform</Package>
+    <ClassName>LazyASTTransformation</ClassName>
+    <SuperClass>AbstractASTTransformation</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LazyASTTransformation  /** 
+ * Handles generation of code for the @Lazy annotation
+ * @author Alex Tkachman
+ * @author Paul King
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SOFT_REF</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NULL_EXPR</FieldName>
+            <FieldType>Expression</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <FieldType>ASTNode[]</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <FieldType>SourceUnit</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AnnotatedNode [parent=(AnnotatedNode)nodes[1]]</InnerVar>
+                <InnerVar>AnnotationNode [node=(AnnotationNode)nodes[0]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;init;[nodes, source]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <FieldType>AnnotationNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [soft=node.getMember("soft")]</InnerVar>
+                <InnerVar>Expression [init=getInitExpr(fieldNode)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fieldNode;rename;["$" + fieldNode.getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>fieldNode;setModifiers;[ACC_PRIVATE | (fieldNode.getModifiers() &amp; (~(ACC_PUBLIC | ACC_PROTECTED)))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>create</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addMethod;[fieldNode, body, fieldNode.getType()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addHolderClassIdiomBody</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>body</ParamName>
+                    <FieldType>BlockStatement</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=fieldNode.getDeclaringClass()]</InnerVar>
+                <InnerVar>ClassNode [fieldType=fieldNode.getType()]</InnerVar>
+                <InnerVar>int [visibility=ACC_PRIVATE | ACC_STATIC]</InnerVar>
+                <InnerVar>String [fullName=declaringClass.getName() + "$" + fieldType.getNameWithoutPackage()+ "Holder_"+ fieldNode.getName().substring(1)]</InnerVar>
+                <InnerVar>InnerClassNode [holderClass=new InnerClassNode(declaringClass,fullName,visibility,ClassHelper.OBJECT_TYPE)]</InnerVar>
+                <InnerVar>String [innerFieldName="INSTANCE"]</InnerVar>
+                <InnerVar>Expression [innerField=propX(classX(holderClass),innerFieldName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>holderClass;addField;[innerFieldName, ACC_PRIVATE | ACC_STATIC | ACC_FINAL, fieldType, initExpr]</InnerMethodInvoke>
+                <InnerMethodInvoke>declaringClass.getModule();addClass;[holderClass]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[returnS(innerField)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDoubleCheckedLockingBody</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>body</ParamName>
+                    <FieldType>BlockStatement</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [fieldExpr=varX(fieldNode)]</InnerVar>
+                <InnerVar>VariableExpression [localVar=varX(fieldNode.getName() + "_local")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[declS(localVar,fieldExpr)]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[ifElseS(notNullX(localVar),returnS(localVar),new SynchronizedStatement(syncTarget(fieldNode),ifElseS(notNullX(fieldExpr),returnS(fieldExpr),returnS(assignX(fieldExpr,initExpr)))))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addNonThreadSafeBody</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>body</ParamName>
+                    <FieldType>BlockStatement</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [fieldExpr=varX(fieldNode)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[ifElseS(notNullX(fieldExpr),stmt(fieldExpr),assignS(fieldExpr,initExpr))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>body</ParamName>
+                    <FieldType>BlockStatement</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [visibility=ACC_PUBLIC]</InnerVar>
+                <InnerVar>String [name="get" + MetaClassHelper.capitalize(fieldNode.getName().substring(1))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fieldNode.getDeclaringClass();addMethod;[name, visibility, type, Parameter.EMPTY_ARRAY, ClassNode.EMPTY_ARRAY, body]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSoft</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [type=fieldNode.getType()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fieldNode;setType;[SOFT_REF]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createSoftGetter;[fieldNode, initExpr, type]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createSoftSetter;[fieldNode, type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSoftGetter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initExpr</ParamName>
+                    <FieldType>Expression</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+                <InnerVar>Expression [fieldExpr=varX(fieldNode)]</InnerVar>
+                <InnerVar>Expression [resExpr=varX("res",type)]</InnerVar>
+                <InnerVar>MethodCallExpression [callExpression=callX(fieldExpr,"get")]</InnerVar>
+                <InnerVar>Statement [mainIf=ifElseS(notNullX(resExpr),stmt(resExpr),block(assignS(resExpr,initExpr),assignS(fieldExpr,ctorX(SOFT_REF,resExpr)),stmt(resExpr)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>callExpression;setSafe;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>body;addStatement;[declS(resExpr,callExpression)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addMethod;[fieldNode, body, type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSoftSetter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+                <InnerVar>Expression [fieldExpr=varX(fieldNode)]</InnerVar>
+                <InnerVar>String [name="set" + MetaClassHelper.capitalize(fieldNode.getName().substring(1))]</InnerVar>
+                <InnerVar>Parameter [parameter=param(type,"value")]</InnerVar>
+                <InnerVar>Expression [paramExpr=varX(parameter)]</InnerVar>
+                <InnerVar>int [visibility=ACC_PUBLIC]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[ifElseS(notNullX(paramExpr),assignS(fieldExpr,ctorX(SOFT_REF,paramExpr)),assignS(fieldExpr,NULL_EXPR))]</InnerMethodInvoke>
+                <InnerMethodInvoke>fieldNode.getDeclaringClass();addMethod;[name, visibility, ClassHelper.VOID_TYPE, params(parameter), ClassNode.EMPTY_ARRAY, body]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>syncTarget</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInitExpr</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldNode</ParamName>
+                    <FieldType>FieldNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [initExpr=fieldNode.getInitialValueExpression()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>fieldNode;setInitialValueExpression;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,155 @@
+<Class>
+    <Id>2034</Id>
+    <Package>org.infinispan.marshall.exts</Package>
+    <ClassName>CacheRpcCommandExternalizer</ClassName>
+    <SuperClass>AbstractExternalizer</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CacheRpcCommandExternalizer  /** 
+ * Externalizer in charge of marshalling cache specific commands. At read time, this marshaller is able to locate the right cache marshaller and provide it any externalizers implementations that follow.
+ * @author Galder Zamarreño
+ * @since 5.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>gcr</FieldName>
+            <FieldType>GlobalComponentRegistry</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cmdExt</FieldName>
+            <FieldType>ReplicableCommandExternalizer</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CacheRpcCommandExternalizer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>gcr</ParamName>
+                    <ParamType>GlobalComponentRegistry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cmdExt</ParamName>
+                    <ParamType>ReplicableCommandExternalizer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeClasses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class&lt;? extends CacheRpcCommand&gt;</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Set&lt;Class&lt;? extends CacheRpcCommand&gt;&gt; [coreCommands=Util.asSet(DistributedExecuteCommand.class,LockControlCommand.class,StateRequestCommand.class,StateResponseCommand.class,ClusteredGetCommand.class,SingleRpcCommand.class,CommitCommand.class,PrepareCommand.class,RollbackCommand.class,RemoveCacheCommand.class,TxCompletionNotificationCommand.class,GetInDoubtTransactionsCommand.class,GetInDoubtTxInfoCommand.class,CompleteTransactionCommand.class,VersionedPrepareCommand.class,CreateCacheCommand.class,CancelCommand.class,VersionedCommitCommand.class,XSiteAdminCommand.class,TotalOrderNonVersionedPrepareCommand.class,TotalOrderVersionedPrepareCommand.class,TotalOrderCommitCommand.class,TotalOrderVersionedCommitCommand.class,TotalOrderRollbackCommand.class,XSiteStateTransferControlCommand.class,XSiteStatePushCommand.class,SingleXSiteRpcCommand.class,ClusteredGetAllCommand.class,StreamRequestCommand.class,StreamSegmentResponseCommand.class,StreamResponseCommand.class,BackupWriteRpcCommand.class,BackupPutMapRpcCommand.class,InvalidateVersionsCommand.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>coreCommands;addAll;[gcr.getModuleProperties().moduleCacheRpcCommands()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>output</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>CacheRpcCommand</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteString [cacheName=command.getCacheName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cmdExt;writeCommandHeader;[output, command]</InnerMethodInvoke>
+                <InnerMethodInvoke>ByteString;writeObject;[output, cacheName]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;marshallParameters;[command, output]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>marshallParameters</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cmd</ParamName>
+                    <ParamType>CacheRpcCommand</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oo</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cmdExt;writeCommandParameters;[oo, cmd]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CacheRpcCommand</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte [type=input.readByte()]</InnerVar>
+                <InnerVar>byte [methodId=(byte)input.readShort()]</InnerVar>
+                <InnerVar>ByteString [cacheName=ByteString.readObject(input)]</InnerVar>
+                <InnerVar>CacheRpcCommand [cacheRpcCommand=cmdExt.fromStream(methodId,type,cacheName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cmdExt;readCommandParameters;[input, cacheRpcCommand]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getId</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

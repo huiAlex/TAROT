@@ -1,0 +1,214 @@
+<Class>
+    <Id>216</Id>
+    <Package>org.jboss.seam.excel.exporter</Package>
+    <ClassName>ExcelExporter</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ExcelExporter  /** 
+ * Excel export class that exports a UIData component to an Excel workbook
+ * @author Nicklas Karlsson (nickarls@gmail.com)
+ * @author Daniel Roth (danielc.roth@gmail.com)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>excelWorkbook</FieldName>
+            <FieldType>ExcelWorkbook</FieldType>
+        </Field>
+        <Field>
+            <FieldName>columnWidths</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>columnWidths</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>export</MethodName>
+            <MethodComment>/** 
+ * Helper method to call the exporter and use the default excel workbook implementation
+ * @param dataTableId
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataTableId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;export;[dataTableId, ""]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>export</MethodName>
+            <MethodComment>/** 
+ * Exports the UIData object to Excel workbook. Looks up the component, parse the templates, iterates the columns and the UIOutput elements within
+ * @param dataTableId id of data table to export
+ * @param type ExcelWorkbook implementation to use
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dataTableId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CSSParser [parser=new CSSParser()]</InnerVar>
+                <InnerVar>UIData [dataTable=(UIData)FacesContext.getCurrentInstance().getViewRoot().findComponent(dataTableId)]</InnerVar>
+                <InnerVar>UIWorkbook [uiWorkbook=new UIWorkbook()]</InnerVar>
+                <InnerVar>UIWorksheet [uiWorksheet=new UIWorksheet()]</InnerVar>
+                <InnerVar>String [dataTableVar=dataTable.getVar()]</InnerVar>
+                <InnerVar>Object [oldValue=FacesContext.getCurrentInstance().getExternalContext().getRequestMap().get(dataTableVar)]</InnerVar>
+                <InnerVar>List&lt;javax.faces.component.UIColumn&gt; [columns=ExcelComponent.getChildrenOfType(dataTable.getChildren(),javax.faces.component.UIColumn.class)]</InnerVar>
+                <InnerVar>int [col=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>excelWorkbook;createWorkbook;[uiWorkbook]</InnerMethodInvoke>
+                <InnerMethodInvoke>uiWorkbook.getChildren();add;[uiWorksheet]</InnerMethodInvoke>
+                <InnerMethodInvoke>uiWorksheet;setStyle;[CSSParser.getStyle(dataTable)]</InnerMethodInvoke>
+                <InnerMethodInvoke>uiWorksheet;setStyleClass;[CSSParser.getStyleClass(dataTable)]</InnerMethodInvoke>
+                <InnerMethodInvoke>excelWorkbook;createOrSelectWorksheet;[uiWorksheet]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;redirectExport;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseColumnWidths</MethodName>
+            <MethodComment>/** 
+ * Parses column widths from a worksheet tag
+ * @param worksheet The worksheet to get the style from
+ * @return The map of column number -&gt; column width
+ */
+</MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>worksheet</ParamName>
+                    <ParamType>UIWorksheet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Map&lt;Integer,Integer&gt; [columnWidths=new HashMap&lt;Integer,Integer&gt;()]</InnerVar>
+                <InnerVar>CSSParser [parser=new CSSParser()]</InnerVar>
+                <InnerVar>StyleMap [styleMap=parser.getCascadedStyleMap(worksheet)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>redirectExport</MethodName>
+            <MethodComment>/** 
+ * Puts document in store and redirects
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [viewId=Pages.getViewId(FacesContext.getCurrentInstance())]</InnerVar>
+                <InnerVar>String [baseName=Pages.getCurrentBaseName()]</InnerVar>
+                <InnerVar>DocumentData [documentData=new ByteArrayDocumentData(baseName,excelWorkbook.getDocumentType(),excelWorkbook.getBytes())]</InnerVar>
+                <InnerVar>String [id=DocumentStore.instance().newId()]</InnerVar>
+                <InnerVar>String [url=DocumentStore.instance().preferredUrlForContent(baseName,excelWorkbook.getDocumentType().getExtension(),id)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>DocumentStore.instance();saveData;[id, documentData]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processColumn</MethodName>
+            <MethodComment>/** 
+ * Processes a datatable column
+ * @param column The column to parse
+ * @param iterator The iterator to the data
+ * @param var The binding var
+ * @param col
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>column</ParamName>
+                    <ParamType>javax.faces.component.UIColumn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>iterator</ParamName>
+                    <ParamType>Iterator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>var</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UIComponent [headerFacet=column.getFacet(UIColumn.HEADER_FACET_NAME)]</InnerVar>
+                <InnerVar>Integer [columnWidth=columnWidths.get(columnIndex)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processOutputs</MethodName>
+            <MethodComment>/** 
+ * Processes all output type elements (in column)
+ * @param outputs The list of outputs to process
+ * @param preTemplates The pre-pushed templates
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>column</ParamName>
+                    <ParamType>javax.faces.component.UIColumn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>outputs</ParamName>
+                    <ParamType>UIOutput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

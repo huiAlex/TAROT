@@ -1,0 +1,1928 @@
+<Class>
+    <Id>2340</Id>
+    <Package>org.drools.core.util.bitmask</Package>
+    <ClassName>OpenBitSet</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>BitMask</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>OpenBitSet  /** 
+ * An "open" BitSet implementation that allows direct access to the array of words storing the bits. &lt;p/&gt; Unlike java.util.bitset, the fact that bits are packed into an array of longs is part of the interface.  This allows efficient implementation of other algorithms by someone other than the author.  It also allows one to efficiently implement alternate serialization or interchange formats. &lt;p/&gt; &lt;code&gt;OpenBitSet&lt;/code&gt; is faster than &lt;code&gt;java.util.BitSet&lt;/code&gt; in most operations and *much* faster at calculating cardinality of sets and results of set operations. It can also handle sets of larger cardinality (up to 64 * 2**32-1) &lt;p/&gt; The goals of &lt;code&gt;OpenBitSet&lt;/code&gt; are the fastest implementation possible, and maximum code reuse.  Extra safety and encapsulation may always be built on top, but if that's built in, the cost can never be removed (and hence people re-implement their own version in order to get better performance). If you want a "safe", totally encapsulated (and slower and limited) BitSet class, use &lt;code&gt;java.util.BitSet&lt;/code&gt;. &lt;p/&gt; &lt;h3&gt;Performance Results&lt;/h3&gt; Test system: Pentium 4, Sun Java 1.5_06 -server -Xbatch -Xmx64M &lt;br/&gt;BitSet size = 1,000,000 &lt;br/&gt;Results are java.util.BitSet time divided by OpenBitSet time. &lt;table border="1"&gt; &lt;tr&gt; &lt;th&gt;&lt;/th&gt; &lt;th&gt;cardinality&lt;/th&gt; &lt;th&gt;intersect_count&lt;/th&gt; &lt;th&gt;union&lt;/th&gt; &lt;th&gt;nextSetBit&lt;/th&gt; &lt;th&gt;get&lt;/th&gt; &lt;th&gt;iterator&lt;/th&gt; &lt;/tr&gt; &lt;tr&gt; &lt;th&gt;50% full&lt;/th&gt; &lt;td&gt;3.36&lt;/td&gt; &lt;td&gt;3.96&lt;/td&gt; &lt;td&gt;1.44&lt;/td&gt; &lt;td&gt;1.46&lt;/td&gt; &lt;td&gt;1.99&lt;/td&gt; &lt;td&gt;1.58&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;th&gt;1% full&lt;/th&gt; &lt;td&gt;3.31&lt;/td&gt; &lt;td&gt;3.90&lt;/td&gt; &lt;td&gt;&amp;nbsp;&lt;/td&gt; &lt;td&gt;1.04&lt;/td&gt; &lt;td&gt;&amp;nbsp;&lt;/td&gt; &lt;td&gt;0.99&lt;/td&gt; &lt;/tr&gt; &lt;/table&gt; &lt;br/&gt; Test system: AMD Opteron, 64 bit linux, Sun Java 1.5_06 -server -Xbatch -Xmx64M &lt;br/&gt;BitSet size = 1,000,000 &lt;br/&gt;Results are java.util.BitSet time divided by OpenBitSet time. &lt;table border="1"&gt; &lt;tr&gt; &lt;th&gt;&lt;/th&gt; &lt;th&gt;cardinality&lt;/th&gt; &lt;th&gt;intersect_count&lt;/th&gt; &lt;th&gt;union&lt;/th&gt; &lt;th&gt;nextSetBit&lt;/th&gt; &lt;th&gt;get&lt;/th&gt; &lt;th&gt;iterator&lt;/th&gt; &lt;/tr&gt; &lt;tr&gt; &lt;th&gt;50% full&lt;/th&gt; &lt;td&gt;2.50&lt;/td&gt; &lt;td&gt;3.50&lt;/td&gt; &lt;td&gt;1.00&lt;/td&gt; &lt;td&gt;1.03&lt;/td&gt; &lt;td&gt;1.12&lt;/td&gt; &lt;td&gt;1.25&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;th&gt;1% full&lt;/th&gt; &lt;td&gt;2.51&lt;/td&gt; &lt;td&gt;3.49&lt;/td&gt; &lt;td&gt;&amp;nbsp;&lt;/td&gt; &lt;td&gt;1.00&lt;/td&gt; &lt;td&gt;&amp;nbsp;&lt;/td&gt; &lt;td&gt;1.02&lt;/td&gt; &lt;/tr&gt; &lt;/table&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>bits</FieldName>
+            <FieldType>long[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>wlen</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numBits</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NUM_BYTES_LONG</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OS_ARCH</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JRE_IS_MINIMUM_JAVA7</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JRE_IS_MINIMUM_JAVA8</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JRE_IS_64BIT</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BYTE_COUNTS</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>BIT_LISTS</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>OpenBitSet</MethodName>
+            <MethodComment>/** 
+ * Constructs an OpenBitSet large enough to hold &lt;code&gt;numBits&lt;/code&gt;.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numBits</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>OpenBitSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>OpenBitSet</MethodName>
+            <MethodComment>/** 
+ * Constructs an OpenBitSet from an existing long[]. &lt;br/&gt; The first 64 bits are in long[0], with bit index 0 at the least significant bit, and bit index 63 at the most significant. Given a bit index, the word containing it is long[index/64], and it is at bit number index%64 within that word. &lt;p&gt; numWords are the number of elements in the array that contain set bits (non-zero longs). numWords should be &amp;lt= bits.length, and any existing words in the array at position &amp;gt= numWords should be zero.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bits</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>capacity</MethodName>
+            <MethodComment>/** 
+ * Returns the current capacity in bits (1 greater than the index of the last bit) 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>size</MethodName>
+            <MethodComment>/** 
+ * Returns the current capacity of this set.  Included for compatibility.  This is *not* equal to  {@link #cardinality}
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>length</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isEmpty</MethodName>
+            <MethodComment>/** 
+ * Returns true if there are no set bits 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBits</MethodName>
+            <MethodComment>/** 
+ * Expert: returns the long[] storing the bits 
+ */
+</MethodComment>
+            <ReturnType>long[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setBits</MethodName>
+            <MethodComment>/** 
+ * Expert: sets a new long[] to use as the bit storage 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bits</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumWords</MethodName>
+            <MethodComment>/** 
+ * Expert: gets the number of longs in the array that are in use 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setNumWords</MethodName>
+            <MethodComment>/** 
+ * Expert: sets the number of longs in the array that are in use 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * Returns true or false for the specified bit index. 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastGet</MethodName>
+            <MethodComment>/** 
+ * Returns true or false for the specified bit index. The index should be less than the OpenBitSet size
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * Returns true or false for the specified bit index
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastGet</MethodName>
+            <MethodComment>/** 
+ * Returns true or false for the specified bit index. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBit</MethodName>
+            <MethodComment>/** 
+ * returns 1 if the bit is set, 0 if not. The index should be less than the OpenBitSet size
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>set</MethodName>
+            <MethodComment>/** 
+ * sets a bit, expanding the set size if necessary 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=expandingWordNum(index)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastSet</MethodName>
+            <MethodComment>/** 
+ * Sets the bit at the specified index. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastSet</MethodName>
+            <MethodComment>/** 
+ * Sets the bit at the specified index. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>set</MethodName>
+            <MethodComment>/** 
+ * Sets a range of bits, expanding the set size if necessary
+ * @param startIndex lower index
+ * @param endIndex one-past the last bit to set
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>endIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startWord=(int)(startIndex &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [endWord=expandingWordNum(endIndex - 1)]</InnerVar>
+                <InnerVar>long [startmask=-1L &lt;&lt; startIndex]</InnerVar>
+                <InnerVar>long [endmask=-1L &gt;&gt;&gt; -endIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;fill;[bits, startWord + 1, endWord, -1L]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expandingWordNum</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastClear</MethodName>
+            <MethodComment>/** 
+ * clears a bit. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x03f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastClear</MethodName>
+            <MethodComment>/** 
+ * clears a bit. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clear</MethodName>
+            <MethodComment>/** 
+ * clears a bit, allowing access beyond the current set size without changing the size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clear</MethodName>
+            <MethodComment>/** 
+ * Clears a range of bits.  Clearing past the end does not change the size of the set.
+ * @param startIndex lower index
+ * @param endIndex one-past the last bit to clear
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>endIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startWord=(startIndex &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [endWord=((endIndex - 1) &gt;&gt; 6)]</InnerVar>
+                <InnerVar>long [startmask=-1L &lt;&lt; startIndex]</InnerVar>
+                <InnerVar>long [endmask=-1L &gt;&gt;&gt; -endIndex]</InnerVar>
+                <InnerVar>int [middle=Math.min(wlen,endWord)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;fill;[bits, startWord + 1, middle, 0L]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clear</MethodName>
+            <MethodComment>/** 
+ * Clears a range of bits.  Clearing past the end does not change the size of the set.
+ * @param startIndex lower index
+ * @param endIndex one-past the last bit to clear
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>endIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startWord=(int)(startIndex &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [endWord=(int)((endIndex - 1) &gt;&gt; 6)]</InnerVar>
+                <InnerVar>long [startmask=-1L &lt;&lt; startIndex]</InnerVar>
+                <InnerVar>long [endmask=-1L &gt;&gt;&gt; -endIndex]</InnerVar>
+                <InnerVar>int [middle=Math.min(wlen,endWord)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Arrays;fill;[bits, startWord + 1, middle, 0L]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAndSet</MethodName>
+            <MethodComment>/** 
+ * Sets a bit and returns the previous value. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+                <InnerVar>boolean [val=(bits[wordNum] &amp; bitmask) != 0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAndSet</MethodName>
+            <MethodComment>/** 
+ * Sets a bit and returns the previous value. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+                <InnerVar>boolean [val=(bits[wordNum] &amp; bitmask) != 0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastFlip</MethodName>
+            <MethodComment>/** 
+ * flips a bit. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fastFlip</MethodName>
+            <MethodComment>/** 
+ * flips a bit. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flip</MethodName>
+            <MethodComment>/** 
+ * flips a bit, expanding the set size if necessary 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=expandingWordNum(index)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flipAndGet</MethodName>
+            <MethodComment>/** 
+ * flips a bit and returns the resulting bit value. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [bit=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flipAndGet</MethodName>
+            <MethodComment>/** 
+ * flips a bit and returns the resulting bit value. The index should be less than the OpenBitSet size.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [wordNum=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [bit=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [bitmask=1L &lt;&lt; bit]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>flip</MethodName>
+            <MethodComment>/** 
+ * Flips a range of bits, expanding the set size if necessary
+ * @param startIndex lower index
+ * @param endIndex one-past the last bit to flip
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>endIndex</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [startWord=(int)(startIndex &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [endWord=expandingWordNum(endIndex - 1)]</InnerVar>
+                <InnerVar>long [startmask=-1L &lt;&lt; startIndex]</InnerVar>
+                <InnerVar>long [endmask=-1L &gt;&gt;&gt; -endIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cardinality</MethodName>
+            <MethodComment>/** 
+ * @return the number of set bits 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>intersectionCount</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of the intersection of the two sets. Neither set is modified.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unionCount</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of the union of the two sets. Neither set is modified.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [tot=BitUtil.pop_union(a.bits,b.bits,0,Math.min(a.wlen,b.wlen))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>andNotCount</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of "a and not b" or "intersection(a, not(b))". Neither set is modified.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [tot=BitUtil.pop_andnot(a.bits,b.bits,0,Math.min(a.wlen,b.wlen))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>xorCount</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of the exclusive-or of the two sets. Neither set is modified.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>a</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [tot=BitUtil.pop_xor(a.bits,b.bits,0,Math.min(a.wlen,b.wlen))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextSetBit</MethodName>
+            <MethodComment>/** 
+ * Returns the index of the first set bit starting at the index specified. -1 is returned if there are no more set bits.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [subIndex=index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [word=bits[i] &gt;&gt; subIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextSetBit</MethodName>
+            <MethodComment>/** 
+ * Returns the index of the first set bit starting at the index specified. -1 is returned if there are no more set bits.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=(int)(index &gt;&gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [subIndex=(int)index &amp; 0x3f]</InnerVar>
+                <InnerVar>long [word=bits[i] &gt;&gt;&gt; subIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prevSetBit</MethodName>
+            <MethodComment>/** 
+ * Returns the index of the first set bit starting downwards at the index specified. -1 is returned if there are no more set bits.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=index &gt;&gt; 6]</InnerVar>
+                <InnerVar>int [subIndex]</InnerVar>
+                <InnerVar>long [word]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prevSetBit</MethodName>
+            <MethodComment>/** 
+ * Returns the index of the first set bit starting downwards at the index specified. -1 is returned if there are no more set bits.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=(int)(index &gt;&gt; 6)]</InnerVar>
+                <InnerVar>int [subIndex]</InnerVar>
+                <InnerVar>long [word]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clone</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OpenBitSet</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>intersect</MethodName>
+            <MethodComment>/** 
+ * this = this AND other 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [newLen=Math.min(this.wlen,other.wlen)]</InnerVar>
+                <InnerVar>long[] [thisArr=this.bits]</InnerVar>
+                <InnerVar>long[] [otherArr=other.bits]</InnerVar>
+                <InnerVar>int [pos=newLen]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>union</MethodName>
+            <MethodComment>/** 
+ * this = this OR other 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [newLen=Math.max(wlen,other.wlen)]</InnerVar>
+                <InnerVar>long[] [thisArr=this.bits]</InnerVar>
+                <InnerVar>long[] [otherArr=other.bits]</InnerVar>
+                <InnerVar>int [pos=Math.min(wlen,other.wlen)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureCapacityWords;[newLen]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * Remove all elements set in other. this = this AND_NOT other 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [idx=Math.min(wlen,other.wlen)]</InnerVar>
+                <InnerVar>long[] [thisArr=this.bits]</InnerVar>
+                <InnerVar>long[] [otherArr=other.bits]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>xor</MethodName>
+            <MethodComment>/** 
+ * this = this XOR other 
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [newLen=Math.max(wlen,other.wlen)]</InnerVar>
+                <InnerVar>long[] [thisArr=this.bits]</InnerVar>
+                <InnerVar>long[] [otherArr=other.bits]</InnerVar>
+                <InnerVar>int [pos=Math.min(wlen,other.wlen)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureCapacityWords;[newLen]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>and</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;intersect;[other]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>or</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;union;[other]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>andNot</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;remove;[other]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>intersects</MethodName>
+            <MethodComment>/** 
+ * returns true if the sets have any elements in common 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>other</ParamName>
+                    <ParamType>OpenBitSet</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [pos=Math.min(this.wlen,other.wlen)]</InnerVar>
+                <InnerVar>long[] [thisArr=this.bits]</InnerVar>
+                <InnerVar>long[] [otherArr=other.bits]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureCapacityWords</MethodName>
+            <MethodComment>/** 
+ * Expand the long[] with the size given as a number of words (64 bit longs). getNumWords() is unchanged by this call.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>grow</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>long[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>array</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>minSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>oversize</MethodName>
+            <MethodComment>/** 
+ * Returns an array size &gt;= minTargetSize, generally over-allocating exponentially to achieve amortized linear-time cost as the array grows. NOTE: this was originally borrowed from Python 2.4.2 listobject.c sources (attribution in LICENSE.txt), but has now been substantially changed based on discussions from java-dev thread with subject "Dynamic array reallocation algorithms", started on Jan 12 2010.
+ * @param minTargetSize Minimum required value to be returned.
+ * @param bytesPerElement Bytes used by each element ofthe array.
+ * @lucene.internal
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>minTargetSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>bytesPerElement</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [extra=minTargetSize &gt;&gt; 3]</InnerVar>
+                <InnerVar>int [newSize=minTargetSize + extra]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureCapacity</MethodName>
+            <MethodComment>/** 
+ * Ensure that the long[] is big enough to hold numBits, expanding it if necessary. getNumWords() is unchanged by this call.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numBits</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;ensureCapacityWords;[bits2words(numBits)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>trimTrailingZeros</MethodName>
+            <MethodComment>/** 
+ * Lowers numWords, the number of words in use, by checking for trailing zero words.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [idx=wlen - 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bits2words</MethodName>
+            <MethodComment>/** 
+ * returns the number of 64 bit words it would take to hold numBits 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>numBits</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>equals</MethodName>
+            <MethodComment>/** 
+ * returns true if both sets have the same bits set 
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>OpenBitSet [a]</InnerVar>
+                <InnerVar>OpenBitSet [b=(OpenBitSet)o]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hashCode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [h=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>BitUtil</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bitCount</MethodName>
+            <MethodComment>/** 
+ * Return the number of bits sets in b. 
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bitList</MethodName>
+            <MethodComment>/** 
+ * Return the list of bits which are set in b encoded as followed: &lt;code&gt;(i &gt;&gt;&gt; (4 * n)) &amp; 0x0F&lt;/code&gt; is the offset of the n-th set bit of the given byte plus one, or 0 if there are n or less bits set in the given byte. For example &lt;code&gt;bitList(12)&lt;/code&gt; returns 0x43:&lt;ul&gt; &lt;li&gt;&lt;code&gt;0x43 &amp; 0x0F&lt;/code&gt; is 3, meaning the the first bit set is at offset 3-1 = 2,&lt;/li&gt; &lt;li&gt;&lt;code&gt;(0x43 &gt;&gt;&gt; 4) &amp; 0x0F&lt;/code&gt; is 4, meaning there is a second bit set at offset 4-1=3,&lt;/li&gt; &lt;li&gt;&lt;code&gt;(0x43 &gt;&gt;&gt; 8) &amp; 0x0F&lt;/code&gt; is 0, meaning there is no more bit set in this byte.&lt;/li&gt; &lt;/ul&gt;
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop_array</MethodName>
+            <MethodComment>/** 
+ * Returns the number of set bits in an array of longs. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arr</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wordOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [popCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop_intersect</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of the two sets after an intersection. Neither array is modified. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arr1</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arr2</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wordOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [popCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop_union</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of the union of two sets. Neither array is modified. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arr1</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arr2</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wordOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [popCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop_andnot</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of A &amp; ~B. Neither array is modified. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arr1</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arr2</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wordOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [popCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pop_xor</MethodName>
+            <MethodComment>/** 
+ * Returns the popcount or cardinality of A ^ B Neither array is modified. 
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arr1</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>arr2</ParamName>
+                    <ParamType>long[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>wordOffset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numWords</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [popCount=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextHighestPowerOfTwo</MethodName>
+            <MethodComment>/** 
+ * returns the next highest power of two, or the current value if it's already a power of two or zero
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextHighestPowerOfTwo</MethodName>
+            <MethodComment>/** 
+ * returns the next highest power of two, or the current value if it's already a power of two or zero
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [s=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>s;append;[" : "]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>set</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BitMask</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;fastSet;[index]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setAll</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BitMask</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mask</ParamName>
+                    <ParamType>BitMask</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reset</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BitMask</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;fastClear;[index]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resetAll</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>BitMask</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mask</ParamName>
+                    <ParamType>BitMask</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isAllSet</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>intersects</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mask</ParamName>
+                    <ParamType>BitMask</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInstancingStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder("new " + OpenBitSet.class.getCanonicalName() + "(new long[] { ")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb.append(bits[0]);append;["L"]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb.append(" }, ").append(wlen);append;[")"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

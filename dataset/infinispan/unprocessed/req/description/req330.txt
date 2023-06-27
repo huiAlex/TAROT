@@ -1,0 +1,36 @@
+Unscheduled for now.
+From Tim Fox:
+E.g. imagine I set a value in the cache, by the time I get the response that the value has been set in the cache, I also need to know that it s been replicated to another node so I can have the redundancy guarantees for high availability.
+One way to do that is just to block the thread that calls set() until the replication has been performed synchronously to the other node and returns, however that will involve a network round trip per set.
+What would be nice would to be able to get the acknowledgements of replication back asynchronously in a different stream, e.g.
+S = Set in cache, A = acknowledgement of replication of Set() in cache
+With a blocking approach you d have
+S1
+A1
+S2
+A2
+S3
+A3
+I.e. you wait for the ack of the set before calling the next set, which involves a network RTT per set.
+With a non blocking (pipelined) approach, you call your sets in quick succession without waiting for a response, then some time later you d get your ack back.
+E.g. chronologically something like:
+S1
+S2
+S3
+S4
+S5
+S6
+S7
+A1
+A2
+S8
+A3
+S9
+A4
+S10
+S11
+A5
+Since you re not blocking, you can use the throughput of the network without being limited by its latency.
+This is the kind of thing we in messaging replication, i.e. when someone sends a load of message one by one we can t individually do a network RTT per message (it would be too slow) to replicate them, but they still need the guarantee the message has reached the backup before they get the acknolwedgement of send back.
+Manik:
+Returning a Future would probably be the way to do this, but I would need to think about what the API would look like though, since the API should look and behave the same regardless of cache mode/cluster config used.

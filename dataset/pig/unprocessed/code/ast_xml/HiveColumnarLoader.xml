@@ -1,0 +1,571 @@
+<Class>
+    <Id>260</Id>
+    <Package>org.apache.pig.piggybank.storage</Package>
+    <ClassName>HiveColumnarLoader</ClassName>
+    <SuperClass>FileInputLoadFunc</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>LoadMetadata</SuperInterface>
+        <SuperInterface>LoadPushDown</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>HiveColumnarLoader  /** 
+ * Loader for Hive RC Columnar files.&lt;br/&gt; Supports the following types:&lt;br/&gt; * &lt;table&gt; &lt;tr&gt; &lt;th&gt;Hive Type&lt;/th&gt; &lt;th&gt;Pig Type from DataType&lt;/th&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;string&lt;/td&gt; &lt;td&gt;CHARARRAY&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;int&lt;/td&gt; &lt;td&gt;INTEGER&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;bigint or long&lt;/td&gt; &lt;td&gt;LONG&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;float&lt;/td&gt; &lt;td&gt;float&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;double&lt;/td&gt; &lt;td&gt;DOUBLE&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;boolean&lt;/td&gt; &lt;td&gt;BOOLEAN&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;byte&lt;/td&gt; &lt;td&gt;BYTE&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;array&lt;/td&gt; &lt;td&gt;TUPLE&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td&gt;map&lt;/td&gt; &lt;td&gt;MAP&lt;/td&gt; &lt;/tr&gt; &lt;/table&gt; &lt;p/&gt; &lt;b&gt;Partitions&lt;/b&gt;&lt;br/&gt; The input paths are scanned by the loader for [partition name]=[value] patterns in the subdirectories.&lt;br/&gt; If detected these partitions are appended to the table schema.&lt;br/&gt; For example if you have the directory structure:&lt;br/&gt; &lt;pre&gt; /user/hive/warehouse/mytable /year=2010/month=02/day=01 &lt;/pre&gt; The mytable schema is (id int,name string).&lt;br/&gt; The final schema returned in pig will be (id:int, name:chararray, year:chararray, month:chararray, day:chararray).&lt;br/&gt; &lt;p/&gt; Usage 1: &lt;p/&gt; To load a hive table: uid bigint, ts long, arr ARRAY&lt;string,string&gt;, m MAP&lt;String, String&gt; &lt;br/&gt; &lt;code&gt; &lt;pre&gt; a = LOAD 'file' USING HiveColumnarLoader("uid bigint, ts long, arr array&lt;string,string&gt;, m map&lt;string,string&gt;"); -- to reference the fields b = FOREACH GENERATE a.uid, a.ts, a.arr, a.m; &lt;/pre&gt; &lt;/code&gt; &lt;p/&gt; Usage 2: &lt;p/&gt; To load a hive table: uid bigint, ts long, arr ARRAY&lt;string,string&gt;, m MAP&lt;String, String&gt; only processing dates 2009-10-01 to 2009-10-02 in a &lt;br/&gt; date partitioned hive table.&lt;br/&gt; &lt;b&gt;Old Usage&lt;/b&gt;&lt;br/&gt; &lt;b&gt;Note:&lt;/b&gt; The partitions can be filtered by using pig's FILTER operator.&lt;br/&gt; &lt;code&gt; &lt;pre&gt; a = LOAD 'file' USING HiveColumnarLoader("uid bigint, ts long, arr array&lt;string,string&gt;, m map&lt;string,string&gt;", "2009-10-01:2009-10-02"); -- to reference the fields b = FOREACH GENERATE a.uid, a.ts, a.arr, a.m; &lt;/pre&gt; &lt;/code&gt; &lt;br/&gt; &lt;b&gt;New Usage&lt;/b/&gt;&lt;br/&gt; &lt;code&gt; &lt;pre&gt; a = LOAD 'file' USING HiveColumnarLoader("uid bigint, ts long, arr array&lt;string,string&gt;, m map&lt;string,string&gt;"); f = FILTER a BY daydate&gt;='2009-10-01' AND daydate &gt;='2009-10-02'; &lt;/pre&gt; &lt;/code&gt; &lt;p/&gt; Usage 3: &lt;p/&gt; To load a hive table: uid bigint, ts long, arr ARRAY&lt;string,string&gt;, m MAP&lt;String, String&gt; only reading column uid and ts for dates 2009-10-01 to 2009-10-02.&lt;br/ &lt;br/&gt; &lt;b&gt;Old Usage&lt;/b&gt;&lt;br/&gt; &lt;b&gt;Note:&lt;b/&gt; This behaviour is now supported in pig by LoadPushDown adding the columns needed to be loaded like below is ignored and pig will automatically send the columns used by the script to the loader.&lt;br/&gt; &lt;code&gt; &lt;pre&gt; a = LOAD 'file' USING HiveColumnarLoader("uid bigint, ts long, arr array&lt;string,string&gt;, m map&lt;string,string&gt;"); f = FILTER a BY daydate&gt;='2009-10-01' AND daydate &gt;='2009-10-02'; -- to reference the fields b = FOREACH a GENERATE uid, ts, arr, m; &lt;/pre&gt; &lt;/code&gt; &lt;p/&gt; &lt;b&gt;Issues&lt;/b&gt; &lt;p/&gt; &lt;u&gt;Table schema definition&lt;/u&gt;&lt;br/&gt; The schema definition must be column name followed by a space then a comma then no space and the next column name and so on.&lt;br/&gt; This so column1 string, column2 string will not work, it must be column1 string,column2 string &lt;p/&gt; &lt;u&gt;Partitioning&lt;/u&gt;&lt;br/&gt; Partitions must be in the format [partition name]=[partition value]&lt;br/&gt; Only strings are supported in the partitioning.&lt;br/&gt; Partitions must follow the same naming convention for all sub directories in a table&lt;br/&gt; For example:&lt;br/&gt; The following is not valid:&lt;br/&gt; &lt;pre&gt; mytable/hour=00 mytable/day=01/hour=00 &lt;/pre&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>PROJECTION_ID</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DATE_RANGE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pcols</FieldName>
+            <FieldType>Pattern</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tupleFactory</FieldName>
+            <FieldType>TupleFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>signature</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dateRange</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reader</FieldName>
+            <FieldType>HiveRCRecordReader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>serde</FieldName>
+            <FieldType>ColumnarSerDe</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conf</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigSchema</FieldName>
+            <FieldType>ResourceSchema</FieldType>
+        </Field>
+        <Field>
+            <FieldName>partitionKeysSet</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buff</FieldName>
+            <FieldType>BytesRefArrayWritable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>props</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hiveConf</FieldName>
+            <FieldType>HiveConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>requiredColumns</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>partitionColumns</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>partitionColumns</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pathPartitionerHelper</FieldName>
+            <FieldType>PathPartitionHelper</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentPath</FieldName>
+            <FieldType>Path</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentPathPartitionKeyMap</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentPathPartitionKeyMap</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>HiveColumnarLoader</MethodName>
+            <MethodComment>/** 
+ * Table schema should be a space and comma separated string describing the Hive schema.&lt;br/&gt; For example uid BIGINT, pid long, means 1 column of uid type BIGINT and one column of pid type LONG.&lt;br/&gt; The types are not case sensitive.
+ * @param table_schema This property cannot be null
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table_schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setup;[table_schema]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>HiveColumnarLoader</MethodName>
+            <MethodComment>/** 
+ * This constructor is for backward compatibility. Table schema should be a space and comma separated string describing the Hive schema.&lt;br/&gt; For example uid BIGINT, pid long, means 1 column of uid type BIGINT and one column of pid type LONG.&lt;br/&gt; The types are not case sensitive.
+ * @param table_schema This property cannot be null
+ * @param dateRange String
+ * @param columns String not used any more
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table_schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dateRange</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setup;[table_schema]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>HiveColumnarLoader</MethodName>
+            <MethodComment>/** 
+ * This constructor is for backward compatibility. Table schema should be a space and comma separated string describing the Hive schema.&lt;br/&gt; For example uid BIGINT, pid long, means 1 column of uid type BIGINT and one column of pid type LONG.&lt;br/&gt; The types are not case sensitive.
+ * @param table_schema This property cannot be null
+ * @param dateRange String
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table_schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dateRange</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;setup;[table_schema]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUDFContext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInputFormat</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LongWritable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Signature: " + signature]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Tuple [tuple=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>prepareToRead</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>RecordReader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>split</ParamName>
+                    <ParamType>PigSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [requiredIndexes[]=getRequiredColumns()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setLocation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>location</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>FileInputFormat;setInputPaths;[job, location]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment>/** 
+ * Does the configuration setup and schema parsing and setup.
+ * @param table_schema String
+ * @param columnsToRead String
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>table_schema</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [types=HiveRCSchemaUtil.parseSchemaTypes(table_schema)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [cols=HiveRCSchemaUtil.parseSchema(pcols,table_schema)]</InnerVar>
+                <InnerVar>List&lt;FieldSchema&gt; [fieldSchemaList=new ArrayList&lt;FieldSchema&gt;(cols.size())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>props;setProperty;[Constants.LIST_COLUMNS, HiveRCSchemaUtil.listToString(cols)]</InnerMethodInvoke>
+                <InnerMethodInvoke>props;setProperty;[Constants.LIST_COLUMN_TYPES, HiveRCSchemaUtil.listToString(types)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readColumnarStruct</MethodName>
+            <MethodComment>/** 
+ * Uses the ColumnarSerde to deserialize the buff:BytesRefArrayWritable into a ColumnarStruct instance.
+ * @param buff BytesRefArrayWritable
+ * @return ColumnarStruct
+ */
+</MethodComment>
+            <ReturnType>ColumnarStruct</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buff</ParamName>
+                    <ParamType>BytesRefArrayWritable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ColumnarStruct [struct=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readColumnarTuple</MethodName>
+            <MethodComment>/** 
+ * Only read the columns that were requested in the constructor.&lt;br/&gt;
+ * @param struct ColumnarStruct
+ * @param path Path
+ * @return Tuple
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>struct</ParamName>
+                    <ParamType>ColumnarStruct</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>path</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int[] [columnIndexes=getRequiredColumns()]</InnerVar>
+                <InnerVar>String[] [partitionKeys=getPartitionKeys(null,null)]</InnerVar>
+                <InnerVar>int [partitionColumnStartIndex=Integer.MAX_VALUE]</InnerVar>
+                <InnerVar>Tuple [t=tupleFactory.newTuple(columnIndexes.length)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRequiredColumns</MethodName>
+            <MethodComment>/** 
+ * Will parse the required columns from the UDFContext properties if the requiredColumns[] variable is null, or else just return the requiredColumns.
+ * @return int[]
+ */
+</MethodComment>
+            <ReturnType>int[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPartitionColumns</MethodName>
+            <MethodComment>/** 
+ * Reads the partition columns
+ * @param location
+ * @param job
+ * @return
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>location</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPartitionKeys</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>location</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [partitionKeys=getPartitionColumns(location,job)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSchema</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ResourceSchema</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>location</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStatistics</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ResourceStatistics</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>location</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setPartitionFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>partitionFilter</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getUDFContext();setProperty;[PathPartitionHelper.PARITITION_FILTER_EXPRESSION, partitionFilter.toString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFeatures</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OperatorSet</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>pushProjection</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RequiredFieldResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requiredFieldList</ParamName>
+                    <ParamType>RequiredFieldList</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [buff=new StringBuilder()]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+                <InnerVar>Properties [properties=getUDFContext()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>properties;setProperty;[PROJECTION_ID, buff.toString()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setUDFContextSignature</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;debug;["Signature: " + signature]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

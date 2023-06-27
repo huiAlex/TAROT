@@ -1,0 +1,476 @@
+<Class>
+    <Id>477</Id>
+    <Package>org.codehaus.groovy.control</Package>
+    <ClassName>ClassNodeResolver</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClassNodeResolver  /** 
+ * This class is used as a pluggable way to resolve class names. An instance of this class has to be added to  {@link CompilationUnit} using {@link CompilationUnit#setClassNodeResolver(ClassNodeResolver)}. The  CompilationUnit will then set the resolver on the  {@link ResolveVisitor} each time new. The ResolveVisitor will prepare name lookup and then finally ask the resolver if the class exists. This resolver then can return either a  SourceUnit or a ClassNode. In case of a SourceUnit the compiler is notified that a new source is to be added to the compilation queue. In case of a ClassNode no further action than the resolving is done. The lookup result is stored in the helper class  {@link LookupResult}. This class provides a class cache to cache lookups. If you don't want this, you have to override the methods  {@link ClassNodeResolver#cacheClass(String,ClassNode)} and {@link ClassNodeResolver#getFromClassCache(String)}. Custom lookup logic is supposed to go into the method  {@link ClassNodeResolver#findClassNode(String,CompilationUnit)} while the entry method is  {@link ClassNodeResolver#resolveName(String,CompilationUnit)}
+ * @author &lt;a href="mailto:blackdrag@gmx.org"&gt;Jochen "blackdrag" Theodorou&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>su</FieldName>
+            <FieldType>SourceUnit</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cn</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cachedClasses</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cachedClasses</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>NO_CLASS</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LookupResult</MethodName>
+            <MethodComment>/** 
+ * creates a new LookupResult. You are not supposed to supply a SourceUnit and a ClassNode at the same time
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>su</ParamName>
+                    <FieldType>SourceUnit</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cn</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isClassNode</MethodName>
+            <MethodComment>/** 
+ * returns true if a ClassNode is stored
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSourceUnit</MethodName>
+            <MethodComment>/** 
+ * returns true if a SourecUnit is stored
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSourceUnit</MethodName>
+            <MethodComment>/** 
+ * returns the SourceUnit
+ */
+</MethodComment>
+            <ReturnType>SourceUnit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getClassNode</MethodName>
+            <MethodComment>/** 
+ * returns the ClassNode
+ */
+</MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setRedirect</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cn</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resolveName</MethodName>
+            <MethodComment>/** 
+ * Resolves the name of a class to a SourceUnit or ClassNode. If no class or source is found this method returns null. A lookup is done by first asking the cache if there is an entry for the class already available to then call  {@link #findClassNode(String,CompilationUnit)}. The result  of that method call will be cached if a ClassNode is found. If a SourceUnit is found, this method will not be asked later on again for that class, because ResolveVisitor will first ask the CompilationUnit for classes in the compilation queue and it will find the class for that SourceUnit there then. method return a ClassNode instead of a SourceUnit, the res 
+ * @param name - the name of the class
+ * @param compilationUnit - the current CompilationUnit
+ * @return the LookupResult
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [res=getFromClassCache(name)]</InnerVar>
+                <InnerVar>LookupResult [lr=findClassNode(name,compilationUnit)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cacheClass</MethodName>
+            <MethodComment>/** 
+ * caches a ClassNode
+ * @param name - the name of the class
+ * @param res - the ClassNode for that name
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>res</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cachedClasses;put;[name, res]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getFromClassCache</MethodName>
+            <MethodComment>/** 
+ * returns whatever is stored in the class cache for the given name
+ * @param name - the name of the class
+ * @return the result of the lookup, which may be null
+ */
+</MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [cached=cachedClasses.get(name)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findClassNode</MethodName>
+            <MethodComment>/** 
+ * Extension point for custom lookup logic of finding ClassNodes. Per default this will use the CompilationUnit class loader to do a lookup on the class path and load the needed class using that loader. Or if a script is found  and that script is seen as "newer", the script will be used instead of the  class.
+ * @param name - the name of the class
+ * @param compilationUnit - the current compilation unit
+ * @return the lookup result
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tryAsLoaderClassOrScript</MethodName>
+            <MethodComment>/** 
+ * This method is used to realize the lookup of a class using the compilation unit class loader. Should no class be found we fall back to a script lookup. If a class is found we check if there is also a script and maybe use that one in case it is newer.&lt;p/&gt; Two class search strategies are possible: by ASM decompilation or by usual Java classloading. The latter is slower but is unavoidable for scripts executed in dynamic environments where the referenced classes might only be available in the classloader, not on disk.
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GroovyClassLoader [loader=compilationUnit.getClassLoader()]</InnerVar>
+                <InnerVar>Map&lt;String,Boolean&gt; [options=compilationUnit.configuration.getOptimizationOptions()]</InnerVar>
+                <InnerVar>boolean [useAsm=!Boolean.FALSE.equals(options.get("asmResolving"))]</InnerVar>
+                <InnerVar>boolean [useClassLoader=!Boolean.FALSE.equals(options.get("classLoaderResolving"))]</InnerVar>
+                <InnerVar>LookupResult [result=useAsm ? findDecompiled(name,compilationUnit,loader) : null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findByClassLoading</MethodName>
+            <MethodComment>/** 
+ * Search for classes using class loading
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <FieldType>GroovyClassLoader</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Class [cls]</InnerVar>
+                <InnerVar>ClassNode [cn=ClassHelper.make(cls)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findDecompiled</MethodName>
+            <MethodComment>/** 
+ * Search for classes using ASM decompiler
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <FieldType>GroovyClassLoader</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [node=ClassHelper.make(name)]</InnerVar>
+                <InnerVar>DecompiledClassNode [asmClass=null]</InnerVar>
+                <InnerVar>String [fileName=name.replace('.','/') + ".class"]</InnerVar>
+                <InnerVar>URL [resource=loader.getResource(fileName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isFromAnotherClassLoader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>loader</ParamName>
+                    <FieldType>GroovyClassLoader</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [parent=loader.getParent()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tryAsScript</MethodName>
+            <MethodComment>/** 
+ * try to find a script using the compilation unit class loader.
+ */
+</MethodComment>
+            <ReturnType>LookupResult</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>compilationUnit</ParamName>
+                    <FieldType>CompilationUnit</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldClass</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LookupResult [lr=null]</InnerVar>
+                <InnerVar>GroovyClassLoader [gcl=compilationUnit.getClassLoader()]</InnerVar>
+                <InnerVar>URL [url=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTimeStamp</MethodName>
+            <MethodComment>/** 
+ * get the time stamp of a class NOTE: copied from GroovyClassLoader
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cls</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSourceNewer</MethodName>
+            <MethodComment>/** 
+ * returns true if the source in URL is newer than the class NOTE: copied from GroovyClassLoader
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <FieldType>URL</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>cls</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

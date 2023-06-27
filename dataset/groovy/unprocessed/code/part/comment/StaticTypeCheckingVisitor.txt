@@ -1,0 +1,198 @@
+/**
+ * The main class code visitor responsible for static type checking. It will perform various inspections like checking
+ * assignment types, type inference, ... Eventually, class nodes may be annotated with inferred type information.
+ *
+ *  *  */
+
+/**
+     * Returns the current type checking context. The context is used internally by the type
+     * checker during type checking to store various state data.
+     *
+     *      */
+
+/**
+     * Returns the list of type checking annotations class nodes. Subclasses may override this method
+     * in order to provide additional classes which must be looked up when checking if a method or
+     * a class node should be skipped.
+     * 
+     * The default implementation returns {@link TypeChecked}.
+     *
+     *      */
+
+/**
+     * Test if a node is an inner class node, and if it is, then checks if the enclosing method is skipped.
+     *      *      */
+
+/**
+     * Given a field node, checks if we are calling a private field from an inner class.
+     */
+
+/**
+     * Given a method node, checks if we are calling a private method from an inner class.
+     */
+
+/**
+     * wrap type in Class if usingClass==true
+     */
+
+/**
+     * Given a binary expression corresponding to an assignment, will check that the type of the RHS matches one
+     * of the possible setters and if not, throw a type checking error.
+     *      *      *      *      *      */
+
+/**
+     * Stores information about types when [objectOfInstanceof instanceof typeExpression] is visited
+     *
+     *      *      */
+
+/**
+     * Checks that a constructor style expression is valid regarding the number of arguments and the argument types.
+     *
+     *      *      * @deprecated use {@link #checkGroovyStyleConstructor(org.codehaus.groovy.ast.ClassNode, org.codehaus.groovy.ast.ClassNode[], org.codehaus.groovy.ast.ASTNode)} )}
+     */
+
+/**
+     * Checks that a constructor style expression is valid regarding the number of arguments and the argument types.
+     *
+     *      *      */
+
+/**
+     * When instanceof checks are found in the code, we store temporary type information data in the {@link
+     * TypeCheckingContext#temporaryIfBranchTypeInformation} table. This method computes the key which must be used to store this type
+     * info.
+     *
+     *      *      */
+
+/**
+     * A helper method which determines which receiver class should be used in error messages when a field or attribute
+     * is not found. The returned type class depends on whether we have temporary type information availble (due to
+     * instanceof checks) and whether there is a single candidate in that case.
+     *
+     *      *      *      *         otherwise falls back to the provided type class.
+     */
+
+/**
+     * Checks whether a property exists on the receiver, or on any of the possible receiver classes (found in the
+     * temporary type information table)
+     *
+     *      *      *      *      */
+
+/**
+     * This method is used to filter search results in which null means "no match",
+     * to filter out illegal access to instance members from a static context.
+     *
+     * Return null if the given member is not static, but we want to access in
+     * a static way (staticOnly=true). If we want to access in a non-static way
+     * we always return the member, since then access to static members and
+     * non-static members is allowed.
+     */
+
+/**
+     * Given a loop collection type, returns the inferred type of the loop element. Used, for
+     * example, to infer the element type of a (for e in list) loop.
+     *
+     *      *      */
+
+/**
+     * @deprecated this method is unused, replaced with {@link DelegatesTo} inference.
+     *      *      */
+
+/**
+     * visit a method call target, to infer the type. Don't report errors right
+     * away, that will be done by a later visitMethod call
+     */
+
+/**
+     * This method is responsible for performing type inference on closure argument types whenever code like this is
+     * found: foo.collect { it.toUpperCase() }.
+     * In this case, the type checker tries to find if the collect method has its {@link Closure} argument
+     * annotated with {@link groovy.transform.stc.ClosureParams}. If yes, then additional type inference can be performed
+     * and the type of it may be inferred.
+     *
+     *      *      *      *      *      */
+
+/**
+     * Given a GenericsType instance, returns a ClassNode which can be used as an inferred type.
+     *      *      */
+
+/**
+     * A special method handling the "withTrait" call for which the type checker knows more than
+     * what the type signature is able to tell. If "withTrait" is detected, then a new class node
+     * is created representing the list of trait interfaces.
+     *
+     *      *      *     *      */
+
+/**
+     * add various getAt and setAt methods for primitive arrays
+     *      *      *      */
+
+/**
+     * In the case of a Object.with { ... } call, this method is supposed to retrieve
+     * the inferred closure return type.
+     *
+     *      *      */
+
+/**
+     * Given an object expression (a receiver expression), generate the list of potential receiver types.
+     *      *      */
+
+/**
+     * This method returns the list of methods named against the supplied parameter that
+     * are defined on the specified receiver, but it will also add "non existing" methods
+     * that will be generated afterwards by the compiler, for example if a method is using
+     * default values and that the specified class node isn't compiled yet.
+     *      *      *      */
+
+/**
+     * Given a method name and a prefix, returns the name of the property that should be looked up,
+     * following the java beans rules. For example, "getName" would return "name", while
+     * "getFullName" would return "fullName".
+     * If the prefix is not found, returns null.
+     *      *      *      */
+
+/**
+     * resolves a Field or Property node generics by using the current class and
+     * the declaring class to extract the right meaning of the generics symbols
+     *      *      *      */
+
+/**
+     * Stores the inferred return type of a closure or a method. We are using a separate key to store
+     * inferred return type because the inferred type of a closure is {@link Closure}, which is different
+     * from the inferred type of the code of the closure.
+     *
+     *      *      *      */
+
+/**
+     * Returns the inferred return type of a closure or a method, if stored on the AST node. This method
+     * doesn't perform any type inference by itself.
+     *      *      */
+
+/**
+     * If a method call returns a parameterized type, then we can perform additional inference on the
+     * return type, so that the type gets actual type parameters. For example, the method
+     * Arrays.asList(T...) is generified with type T which can be deduced from actual type
+     * arguments.
+     *
+     *      *      *      */
+
+/**
+     * If a method call returns a parameterized type, then we can perform additional inference on the
+     * return type, so that the type gets actual type parameters. For example, the method
+     * Arrays.asList(T...) is generified with type T which can be deduced from actual type
+     * arguments.
+     *
+     *      *      *      *      */
+
+/**
+     * This method will convert a closure type to the appropriate SAM type, which will be used
+     * to infer return type generics.
+     *
+     *      *      *      */
+
+/**
+     * Returns a wrapped type if, and only if, the provided class node is a primitive type.
+     * This method differs from {@link ClassHelper#getWrapper(org.codehaus.groovy.ast.ClassNode)} as it will
+     * return the same instance if the provided type is not a generic type.
+     *
+     *      *      */
+

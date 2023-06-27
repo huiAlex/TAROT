@@ -1,0 +1,184 @@
+<Class>
+    <Id>345</Id>
+    <Package>org.apache.pig.scripting.jruby</Package>
+    <ClassName>JrubyAccumulatorEvalFunc</ClassName>
+    <SuperClass>AccumulatorEvalFunc</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>JrubyAccumulatorEvalFunc  /** 
+ * This class provides a bridge between Ruby classes that extend AccumulatorPigUdf and their execution in Pig. This class passes a Bag of data to the Ruby "exec" function, and ultimate gets the value by calling "get" on the class instance that receives methods.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>methodReceiver</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>classObject</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isInitialized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>path</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>methodName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rubyEngine</FieldName>
+            <FieldType>ScriptingContainer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ruby</FieldName>
+            <FieldType>Ruby</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>JrubyAccumulatorEvalFunc</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>JrubyAccumulatorEvalFunc</MethodName>
+            <MethodComment>/** 
+ * This constructor is used by JrubyScriptEngine to register a Ruby class as an Accumulator. The path and methodName are used to find the ruby Class, which is then instantated and used.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>path</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methodName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment>/** 
+ * This function intializes the object that receives method calls, and the class object that has schema information. While this is only 3 lines, it is split out so that the schema function can initialize it if necessary. The class object is pulled from the ruby script registered at the path per the RubyFunctions helper methods.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>accumulate</MethodName>
+            <MethodComment>/** 
+ * This uses the "exec" method required of AccumulatorPigUdf Ruby classes. It streams the data bags it receives through the exec method defined on the registered class.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>b</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RubyDataBag [db=new RubyDataBag(ruby,ruby.getClass("DataBag"),(DataBag)b.get(0))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rubyEngine;callMethod;[methodReceiver, "exec", db, IRubyObject.class]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>cleanup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getValue</MethodName>
+            <MethodComment>/** 
+ * This method calls "get" on the AccumulatorPigUdf Ruby class that was specified.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>IRubyObject [rubyResult=rubyEngine.callMethod(methodReceiver,"get",IRubyObject.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>outputSchema</MethodName>
+            <MethodComment>/** 
+ * This provides the Schema of the output, and leverages the get_output_schema function on the class object that is defined on the ruby side.
+ */
+</MethodComment>
+            <ReturnType>Schema</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>Schema</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RubySchema [rs=PigJrubyLibrary.pigToRuby(ruby,input)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,121 @@
+<Class>
+    <Id>3977</Id>
+    <Package>org.infinispan.container</Package>
+    <ClassName>EntryFactory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EntryFactory  /** 
+ * A factory for constructing  {@link org.infinispan.container.entries.MVCCEntry} instances for use in the {@link org.infinispan.context.InvocationContext}. Implementations of this interface would typically wrap an internal  {@link org.infinispan.container.entries.CacheEntry}with an  {@link org.infinispan.container.entries.MVCCEntry}. &lt;h3&gt;Expected wrapping patterns&lt;/h3&gt; {@link EntryWrappingInterceptor} checks {@link CacheTopology#getReadConsistentHash()} and if this node is an ownerof the key, it loads the entry from  {@link DataContainer}. On the way back through interceptor stack, the entry is committed from  {@link EntryWrappingInterceptor} through {@link ClusteringDependentLogic} which checks{@link CacheTopology#getWriteConsistentHash()}. &lt;p&gt; Entry being wrapped is a prerequisite for the command to run and therefore commit the entry, but it's not up to {@link EntryWrappingInterceptor} to make sure the entry is always wrapped - all the interceptors below can expectis &lt;em&gt;(key is in readCH) =&gt; (entry is wrapped)&lt;/em&gt;. The entry may be wrapped by EWI or other interceptors later, e.g. (but not limited to) when: &lt;ul&gt; &lt;li&gt;entry is in L1 &lt;li&gt;entry is fetched from remote node &lt;li&gt;the cache is transactional and command should be executed on origin (but it does not need previous value - it is then wrapped as null entry) &lt;/ul&gt; It is the distribution interceptor that enforces that (entry is read/written by command) =&gt; (entry is wrapped), by fetching the remote value, limiting the set of keys in given command (narrowing it) or not executing the command locally at all. &lt;p&gt; If the entry should be read locally but it's not found in DC, the entry will be wrapped by {@link EntryWrappingInterceptor} (either as {@link NullCacheEntry} for reads or other appropriate type for writes).Such entry returns &lt;code&gt;false&lt;/code&gt; on  {@link CacheEntry#skipLookup()} as it's value is unsure (subsequentinterceptors can retrieve the new value from the cache store or remote node and call {@link EntryFactory#wrapExternalEntry} to update the context.&lt;p&gt; With repeatable reads, the value that is context must not be overwritten by value out of the transaction (only commands in this transaction can change the context entry. That's why  {@link EntryWrappingInterceptor}calls  {@link CacheEntry#setSkipLookup} from the return handler for every command.&lt;p&gt; When a command is retried and repeatable reads are not used, the entry is removed from the context completely and wrapped again by  {@link EntryWrappingInterceptor}. When repeatable reads are in use, {@link org.infinispan.container.entries.RepeatableReadEntry} entry keeps the value before the command was executedand the context is reset to this value. &lt;p&gt; This summarizes expected behaviour of interceptors loading from persistence layer: &lt;ul&gt; &lt;li&gt;entry == null:             don't load the entry because this node is not a read owner &lt;li&gt;entry.skipLookup == false: attempt to load the entry &lt;li&gt;entry.skipLookup == true:  don't load the entry because it was already published &lt;/ul&gt; Distribution interceptor should behave as follows: &lt;ul&gt; &lt;li&gt;entry == null: If this is a write command, check writeCH and if this node is &lt;ul&gt; &lt;li&gt;primary owner: that should not happen as command.topologyId is outdated (the topology is checked before executing the command and  {@link org.infinispan.statetransfer.OutdatedTopologyException} is thrown)&lt;li&gt;backup owner and  {@link VisitableCommand#loadType()} is {@link org.infinispan.commands.VisitableCommand.LoadType#OWNER OWNER}: retrieve the value from remote node &lt;li&gt;backup owner that does not need previous value: wrap null &lt;li&gt;non-owner: don't execute the command (or narrow the set of keys in it) &lt;/ul&gt; If this is a read-only command: &lt;ul&gt; &lt;li&gt;If this is the origin, fetch the entry from remote node &lt;li&gt;If this is not the origin, the command must have different topologyId and we retry &lt;/ul&gt; &lt;li&gt;entry != null: don't do any remote retrieval because the value is known &lt;/ul&gt; &lt;p&gt; In local mode, the data can be always read and written, so there is no risk that a command won't have the entry wrapped.
+ * @author Manik Surtani (&lt;a href="mailto:manik@jboss.org"&gt;manik@jboss.org&lt;/a&gt;)
+ * @author Galder Zamarreño
+ * @author Mircea.Markus@jboss.com
+ * @since 4.0
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>wrapEntryForReading</MethodName>
+            <MethodComment>/** 
+ * Wraps an entry for reading.  Usually this is just a raw  {@link CacheEntry} but certain combinations of isolationlevels and the presence of an ongoing JTA transaction may force this to be a proper, wrapped MVCCEntry.  The entry is also typically placed in the invocation context.
+ * @param ctx current invocation context
+ * @param key key to look up and wrap
+ * @param isOwner true if this node is current owner in readCH (or we ignore CH)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>InvocationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isOwner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapEntryForWriting</MethodName>
+            <MethodComment>/** 
+ * Insert an entry that exists in the data container into the context. Doesn't do anything if the key was already wrapped.
+ * @param ctx current invocation context
+ * @param key key to look up and wrap
+ * @param isOwner true if this node is current owner in readCH (or we ignore CH)
+ * @param isRead true if this operation is expected to read the value of the entry
+ * @since 8.1
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>InvocationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isOwner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRead</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>wrapExternalEntry</MethodName>
+            <MethodComment>/** 
+ * Insert an external entry (e.g. loaded from a cache loader or from a remote node) into the context.
+ * @param ctx current invocation context
+ * @param key key to look up and wrap
+ * @param externalEntry the value to be inserted into context
+ * @param isRead true if this operation is expected to read the value of the entry
+ * @param isWrite if this is executed within a write command
+ * @since 8.1
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>InvocationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>externalEntry</ParamName>
+                    <ParamType>CacheEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRead</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isWrite</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

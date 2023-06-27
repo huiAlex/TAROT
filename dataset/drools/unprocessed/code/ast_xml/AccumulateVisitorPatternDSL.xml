@@ -1,0 +1,184 @@
+<Class>
+    <Id>2567</Id>
+    <Package>org.drools.modelcompiler.builder.generator.visitor.accumulate</Package>
+    <ClassName>AccumulateVisitorPatternDSL</ClassName>
+    <SuperClass>AccumulateVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>AccumulateVisitorPatternDSL</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>modelGeneratorVisitor</ParamName>
+                    <ParamType>ModelGeneratorVisitor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>RuleContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>packageModel</ParamName>
+                    <ParamType>PackageModel</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildBinding</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodCallExpr</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bindingName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>usedDeclaration</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expression</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodCallExpr [bindDSL=new MethodCallExpr(null,BIND_CALL)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bindDSL;addArgument;[toVar(bindingName)]</InnerMethodInvoke>
+                <InnerMethodInvoke>usedDeclaration.stream().map(d -&gt; new NameExpr(toVar(d)));forEach;[bindDSL::addArgument]</InnerMethodInvoke>
+                <InnerMethodInvoke>bindDSL;addArgument;[buildConstraintExpression(expression,usedDeclaration)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processNewBinding</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>optNewBinding</ParamName>
+                    <ParamType>NewBinding</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>optNewBinding;ifPresent;[newBinding -&gt; {
+  final Optional&lt;String&gt; patterBinding=newBinding.patternBinding;
+  final List&lt;Expression&gt; allExpressions=context.getExpressions();
+  final MethodCallExpr newBindingExpression=newBinding.bindExpression;
+  if (patterBinding.isPresent()) {
+    final Optional&lt;MethodCallExpr&gt; optPattern=DrlxParseUtil.findPatternWithBinding(patterBinding.get(),allExpressions);
+    optPattern.ifPresent(pattern -&gt; addBindAsLastChainCall(newBindingExpression,pattern));
+  }
+ else {
+    final MethodCallExpr lastPattern=DrlxParseUtil.findLastPattern(allExpressions).orElseThrow(() -&gt; new RuntimeException("Need the last pattern to add the binding"));
+    final MethodCallExpr replacedBinding=replaceBindingWithPatternBinding(newBindingExpression,lastPattern);
+    addBindAsLastChainCall(replacedBinding,lastPattern);
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addBindAsLastChainCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newBindingExpression</ParamName>
+                    <ParamType>MethodCallExpr</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pattern</ParamName>
+                    <ParamType>MethodCallExpr</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [newScope=(Expression)pattern.getParentNode().orElse(pattern)]</InnerVar>
+                <InnerVar>Optional&lt;Node&gt; [optParent=newScope.getParentNode()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newBindingExpression;setScope;[newScope]</InnerMethodInvoke>
+                <InnerMethodInvoke>optParent;ifPresent;[parent -&gt; parent.replace(newScope,newBindingExpression)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceBindingWithPatternBinding</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodCallExpr</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>bindExpression</ParamName>
+                    <ParamType>MethodCallExpr</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastPattern</ParamName>
+                    <ParamType>MethodCallExpr</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [bindingId=lastPattern.getArgument(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>bindExpression.findFirst(NameExpr.class,e -&gt; e.equals(bindingId));ifPresent;[name -&gt; {
+  bindExpression.remove(name);
+  LambdaExpr lambda=(LambdaExpr)bindExpression.getArgument(bindExpression.getArguments().size() - 1);
+  if (lambda.getParameters().size() &gt; 1) {
+    String formalArg=fromVar(name.getNameAsString());
+    for (    Parameter param : lambda.getParameters()) {
+      if (param.getNameAsString().equals(formalArg)) {
+        lambda.getParameters().remove(param);
+        lambda.getParameters().add(0,param);
+        break;
+      }
+    }
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>postVisit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

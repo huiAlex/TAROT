@@ -1,0 +1,25 @@
+Page actions currently have one severe quirk. If multiple page actions are configured for a view-id pattern, they all execute without checking whether or not a navigation has occurred (a navigation match was found). What is even more strange is that even when a navigation match is found and the JSF NavigationHandler has processed the navigation, the actions just keep on executing. I cannot imagine that invoking the navigation handler multiple times was anticipated behavior. Even if it is, the developer is still going to be massively confused which navigation event is going to actually stick.
+Here is the current logic:
+for ( Action action: getActions() )
+{
+if ( action.isExecutable() )
+{
+String outcome = action.getOutcome();
+String fromAction = outcome;
+if (outcome==null)
+{
+fromAction = action.getMethodExpression().getExpressionString();
+result = true;
+outcome = Pages.toString( action.getMethodExpression().invoke() );
+Pages.handleOutcome(facesContext, outcome, fromAction);
+}
+else
+{
+Pages.handleOutcome(facesContext, outcome, fromAction);
+}
+}
+}
+I think that the short-circuit that needs to take place is that if the response is marked as complete (which indicates a redirect navigation) or if the UIViewRoot changed (which indicates a non-redirect navigation), then the actions should stop executing.
+We should definitely include a test case if we make this change. Its too important to screw up.
+If there is a desire to maintain the previous behavior, then I believe a flag should be added on the page element like so
+&lt;page short-circuit-actions= false &gt; .

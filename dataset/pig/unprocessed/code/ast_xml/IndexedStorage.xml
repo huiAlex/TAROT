@@ -1,0 +1,1339 @@
+<Class>
+    <Id>1258</Id>
+    <Package>org.apache.pig.piggybank.storage</Package>
+    <ClassName>IndexedStorage</ClassName>
+    <SuperClass>PigStorage</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>IndexableLoadFunc</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>IndexedStorage  /** 
+ * &lt;code&gt;IndexedStorage&lt;/code&gt; is a form of &lt;code&gt;PigStorage&lt;/code&gt; that supports a per record seek.  &lt;code&gt;IndexedStorage&lt;/code&gt; creates a separate (hidden) index file for every data file that is written.  The format of the index file is: &lt;pre&gt; | Header     | | Index Body | | Footer     | &lt;/pre&gt; The Header contains the list of record indices (field numbers) that represent index keys. The Index Body contains a &lt;code&gt;Tuple&lt;/code&gt; for each record in the data. The fields of the &lt;code&gt;Tuple&lt;/code&gt; are: &lt;ul&gt; &lt;li&gt; The index key(s) &lt;code&gt;Tuple&lt;/code&gt; &lt;/li&gt; &lt;li&gt; The number of records that share this index key. &lt;/li&gt; &lt;li&gt; Offset into the data file to read the first matching record. &lt;/li&gt; &lt;/ul&gt; The Footer contains sequentially: &lt;ul&gt; &lt;li&gt; The smallest key(s) &lt;code&gt;Tuple&lt;/code&gt; in the index. &lt;/li&gt; &lt;li&gt; The largest key(s) &lt;code&gt;Tuple&lt;/code&gt; in the index. &lt;/li&gt; &lt;li&gt; The offset in bytes to the start of the footer &lt;/li&gt; &lt;/ul&gt; &lt;code&gt;IndexStorage&lt;/code&gt; implements &lt;code&gt;IndexableLoadFunc&lt;/code&gt; and can be used as the 'right table' in a PIG 'merge' or 'merge-sparse' join. &lt;code&gt;IndexStorage&lt;/code&gt; does not require the data to be globally partitioned &amp; sorted by index keys.  Each partition (separate index) must be locally sorted. Also note IndexStorage is a loader to demonstrate "merge-sparse" join.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>fileOut</FieldName>
+            <FieldType>FSDataOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexManager</FieldName>
+            <FieldType>IndexManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fieldDelimiter</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>offsetsToIndexKeys</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>offsetsToIndexKeys</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>offsetToFooter</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexOut</FieldName>
+            <FieldType>FSDataOutputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexIn</FieldName>
+            <FieldType>FSDataInputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>tupleFactory</FieldName>
+            <FieldType>TupleFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexTuple</FieldName>
+            <FieldType>Tuple</FieldType>
+        </Field>
+        <Field>
+            <FieldName>minIndexKeyTuple</FieldName>
+            <FieldType>Tuple</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxIndexKeyTuple</FieldName>
+            <FieldType>Tuple</FieldType>
+        </Field>
+        <Field>
+            <FieldName>lastIndexKeyTuple</FieldName>
+            <FieldType>Tuple</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numberOfTuples</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexFile</FieldName>
+            <FieldType>FileStatus</FieldType>
+        </Field>
+        <Field>
+            <FieldName>start</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pos</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>end</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>in</FieldName>
+            <FieldType>IndexedStorageLineReader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>maxLineLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>key</FieldName>
+            <FieldType>LongWritable</FieldType>
+        </Field>
+        <Field>
+            <FieldName>value</FieldName>
+            <FieldType>Text</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexManager</FieldName>
+            <FieldType>IndexManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DEFAULT_BUFFER_SIZE</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>in</FieldName>
+            <FieldType>InputStream</FieldType>
+        </Field>
+        <Field>
+            <FieldName>buffer</FieldName>
+            <FieldType>byte[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferLength</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferPosn</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>bufferOffset</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CR</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LF</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readers</FieldName>
+            <FieldType>IndexedStorageRecordReader[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>currentReaderIndexStart</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>fieldDelimiter</FieldName>
+            <FieldType>byte</FieldType>
+        </Field>
+        <Field>
+            <FieldName>offsetsToIndexKeys</FieldName>
+            <FieldType>int[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readerComparator</FieldName>
+            <FieldType>Comparator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>readerComparator</FieldName>
+            <FieldType>IndexedStorageRecordReader</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>IndexedStorage</MethodName>
+            <MethodComment>/** 
+ * Constructs a Pig Storer that uses specified regex as a field delimiter.
+ * @param delimiter - field delimiter to use
+ * @param offsetsToIndexKeys - list of offset into Tuple for index keys (comma separated)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>delimiter</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offsetsToIndexKeys</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [stroffsetsToIndexKeys=offsetsToIndexKeys.split(",")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOutputFormat</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OutputFormat</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sortReader</MethodName>
+            <MethodComment>/** 
+ * Assumes this list of readers is already sorted except for the provided element. This element is bubbled up the array to its appropriate sort location (faster than doing a Utils sort).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [idx=startIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageOutputFormat</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>delimiter</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offsetsToIndexKeys</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRecordWriter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>WritableComparable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=context.getConfiguration()]</InnerVar>
+                <InnerVar>FileSystem [fs=FileSystem.get(conf)]</InnerVar>
+                <InnerVar>Path [file=this.getDefaultWorkFile(context,"")]</InnerVar>
+                <InnerVar>FSDataOutputStream [fileOut=fs.create(file,false)]</InnerVar>
+                <InnerVar>IndexManager [indexManager=new IndexManager(offsetsToIndexKeys)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexManager;createIndexFile;[fs, file]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageRecordWriter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileOut</ParamName>
+                    <ParamType>FSDataOutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fieldDel</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexManager</ParamName>
+                    <ParamType>IndexManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexManager;WriteIndexHeader;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>write</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>WritableComparable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [offset=this.fileOut.getPos()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexManager;BuildIndex;[value, offset]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexManager;WriterIndexFooter;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>this.indexManager;Close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInputFormat</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InputFormat</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment>/** 
+ * IndexableLoadFunc interface implementation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>seekNear</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [lastIndexModified=-1]</InnerVar>
+                <InnerVar>int [idx=currentReaderIndexStart]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexManager</MethodName>
+            <MethodComment>/** 
+ * Constructor (called during reading)
+ * @param ifile index file to read
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ifile</ParamName>
+                    <ParamType>FileStatus</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexManager</MethodName>
+            <MethodComment>/** 
+ * Constructor (called during writing)
+ * @param offsetsToIndexKeys
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offsetsToIndexKeys</ParamName>
+                    <ParamType>int[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexFileName</MethodName>
+            <MethodComment>/** 
+ * Construct index file path for a given a data file
+ * @param file - Data file
+ * @return - Index file path for given data file
+ */
+</MethodComment>
+            <ReturnType>Path</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createIndexFile</MethodName>
+            <MethodComment>/** 
+ * Open the index file for writing for given data file
+ * @param fs
+ * @param file
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fs</ParamName>
+                    <ParamType>FileSystem</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>file</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openIndexFile</MethodName>
+            <MethodComment>/** 
+ * Opens the index file.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fs</ParamName>
+                    <ParamType>FileSystem</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Close</MethodName>
+            <MethodComment>/** 
+ * Close the index file
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexOut;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>BuildIndex</MethodName>
+            <MethodComment>/** 
+ * Build index tuple
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>t</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Tuple [indexKeyTuple=tupleFactory.newTuple(this.offsetsToIndexKeys.length)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>WriteIndexHeader</MethodName>
+            <MethodComment>/** 
+ * Write index header
+ * @param indexOut - Stream to write to
+ * @param ih - Index header to write
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexOut;writeInt;[this.offsetsToIndexKeys.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReadIndexHeader</MethodName>
+            <MethodComment>/** 
+ * Read index header
+ * @param indexIn - Stream to read from
+ * @return Index header
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [nkeys=this.indexIn.readInt()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>WriterIndexFooter</MethodName>
+            <MethodComment>/** 
+ * Writes the index footer
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;WriteIndex;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>DataReaderWriter;writeDatum;[indexOut, this.minIndexKeyTuple]</InnerMethodInvoke>
+                <InnerMethodInvoke>DataReaderWriter;writeDatum;[indexOut, this.maxIndexKeyTuple]</InnerMethodInvoke>
+                <InnerMethodInvoke>indexOut;writeLong;[this.offsetToFooter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReadIndexFooter</MethodName>
+            <MethodComment>/** 
+ * Reads the index footer
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>long [currentOffset=this.indexIn.getPos()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;SeekToIndexFooter;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>this.indexIn;seek;[currentOffset]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SeekToIndexFooter</MethodName>
+            <MethodComment>/** 
+ * Seeks to the index footer
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexIn;seek;[this.offsetToFooter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>WriteIndex</MethodName>
+            <MethodComment>/** 
+ * Writes the current index.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.indexTuple;set;[1, this.numberOfTuples]</InnerMethodInvoke>
+                <InnerMethodInvoke>DataReaderWriter;writeDatum;[this.indexOut, this.indexTuple]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexKeyTuple</MethodName>
+            <MethodComment>/** 
+ * Extracts the index key from the index tuple
+ */
+</MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexTuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIndexKeyTupleCount</MethodName>
+            <MethodComment>/** 
+ * Extracts the number of records that share the current key from the index tuple.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexTuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOffset</MethodName>
+            <MethodComment>/** 
+ * Extracts the offset into the data file from the index tuple.
+ */
+</MethodComment>
+            <ReturnType>long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>indexTuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReadIndex</MethodName>
+            <MethodComment>/** 
+ * Reads the next index from the index file (or null if EOF) and extracts the index fields.
+ */
+</MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ScanIndex</MethodName>
+            <MethodComment>/** 
+ * Scans the index looking for a given key.
+ * @return the matching index tuple OR the last index tuplegreater than the requested key if no match is found.
+ */
+</MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createRecordReader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LongWritable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>split</ParamName>
+                    <ParamType>InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>IndexManager [im=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSplitable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>JobContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>Path</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageRecordReader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>im</ParamName>
+                    <ParamType>IndexManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compare</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o1</ParamName>
+                    <ParamType>IndexedStorageRecordReader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>o2</ParamName>
+                    <ParamType>IndexedStorageRecordReader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Tuple [t1=(o1.indexManager.lastIndexKeyTuple == null) ? o1.indexManager.minIndexKeyTuple : o1.indexManager.lastIndexKeyTuple]</InnerVar>
+                <InnerVar>Tuple [t2=(o2.indexManager.lastIndexKeyTuple == null) ? o2.indexManager.minIndexKeyTuple : o2.indexManager.lastIndexKeyTuple]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageLineReader</MethodName>
+            <MethodComment>/** 
+ * Create a line reader that reads from the given stream using the default buffer-size (64k).
+ * @param in The input stream
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageLineReader</MethodName>
+            <MethodComment>/** 
+ * Create a line reader that reads from the given stream using the given buffer-size.
+ * @param in The input stream
+ * @param bufferSize Size of the read buffer
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>bufferSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>IndexedStorageLineReader</MethodName>
+            <MethodComment>/** 
+ * Create a line reader that reads from the given stream using the &lt;code&gt;io.file.buffer.size&lt;/code&gt; specified in the given &lt;code&gt;Configuration&lt;/code&gt;.
+ * @param in input stream
+ * @param conf configuration
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>InputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Close the underlying stream.
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>in;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLine</MethodName>
+            <MethodComment>/** 
+ * Read one line from the InputStream into the given Text.  A line can be terminated by one of the following: '\n' (LF) , '\r' (CR), or '\r\n' (CR+LF).  EOF also terminates an otherwise unterminated line.
+ * @param str the object to store the given line (without newline)
+ * @param maxLineLength the maximum number of bytes to store into str;the rest of the line is silently discarded.
+ * @param maxBytesToConsume the maximum number of bytes to consumein this call.  This is only a hint, because if the line cross this threshold, we allow it to happen.  It can overshoot potentially by as much as one buffer length.
+ * @return the number of bytes read including the (longest) newlinefound.
+ * @throws IOException if the underlying stream throws
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>Text</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxLineLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxBytesToConsume</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [txtLength=0]</InnerVar>
+                <InnerVar>int [newlineLength=0]</InnerVar>
+                <InnerVar>boolean [prevCharCR=false]</InnerVar>
+                <InnerVar>long [bytesConsumed=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>str;clear;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLine</MethodName>
+            <MethodComment>/** 
+ * Read from the InputStream into the given Text.
+ * @param str the object to store the given line
+ * @param maxLineLength the maximum number of bytes to store into str.
+ * @return the number of bytes read including the newline
+ * @throws IOException if the underlying stream throws
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>Text</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxLineLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readLine</MethodName>
+            <MethodComment>/** 
+ * Read from the InputStream into the given Text.
+ * @param str the object to store the given line
+ * @return the number of bytes read including the newline
+ * @throws IOException if the underlying stream throws
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>str</ParamName>
+                    <ParamType>Text</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>seek</MethodName>
+            <MethodComment>/** 
+ * If given offset is within the buffer, adjust the buffer position to read from otherwise seek to the given offset from start of the file.
+ * @param offset
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>genericSplit</ParamName>
+                    <ParamType>InputSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>TaskAttemptContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>FileSplit [split=(FileSplit)genericSplit]</InnerVar>
+                <InnerVar>Configuration [job=context.getConfiguration()]</InnerVar>
+                <InnerVar>Path [file=split.getPath()]</InnerVar>
+                <InnerVar>FileSystem [fs=file.getFileSystem(job)]</InnerVar>
+                <InnerVar>FSDataInputStream [fileIn=fs.open(split.getPath())]</InnerVar>
+                <InnerVar>boolean [skipFirstLine=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>seek</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>in;seek;[offset]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>seekNear</MethodName>
+            <MethodComment>/** 
+ * Scan the index for given key and seek to appropriate offset in the data
+ * @param keys to look for
+ * @return true if the given key was found, false otherwise
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [ret=false]</InnerVar>
+                <InnerVar>Tuple [indexTuple=this.indexManager.ScanIndex(keys)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>nextKeyValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [newSize=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>key;set;[pos]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LongWritable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCurrentValue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Text</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProgress</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>float</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

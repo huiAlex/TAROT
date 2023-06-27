@@ -1,0 +1,6 @@
+We have moved our app from JBoss 4.2.3 to 5.1 and our page level messages.properties stopped to work correctly. After analyzing the issue, we traced the problem to the ResourceLoader loadBundle method which uses the getContextClassloader to load the bundles. In out app, the .properties files where located in the WAR root along with the faceltes .xhtml and the .page.xml, which use to work fine on 4.2.3. It is my understanding that with 5.1 the classloader has changed, and the one retrieved via getContextClassloader does not have access to the ServletContext anymore, hence our properties file are not found any more.
+So, I suggest two things:
+1) The documentation makes it explicit that the messages.properties file should be localed in WEB-INF/classes. The explanation for the page level messages.properties is instead a bit more open to interpretation. It could be good to reiterate there that also page level files need to go into WEB-INF/classes
+2) Or, modify ResourceLoader to scan also the ServletContext for bundle files, which would make it compatible with apps that used to work on JBoss 4.2.3. Notice that the other ResourceLoader methods already use ServletLifecycle.getServletContext(), that is why .page.xml files can be nicely placed along .xhtml file in the context root.
+Thanks,
+Riccardo. .

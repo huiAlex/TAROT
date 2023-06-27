@@ -1,0 +1,26 @@
+ATM the default value for virtualNodes is 1. This means that the wheel-share each node has can be very uneven for small(up to 15 nodes) clusters.
+Increasing this value even to a small number(10-30) would significantly improve each node s share of wheel and the chance for a well balanced data distribution over the cluster.
+Here are some suggestions from an email from Dan:
+&lt;snip&gt;
+I ve been working on a test to search for an optimal default value here:
+I m measuring both the number of keys for which a node is primary
+owner and the number of keys for which it is one of the owners
+compared to the ideal distribution (K/N keys on each node). The former
+tells us how much more work the node could be expected to do, the
+latter how much memory the node is likely to need.
+I m only running 10000 loops, so the max figure is not the absolute
+maximum. But it s certainly bigger than the 0.9999 percentile.
+The full results are here:
+The uniformity of the distribution goes up with the number of virtual
+nodes but down with the number of physical nodes. I think we should go
+with a default of 48 nodes (or 50 if you prefer decimal). With 32
+nodes, there s only a 0.1% chance that a node will hold more than 1.35
+K/N keys, and a 0.1% chance that the node will be primary owner for
+more than 1.5 * K/N keys.
+We could go higher, but we run against the risk of node addresses
+colliding on the hash wheel. According to the formula on the Birthday
+Paradox page ( ), we only
+need 2072 addresses on our 2^31 hash wheel to get a 0.1% chance of
+collision. That means 21 nodes * 96 virtual nodes, 32 nodes * 64
+virtual nodes or 43 nodes * 48 virtual nodes.
+&lt;/snip&gt;

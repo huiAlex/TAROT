@@ -1,0 +1,189 @@
+<Class>
+    <Id>660</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark.optimizer</Package>
+    <ClassName>SecondaryKeyOptimizerSpark</ClassName>
+    <SuperClass>SparkOpPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>SecondaryKeyOptimizer</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SecondaryKeyOptimizerSpark  /** 
+ * Secondary key sort optimization for spark mode
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numSortRemoved</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numDistinctChanged</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>numUseSecondaryKey</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SecondaryKeyOptimizerSpark</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSparkOp</MethodName>
+            <MethodComment>/** 
+ * Secondary key sort optimization is enabled in group + foreach nested situation, like TestAccumlator#testAccumWithSort After calling SecondaryKeyOptimizerUtil.applySecondaryKeySort, the POSort in the POForeach will be deleted in the spark plan. Sort function can be implemented in secondary key sort even though POSort is deleted in the spark plan.
+ * @param sparkOperator
+ * @throws VisitorException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkOperator</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;POLocalRearrange&gt; [rearranges=PlanHelper.getPhysicalOperators(sparkOperator.physicalPlan,POLocalRearrange.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMapPlan</MethodName>
+            <MethodComment>/** 
+ * Find the MRPlan of the physicalPlan which containing currentLR Backward search all the physicalOperators which precede currentLR until the previous POLocalRearrange is found or the root of physicalPlan is found.
+ * @param physicalPlan
+ * @param currentLR
+ * @return
+ * @throws VisitorException
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>currentLR</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [mapPlan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [preList=physicalPlan.getPredecessors(currentLR)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mapPlan;addAsRoot;[currentLR]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReducePlan</MethodName>
+            <MethodComment>/** 
+ * Find the ReducePlan of the physicalPlan which containing currentLR Forward search all the physicalOperators which succeed currentLR until the next POLocalRearrange is found or the leave of physicalPlan is found.
+ * @param physicalPlan
+ * @param currentLR
+ * @return
+ * @throws PlanException
+ */
+</MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>currentLR</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [reducePlan=new PhysicalPlan()]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [succList=physicalPlan.getSuccessors(currentLR)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumSortRemoved</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumDistinctChanged</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumUseSecondaryKey</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

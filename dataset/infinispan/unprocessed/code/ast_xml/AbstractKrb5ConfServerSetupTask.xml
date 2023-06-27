@@ -1,0 +1,348 @@
+<Class>
+    <Id>2982</Id>
+    <Package>org.infinispan.test.integration.security.tasks</Package>
+    <ClassName>AbstractKrb5ConfServerSetupTask</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ServerSetupTask</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AbstractKrb5ConfServerSetupTask  /** 
+ * This server setup task creates a krb5.conf file and generates KeyTab files for the LDAP server and ISPN users The task also sets system properties &lt;ul&gt; &lt;li&gt;"java.security.krb5.conf" - path to the newly created krb5.conf is set&lt;/li&gt; &lt;li&gt;"sun.security.krb5.debug" - true is set (Kerberos debugging for Oracle Java)&lt;/li&gt; &lt;/ul&gt;
+ * @author &lt;a href="mailto:jcacek@redhat.com"&gt;Josef Cacek&lt;/a&gt;
+ * @author &lt;a href="mailto:vchepeli@redhat.com"&gt;Vitalii Chepeliuk&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOGGER</FieldName>
+            <FieldType>Logger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>JAVA_IO_TMP_DIR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEYTABS_DIR</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KRB5_CONF</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KRB5_CONF_FILE</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LDAP_KEYTAB_FILE</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>origKrb5Conf</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>origKrbDebug</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>origIbmJGSSDebug</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>origIbmKrbDebug</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>user</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>password</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyTabFileName</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment>/** 
+ * @param managementClient
+ * @param containerId
+ * @throws Exception
+ * @see org.jboss.as.arquillian.api.ServerSetupTask#setup(org.jboss.as.arquillian.container.ManagementClient,String)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>managementClient</ParamName>
+                    <ParamType>ManagementClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [cannonicalHost=Utils.getCannonicalHost(managementClient)]</InnerVar>
+                <InnerVar>Map&lt;String,String&gt; [map=new HashMap&lt;&gt;()]</InnerVar>
+                <InnerVar>String [supportedEncTypes=getSupportedEncTypes()]</InnerVar>
+                <InnerVar>List&lt;UserForKeyTab&gt; [kerberosUsers=kerberosUsers()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOGGER;info;["(Re)Creating workdir: " + KEYTABS_DIR.getAbsolutePath()]</InnerMethodInvoke>
+                <InnerMethodInvoke>FileUtils;deleteDirectory;[KEYTABS_DIR]</InnerMethodInvoke>
+                <InnerMethodInvoke>KEYTABS_DIR;mkdirs;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>map;put;["hostname", cannonicalHost]</InnerMethodInvoke>
+                <InnerMethodInvoke>map;put;["enctypes", supportedEncTypes]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOGGER;info;["Supported enctypes in krb5.conf: " + supportedEncTypes]</InnerMethodInvoke>
+                <InnerMethodInvoke>FileUtils;write;[KRB5_CONF_FILE, StrSubstitutor.replace(IOUtils.toString(Utils.getResource(KRB5_CONF),"UTF-8"),map), "UTF-8"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;createLdapServerKeytab;[cannonicalHost]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOGGER;info;["Setting Kerberos configuration: " + KRB5_CONF_FILE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment>/** 
+ * Removes working directory with Kerberos related generated files.
+ * @param managementClient
+ * @param containerId
+ * @throws Exception
+ * @see org.jboss.as.arquillian.api.ServerSetupTask#tearDown(org.jboss.as.arquillian.container.ManagementClient,String)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>managementClient</ParamName>
+                    <ParamType>ManagementClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>FileUtils;deleteDirectory;[KEYTABS_DIR]</InnerMethodInvoke>
+                <InnerMethodInvoke>FileUtils;deleteQuietly;[KRB5_CONF_FILE]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setSystemProperty;["java.security.krb5.conf", origKrb5Conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setSystemProperty;["sun.security.krb5.debug", origKrbDebug]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setSystemProperty;["com.ibm.security.jgss.debug", origIbmJGSSDebug]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;setSystemProperty;["com.ibm.security.krb5.Krb5Debug", origIbmKrbDebug]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKrb5ConfFullPath</MethodName>
+            <MethodComment>/** 
+ * Returns an absolute path to krb5.conf file.
+ * @return
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeyTabFullPath</MethodName>
+            <MethodComment>/** 
+ * Returns an absolute path to a keytab with JBoss AS credentials (ldap/${host}@INFINISPAN.ORG).
+ * @return
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createLdapServerKeytab</MethodName>
+            <MethodComment>/** 
+ * Creates a default "ldap/${host}@INFINISPAN.ORG" server keytab. it can be overridden if you want to use another SPN, password or keytab file location (or do more magic here).
+ * @param host
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>host</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;createKeytab;["ldap/" + host + "@INFINISPAN.ORG", "ldapPassword", LDAP_KEYTAB_FILE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSupportedEncTypes</MethodName>
+            <MethodComment>/** 
+ * Returns comma-separated list of JDK-supported encryption type names for use in krb5.conf.
+ * @return
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [enctypesList=new ArrayList&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createKeytab</MethodName>
+            <MethodComment>/** 
+ * Creates a keytab file for given principal.
+ * @param principalName
+ * @param passPhrase
+ * @param keytabFile
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>principalName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>passPhrase</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keytabFile</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>KerberosTime [timeStamp=new KerberosTime()]</InnerVar>
+                <InnerVar>DataOutputStream [dos=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOGGER;info;["Principal name: " + principalName]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>kerberosUsers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>UserForKeyTab</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>UserForKeyTab</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>user</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>password</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keyTabFileName</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getUser</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPassword</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeyTabFileName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>File</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

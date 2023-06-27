@@ -1,0 +1,454 @@
+<Class>
+    <Id>3224</Id>
+    <Package>org.infinispan.stream.impl</Package>
+    <ClassName>ClusterStreamManager</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ClusterStreamManager  /** 
+ * Manages distribution of various stream operations that are sent to remote nodes.  Note usage of any operations should &lt;b&gt;always&lt;/b&gt; be accompanied with a subsequent call to  {@link ClusterStreamManager#forgetOperation(Object)}so that the operation is fully released.  This is important especially for early terminating operations.
+ * @param &lt; K &gt; The key type for the underlying cache
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>onIntermediateResult</MethodName>
+            <MethodComment>/** 
+ * Called back for intermediate data returned from an operation.  This is useful for operations that utilized batch fetching such as  {@link CacheStream#iterator()},  {@link CacheStream#spliterator()}, {@link CacheStream#forEach(Consumer)} and {@link CacheStream#toArray()}.
+ * @param address Which node this data came from
+ * @param results The results obtained so far.
+ * @return the segments that completed with some value
+ */
+</MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>results</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>onCompletion</MethodName>
+            <MethodComment>/** 
+ * Essentially the same as  {@link ClusterStreamManager.ResultsCallback#onIntermediateResult(Address address, Object)}except that this is the last time this callback will be invoked and it tells which segments were completed
+ * @param address Which node this data came from
+ * @param results The last batch of results for this operator
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>completedSegments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>results</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>onSegmentsLost</MethodName>
+            <MethodComment>/** 
+ * Called back when a segment is found to have been lost that is no longer remote This method should return as soon as possible and not block in any fashion. This method may be invoked concurrently with any of the other methods
+ * @param segments The segments that were requested but are now local
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>requestFutureTopology</MethodName>
+            <MethodComment>/** 
+ * Called when a an owner of a segment is not available in the provided  {@link ConsistentHash}
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remoteStreamOperation</MethodName>
+            <MethodComment>/** 
+ * Performs the remote stream operation without rehash awareness.
+ * @param &lt; R &gt; the type of response
+ * @param parallelDistribution whether or not parallel distribution is enabled
+ * @param parallelStream whether or not the stream is paralllel
+ * @param ch the consistent hash to use when determining segment ownership
+ * @param segments the segments that this request should utilize
+ * @param keysToInclude which keys to include in the request
+ * @param keysToExclude which keys to exclude in the request
+ * @param includeLoader whether or not to use a loader
+ * @param operation the actual operation to perform
+ * @param callback the callback to collect individual node results
+ * @param earlyTerminatePredicate a predicate to determine if this operation should stop based on intermediate results
+ * @return the operation id to be used for further calls
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parallelDistribution</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parallelStream</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ch</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToInclude</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToExclude</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>includeLoader</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callback</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>earlyTerminatePredicate</ParamName>
+                    <ParamType>? super R</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remoteStreamOperationRehashAware</MethodName>
+            <MethodComment>/** 
+ * Performs the remote stream operation with rehash awareness.
+ * @param &lt; R &gt; the type of response
+ * @param parallelDistribution whether or not parallel distribution is enabled
+ * @param parallelStream whether or not the stream is paralllel
+ * @param ch the consistent hash to use when determining segment ownership
+ * @param segments the segments that this request should utilize
+ * @param keysToInclude which keys to include in the request
+ * @param keysToExclude which keys to exclude in the request
+ * @param includeLoader whether or not to use a loader
+ * @param operation the actual operation to perform
+ * @param callback the callback to collect individual node results
+ * @param earlyTerminatePredicate a predicate to determine if this operation should stop based on intermediate results
+ * @return the operation id to be used for further calls
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parallelDistribution</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parallelStream</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ch</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToInclude</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToExclude</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>includeLoader</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callback</ParamName>
+                    <ParamType>R</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>earlyTerminatePredicate</ParamName>
+                    <ParamType>? super R</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remoteStreamOperation</MethodName>
+            <MethodComment>/** 
+ * Key tracking remote operation that doesn't have rehash enabled.
+ * @param &lt; R &gt; the type of response
+ * @param parallelDistribution whether or not parallel distribution is enabled
+ * @param parallelStream whether or not the stream is paralllel
+ * @param ch the consistent hash to use when determining segment ownership
+ * @param segments the segments that this request should utilize
+ * @param keysToInclude which keys to include in the request
+ * @param keysToExclude which keys to exclude in the request
+ * @param includeLoader whether or not to use a loader
+ * @param operation the actual operation to perform
+ * @param callback the callback to collect individual node results
+ * @return the operation id to be used for further calls
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parallelDistribution</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parallelStream</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ch</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToInclude</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToExclude</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>includeLoader</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callback</ParamName>
+                    <ParamType>Collection&lt;R&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remoteStreamOperationRehashAware</MethodName>
+            <MethodComment>/** 
+ * Key tracking remote operation that has rehash enabled
+ * @param &lt; R2 &gt; the type of response
+ * @param parallelDistribution whether or not parallel distribution is enabled
+ * @param parallelStream whether or not the stream is paralllel
+ * @param ch the consistent hash to use when determining segment ownership
+ * @param segments the segments that this request should utilize
+ * @param keysToInclude which keys to include in the request
+ * @param keysToExclude which keys to exclude in the request
+ * @param includeLoader whether or not to use a loader
+ * @param operation the actual operation to perform
+ * @param callback the callback to collect individual node results
+ * @return the operation id to be used for further calls
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parallelDistribution</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parallelStream</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ch</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToInclude</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToExclude</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>includeLoader</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>callback</ParamName>
+                    <ParamType>Map&lt;K,R2&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isComplete</MethodName>
+            <MethodComment>/** 
+ * Tests whether this operation is still pending or not.
+ * @param id the id of the operation that was returned from the invocation
+ * @return whether or not it is completed
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>awaitCompletion</MethodName>
+            <MethodComment>/** 
+ * Awaits completion of the given request.  Returns true when the request completes otherwise returns false after the time elapses
+ * @param id the ide of the operation that was returned from the invocation - must be non null
+ * @param time how long to wait before returning false - must be greater than 0
+ * @param unit controls how long the time wait is
+ * @return whether or not the request is complete
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>time</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>forgetOperation</MethodName>
+            <MethodComment>/** 
+ * Frees any resources related to this operation and signals to any ongoing remote operations to no longer continue processing
+ * @param id the ide of the operation that was returned from the invocation - can be null in which case this is a noop
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>receiveResponse</MethodName>
+            <MethodComment>/** 
+ * Receives a response for a given request
+ * @param id The request id
+ * @param origin The origin of the response
+ * @param complete Whether or not this is a completed response
+ * @param segments The segments that were suspected
+ * @param response The actual response value
+ * @param &lt; R1 &gt; The type of the response
+ * @return Whether or not the operation should continue operating, only valid if complete was false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>origin</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>complete</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>response</ParamName>
+                    <ParamType>R1</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

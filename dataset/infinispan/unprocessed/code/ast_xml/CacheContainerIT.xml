@@ -1,0 +1,115 @@
+<Class>
+    <Id>1401</Id>
+    <Package>org.infinispan.server.test.cache.container</Package>
+    <ClassName>CacheContainerIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CacheContainerIT  /** 
+ * - test start, default-cache, eviction-executor, listener-executor and replication-queue-executor attributes of cache-container element - test the cache-container attribute of hotrod-connector, so that we can have different hotrod endpoints for different containers
+ * @author &lt;a href="mailto:mgencur@redhat.com"&gt;Martin Gencur&lt;/a&gt;
+ * @author &lt;a href="mailto:jmarkos@redhat.com"&gt;Jakub Markos&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dumpServicesBean</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dumpServicesOp</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcm1</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcm2</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>provider</FieldName>
+            <FieldType>MBeanServerConnectionProvider</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testEndpointConfiguration</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [cache1=rcm1.getCache("default")]</InnerVar>
+                <InnerVar>RemoteCache&lt;String,String&gt; [cache2=rcm2.getCache("other-cache")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cache1;put;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache2;put;["key2", "value2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[1 == server1.getCacheManager("default").getCache("default").getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[1 == server1.getCacheManager("special-cache-container").getCache("other-cache").getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache1;remove;["key"]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache2;remove;["key2"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDefaultCacheAttribute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [cache=rcm2.getCache()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cache;put;["key", "value"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[1 == server1.getCacheManager("special-cache-container").getCache("special-cache").getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[0 == server1.getCacheManager("special-cache-container").getCache("other-cache").getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;remove;["key"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testExecutorAttributesAndStartMode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [services=provider.getConnection().invoke(new ObjectName(dumpServicesBean),dumpServicesOp,null,null).toString()]</InnerVar>
+                <InnerVar>boolean [b1=false, b2=false, b3=false]</InnerVar>
+                <InnerVar>String [executorPrefix="jboss.thread.executor."]</InnerVar>
+                <InnerVar>Scanner [s=new Scanner(services).useDelimiter("\n")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertTrue;[b1 &amp;&amp; b2 &amp;&amp; b3]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

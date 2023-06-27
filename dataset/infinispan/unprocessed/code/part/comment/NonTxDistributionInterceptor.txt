@@ -1,0 +1,15 @@
+/**
+ * Non-transactional interceptor used by distributed caches that support concurrent writes.
+ * It is implemented based on lock forwarding. E.g.
+ * - 'k' is written on node A, owners(k)={B,C}
+ * - A forwards the given command to B
+ * - B acquires a lock on 'k' then it forwards it to the remaining owners: C
+ * - C applies the change and returns to B (no lock acquisition is needed)
+ * - B applies the result as well, releases the lock and returns the result of the operation to A.
+ * 
+ * Note that even though this introduces an additional RPC (the forwarding), it behaves very well in
+ * conjunction with
+ * consistent-hash aware hotrod clients which connect directly to the lock owner.
+ *
+ *  *  *  */
+

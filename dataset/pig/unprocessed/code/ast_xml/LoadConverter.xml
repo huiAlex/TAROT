@@ -1,0 +1,337 @@
+<Class>
+    <Id>158</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark.converter</Package>
+    <ClassName>LoadConverter</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>RDDConverter</SuperInterface>
+        <SuperInterface>Tuple</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>LoadConverter  /** 
+ * Converter that loads data via POLoad and converts it to RRD&amp;lt;Tuple&gt;. Abuses the interface a bit in that there is no input RRD to convert in this case. Instead input is the source path of the POLoad.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>physicalPlan</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkContext</FieldName>
+            <FieldType>SparkContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>jobConf</FieldName>
+            <FieldType>JobConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkEngineConf</FieldName>
+            <FieldType>SparkEngineConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>counterGroupName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>counterName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkCounters</FieldName>
+            <FieldType>SparkCounters</FieldType>
+        </Field>
+        <Field>
+            <FieldName>disableCounter</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sparkEngineConf</FieldName>
+            <FieldType>SparkEngineConf</FieldType>
+        </Field>
+        <Field>
+            <FieldName>initialized</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>LoadConverter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sparkContext</ParamName>
+                    <ParamType>SparkContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>jobConf</ParamName>
+                    <ParamType>JobConf</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sparkEngineConf</ParamName>
+                    <ParamType>SparkEngineConf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>convert</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predecessorRdds</ParamName>
+                    <ParamType>RDD&lt;Tuple&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RDD&lt;Tuple2&lt;Text,Tuple&gt;&gt; [hadoopRDD=sparkContext.newAPIHadoopRDD(jobConf,PigInputFormatSpark.class,Text.class,Tuple.class)]</InnerVar>
+                <InnerVar>ToTupleFunction [ttf=new ToTupleFunction(sparkEngineConf)]</InnerVar>
+                <InnerVar>boolean [disableCounter=jobConf.getBoolean("pig.disable.counter",false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;configureLoader;[physicalPlan, op, jobConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;["mapreduce.input.fileinputformat.inputdir", op.getLFile().getFileName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>UDFContext.getUDFContext();serialize;[jobConf]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;registerUdfFiles;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerUdfFiles</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Map&lt;String,File&gt; [scriptFiles=pigContext.getScriptFiles()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>MalformedURLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ToTupleFunction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkEngineConf</ParamName>
+                    <ParamType>SparkEngineConf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>apply</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v1</ParamName>
+                    <ParamType>Text</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCounterGroupName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>counterGroupName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setCounterName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>counterName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSparkCounters</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkCounters</ParamName>
+                    <ParamType>SparkCounters</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setDisableCounter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>disableCounter</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configureLoader</MethodName>
+            <MethodComment>/** 
+ * stolen from JobControlCompiler TODO: refactor it to share this
+ * @param physicalPlan
+ * @param poLoad
+ * @param jobConf
+ * @return
+ * @throws java.io.IOException
+ */
+</MethodComment>
+            <ReturnType>JobConf</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>poLoad</ParamName>
+                    <ParamType>POLoad</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>jobConf</ParamName>
+                    <ParamType>JobConf</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Job [job=new Job(jobConf)]</InnerVar>
+                <InnerVar>LoadFunc [loadFunc=poLoad.getLoadFunc()]</InnerVar>
+                <InnerVar>ArrayList&lt;FileSpec&gt; [pigInputs=new ArrayList&lt;FileSpec&gt;()]</InnerVar>
+                <InnerVar>ArrayList&lt;List&lt;OperatorKey&gt;&gt; [inpTargets=Lists.newArrayList()]</InnerVar>
+                <InnerVar>ArrayList&lt;String&gt; [inpSignatures=Lists.newArrayList()]</InnerVar>
+                <InnerVar>ArrayList&lt;Long&gt; [inpLimits=Lists.newArrayList()]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [loadSuccessors=physicalPlan.getSuccessors(poLoad)]</InnerVar>
+                <InnerVar>List&lt;OperatorKey&gt; [loadSuccessorsKeys=Lists.newArrayList()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>loadFunc;setLocation;[poLoad.getLFile().getFileName(), job]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigInputs;add;[poLoad.getLFile()]</InnerMethodInvoke>
+                <InnerMethodInvoke>inpTargets;add;[loadSuccessorsKeys]</InnerMethodInvoke>
+                <InnerMethodInvoke>inpSignatures;add;[poLoad.getSignature()]</InnerMethodInvoke>
+                <InnerMethodInvoke>inpLimits;add;[poLoad.getLimit()]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;[PigInputFormat.PIG_INPUTS, ObjectSerializer.serialize(pigInputs)]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;[PigInputFormat.PIG_INPUT_TARGETS, ObjectSerializer.serialize(inpTargets)]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;[PigInputFormat.PIG_INPUT_SIGNATURES, ObjectSerializer.serialize(inpSignatures)]</InnerMethodInvoke>
+                <InnerMethodInvoke>jobConf;set;[PigInputFormat.PIG_INPUT_LIMITS, ObjectSerializer.serialize(inpLimits)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasMergeJoinSuccessor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [successors=op.getParentPlan().getSuccessors(op)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

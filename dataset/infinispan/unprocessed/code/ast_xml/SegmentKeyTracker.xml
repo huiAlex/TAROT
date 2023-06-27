@@ -1,0 +1,132 @@
+<Class>
+    <Id>1539</Id>
+    <Package>org.infinispan.client.hotrod.impl.iteration</Package>
+    <ClassName>SegmentKeyTracker</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>KeyTracker</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SegmentKeyTracker  /** 
+ * @author gustavonalle
+ * @since 8.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keysPerSegment</FieldName>
+            <FieldType>AtomicReferenceArray</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keysPerSegment</FieldName>
+            <FieldType>Set&lt;WrappedByteArray&gt;</FieldType>
+        </Field>
+        <Field>
+            <FieldName>segmentConsistentHash</FieldName>
+            <FieldType>SegmentConsistentHash</FieldType>
+        </Field>
+        <Field>
+            <FieldName>marshaller</FieldName>
+            <FieldType>Marshaller</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SegmentKeyTracker</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>marshaller</ParamName>
+                    <ParamType>Marshaller</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segmentConsistentHash</ParamName>
+                    <ParamType>SegmentConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [numSegments=segmentConsistentHash.getNumSegments()]</InnerVar>
+                <InnerVar>IntStream [segmentStream=segments == null ? IntStream.range(0,segmentConsistentHash.getNumSegments()) : segments.stream().mapToInt(i -&gt; i)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>segmentStream;forEach;[i -&gt; keysPerSegment.set(i,new HashSet&lt;&gt;())]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>track</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>status</ParamName>
+                    <ParamType>short</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>whitelist</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [segment=HotRodConstants.hasCompatibility(status) ? segmentConsistentHash.getSegment(MarshallerUtil.bytes2obj(marshaller,key,status,whitelist)) : segmentConsistentHash.getSegment(key)]</InnerVar>
+                <InnerVar>boolean [result=keysPerSegment.get(segment).add(new WrappedByteArray(key))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>missedSegments</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Integer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [length=keysPerSegment.length()]</InnerVar>
+                <InnerVar>Set&lt;Integer&gt; [missed=new HashSet&lt;&gt;(length)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>segmentsFinished</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>finishedSegments</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

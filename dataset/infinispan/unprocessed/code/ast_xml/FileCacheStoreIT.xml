@@ -1,0 +1,62 @@
+<Class>
+    <Id>3057</Id>
+    <Package>org.infinispan.server.test.cs.file</Package>
+    <ClassName>FileCacheStoreIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FileCacheStoreIT  /** 
+ * The goal is to test that the file-store is really preserving data after server kills/shutdowns. The path configuration and expiration is tested in ExampleConfigs (we can't test there the server restarts because all the caches in the example configuration have purge=true).
+ * @author Martin Gencur
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>CONTAINER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>controller</FieldName>
+            <FieldType>ContainerController</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>testSurviveRestart</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManagerFactory [rcmFactory=new RemoteCacheManagerFactory()]</InnerVar>
+                <InnerVar>RemoteInfinispanMBeans [s=RemoteInfinispanMBeans.create(server,CONTAINER,"default","local")]</InnerVar>
+                <InnerVar>RemoteCache&lt;Object,Object&gt; [rc=rcmFactory.createCache(s)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller;start;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNull;[rc.get("k1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["k1", "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["k2", "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["k3", "v3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v1", rc.get("k1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", rc.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", rc.get("k3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;kill;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;start;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", rc.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", rc.get("k3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNull;[rc.get("k1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;stop;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcmFactory;stopManagers;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

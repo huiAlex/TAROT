@@ -1,0 +1,116 @@
+<Class>
+    <Id>297</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark</Package>
+    <ClassName>SparkEngineConf</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Serializable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SparkEngineConf  /** 
+ * The object of SparkEngineConf is to solve the initialization problem of PigContext.properties.get("udf.import.list"), UDFContext#udfConfs, UDFContext#clientSysProps in spark mode. These variables can not be serialized because they are ThreadLocal variables. In MR mode, they are serialized in JobConfiguration in JobControlCompiler#getJob and deserialized by JobConfiguration in PigGenericMapBase#setup. But there is no setup() in spark like what in mr, so these variables can be correctly deserialized before spark programs call them. Here we use following solution to solve: these variables are saved in SparkEngineConf#writeObject and available and then initialized in SparkEngineConf#readObject in spark executor thread.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPARK_UDF_IMPORT_LIST</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPARK_UDFCONTEXT_UDFCONFS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SPARK_UDFCONTEXT_CLIENTSYSPROPS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>properties</FieldName>
+            <FieldType>Properties</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SparkEngineConf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>ObjectInputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;String&gt; [udfImportList=(ArrayList&lt;String&gt;)in.readObject()]</InnerVar>
+                <InnerVar>String [udfConfsStr=(String)in.readObject()]</InnerVar>
+                <InnerVar>String [clientSysPropsStr=(String)in.readObject()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>PigContext;setPackageImportList;[udfImportList]</InnerMethodInvoke>
+                <InnerMethodInvoke>UDFContext.getUDFContext();deserializeForSpark;[udfConfsStr, clientSysPropsStr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ObjectOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ArrayList&lt;String&gt; [udfImportList=Lists.newArrayList(Splitter.on(",").split(properties.getProperty(SPARK_UDF_IMPORT_LIST)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;writeObject;[udfImportList]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSparkUdfImportListStr</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkUdfImportListStr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.properties;setProperty;[SPARK_UDF_IMPORT_LIST, sparkUdfImportListStr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,611 @@
+<Class>
+    <Id>1206</Id>
+    <Package>org.apache.pig.scripting</Package>
+    <ClassName>Pig</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Pig  /** 
+ * The class being used in scripts to interact with Pig
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>defineCache</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>defineCache</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptUDFCache</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptUDFCache</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>script</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scriptContext</FieldName>
+            <FieldType>ScriptPigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>name</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>fs</MethodName>
+            <MethodComment>/** 
+ * Run a filesystem command.  Any output from this command is written to stdout or stderr as appropriate.
+ * @param cmd Filesystem command to run along with its arguments as onestring.
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cmd</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>FsShell [shell=new FsShell(ConfigurationUtil.toConfiguration(ctx.getPigContext().getProperties()))]</InnerVar>
+                <InnerVar>int [code=-1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>sql</MethodName>
+            <MethodComment>/** 
+ * Run a sql command.  Any output from this command is written to stdout or stderr as appropriate.
+ * @param cmd sql command to run along with its arguments as onestring. Currently only hcat is supported as a sql backend
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cmd</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>String [hcatBin=(String)ctx.getPigContext().getProperties().get("hcat.bin")]</InnerVar>
+                <InnerVar>int [ret=GruntParser.runSQLCommand(hcatBin,cmd,false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerJar</MethodName>
+            <MethodComment>/** 
+ * Register a jar for use in Pig.  Once this is done this jar will be registered for &lt;b&gt;all subsequent&lt;/b&gt; Pig pipelines in this script. If you wish to register it for only a single Pig pipeline, use register within that definition.
+ * @param jarfile Path of jar to include.
+ * @throws IOException if the indicated jarfile cannot be found.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jarfile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>PigServer [pigServer=new PigServer(ctx.getPigContext(),false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Register jar: " + jarfile]</InnerMethodInvoke>
+                <InnerMethodInvoke>pigServer;registerJar;[jarfile]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerUDF</MethodName>
+            <MethodComment>/** 
+ * Register scripting UDFs for use in Pig. Once this is done all UDFs defined in the file will be available for &lt;b&gt;all subsequent&lt;/b&gt; Pig pipelines in this script. If you wish to register UDFS for only a single Pig pipeline, use register within that definition.
+ * @param udffile Path of the script UDF file
+ * @param namespace namespace of the UDFs
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>udffile</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>namespace</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>ScriptEngine [engine=ctx.getScriptEngine()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Register script UDF file: " + udffile]</InnerMethodInvoke>
+                <InnerMethodInvoke>engine;registerFunctions;[udffile, namespace, ctx.getPigContext()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addRegisterScriptUDFClause;[udffile, namespace]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>define</MethodName>
+            <MethodComment>/** 
+ * Define an alias for a UDF or a streaming command.  This definition will then be present for &lt;b&gt;all subsequent&lt;/b&gt; Pig pipelines defined in this script.  If you wish to define it for only a single Pig pipeline, use define within that definition.
+ * @param alias name of the defined alias
+ * @param definition string this alias is defined as
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>alias</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>definition</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Add define clause: " + alias + " -- "+ definition]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addDefineClause;[alias, definition]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>set</MethodName>
+            <MethodComment>/** 
+ * Set a variable for use in Pig Latin.  This set will then be present for &lt;b&gt;all subsequent&lt;/b&gt; Pig pipelines defined in this script.  If you wish to set it for only a single Pig pipeline, use set within that definition.
+ * @param var variable to set
+ * @param value to set it to
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>var</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>PigServer [pigServer=new PigServer(ctx.getPigContext(),false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pigServer.getPigContext().getProperties();setProperty;[var, value]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment>/** 
+ * Define a Pig pipeline.
+ * @param pl Pig Latin definition of the pipeline.
+ * @return Pig object representing this pipeline.
+ * @throws IOException if the Pig Latin does not compile.
+ */
+</MethodComment>
+            <ReturnType>Pig</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pl</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment>/** 
+ * Define a named portion of a Pig pipeline.  This allows it to be imported into another pipeline.
+ * @param name Name that will be used to define this pipeline.The namespace is global.
+ * @param pl Pig Latin definition of the pipeline.
+ * @return Pig object representing this pipeline.
+ * @throws IOException if the Pig Latin does not compile.
+ */
+</MethodComment>
+            <ReturnType>Pig</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pl</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb.append(getRegisterScriptUDFClauses());append;[getDefineClauses()]</InnerMethodInvoke>
+                <InnerMethodInvoke>sb.append(pl);append;["\n"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compileFromFile</MethodName>
+            <MethodComment>/** 
+ * Define a Pig pipeline based on Pig Latin in a separate file.
+ * @param filename File to read Pig Latin from.  This must be a purelyPig Latin file.  It cannot contain host language constructs in it.
+ * @return Pig object representing this pipeline.
+ * @throws IOException if the Pig Latin does not compile or the filecannot be found.
+ */
+</MethodComment>
+            <ReturnType>Pig</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compileFromFile</MethodName>
+            <MethodComment>/** 
+ * Define a named Pig pipeline based on Pig Latin in a separate file. This allows it to be imported into another pipeline.
+ * @param name Name that will be used to define this pipeline.The namespace is global.
+ * @param filename File to read Pig Latin from.  This must be a purelyPig Latin file.  It cannot contain host language constructs in it.
+ * @return Pig object representing this pipeline.
+ * @throws IOException if the Pig Latin does not compile or the filecannot be found.
+ */
+</MethodComment>
+            <ReturnType>Pig</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bind</MethodName>
+            <MethodComment>/** 
+ * Bind this to a set of variables. Values must be provided for all Pig Latin parameters.
+ * @param vars map of variables to bind.  Keys should be parameters definedin the Pig Latin.  Values should be strings that provide values for those parameters.  They can be either constants or variables from the host language.  Host language variables must contain strings.
+ * @return a {@link BoundScript} object
+ * @throws IOException if there is not a key for eachPig Latin parameter or if they contain unsupported types.
+ */
+</MethodComment>
+            <ReturnType>BoundScript</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>vars</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bind</MethodName>
+            <MethodComment>/** 
+ * Bind this to multiple sets of variables.  This will cause the Pig Latin script to be executed in parallel over these sets of variables.
+ * @param vars list of maps of variables to bind.  Keys should be parameters definedin the Pig Latin.  Values should be strings that provide values for those variables.  They can be either constants or variables from the host language.  Host language variables must be strings.
+ * @return a {@link BoundScript} object
+ * @throws IOException  if there is not a key for eachPig Latin parameter or if they contain unsupported types.
+ */
+</MethodComment>
+            <ReturnType>BoundScript</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>vars</ParamName>
+                    <ParamType>Map&lt;String,Object&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [lst=new ArrayList&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>bind</MethodName>
+            <MethodComment>/** 
+ * Bind a Pig object to variables in the host language (optional operation).  This does an implicit mapping of variables in the host language to parameters in Pig Latin.  For example, if the user provides a Pig Latin statement &lt;tt&gt; p = Pig.compile("A = load '$input';");&lt;/tt&gt; and then calls this function it will look for a variable called &lt;tt&gt;input&lt;/tt&gt; in the host language.  Scoping rules of the host language will be followed in selecting which variable to bind.  The variable bound must contain a string value.  This method is optional because not all host languages may support searching for in scope variables.
+ * @throws IOException if host language variables are not found to resolve allPig Latin parameters or if they contain unsupported types.
+ */
+</MethodComment>
+            <ReturnType>BoundScript</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ScriptEngine [engine=scriptContext.getScriptEngine()]</InnerVar>
+                <InnerVar>int [index=script.indexOf('$')]</InnerVar>
+                <InnerVar>Map&lt;String,Object&gt; [vars=engine.getParamsFromVariables()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Pig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>script</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>scriptContext</ParamName>
+                    <ParamType>ScriptPigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceParameters</MethodName>
+            <MethodComment>/** 
+ * Replaces the $&lt;identifier&gt; with their actual values
+ * @param qstr the pig script to rewrite
+ * @param vars parameters and their values
+ * @return the modified version
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>qstr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>vars</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [params=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>PigContext [context=getScriptContext().getPigContext()]</InnerVar>
+                <InnerVar>List&lt;String&gt; [contextParams=context.getParams()]</InnerVar>
+                <InnerVar>BufferedReader [reader=new BufferedReader(new StringReader(qstr))]</InnerVar>
+                <InnerVar>String [substituted=context.doParamSubstitution(reader,params,context.getParamFiles())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>context;setParams;[contextParams]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixNonEscapedDollarSign</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [tkns=s.split("\\$",-1)]</InnerVar>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>sb;append;[tkns[tkns.length - 1]]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScriptFromFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filename</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LineNumberReader [rd=new LineNumberReader(new FileReader(filename))]</InnerVar>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDefineClause</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>alias</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>definition</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>defineCache;add;["DEFINE " + alias + " "+ definition+ ";\n"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addRegisterScriptUDFClause</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>path</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>namespace</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=getScriptContext()]</InnerVar>
+                <InnerVar>ScriptEngine [engine=ctx.getScriptEngine()]</InnerVar>
+                <InnerVar>String [clause="REGISTER '" + path + "' USING "+ engine.getScriptingLang()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>scriptUDFCache;add;[clause + ";\n"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDefineClauses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRegisterScriptUDFClauses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [sb=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getScriptContext</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ScriptPigContext</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ScriptPigContext [ctx=ScriptPigContext.get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

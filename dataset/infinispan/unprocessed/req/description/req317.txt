@@ -1,0 +1,14 @@
+Currently, DefaultCacheManager stores it s caches in a concurrent map.  When a call to getCache(...) is made for a cache that does not yet exist, the cache is created, put into the map (via putIfAbsent()) and then the cache is started.  Consequently, a subsequent, but concurrent thread calling getCache(...) with the same cache name may end up with a cache that is not yet ready for use, leading to unexpected behavior.
+Ideally, calls to getCache(...) should block if the requested cache is newly created, but not yet started.  Requests for an already started cache should not block.
+A possible implementation might involve storing the cache along side a volatile single-use thread gate (e.g. new CountDownLatch(1)) in the concurrent map.  The algorithm might look like:
+1. Lookup the map entry (i.e. cache + gate) using the cache name
+2. If the map entry exists, but no gate is present, return the cache.
+3. If the map entry exists, and a latch is present, wait on the latch (ideally with a timeout) and return the cache.
+4. If the map entry does not exist, create the cache and put it into the map (if absent) with a new thread gate.
+4a. If the put was not successful (i.e. an entry already existed), goto 1.
+5. Start the cache - if start fails, stop the cache and remove the map entry (threads waiting on it s gate will timeout, oh well)
+6. Open the gate
+7. Remove the gate from the map entry
+8. Return the cache
+A horridly generic version of the above can be found in the HA-JDBC source code:
+and an example demonstrating use of a Registry with a MapRegistryStoreFactory can be found here:

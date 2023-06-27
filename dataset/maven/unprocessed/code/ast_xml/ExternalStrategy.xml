@@ -1,0 +1,199 @@
+<Class>
+    <Id>482</Id>
+    <Package>groovy.transform.builder</Package>
+    <ClassName>ExternalStrategy</ClassName>
+    <SuperClass>BuilderASTTransformation.AbstractBuilderStrategy</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ExternalStrategy  /** 
+ * This strategy is used with the  {@link Builder} AST transform to populate a builder helper classso that it can be used for the fluent creation of instances of a specified class.&amp;nbsp;The specified class is not modified in any way and may be a Java class. You use it by creating and annotating an explicit builder class which will be filled in by during annotation processing with the appropriate build method and setters. An example is shown here: &lt;pre&gt; import groovy.transform.builder. class Person { String firstName String lastName } {@code @Builder}(builderStrategy=ExternalStrategy, forClass=Person) class PersonBuilder { } def person = new PersonBuilder().firstName("Robert").lastName("Lewandowski").build() assert person.firstName == "Robert" assert person.lastName == "Lewandowski" &lt;/pre&gt; The  {@code prefix} annotation attribute, which defaults to the empty String for this strategy, can be used to create setters with a different naming convention, e.g. withthe  {@code prefix} changed to 'set', you would use your setters as follows:&lt;pre&gt; def p1 = new PersonBuilder().setFirstName("Robert").setLastName("Lewandowski").setAge(21).build() &lt;/pre&gt; or using a prefix of 'with': &lt;pre&gt; def p2 = new PersonBuilder().withFirstName("Robert").withLastName("Lewandowski").withAge(21).build() &lt;/pre&gt; The properties to use can be filtered using either the 'includes' or 'excludes' annotation attributes for  {@code @Builder}. The  {@code @Builder} 'buildMethodName' annotation attribute can be used for configuring the build method's name, default "build".The  {@code @Builder} 'builderMethodName' and 'builderClassName' annotation attributes aren't applicable for this strategy.The  {@code @Builder} 'useSetters' annotation attribute is ignored by this strategy which always uses setters.
+ * @author Marcin Grzejszczak
+ * @author Paul King
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>DEFAULT_INITIAL_VALUE</FieldName>
+            <FieldType>Expression</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>build</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>transform</ParamName>
+                    <FieldType>BuilderASTTransformation</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>annotatedNode</ParamName>
+                    <FieldType>AnnotatedNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>anno</ParamName>
+                    <FieldType>AnnotationNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [builder=(ClassNode)annotatedNode]</InnerVar>
+                <InnerVar>String [prefix=transform.getMemberStringValue(anno,"prefix","")]</InnerVar>
+                <InnerVar>ClassNode [buildee=transform.getMemberClassValue(anno,"forClass")]</InnerVar>
+                <InnerVar>List&lt;String&gt; [excludes=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>List&lt;String&gt; [includes=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>List&lt;PropertyInfo&gt; [props]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>builder;addMethod;[createBuildMethod(transform,anno,buildee,props)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createBuildMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>transform</ParamName>
+                    <FieldType>BuilderASTTransformation</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>anno</ParamName>
+                    <FieldType>AnnotationNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sourceClass</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fields</ParamName>
+                    <FieldType>PropertyInfo</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [buildMethodName=transform.getMemberStringValue(anno,"buildMethodName","build")]</InnerVar>
+                <InnerVar>BlockStatement [body=new BlockStatement()]</InnerVar>
+                <InnerVar>Expression [sourceClassInstance=initializeInstance(sourceClass,fields,body)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[returnS(sourceClassInstance)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createBuilderMethodForField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>builderClass</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prop</ParamName>
+                    <FieldType>PropertyInfo</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prefix</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [propName=prop.getName().equals("class") ? "clazz" : prop.getName()]</InnerVar>
+                <InnerVar>String [setterName=getSetterName(prefix,prop.getName())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createFieldCopy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>FieldNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>builderClass</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>prop</ParamName>
+                    <FieldType>PropertyInfo</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [propName=prop.getName()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPropertyInfoFromBeanInfo</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PropertyInfo</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cNode</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>includes</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>excludes</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PropertyInfo&gt; [result=new ArrayList&lt;PropertyInfo&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeInstance</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sourceClass</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>props</ParamName>
+                    <FieldType>PropertyInfo</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>body</ParamName>
+                    <FieldType>BlockStatement</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [instance=varX("_the" + sourceClass.getNameWithoutPackage(),sourceClass)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>body;addStatement;[declS(instance,ctorX(sourceClass))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

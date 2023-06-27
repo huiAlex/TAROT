@@ -1,0 +1,291 @@
+<Class>
+    <Id>486</Id>
+    <Package>edu.ncsu.csc.itrust.action</Package>
+    <ClassName>ViewVisitedHCPsAction</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ViewVisitedHCPsAction  /** 
+ * Action class for ViewVisitedHCPs.jsp
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>patientMID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>docDAO</FieldName>
+            <FieldType>PersonnelDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>visitDAO</FieldName>
+            <FieldType>OfficeVisitDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>patientDAO</FieldName>
+            <FieldType>PatientDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>declareAction</FieldName>
+            <FieldType>DeclareHCPAction</FieldType>
+        </Field>
+        <Field>
+            <FieldName>filterList</FieldName>
+            <FieldType>ArrayList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>filterList</FieldName>
+            <FieldType>PersonnelBean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ViewVisitedHCPsAction</MethodName>
+            <MethodComment>/** 
+ * Set up defaults 
+ * @param factory The DAOFactory used to create the DAOs used in this action.
+ * @param loggedInMID The MID of the person viewing the visited HCPs.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <ParameterType>DAOFactory factory</ParameterType>
+                <ParameterType>long loggedInMID</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeHCPVisitBean</MethodName>
+            <MethodComment>/** 
+ * Create an HCPVisitBean from a given PersonnelBean and office visit date.
+ * @param pb The PersonnelBean that will be visited.
+ * @param visitDate The date of the visit.  This may be the empty string.
+ * @return The new HCPVisitBean. 
+ * @throws DBException
+ */
+</MethodComment>
+            <ReturnType>HCPVisitBean</ReturnType>
+            <ParameterList>
+                <ParameterType>PersonnelBean pb</ParameterType>
+                <ParameterType>String visitDate</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [hcpid=pb.getMID()]</InnerVar>
+                <InnerVar>HCPVisitBean [visitBean=new HCPVisitBean()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>visitBean;setHCPMID;[hcpid]</InnerMethodInvoke>
+                <InnerMethodInvoke>visitBean;setHCPName;[pb.getFullName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>visitBean;setOVDate;[visitDate]</InnerMethodInvoke>
+                <InnerMethodInvoke>visitBean;setHCPSpecialty;[pb.getSpecialty()]</InnerMethodInvoke>
+                <InnerMethodInvoke>visitBean;setHCPAddr;[pb.getStreetAddress1() + " " + pb.getStreetAddress2()+ " "+ pb.getCity()+ ", "+ pb.getState()+ " "+ pb.getZip()]</InnerMethodInvoke>
+                <InnerMethodInvoke>visitBean;setDesignated;[patientDAO.checkDeclaredHCP(patientMID,hcpid)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>matchPersonnel</MethodName>
+            <MethodComment>/** 
+ * Checks to see if a PersonnelBean matches against a given set of  criteria.
+ * @param pb The PersonnelBean to check.
+ * @param lastName The last name to check against.  May be null or the empty string to ignore.
+ * @param specialty The specialty to check against.  May be null or the empty string to ignore.
+ * @param zip The zip code to check against.  May be null or the empty string to ignore.
+ * @return true if the PersonnelBean matches all the given parameters, or false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <ParameterType>PersonnelBean pb</ParameterType>
+                <ParameterType>String lastName</ParameterType>
+                <ParameterType>String specialty</ParameterType>
+                <ParameterType>String zip</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAllVisitedHCPs</MethodName>
+            <MethodComment>/** 
+ * Get a list of all HCPs visited and/or designated by by the current  user.  The list can optionally be filtered by the doctor's last name,  specialty, or zip code.
+ * @param lastName The last name (or a part of it) of the doctor to search for, or null or an empty string to accept all doctors.
+ * @param specialty The specialty of the doctor to search for, or null or an empty string to accept all doctors.
+ * @param zip The zip code of the doctor to search for, or null or an empty string to accept all doctors.
+ * @return A list of HCPVisitBeans where each represents one HCP that has been visited or has been designated.
+ * @throws iTrustException
+ */
+</MethodComment>
+            <ReturnType>HCPVisitBean</ReturnType>
+            <ParameterList>
+                <ParameterType>String lastName</ParameterType>
+                <ParameterType>String specialty</ParameterType>
+                <ParameterType>String zip</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;HCPVisitBean&gt; [visits=new ArrayList&lt;HCPVisitBean&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVisitedHCPs</MethodName>
+            <MethodComment>/** 
+ * Returns a list of all the visited and/or designated HCPs.
+ * @return list of all the visited HCPs
+ */
+</MethodComment>
+            <ReturnType>HCPVisitBean</ReturnType>
+            <ParameterList>
+                <ParameterType></ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;HCPVisitBean&gt; [visits]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNamedHCP</MethodName>
+            <MethodComment>/** 
+ * Given an HCP's name, return the corresponding HCPVisitBean.
+ * @param name
+ * @return
+ */
+</MethodComment>
+            <ReturnType>HCPVisitBean</ReturnType>
+            <ParameterList>
+                <ParameterType>String name</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HCPVisitBean [r=new HCPVisitBean()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>undeclareHCP</MethodName>
+            <MethodComment>/** 
+ * Set a given HCP as undeclared.
+ * @param name HCP to undeclare.
+ * @return An empty string.
+ * @throws iTrustException
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <ParameterType>String name</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>declareHCP</MethodName>
+            <MethodComment>/** 
+ * Set a given HCP as declared
+ * @param name HCP to declare
+ * @return An empty string.
+ * @throws iTrustException
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <ParameterType>String name</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [match=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkDeclared</MethodName>
+            <MethodComment>/** 
+ * Check to see if a given HCP is declared
+ * @param mid HCP to check
+ * @return true if the HCP is declared, otherwise false
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <ParameterType>long mid</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterHCPList</MethodName>
+            <MethodComment>/** 
+ * Filter the list of HCPs by last name, specialty, or zip code. 
+ * @param doc Filter by lastName.  May be null or the empty string to ignore.
+ * @param specialty Filter by specialty.  May be null or the empty string to ignore.
+ * @param zip Filter by zip.  May be null or the empty string to ignore.
+ * @return Filtered list of HCPs.
+ */
+</MethodComment>
+            <ReturnType>HCPVisitBean</ReturnType>
+            <ParameterList>
+                <ParameterType>String lastName</ParameterType>
+                <ParameterType>String specialty</ParameterType>
+                <ParameterType>String zip</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;HCPVisitBean&gt; [visits]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

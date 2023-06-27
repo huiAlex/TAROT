@@ -1,0 +1,177 @@
+<Class>
+    <Id>1621</Id>
+    <Package>org.drools.games.wumpus</Package>
+    <ClassName>WumpusWorldMain</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>main</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>KieContainer [kc=KieServices.Factory.get().getKieClasspathContainer()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>new WumpusWorldMain();init;[kc, true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>WumpusWorldMain</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>init</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>kc</ParamName>
+                    <ParamType>KieContainer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exitOnClose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>KieSession [serverKsession=kc.newKieSession("WumpusMainKS")]</InnerVar>
+                <InnerVar>KieSession [clientKsession=kc.newKieSession("WumpusClientKS")]</InnerVar>
+                <InnerVar>WumpusWorldConfiguration [wumpusWorldConfiguration=new WumpusWorldConfiguration()]</InnerVar>
+                <InnerVar>GameUI [gameUI=new GameUI(serverKsession,wumpusWorldConfiguration)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverKsession.getChannels();put;["sensors", new Channel(){
+  public void send(  Object object){
+    clientKsession.insert(object);
+    clientKsession.fireAllRules();
+  }
+}
+]</InnerMethodInvoke>
+                <InnerMethodInvoke>clientKsession.getChannels();put;["commands", new Channel(){
+  public void send(  Object object){
+    serverKsession.insert(object);
+    serverKsession.fireAllRules();
+  }
+}
+]</InnerMethodInvoke>
+                <InnerMethodInvoke>wumpusWorldConfiguration;setExitOnClose;[exitOnClose]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverKsession;setGlobal;["wumpusWorldConfiguration", wumpusWorldConfiguration]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverKsession;setGlobal;["randomInteger", new java.util.Random()]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverKsession;insert;[gameUI]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverKsession;insert;[gameUI.getGameView()]</InnerMethodInvoke>
+                <InnerMethodInvoke>new Thread(new Runnable(){
+  public void run(){
+    serverKsession.fireUntilHalt();
+  }
+}
+);start;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>new Thread(new Runnable(){
+  public void run(){
+    clientKsession.fireUntilHalt();
+  }
+}
+);start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>send</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>object</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>clientKsession;insert;[object]</InnerMethodInvoke>
+                <InnerMethodInvoke>clientKsession;fireAllRules;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>send</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>object</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverKsession;insert;[object]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverKsession;fireAllRules;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>serverKsession;fireUntilHalt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>clientKsession;fireUntilHalt;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

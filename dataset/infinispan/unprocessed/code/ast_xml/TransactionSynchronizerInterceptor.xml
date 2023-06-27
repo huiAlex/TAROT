@@ -1,0 +1,49 @@
+<Class>
+    <Id>463</Id>
+    <Package>org.infinispan.statetransfer</Package>
+    <ClassName>TransactionSynchronizerInterceptor</ClassName>
+    <SuperClass>BaseAsyncInterceptor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>TransactionSynchronizerInterceptor  /** 
+ * With the Non-Blocking State Transfer (NBST) in place it is possible for a transactional command to be forwarded multiple times, concurrently to the same node. This interceptor makes sure that for any given transaction, the interceptor chain, post  {@link StateTransferInterceptor}, would only allows a single thread to amend a transaction. &lt;/p&gt; E.g. of when this situation might occur: &lt;ul&gt; &lt;li&gt;1) Node A broadcasts PrepareCommand to nodes B, C &lt;/li&gt; &lt;li&gt;2) Node A leaves cluster, causing new topology to be installed &lt;/li&gt; &lt;li&gt;3) The command arrives to B and C, with lower topology than the current one&lt;/li&gt; &lt;li&gt;4) Both B and C forward the command to node D&lt;/li&gt; &lt;li&gt;5) D executes the two commands in parallel and finds out that A has left, therefore executing RollbackCommand&gt;&lt;/li&gt; &lt;/ul&gt; &lt;p/&gt; This interceptor must placed after the logic that handles command forwarding ( {@link StateTransferInterceptor}), otherwise we can end up in deadlocks when a command is forwarded in a loop to the same cache: e.g. A-&gt;B-&gt;C-&gt;A. This scenario is possible when we have chained topology changes (see &lt;a href="https://issues.jboss.org/browse/ISPN-2578"&gt;ISPN-2578&lt;/a&gt;).
+ * @author Mircea Markus
+ * @since 5.2
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>visitCommand</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>InvocationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>VisitableCommand</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CompletableFuture&lt;Void&gt; [releaseFuture=new CompletableFuture&lt;&gt;()]</InnerVar>
+                <InnerVar>RemoteTransaction [remoteTransaction=((TxInvocationContext&lt;RemoteTransaction&gt;)ctx).getCacheTransaction()]</InnerVar>
+                <InnerVar>Object [result=asyncInvokeNext(ctx,command,remoteTransaction.enterSynchronizationAsync(releaseFuture))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Throwable</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

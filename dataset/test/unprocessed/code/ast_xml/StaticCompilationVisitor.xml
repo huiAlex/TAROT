@@ -1,0 +1,602 @@
+<Class>
+    <Id>700</Id>
+    <Package>org.codehaus.groovy.transform.sc</Package>
+    <ClassName>StaticCompilationVisitor</ClassName>
+    <SuperClass>StaticTypeCheckingVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>StaticCompilationVisitor  /** 
+ * This visitor is responsible for amending the AST with static compilation metadata or transform the AST so that a class or a method can be statically compiled. It may also throw errors specific to static compilation which are not considered as an error at the type check pass. For example, usage of spread operator is not allowed in statically compiled portions of code, while it may be statically checked. Static compilation relies on static type checking, which explains why this visitor extends the type checker visitor.
+ * @author Cedric Champeau
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>TYPECHECKED_CLASSNODE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COMPILESTATIC_CLASSNODE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TYPECHECKED_ANNOTATIONS</FieldName>
+            <FieldType>ClassNode[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ARRAYLIST_CLASSNODE</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ARRAYLIST_CONSTRUCTOR</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ARRAYLIST_ADD_METHOD</FieldName>
+            <FieldType>MethodNode</FieldType>
+        </Field>
+        <Field>
+            <FieldName>typeChooser</FieldName>
+            <FieldType>TypeChooser</FieldType>
+        </Field>
+        <Field>
+            <FieldName>classNode</FieldName>
+            <FieldType>ClassNode</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>StaticCompilationVisitor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeCheckingAnnotations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClassNode[]</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isStaticallyCompiled</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>AnnotatedNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPrivateFieldAndMethodAccessors</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Iterator&lt;InnerClassNode&gt; [it=node.getInnerClasses()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addPrivateBridgeMethods;[node]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addPrivateFieldsAccessors;[node]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [skip=shouldSkipClassNode(node)]</InnerVar>
+                <InnerVar>ClassNode [oldCN=classNode]</InnerVar>
+                <InnerVar>Iterator&lt;InnerClassNode&gt; [innerClasses=classNode.getInnerClasses()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addPrivateFieldAndMethodAccessors;[node]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>anyMethodSkip</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>checkForConstructorWithCSButClassWithout</MethodName>
+            <MethodComment>/** 
+ * If we are in a constructor, that is static compiled, but in a class, that is not, it may happen that init code from object initializers, fields or properties is added into the constructor code. The backend assumes a purely static contructor, so it may fail if it encounters dynamic code here. Thus we make this kind of code fail
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [meta=node.getNodeMetaData(STATIC_COMPILE_NODE)]</InnerVar>
+                <InnerVar>ClassNode [clz=typeCheckingContext.getEnclosingClassNode()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addStaticTypeError;["Cannot statically compile constructor implicitly including non static elements from object initializers, properties or fields.", node]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;checkForConstructorWithCSButClassWithout;[node]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPrivateFieldsAccessors</MethodName>
+            <MethodComment>/** 
+ * Adds special accessors for private constants so that inner classes can retrieve them.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;ASTNode&gt; [accessedFields=(Set&lt;ASTNode&gt;)node.getNodeMetaData(StaticTypesMarker.PV_FIELDS_ACCESS)]</InnerVar>
+                <InnerVar>Map&lt;String,MethodNode&gt; [privateConstantAccessors=(Map&lt;String,MethodNode&gt;)node.getNodeMetaData(PRIVATE_FIELDS_ACCESSORS)]</InnerVar>
+                <InnerVar>int [acc=-1]</InnerVar>
+                <InnerVar>int [access=Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>node;setNodeMetaData;[PRIVATE_FIELDS_ACCESSORS, privateConstantAccessors]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPrivateBridgeMethods</MethodName>
+            <MethodComment>/** 
+ * This method is used to add "bridge" methods for private methods of an inner/outer class, so that the outer class is capable of calling them. It does basically the same job as access$000 like methods in Java.
+ * @param node an inner/outer class node for which to generate bridge methods
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;ASTNode&gt; [accessedMethods=(Set&lt;ASTNode&gt;)node.getNodeMetaData(StaticTypesMarker.PV_METHODS_ACCESS)]</InnerVar>
+                <InnerVar>List&lt;MethodNode&gt; [methods=new ArrayList&lt;MethodNode&gt;(node.getAllDeclaredMethods())]</InnerVar>
+                <InnerVar>Map&lt;MethodNode,MethodNode&gt; [privateBridgeMethods=(Map&lt;MethodNode,MethodNode&gt;)node.getNodeMetaData(PRIVATE_BRIDGE_METHODS)]</InnerVar>
+                <InnerVar>int [i=-1]</InnerVar>
+                <InnerVar>int [access=Opcodes.ACC_STATIC | Opcodes.ACC_PUBLIC | Opcodes.ACC_SYNTHETIC]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>methodSpecificGenerics</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>method</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;String&gt; [genericTypeTokens=new ArrayList&lt;String&gt;()]</InnerVar>
+                <InnerVar>GenericsType[] [candidateGenericsTypes=method.getGenericsTypes()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>memorizeInitialExpressions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSpreadExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expression</ParamName>
+                    <ParamType>SpreadExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMethodCallExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>call</ParamName>
+                    <ParamType>MethodCallExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodNode [target=(MethodNode)call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitConstructorCallExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>call</ParamName>
+                    <ParamType>ConstructorCallExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodNode [target=(MethodNode)call.getNodeMetaData(DIRECT_METHOD_CALL_TARGET)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitForLoop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forLoop</ParamName>
+                    <ParamType>ForStatement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [collectionExpression=forLoop.getCollectionExpression()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findMethodOrFail</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expr</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>receiver</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodNode [methodNode=super.findMethodOrFail(expr,receiver,name,args)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>existsProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pexp</ParamName>
+                    <ParamType>PropertyExpression</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>checkForReadOnly</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>visitor</ParamName>
+                    <ParamType>ClassCodeVisitorSupport</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [objectExpression=pexp.getObjectExpression()]</InnerVar>
+                <InnerVar>ClassNode [objectExpressionType=getType(objectExpression)]</InnerVar>
+                <InnerVar>Reference&lt;ClassNode&gt; [rType=new Reference&lt;ClassNode&gt;(objectExpressionType)]</InnerVar>
+                <InnerVar>ClassCodeVisitorSupport [receiverMemoizer=new ClassCodeVisitorSupport(){
+  @Override protected SourceUnit getSourceUnit(){
+    return null;
+  }
+  public void visitField(  final FieldNode node){
+    if (visitor != null)     visitor.visitField(node);
+    ClassNode declaringClass=node.getDeclaringClass();
+    if (declaringClass != null) {
+      if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(declaringClass,ClassHelper.LIST_TYPE)) {
+        boolean spread=declaringClass.getDeclaredField(node.getName()) != node;
+        pexp.setSpreadSafe(spread);
+      }
+      rType.set(declaringClass);
+    }
+  }
+  public void visitMethod(  final MethodNode node){
+    if (visitor != null)     visitor.visitMethod(node);
+    ClassNode declaringClass=node.getDeclaringClass();
+    if (declaringClass != null) {
+      if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(declaringClass,ClassHelper.LIST_TYPE)) {
+        List&lt;MethodNode&gt; properties=declaringClass.getDeclaredMethods(node.getName());
+        boolean spread=true;
+        for (        MethodNode mn : properties) {
+          if (node == mn) {
+            spread=false;
+            break;
+          }
+        }
+        pexp.setSpreadSafe(spread);
+      }
+      rType.set(declaringClass);
+    }
+  }
+  @Override public void visitProperty(  final PropertyNode node){
+    if (visitor != null)     visitor.visitProperty(node);
+    ClassNode declaringClass=node.getDeclaringClass();
+    if (declaringClass != null) {
+      if (StaticTypeCheckingSupport.implementsInterfaceOrIsSubclassOf(declaringClass,ClassHelper.LIST_TYPE)) {
+        List&lt;PropertyNode&gt; properties=declaringClass.getProperties();
+        boolean spread=true;
+        for (        PropertyNode propertyNode : properties) {
+          if (propertyNode == node) {
+            spread=false;
+            break;
+          }
+        }
+        pexp.setSpreadSafe(spread);
+      }
+      rType.set(declaringClass);
+    }
+  }
+}
+]</InnerVar>
+                <InnerVar>boolean [exists=super.existsProperty(pexp,checkForReadOnly,receiverMemoizer)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSourceUnit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SourceUnit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>FieldNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=node.getDeclaringClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=node.getDeclaringClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>PropertyNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassNode [declaringClass=node.getDeclaringClass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitPropertyExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pexp</ParamName>
+                    <ParamType>PropertyExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [dynamic=pexp.getNodeMetaData(StaticTypesMarker.DYNAMIC_RESOLUTION)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

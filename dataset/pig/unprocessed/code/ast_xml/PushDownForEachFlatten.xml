@@ -1,0 +1,197 @@
+<Class>
+    <Id>584</Id>
+    <Package>org.apache.pig.newplan.logical.rules</Package>
+    <ClassName>PushDownForEachFlatten</ClassName>
+    <SuperClass>Rule</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>PushDownForEachFlatten  /** 
+ * It's generally a good idea to do flattens as late as possible as they tend to generate more rows (and so more I/O). This optimization swaps the order of SORTs, CROSSes and JOINs that come after  FOREACH..GENERATE..FLATTENs. FILTERs are re-ordered by the  {@link FilterAboveForeach} rule so are ignored here. 
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>subPlan</FieldName>
+            <FieldType>OperatorSubPlan</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>PushDownForEachFlatten</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildPattern</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OperatorPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>LogicalPlan [plan=new LogicalPlan()]</InnerVar>
+                <InnerVar>LogicalRelationalOperator [foreach=new LOForEach(plan)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>plan;add;[foreach]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNewTransformer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Transformer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>check</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>matched</ParamName>
+                    <ParamType>OperatorPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LOForEach [foreach=(LOForEach)matched.getSources().get(0)]</InnerVar>
+                <InnerVar>LOGenerate [gen=OptimizerUtils.findGenerate(foreach)]</InnerVar>
+                <InnerVar>List&lt;Operator&gt; [succs=currentPlan.getSuccessors(foreach)]</InnerVar>
+                <InnerVar>List&lt;Long&gt; [uids=getNonFlattenFieldUids(gen)]</InnerVar>
+                <InnerVar>Operator [succ=succs.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProjectExpressions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ProjectExpression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expr</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Operator&gt; [ops=expr.getSinks()]</InnerVar>
+                <InnerVar>List&lt;ProjectExpression&gt; [projs=new ArrayList&lt;ProjectExpression&gt;(ops.size())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNonFlattenFieldUids</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Long</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>gen</ParamName>
+                    <ParamType>LOGenerate</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Long&gt; [uids=new ArrayList&lt;Long&gt;()]</InnerVar>
+                <InnerVar>List&lt;LogicalExpressionPlan&gt; [exprs=gen.getOutputPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isPureProjection</MethodName>
+            <MethodComment>/** 
+ * Check if the given expression contains only a pure projection. For instance $0 is legal, f1 is legal, but 5 + $2 is not legal. (int)f1 is not legal either.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expr</ParamName>
+                    <ParamType>LogicalExpressionPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reportChanges</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OperatorPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transform</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>matched</ParamName>
+                    <ParamType>OperatorPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LOForEach [foreach=(LOForEach)matched.getSources().get(0)]</InnerVar>
+                <InnerVar>Operator [next=currentPlan.getSuccessors(foreach).get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

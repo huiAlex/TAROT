@@ -1,0 +1,259 @@
+<Class>
+    <Id>904</Id>
+    <Package>org.apache.pig.backend.executionengine</Package>
+    <ClassName>ExecutionEngine</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ExecutionEngine  /** 
+ * The main interface bridging the front end and back end of Pig. This allows Pig to be ran on multiple Execution Engines, and not being limited to only Hadoop MapReduce. The ExecutionEngines must support the following methods as these are all the access points for the Pig frontend for processing. Traditionally there is one ExecutionEngine created per processing job, but this is not necessary. The ExecutionEngine instance comes from the ExecType, and it can choose to reuse ExecutionEngine instances. All specifications for methods are listed below as well as expected behavior, and the ExecutionEngine must conform to these.
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>init</MethodName>
+            <MethodComment>/** 
+ * This method is responsible for the initialization of the ExecutionEngine. All necessary setup tasks and configuration should execute in the init() method. This method will be called via the PigContext object.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setConfiguration</MethodName>
+            <MethodComment>/** 
+ * Responsible for updating the properties for the ExecutionEngine. The update may require reinitialization of the engine, perhaps through another call to init() if appropriate. This decision is delegated to the ExecutionEngine -- that is, the caller will not call init() after updating the properties. The Properties passed in should replace any configuration that occurred from previous Properties object. The Properties object should also be updated to reflect the deprecation/modifications that the ExecutionEngine may trigger.
+ * @param newConfiguration -- Properties object holding all configuration vals
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newConfiguration</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setProperty</MethodName>
+            <MethodComment>/** 
+ * Responsible for setting a specific property and value. This method may be called as a result of a user "SET" command in the script or elsewhere in Pig to set certain properties. The properties object of the PigContext should be updated with the property and value with deprecation/other configuration done by the ExecutionEngine reflected. The ExecutionEngine should also update its internal configuration view as well.
+ * @param property to update
+ * @param value to set for property
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>property</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getConfiguration</MethodName>
+            <MethodComment>/** 
+ * Returns the Properties representation of the ExecutionEngine configuration. The Properties object returned does not have to be the same object between distinct calls to getConfiguration(). The ExecutionEngine may create a new Properties object populated with all the properties each time.
+ */
+</MethodComment>
+            <ReturnType>Properties</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>launchPig</MethodName>
+            <MethodComment>/** 
+ * This method is responsible for the actual execution of a LogicalPlan. No assumptions is made about the architecture of the ExecutionEngine, except that it is capable of executing the LogicalPlan representation of a script. The ExecutionEngine should take care of all cleanup after executing the logical plan and returns an implementation of PigStats that contains the relevant information/statistics of the execution of the script.
+ * @param lp -- plan to compile
+ * @param grpName -- group name for submission
+ * @param pc -- context for execution
+ * @throws ExecException
+ */
+</MethodComment>
+            <ReturnType>PigStats</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lp</ParamName>
+                    <ParamType>LogicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>grpName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>FrontendException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>explain</MethodName>
+            <MethodComment>/** 
+ * This method handles the backend processing of the Explain command. Once again, no assumptions is made about the architecture of the ExecutionEngine, except that it is capable of "explaining" the LogicalPlan representation of a script. The ExecutionEngine should print all of it's explain statements in the PrintStream provided UNLESS the File object is NOT null. In that case, the file is the directory for which the ExecutionEngine must write out the explain statements into semantically distinct files. For example, if the ExecutionEngine operates on a PhysicalPlan and an ExecutionPlan then there would be two separate files detailing each. The suffix param indicates the suffix of each of these file names.
+ * @param lp -- plan to explain
+ * @param pc -- context for explain processing
+ * @param ps -- print stream to write all output to (if dir param is null)
+ * @param format -- format to print explain
+ * @param verbose
+ * @param dir -- directory to write output to. if not null, write to files
+ * @param suffix -- if writing to files, suffix to be used for each file
+ * @throws PlanException
+ * @throws VisitorException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lp</ParamName>
+                    <ParamType>LogicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>PrintStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>format</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>verbose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>dir</ParamName>
+                    <ParamType>File</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>suffix</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDataStorage</MethodName>
+            <MethodComment>/** 
+ * Returns the DataStorage the ExecutionEngine is using.
+ * @return DataStorage the ExecutionEngine is using.
+ */
+</MethodComment>
+            <ReturnType>DataStorage</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>instantiateScriptState</MethodName>
+            <MethodComment>/** 
+ * Creates a ScriptState object which will be accessible as a ThreadLocal variable inside the ScriptState class. This method is called when first initializing the ScriptState as to delegate to the ExecutionEngine the version of ScriptState to use to manage the execution at hand.
+ * @return ScriptState object to manage execution of the script
+ */
+</MethodComment>
+            <ReturnType>ScriptState</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>instantiatePigStats</MethodName>
+            <MethodComment>/** 
+ * Creates a PigStats object which will be accessible as a ThreadLocal variable inside the PigStats class. This method is called when first initializing the PigStats.
+ * @return PigStats object.
+ */
+</MethodComment>
+            <ReturnType>PigStats</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExecutableManager</MethodName>
+            <MethodComment>/** 
+ * Returns the ExecutableManager to be used in Pig Streaming.
+ * @return ExecutableManager to be used in Pig Streaming.
+ */
+</MethodComment>
+            <ReturnType>ExecutableManager</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>kill</MethodName>
+            <MethodComment>/** 
+ * This method is called when user requests to kill all jobs associated with the execution engine
+ * @throws BackendException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>BackendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>killJob</MethodName>
+            <MethodComment>/** 
+ * This method is called when a user requests to kill a job associated with the given job id. If it is not possible for a user to kill a job, throw a exception. It is imperative for the job id's being displayed to be unique such that the correct jobs are being killed when the user supplies the id.
+ * @throws BackendException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jobID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType>BackendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>destroy</MethodName>
+            <MethodComment>/** 
+ * Perform any cleanup operation
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

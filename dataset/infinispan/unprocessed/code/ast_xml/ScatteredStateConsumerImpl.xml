@@ -1,0 +1,618 @@
+<Class>
+    <Id>916</Id>
+    <Package>org.infinispan.scattered.impl</Package>
+    <ClassName>ScatteredStateConsumerImpl</ClassName>
+    <SuperClass>StateConsumerImpl</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ScatteredStateConsumerImpl  /** 
+ * @author Radim Vansa &amp;lt;rvansa@redhat.com&amp;gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SKIP_OWNERSHIP_FLAGS</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>entryFactory</FieldName>
+            <FieldType>InternalEntryFactory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>asyncExecutor</FieldName>
+            <FieldType>ExecutorService</FieldType>
+        </Field>
+        <Field>
+            <FieldName>svm</FieldName>
+            <FieldType>ScatteredVersionManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inboundSegments</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inboundSegments</FieldName>
+            <FieldType>Integer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>chunkCounter</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>retrievedEntries</FieldName>
+            <FieldType>ConcurrentMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>retrievedEntries</FieldName>
+            <FieldType>Address</FieldType>
+        </Field>
+        <Field>
+            <FieldName>backupQueue</FieldName>
+            <FieldType>BlockingQueue</FieldType>
+        </Field>
+        <Field>
+            <FieldName>backupQueue</FieldName>
+            <FieldType>InternalCacheEntry</FieldType>
+        </Field>
+        <Field>
+            <FieldName>invalidations</FieldName>
+            <FieldType>ConcurrentMap</FieldType>
+        </Field>
+        <Field>
+            <FieldName>invalidations</FieldName>
+            <FieldType>Address</FieldType>
+        </Field>
+        <Field>
+            <FieldName>backupAddress</FieldName>
+            <FieldType>Collection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>backupAddress</FieldName>
+            <FieldType>Address</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nonBackupAddresses</FieldName>
+            <FieldType>Collection</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nonBackupAddresses</FieldName>
+            <FieldType>Address</FieldType>
+        </Field>
+        <Field>
+            <FieldName>chunkSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>key</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>version</FieldName>
+            <FieldType>EntryVersion</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>inject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entryFactory</ParamName>
+                    <ParamType>InternalEntryFactory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>executorService</ParamName>
+                    <ParamType>ExecutorService</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>svm</ParamName>
+                    <ParamType>ScatteredVersionManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>onTopologyUpdate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheTopology</ParamName>
+                    <ParamType>CacheTopology</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isRebalance</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Address [nextMember=getNextMember(cacheTopology)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>nonBackupAddresses;remove;[nextMember]</InnerMethodInvoke>
+                <InnerMethodInvoke>nonBackupAddresses;remove;[rpcManager.getAddress()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>beforeTopologyInstalled</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>topologyId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>startRebalance</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>previousWriteCh</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newWriteCh</ParamName>
+                    <ParamType>ConsistentHash</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;Integer&gt; [addedSegments=getOwnedSegments(newWriteCh)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>svm;setTopologyId;[topologyId]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleSegments</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startRebalance</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>addedSegments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>removedSegments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>chunkCounter;set;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpcManager.invokeRemotelyAsync(null,commandsFactory.buildStateRequestCommand(StateRequestCommand.Type.CONFIRM_REVOKED_SEGMENTS,rpcManager.getAddress(),cacheTopology.getTopologyId(),null),synchronousIgnoreLeaversRpcOptions).whenComplete((responses,throwable) -&gt; {
+  if (throwable == null) {
+    try {
+      svm.startKeyTransfer(addedSegments);
+      requestKeyTransfer(addedSegments);
+    }
+ catch (    Throwable t) {
+      log.failedToRequestSegments(cacheName,null,addedSegments,t);
+    }
+  }
+ else {
+    if (cache.getAdvancedCache().getComponentRegistry().getStatus() == ComponentStatus.RUNNING) {
+      log.failedConfirmingRevokedSegments(throwable);
+    }
+ else {
+      log.debug("Failed confirming revoked segments",throwable);
+    }
+    for (    int segment : addedSegments) {
+      svm.notifyKeyTransferFinished(segment,false,false);
+    }
+    notifyEndOfStateTransferIfNeeded();
+  }
+}
+);join;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>requestKeyTransfer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isTransferringKeys=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>onTaskCompletion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inboundTransfer</ParamName>
+                    <ParamType>InboundTransferTask</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;Integer&gt; [completedSegments=Collections.emptySet()]</InnerVar>
+                <InnerVar>boolean [lastTransfer=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;removeTransfer;[inboundTransfer]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>offerAndDrain</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>T</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queue</ParamName>
+                    <ParamType>T</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>element</ParamName>
+                    <ParamType>T</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;T&gt; [list=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>invalidate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>EntryVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>member</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockingQueue&lt;KeyAndVersion&gt; [queue=invalidations.computeIfAbsent(member,m -&gt; new ArrayBlockingQueue&lt;&gt;(chunkSize))]</InnerVar>
+                <InnerVar>List&lt;KeyAndVersion&gt; [list=offerAndDrain(queue,new KeyAndVersion(key,version))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>invalidate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>list</ParamName>
+                    <ParamType>KeyAndVersion</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>member</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object[] [keys=new Object[list.size()]]</InnerVar>
+                <InnerVar>int[] [topologyIds=new int[list.size()]]</InnerVar>
+                <InnerVar>long[] [versions=new long[list.size()]]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+                <InnerVar>InvalidateVersionsCommand [ivc=commandsFactory.buildInvalidateVersionsCommand(cacheTopology.getTopologyId(),keys,topologyIds,versions,true)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>chunkCounter;incrementAndGet;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpcManager.invokeRemotelyAsync(Collections.singleton(member),ivc,synchronousRpcOptions);whenComplete;[(responses,t) -&gt; {
+  if (t != null) {
+    log.failedInvalidatingRemoteCache(t);
+  }
+  if (chunkCounter.decrementAndGet() == 0) {
+    notifyEndOfStateTransferIfNeeded();
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backupEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entry</ParamName>
+                    <ParamType>InternalCacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;InternalCacheEntry&gt; [entries=offerAndDrain(backupQueue,entry)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>backupEntries</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entries</ParamName>
+                    <ParamType>InternalCacheEntry</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Map&lt;Object,InternalCacheValue&gt; [map=new HashMap&lt;&gt;()]</InnerVar>
+                <InnerVar>PutMapCommand [putMapCommand=commandsFactory.buildPutMapCommand(map,null,STATE_TRANSFER_FLAGS)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>chunkCounter;incrementAndGet;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpcManager.invokeRemotelyAsync(backupAddress,putMapCommand,synchronousRpcOptions);whenComplete;[((responseMap,throwable) -&gt; {
+  try {
+    if (throwable != null) {
+      log.failedOutBoundTransferExecution(throwable);
+    }
+  }
+  finally {
+    if (chunkCounter.decrementAndGet() == 0) {
+      notifyEndOfStateTransferIfNeeded();
+    }
+  }
+}
+)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntry</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BlockingQueue&lt;Object&gt; [queue=retrievedEntries.computeIfAbsent(address,k -&gt; new ArrayBlockingQueue&lt;&gt;(chunkSize))]</InnerVar>
+                <InnerVar>List&lt;Object&gt; [keys=offerAndDrain(queue,key)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getValuesAndApply</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusteredGetAllCommand [command=commandsFactory.buildClusteredGetAllCommand(keys,SKIP_OWNERSHIP_FLAGS,null)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>chunkCounter;incrementAndGet;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rpcManager.invokeRemotelyAsync(Collections.singleton(address),command,rpcManager.getDefaultRpcOptions(true));whenComplete;[(responseMap,throwable) -&gt; {
+  try {
+    if (throwable != null) {
+      throw log.exceptionProcessingEntryRetrievalValues(throwable);
+    }
+ else {
+      applyValues(address,keys,responseMap);
+    }
+  }
+ catch (  Throwable t) {
+    log.failedProcessingValuesDuringRebalance(t);
+    throw t;
+  }
+ finally {
+    if (chunkCounter.decrementAndGet() == 0) {
+      notifyEndOfStateTransferIfNeeded();
+    }
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>applyValues</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>responseMap</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Response [response=responseMap.get(address)]</InnerVar>
+                <InnerVar>InternalCacheValue[] [values=(InternalCacheValue[])((SuccessfulResponse)response).getResponseValue()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopApplyingState</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>topologyId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>svm;notifyValueTransferFinished;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeStaleData</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>removedSegments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextMember</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Address</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheTopology</ParamName>
+                    <ParamType>CacheTopology</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Address [myAddress=rpcManager.getAddress()]</InnerVar>
+                <InnerVar>List&lt;Address&gt; [members=cacheTopology.getActualMembers()]</InnerVar>
+                <InnerVar>Iterator&lt;Address&gt; [it=members.iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>KeyAndVersion</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>EntryVersion</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

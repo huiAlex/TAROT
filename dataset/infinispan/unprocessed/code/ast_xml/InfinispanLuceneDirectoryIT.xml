@@ -1,0 +1,342 @@
+<Class>
+    <Id>2456</Id>
+    <Package>org.infinispan.test.integration.as</Package>
+    <ClassName>InfinispanLuceneDirectoryIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>InfinispanLuceneDirectoryIT  /** 
+ * Test infinispan-lucene-directory server module
+ * @author gustavonalle
+ * @since 7.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>directory</FieldName>
+            <FieldType>Directory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cacheManager</FieldName>
+            <FieldType>EmbeddedCacheManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>Cache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>?</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cacheManager;defineConfiguration;["index", new ConfigurationBuilder().build()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>directory;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;stop;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>cacheManager;stop;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deployment</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>?</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [dependencies=deps(dep("org.infinispan",Version.getModuleSlot()),dep("org.infinispan.lucene-directory",Version.getModuleSlot()))]</InnerVar>
+                <InnerVar>StringAsset [manifest=new StringAsset(Descriptors.create(ManifestDescriptor.class).attribute("Dependencies",dependencies).exportAsString())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testCoreLucene</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Document [document=buildSimpleLuceneDoc("field1","The quick brown fox jumped over the lazy dog")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;index;[document]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[9, terms("field1").size()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testQParserLucene</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Document [document=buildSimpleLuceneDoc("field1","The quick brown fox jumped over the lazy dog")]</InnerVar>
+                <InnerVar>Query [matchingQuery=buildQuery("field1:box~")]</InnerVar>
+                <InnerVar>Query [nonMatchingQuery=buildQuery("-field1:over")]</InnerVar>
+                <InnerVar>IndexSearcher [indexSearcher=openSearcher()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;index;[document]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, indexSearcher.search(matchingQuery,1).totalHits]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, indexSearcher.search(nonMatchingQuery,1).totalHits]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ParseException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testGrouping</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Document [doc1=buildDocValueLuceneDoc("field1","value1")]</InnerVar>
+                <InnerVar>Document [doc2=buildDocValueLuceneDoc("field1","value1")]</InnerVar>
+                <InnerVar>Document [doc3=buildDocValueLuceneDoc("field1","value2")]</InnerVar>
+                <InnerVar>GroupingSearch [groupingSearch=new GroupingSearch("field1")]</InnerVar>
+                <InnerVar>TopGroups&lt;Object&gt; [topGroups=groupingSearch.search(openSearcher(),new MatchAllDocsQuery(),0,10)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;index;[doc1, doc2, doc3]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, topGroups.totalHitCount]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, topGroups.groups.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testFaceting</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Directory [taxonomyDirectory=DirectoryBuilder.newDirectoryInstance(cache,cache,cache,"taxonomy").create()]</InnerVar>
+                <InnerVar>DirectoryTaxonomyWriter [tw=new DirectoryTaxonomyWriter(taxonomyDirectory)]</InnerVar>
+                <InnerVar>FacetsConfig [cfg=new FacetsConfig()]</InnerVar>
+                <InnerVar>Document [doc1=new Document()]</InnerVar>
+                <InnerVar>Document [doc2=new Document()]</InnerVar>
+                <InnerVar>Document [doc3=new Document()]</InnerVar>
+                <InnerVar>DirectoryTaxonomyReader [tr=new DirectoryTaxonomyReader(taxonomyDirectory)]</InnerVar>
+                <InnerVar>FacetsCollector [fc=new FacetsCollector()]</InnerVar>
+                <InnerVar>Facets [facets=new FastTaxonomyFacetCounts(tr,cfg,fc)]</InnerVar>
+                <InnerVar>FacetResult [category=facets.getTopChildren(10,"category")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>doc1;add;[new FacetField("category","c2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>doc2;add;[new FacetField("category","c2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>doc3;add;[new FacetField("category","c1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;index;[cfg.build(tw,doc1), cfg.build(tw,doc2), cfg.build(tw,doc3)]</InnerMethodInvoke>
+                <InnerMethodInvoke>tw;close;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>FacetsCollector;search;[openSearcher(), new MatchAllDocsQuery(), 10, fc]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, category.childCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Query</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>q</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>QueryParser [queryParser=new QueryParser("field1",new WhitespaceAnalyzer())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ParseException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>openSearcher</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>IndexSearcher</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>terms</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Terms</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>field</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>DirectoryReader [reader=DirectoryReader.open(directory)]</InnerVar>
+                <InnerVar>LeafReaderContext [readerContext=reader.getContext().leaves().iterator().next()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>index</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>documents</ParamName>
+                    <ParamType>Document</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>IndexWriterConfig [iwc=new IndexWriterConfig(new WhitespaceAnalyzer())]</InnerVar>
+                <InnerVar>IndexWriter [indexWriter=new IndexWriter(directory,iwc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>indexWriter;close;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildDocValueLuceneDoc</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Document</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>contents</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Document [document=new Document()]</InnerVar>
+                <InnerVar>Field [field=new SortedDocValuesField(fieldName,new BytesRef(contents))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>document;add;[field]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>buildSimpleLuceneDoc</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Document</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fieldName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>contents</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Document [document=new Document()]</InnerVar>
+                <InnerVar>Field [field=new TextField(fieldName,contents,Field.Store.NO)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>document;add;[field]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>dep</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>deps</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>dep</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,177 @@
+<Class>
+    <Id>1080</Id>
+    <Package>org.jboss.seam.ui.renderkit</Package>
+    <ClassName>TokenRendererBase</ClassName>
+    <SuperClass>RendererBase</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>TokenRendererBase  /** 
+ * &lt;p&gt; The &lt;strong&gt;TokenRendererBase&lt;/strong&gt; renders the form's signature as a hidden form field for the UIToken component. If the renderStampStore component is enabled, the actually signature will be stored in the session and the key to this token store in the hidden form field, providing the same guarantee for client-side state saving as with server-side state saving. &lt;/p&gt; &lt;p&gt; The form signature is calculated as follows: &lt;/p&gt; &lt;pre&gt; sha1(signature = contextPath + viewId + &amp;quot;,&amp;quot; + formClientId + random alphanum, salt = clientUid) &lt;/pre&gt; &lt;p&gt; The developer can also choose to incorporate the session id into this hash to generate a more secure token (at the cost of binding it to the session) by setting the requireSession attribute to true. Then the calculation becomes: &lt;/p&gt; &lt;pre&gt; sha1(signature = contextPath + viewId + &amp;quot;,&amp;quot; + formClientId + &amp;quot;,&amp;quot; + random alphanum + sessionId, salt = clientUid) &lt;/pre&gt; &lt;p&gt; The decode method performs the following steps: &lt;/p&gt; &lt;ol&gt; &lt;li&gt;Check if this is a postback, otherwise skip the check&lt;/li&gt; &lt;li&gt;Check that this form was the one that was submitted, otherwise skip the check&lt;/li&gt; &lt;li&gt;Get the unique client identifier (from cookie), otherwise throw an exception that the browser must have unique identifier&lt;/li&gt; &lt;li&gt;Get the javax.faces.FormSignature request parameter, otherwise throw an exception that the form signature is missing&lt;/li&gt; &lt;li&gt;If the renderStampStore component is enabled, retrieve the render stamp from the store using the key stored in the render stamp attribute of the form.&lt;/li&gt; &lt;li&gt;Generate the hash as before and verify that it equals the value of the javax.faces.FormSignature request parameter, otherwise throw an exception&lt;/li&gt; &lt;/ol&gt; &lt;p&gt; If all of that passes, we are okay to process the form (advance to validate phase as decode() is called in apply request values). &lt;/p&gt;
+ * @author Dan Allen
+ * @author Stuart Douglas
+ * @see UnauthorizedCommandException
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>FORM_SIGNATURE_PARAM</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>RENDER_STAMP_ATTR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COOKIE_CHECK_SCRIPT_KEY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getComponentClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doDecode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>FacesContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>component</ParamName>
+                    <ParamType>UIComponent</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UIToken [token=(UIToken)component]</InnerVar>
+                <InnerVar>UIForm [form=token.getParentForm()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doEncodeBegin</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>writer</ParamName>
+                    <ParamType>ResponseWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>FacesContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>component</ParamName>
+                    <ParamType>UIComponent</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>UIToken [token=(UIToken)component]</InnerVar>
+                <InnerVar>UIForm [form=token.getParentForm()]</InnerVar>
+                <InnerVar>String [renderStamp=RandomStringUtils.randomAlphanumeric(50)]</InnerVar>
+                <InnerVar>RenderStampStore [store=RenderStampStore.instance()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;writeCookieCheckScript;[context, writer, token]</InnerMethodInvoke>
+                <InnerMethodInvoke>token.getClientUidSelector();seed;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>form.getAttributes();put;[RENDER_STAMP_ATTR, renderStamp]</InnerMethodInvoke>
+                <InnerMethodInvoke>writer;startElement;[HTML.INPUT_ELEM, component]</InnerMethodInvoke>
+                <InnerMethodInvoke>writer;writeAttribute;[HTML.TYPE_ATTR, HTML.INPUT_TYPE_HIDDEN, HTML.TYPE_ATTR]</InnerMethodInvoke>
+                <InnerMethodInvoke>writer;writeAttribute;[HTML.NAME_ATTR, FORM_SIGNATURE_PARAM, HTML.NAME_ATTR]</InnerMethodInvoke>
+                <InnerMethodInvoke>writer;writeAttribute;[HTML.VALUE_ATTR, generateViewSignature(context,form,!token.isAllowMultiplePosts(),token.isRequireSession(),token.getClientUidSelector().getClientUid()), HTML.VALUE_ATTR]</InnerMethodInvoke>
+                <InnerMethodInvoke>writer;endElement;[HTML.INPUT_ELEM]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeCookieCheckScript</MethodName>
+            <MethodComment>/** 
+ * If the client has not already delivered us a cookie and the cookie notice is enabled, write out JavaScript that will show the user an alert if cookies are not enabled.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>FacesContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>writer</ParamName>
+                    <ParamType>ResponseWriter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>token</ParamName>
+                    <ParamType>UIToken</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateViewSignature</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>FacesContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>form</ParamName>
+                    <ParamType>UIForm</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useRenderStamp</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>useSessionId</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>saltPhrase</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [rawViewSignature=context.getExternalContext().getRequestContextPath() + "," + context.getViewRoot().getViewId()+ ","+ form.getClientId(context)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

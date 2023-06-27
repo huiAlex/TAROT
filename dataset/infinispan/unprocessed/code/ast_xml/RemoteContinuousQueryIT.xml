@@ -1,0 +1,239 @@
+<Class>
+    <Id>1218</Id>
+    <Package>org.infinispan.server.test.query</Package>
+    <ClassName>RemoteContinuousQueryIT</ClassName>
+    <SuperClass>RemoteQueryBaseIT</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RemoteContinuousQueryIT  /** 
+ * Basic tests for continuous query over HotRod.
+ * @author vjuranek
+ * @since 8.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>RemoteContinuousQueryIT</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RemoteInfinispanServer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testContinuousQuery</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>QueryFactory [qf=Search.getQueryFactory(remoteCache)]</InnerVar>
+                <InnerVar>Query [query=qf.from(User.class).having("name").eq("user1").and().having("age").gt(20).build()]</InnerVar>
+                <InnerVar>BlockingQueue&lt;Integer&gt; [joined=new LinkedBlockingQueue&lt;&gt;()]</InnerVar>
+                <InnerVar>BlockingQueue&lt;Integer&gt; [updated=new LinkedBlockingQueue&lt;&gt;()]</InnerVar>
+                <InnerVar>BlockingQueue&lt;Integer&gt; [left=new LinkedBlockingQueue&lt;&gt;()]</InnerVar>
+                <InnerVar>ContinuousQueryListener&lt;Integer,User&gt; [listener=new ContinuousQueryListener&lt;Integer,User&gt;(){
+  @Override public void resultJoining(  Integer key,  User value){
+    joined.add(key);
+  }
+  @Override public void resultUpdated(  Integer key,  User value){
+    updated.add(key);
+  }
+  @Override public void resultLeaving(  Integer key){
+    left.add(key);
+  }
+}
+]</InnerVar>
+                <InnerVar>ContinuousQuery&lt;Integer,User&gt; [continuousQuery=Search.getContinuousQuery(remoteCache)]</InnerVar>
+                <InnerVar>User [user4=createUser(4,30)]</InnerVar>
+                <InnerVar>User [user1=remoteCache.get(1)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>remoteCache;put;[1, createUser(1,25)]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[2, createUser(2,25)]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[3, createUser(3,20)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, remoteCache.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>continuousQuery;addContinuousQueryListener;[query, listener]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>user4;setName;["user1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[4, user4]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>user1;setAge;[19]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[1, user1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>user4;setAge;[32]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[4, user4]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>continuousQuery;removeContinuousQueryListener;[listener]</InnerMethodInvoke>
+                <InnerMethodInvoke>user1;setAge;[25]</InnerMethodInvoke>
+                <InnerMethodInvoke>remoteCache;put;[1, user1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[joined, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[updated, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;expectElementsInQueue;[left, 0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resultJoining</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>User</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>joined;add;[key]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resultUpdated</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>User</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>updated;add;[key]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resultLeaving</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>left;add;[key]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createUser</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>User</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>id</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>age</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>User [user=new User()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>user;setId;[id]</InnerMethodInvoke>
+                <InnerMethodInvoke>user;setName;["user" + id]</InnerMethodInvoke>
+                <InnerMethodInvoke>user;setAge;[age]</InnerMethodInvoke>
+                <InnerMethodInvoke>user;setSurname;["Doesn't matter"]</InnerMethodInvoke>
+                <InnerMethodInvoke>user;setGender;[User.Gender.MALE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>expectElementsInQueue</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>queue</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>numElements</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

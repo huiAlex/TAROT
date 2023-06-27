@@ -1,0 +1,101 @@
+<Class>
+    <Id>514</Id>
+    <Package>org.infinispan.server.test.cs.custom</Package>
+    <ClassName>CustomCacheStoreIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CustomCacheStoreIT  /** 
+ * Tests Deployeable Cache Stores which are placed into server deployments directory.
+ * @author &lt;a href="mailto:jmarkos@redhat.com"&gt;Jakub Markos&lt;/a&gt;
+ * @author Sebastian Laskawiec
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>managementPort</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cacheLoaderMBean</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>before</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [serverDir=System.getProperty("server1.dist")]</InnerVar>
+                <InnerVar>JavaArchive [deployedCacheStore=ShrinkWrap.create(JavaArchive.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>deployedCacheStore;addPackage;[MyCustomCacheStore.class.getPackage()]</InnerMethodInvoke>
+                <InnerMethodInvoke>deployedCacheStore;addAsServiceProvider;[ExternalStore.class, MyCustomCacheStore.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>deployedCacheStore.as(ZipExporter.class);exportTo;[new File(serverDir,"/standalone/deployments/custom-store.jar"), true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testIfDeployedCacheContainsProperValues</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=ITestUtils.createCacheManager(server)]</InnerVar>
+                <InnerVar>RemoteCache&lt;String,String&gt; [rc=rcm.getCache()]</InnerVar>
+                <InnerVar>MBeanServerConnectionProvider [provider=new MBeanServerConnectionProvider(server.getHotrodEndpoint().getInetAddress().getHostName(),managementPort)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertNull;[rc.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["key1", "value1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["value1", rc.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["[org.infinispan.persistence.cluster.MyCustomCacheStore]", getAttribute(provider,cacheLoaderMBean,"stores")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAttribute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>provider</ParamName>
+                    <ParamType>MBeanServerConnectionProvider</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mbean</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>attr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

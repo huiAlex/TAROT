@@ -1,0 +1,553 @@
+<Class>
+    <Id>1874</Id>
+    <Package>org.infinispan.lucene.cacheloader</Package>
+    <ClassName>DirectoryLoaderAdaptor</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DirectoryLoaderAdaptor  /** 
+ * Contains the low-level logic to map the cache structure the the "native" Lucene format for a single Directory instance.
+ * @author Sanne Grinovero
+ * @since 5.2
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>directory</FieldName>
+            <FieldType>Directory</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loadVisitor</FieldName>
+            <FieldType>LoadVisitor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>containsKeyVisitor</FieldName>
+            <FieldType>ContainsKeyVisitor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>indexName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>autoChunkSize</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>affinitySegmentId</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>DirectoryLoaderAdaptor</MethodName>
+            <MethodComment>/** 
+ * Create a new DirectoryLoaderAdaptor.
+ * @param directory The {@link org.apache.lucene.store.Directory} to which delegate actual IO operations
+ * @param indexName the index name
+ * @param autoChunkSize index segments might be large; we'll split them in chunks of this amount of bytes
+ * @param affinitySegmentId
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>directory</ParamName>
+                    <ParamType>Directory</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>indexName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>autoChunkSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>affinitySegmentId</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadAllEntries</MethodName>
+            <MethodComment>/** 
+ * Loads all "entries" from the CacheLoader; considering this is actually a Lucene index, that's going to transform segments in entries in a specific order, simplest entries first.
+ * @param entriesCollector loaded entries are collected in this set
+ * @param maxEntries to limit amount of entries loaded
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>entriesCollector</ParamName>
+                    <ParamType>MarshalledEntry</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxEntries</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>marshaller</ParamName>
+                    <ParamType>StreamingMarshaller</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [existingElements=entriesCollector.size()]</InnerVar>
+                <InnerVar>int [toLoadElements=maxEntries - existingElements]</InnerVar>
+                <InnerVar>HashSet&lt;IndexScopedKey&gt; [keysCollector=new HashSet&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;loadSomeKeys;[keysCollector, Collections.EMPTY_SET, toLoadElements]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadSomeKeys</MethodName>
+            <MethodComment>/** 
+ * Load some keys in the collector, excluding some and to a maximum number of collected (non-excluded) keys.
+ * @param keysCollector the set where to add loaded keys to
+ * @param keysToExclude which keys should not be loaded. Warning: can be null! Means all keys are to be returned
+ * @param maxElements upper limit for collection
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keysCollector</ParamName>
+                    <ParamType>IndexScopedKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>keysToExclude</ParamName>
+                    <ParamType>IndexScopedKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxElements</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [collectedKeys=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>figureChunksNumber</MethodName>
+            <MethodComment>/** 
+ * Guess in how many chunks we should split this file. Should return the same value consistently for the same file (segments are immutable) so that a full segment can be rebuilt from the upper layers without anyone actually specifying the chunks numbers.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [fileLength=directory.fileLength(fileName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>figureChunksNumber</MethodName>
+            <MethodComment>/** 
+ * Index segment files might be larger than 2GB; so it's possible to have an autoChunksize which is too low to contain all bytes in a single array (overkill anyway). In this case we ramp up and try splitting with larger chunkSize values.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fileLength</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>chunkSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [numChunks=(fileLength % chunkSize == 0) ? (fileLength / chunkSize) : (fileLength / chunkSize) + 1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>close</MethodName>
+            <MethodComment>/** 
+ * Closes the underlying Directory. After it's closed, no other invocations are expected on this Adapter; we don't check explicitly for it as the Directory instance takes care of it.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>load</MethodName>
+            <MethodComment>/** 
+ * Load the value for a specific key
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>IndexScopedKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsKey</MethodName>
+            <MethodComment>/** 
+ * @param key {@link org.infinispan.lucene.IndexScopedKey}
+ * @return true if the indexKey matches a loadable entry
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>IndexScopedKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadIntern</MethodName>
+            <MethodComment>/** 
+ * Load implementation for FileListCacheKey; must return a ConcurrentHashSet containing the names of all files in this Directory.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String[] [listAll=directory.listAll()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadIntern</MethodName>
+            <MethodComment>/** 
+ * Load implementation for FileCacheKey: must return the metadata of the requested file.
+ */
+</MethodComment>
+            <ReturnType>FileMetadata</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>FileCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [fileName=key.getFileName()]</InnerVar>
+                <InnerVar>long [fileLength=directory.fileLength(fileName)]</InnerVar>
+                <InnerVar>int [bufferSize=(int)Math.min(fileLength,(long)autoChunkSize)]</InnerVar>
+                <InnerVar>FileMetadata [meta=new FileMetadata(bufferSize)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>meta;setSize;[fileLength]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>loadIntern</MethodName>
+            <MethodComment>/** 
+ * Loads the actual byte array from a segment, in the range of a specific chunkSize. Not that while the chunkSize is specified in this case, it's likely derived from the invocations of other loading methods.
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>ChunkCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [fileName=key.getFileName()]</InnerVar>
+                <InnerVar>long [chunkId=key.getChunkId()]</InnerVar>
+                <InnerVar>int [bufferSize=key.getBufferSize()]</InnerVar>
+                <InnerVar>long [seekTo=chunkId * bufferSize]</InnerVar>
+                <InnerVar>byte[] [buffer]</InnerVar>
+                <InnerVar>IndexInput [input=directory.openInput(fileName,IOContext.READ)]</InnerVar>
+                <InnerVar>long [length=input.length()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsKeyIntern</MethodName>
+            <MethodComment>/** 
+ * ContainsKey implementation for chunk elements
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>chunkCacheKey</ParamName>
+                    <ParamType>ChunkCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsKeyIntern</MethodName>
+            <MethodComment>/** 
+ * ContainsKey implementation for chunk elements
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileCacheKey</ParamName>
+                    <ParamType>FileCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileListCacheKey</ParamName>
+                    <ParamType>FileListCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>chunkCacheKey</ParamName>
+                    <ParamType>ChunkCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileCacheKey</ParamName>
+                    <ParamType>FileCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileReadLockKey</ParamName>
+                    <ParamType>FileReadLockKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileListCacheKey</ParamName>
+                    <ParamType>FileListCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>chunkCacheKey</ParamName>
+                    <ParamType>ChunkCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileCacheKey</ParamName>
+                    <ParamType>FileCacheKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fileReadLockKey</ParamName>
+                    <ParamType>FileReadLockKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,105 @@
+<Class>
+    <Id>3202</Id>
+    <Package>org.infinispan.notifications</Package>
+    <ClassName>Listener</ClassName>
+    <ClassComment>Listener  /** 
+ * Class-level annotation used to annotate an object as being a valid cache listener.  Used with the  {@link org.infinispan.Cache#addListener(Object)} and related APIs. &lt;p/&gt; Note that even if a class is annotated with thisannotation, it still needs method-level annotation (such as  {@link org.infinispan.notifications.cachemanagerlistener.annotation.CacheStarted}) to actually receive notifications. &lt;p/&gt; Objects annotated with this annotation - listeners - can be attached to a running  {@link org.infinispan.Cache} so users can be notified of {@link org.infinispan.Cache} events. &lt;p/&gt; &lt;p/&gt; There canbe multiple methods that are annotated to receive the same event, and a method may receive multiple events by using a super type. &lt;/p&gt; &lt;p/&gt; &lt;h4&gt;Delivery Semantics&lt;/h4&gt; &lt;p/&gt; An event is delivered immediately after the respective operation, but before the underlying cache call returns. For this reason it is important to keep listener processing logic short-lived. If a long running task needs to be performed, it's recommended to use another thread. &lt;/p&gt; &lt;p/&gt; &lt;h4&gt;Transactional Semantics&lt;/h4&gt; &lt;p/&gt; Since the event is delivered during the actual cache call, the transactional outcome is not yet known. For this reason, &lt;i&gt;events are always delivered, even if the changes they represent are discarded by their containing transaction&lt;/i&gt;. For applications that must only process events that represent changes in a completed transaction,  {@link org.infinispan.notifications.cachelistener.event.TransactionalEvent#getGlobalTransaction()}can be used, along with  {@link org.infinispan.notifications.cachelistener.event.TransactionCompletedEvent#isTransactionSuccessful()}to record events and later process them once the transaction has been successfully committed. Example 4 demonstrates this. &lt;/p&gt; &lt;p/&gt; &lt;h4&gt;Threading Semantics&lt;/h4&gt; &lt;p/&gt; A listener implementation must be capable of handling concurrent invocations. Local notifications reuse the calling thread; remote notifications reuse the network thread. &lt;/p&gt; &lt;p/&gt; Since notifications reuse the calling or network thread, it is important to realise that if your listener implementation blocks or performs a long-running task, the original caller which triggered the cache event may block until the listener callback completes.  It is therefore a good idea to use the listener to be notified of an event but to perform any long running tasks in a separate thread so as not to block the original caller. &lt;/p&gt; &lt;p/&gt; In addition, any locks acquired for the operation being performed will still be held for the callback.  This needs to be kept in mind as locks may be held longer than necessary or intended to and may cause deadlocking in certain situations.  See above paragraph on long-running tasks that should be run in a separate thread. &lt;/p&gt; &lt;b&gt;Note&lt;/b&gt;: The &lt;tt&gt;sync&lt;/tt&gt; parameter on this annotation defaults to &lt;tt&gt;true&lt;/tt&gt; which provides the above semantics.  Alternatively, if you set &lt;tt&gt;sync&lt;/tt&gt; to &lt;tt&gt;false&lt;/tt&gt;, then invocations are made in a &lt;i&gt;separate&lt;/i&gt; thread, which will not cause any blocking on the caller or network thread.  The separate thread is taken from a pool, which can be configured using  {@link org.infinispan.config.GlobalConfiguration#setAsyncListenerExecutorProperties(java.util.Properties)}and  {@link org.infinispan.config.GlobalConfiguration#setAsyncListenerExecutorFactoryClass(String)}. &lt;p/&gt; &lt;b&gt;Summary of Notification Annotations&lt;/b&gt; &lt;table border="1" cellpadding="1" cellspacing="1" summary="Summary of notification annotations"&gt; &lt;tr&gt; &lt;th bgcolor="#CCCCFF" align="left"&gt;Annotation&lt;/th&gt; &lt;th bgcolor="#CCCCFF" align="left"&gt;Event&lt;/th&gt; &lt;th bgcolor="#CCCCFF" align="left"&gt;Description&lt;/th&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.annotation.CacheStarted}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.event.CacheStartedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache was started&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.annotation.CacheStopped}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.event.CacheStoppedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache was stopped&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryModified}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryModifiedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was modified&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryCreatedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was created&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryRemovedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was removed&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryVisitedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was visited&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryLoaded}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryLoadedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was loaded&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntriesEvicted}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntriesEvictedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entries were evicted&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryActivatedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was activated&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryPassivated}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryPassivatedEvent}&lt;/td&gt; &lt;td valign="top"&gt;One or more cache entries were passivated&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged}&lt;/td&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachemanagerlistener.event.ViewChangedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A view change event was detected&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.TransactionRegistered}&lt;/td&gt; &lt;td valign@="top"&gt; {@link org.infinispan.notifications.cachelistener.event.TransactionRegisteredEvent}&lt;/td&gt; &lt;td valign="top"&gt;The cache has started to participate in a transaction&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.TransactionCompleted}&lt;/td&gt; &lt;td valign=@"top"&gt; {@link org.infinispan.notifications.cachelistener.event.TransactionCompletedEvent}&lt;/td&gt; &lt;td valign="top"&gt;The cache has completed its participation in a transaction&lt;/td&gt; &lt;/tr&gt; &lt;tr&gt; &lt;td valign="top"&gt; {@link org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated}&lt;/td&gt; &lt;td valign=@"top"&gt; {@link org.infinispan.notifications.cachelistener.event.CacheEntryInvalidatedEvent}&lt;/td&gt; &lt;td valign="top"&gt;A cache entry was invalidated by a remote cache.  Only if cache mode is INVALIDATION_SYNC or INVALIDATION_ASYNC.&lt;/td&gt; &lt;/tr&gt; &lt;p/&gt; &lt;/table&gt; &lt;p/&gt; &lt;h4&gt;Example 1 - Method receiving a single event&lt;/h4&gt; &lt;pre&gt; &amp;#064;Listener public class SingleEventListener { &amp;#064;CacheStarted public void doSomething(Event event) { System.out.println(&amp;quot;Cache started.  Details = &amp;quot; + event); } } &lt;/pre&gt; &lt;p/&gt; &lt;h4&gt;Example 2 - Method receiving multiple events&lt;/h4&gt; &lt;pre&gt; &amp;#064;Listener public class MultipleEventListener { &amp;#064;CacheStarted &amp;#064;CacheStopped public void doSomething(Event event) { if (event.getType() == Event.Type.CACHE_STARTED) System.out.println(&amp;quot;Cache started.  Details = &amp;quot; + event); else if (event.getType() == Event.Type.CACHE_STOPPED) System.out.println(&amp;quot;Cache stopped.  Details = &amp;quot; + event); } } &lt;/pre&gt; &lt;p/&gt; &lt;h4&gt;Example 3 - Multiple methods receiving the same event&lt;/h4&gt; &lt;pre&gt; &amp;#064;Listener public class SingleEventListener { &amp;#064;CacheStarted public void handleStart(Event event) { System.out.println(&amp;quot;Cache started&amp;quot;); } &lt;p/&gt; &amp;#064;CacheStarted &amp;#064;CacheStopped &amp;#064;CacheBlocked &amp;#064;CacheUnblocked &amp;#064;ViewChanged public void logEvent(Event event) { logSystem.logEvent(event.getType()); } } &lt;/pre&gt; &lt;p/&gt; &lt;p/&gt; &lt;b&gt;Example 4 - Processing only events with a committed transaction.&lt;/b&gt; &lt;p/&gt; &lt;pre&gt; &amp;#064;Listener public class EventHandler { private ConcurrentMap&amp;lt;GlobalTransaction, Queue&amp;lt;Event&amp;gt;&amp;gt; map = new ConcurrentHashMap&amp;lt;GlobalTransaction, Queue&amp;lt;Event&amp;gt;&amp;gt;(); &amp;#064;TransactionRegistered public void startTransaction(TransactionRegisteredEvent event) { map.put(event.getGlobalTransaction(), new ConcurrentLinkedQueue&amp;lt;Event&amp;gt;()); } &amp;#064;CacheEntryCreated &amp;#064;CacheEntryModified &amp;#064;CacheEntryRemoved public void addEvent(TransactionalEvent event) { map.get(event.getGlobalTransaction()).add(event); } &amp;#064;TransactionCompleted public void endTransaction(TransactionCompletedEvent event) { Queue&amp;lt;Event&amp;gt; events = map.get(event.getGlobalTransaction()); map.remove(event.getGlobalTransaction()); System.out.println("Ended transaction " + event.getGlobalTransaction().getId()); if(event.isTransactionSuccessful()) { for(Event e : events) { System.out.println("Event " + e); } } } } &lt;/pre&gt;
+ * @author &lt;a href="mailto:manik@jboss.org"&gt;Manik Surtani&lt;/a&gt;
+ * @author Jason T. Greene
+ * @see org.infinispan.notifications.cachemanagerlistener.annotation.CacheStarted
+ * @see org.infinispan.notifications.cachemanagerlistener.annotation.CacheStopped
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryModified
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryCreated
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryRemoved
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryVisited
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryLoaded
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntriesEvicted
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryActivated
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryPassivated
+ * @see org.infinispan.notifications.cachemanagerlistener.annotation.ViewChanged
+ * @see org.infinispan.notifications.cachelistener.annotation.TransactionCompleted
+ * @see org.infinispan.notifications.cachelistener.annotation.TransactionRegistered
+ * @see org.infinispan.notifications.cachelistener.annotation.CacheEntryInvalidated
+ * @see org.infinispan.notifications.cachelistener.annotation.DataRehashed
+ * @see org.infinispan.notifications.cachelistener.annotation.TopologyChanged
+ * @since 4.0
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>shouldInvoke</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pre</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldInvoke</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pre</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldInvoke</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pre</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldInvoke</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pre</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,1175 @@
+<Class>
+    <Id>548</Id>
+    <Package>org.codehaus.groovy.runtime</Package>
+    <ClassName>ProxyGeneratorAdapter</ClassName>
+    <SuperClass>ClassVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Opcodes</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ProxyGeneratorAdapter  /** 
+ * A proxy generator responsible for mapping a map of closures to a class implementing a list of interfaces. For example, the following code: &lt;pre&gt; abstract class Foo { abstract void bar(); abstract void baz(); } def dyn = [bar: { println 'hello' }, baz: { println 'world'}] as Foo &lt;/pre&gt; will generate a proxy class which extends class &lt;i&gt;Foo&lt;/i&gt; and delegates method calls to the provided closures. The generated proxy implements the  {@link GroovyObject} interface.Additionaly, this proxy generator supports delegation to another object. In that case, if a method is defined both in the closure map and the delegate, the version from the map is preferred. This allows overriding methods from delegates with ease. Internally, the proxy generator makes use of ASM to generate bytecode, for improved performance as compared to the legacy proxy generation mechanism which made use of string templates.
+ * @author Cedric Champeau
+ * @since 2.0.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>EMPTY_DELEGATECLOSURE_MAP</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_DELEGATECLOSURE_MAP</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_STRING_SET</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_STRING_SET</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CLOSURES_MAP_FIELD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>DELEGATE_OBJECT_FIELD</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OBJECT_METHODS</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>OBJECT_METHODS</FieldName>
+            <FieldType>Method</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROOVYOBJECT_METHODS</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROOVYOBJECT_METHODS</FieldName>
+            <FieldType>Method</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pxyCounter</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROOVYOBJECT_METHOD_NAMESS</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>GROOVYOBJECT_METHOD_NAMESS</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_ARGS</FieldName>
+            <FieldType>Object[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>superClass</FieldName>
+            <FieldType>Class</FieldType>
+        </Field>
+        <Field>
+            <FieldName>delegateClass</FieldName>
+            <FieldType>Class</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loader</FieldName>
+            <FieldType>InnerLoader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>proxyName</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>classList</FieldName>
+            <FieldType>LinkedHashSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>classList</FieldName>
+            <FieldType>Class</FieldType>
+        </Field>
+        <Field>
+            <FieldName>delegatedClosures</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>delegatedClosures</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>emptyBody</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hasWildcard</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>generateDelegateField</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>objectDelegateMethods</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>objectDelegateMethods</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>visitedMethods</FieldName>
+            <FieldType>Set</FieldType>
+        </Field>
+        <Field>
+            <FieldName>visitedMethods</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cachedClass</FieldName>
+            <FieldType>Class</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cachedNoArgConstructor</FieldName>
+            <FieldType>Constructor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>value</FieldName>
+            <FieldType>V</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ProxyGeneratorAdapter</MethodName>
+            <MethodComment>/** 
+ * Construct a proxy generator. This generator is used when we need to create a proxy object for a class or an interface given a map of closures.
+ * @param closureMap the delegates implementations
+ * @param superClass corresponding to the superclass class visitor
+ * @param interfaces extra interfaces the proxy should implement
+ * @param proxyLoader the class loader which should be used to load the generated proxy
+ * @param delegateClass if not null, generate a delegate field with the corresponding class
+ * @param emptyBody if set to true, the unimplemented abstract methods will receive an empty body instead ofthrowing an  {@link UnsupportedOperationException}.
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>closureMap</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>superClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <FieldType>Class[]</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>proxyLoader</ParamName>
+                    <FieldType>ClassLoader</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>emptyBody</ParamName>
+                    <FieldType>boolean</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>delegateClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [wildcard=false]</InnerVar>
+                <InnerVar>Class [fixedSuperClass=adjustSuperClass(superClass,interfaces)]</InnerVar>
+                <InnerVar>ClassWriter [writer=(ClassWriter)cv]</InnerVar>
+                <InnerVar>byte[] [b=writer.toByteArray()]</InnerVar>
+                <InnerVar>Class[] [args=generateDelegateField ? new Class[]{Map.class,delegateClass} : new Class[]{Map.class}]</InnerVar>
+                <InnerVar>Constructor [constructor]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this.classList;add;[superClass]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;visit;[Opcodes.V1_5, ACC_PUBLIC, proxyName, null, null, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>adjustSuperClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>superClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <FieldType>Class[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [isSuperClassAnInterface=superClass.isInterface()]</InnerVar>
+                <InnerVar>Class [result=Object.class]</InnerVar>
+                <InnerVar>Set&lt;ClassNode&gt; [traits=new LinkedHashSet&lt;ClassNode&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;collectTraits;[superClass, traits]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>collectTraits</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clazz</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>traits</ParamName>
+                    <FieldType>ClassNode</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Annotation [annotation=clazz.getAnnotation(Trait.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createInnerLoader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InnerLoader</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <FieldType>ClassLoader</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InnerLoader</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>findClassLoader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InnerLoader</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clazz</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [cl=clazz.getClassLoader()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDelegateMethodList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>superClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>delegateClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <FieldType>Class[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [selectedMethods=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>List&lt;Method&gt; [interfaceMethods=new ArrayList&lt;Method&gt;()]</InnerVar>
+                <InnerVar>List&lt;Method&gt; [superClassMethods=new ArrayList&lt;Method&gt;()]</InnerVar>
+                <InnerVar>List&lt;Method&gt; [additionalMethods=getInheritedMethods(delegateClass,new ArrayList&lt;Method&gt;())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;addAll;[superClassMethods, superClass.getDeclaredMethods()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInheritedMethods</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Method</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>baseClass</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>methods</ParamName>
+                    <FieldType>Method</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Class [currentClass=baseClass]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Collections;addAll;[methods, baseClass.getMethods()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>containsEquivalentMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>publicAndProtectedMethods</ParamName>
+                    <FieldType>Method</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>candidate</ParamName>
+                    <FieldType>Method</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasMatchingParameterTypes</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>method</ParamName>
+                    <FieldType>Method</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>candidate</ParamName>
+                    <FieldType>Method</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Class[] [candidateParamTypes=candidate.getParameterTypes()]</InnerVar>
+                <InnerVar>Class[] [methodParamTypes=method.getParameterTypes()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>access</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>superName</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>interfaces</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [interfacesSet=new LinkedHashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>boolean [addGroovyObjectSupport=!GroovyObject.class.isAssignableFrom(superClass)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;visitMethod;[ACC_PUBLIC, "&lt;init&gt;", "()V", null, null]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addDelegateFields;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitClass</MethodName>
+            <MethodComment>/** 
+ * Visit every class/interface this proxy should implement, and generate the appropriate bytecode for delegation if available.
+ * @param clazz an class for which to generate bytecode
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clazz</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Method[] [methods=clazz.getDeclaredMethods()]</InnerVar>
+                <InnerVar>Constructor[] [constructors=clazz.getDeclaredConstructors()]</InnerVar>
+                <InnerVar>Class [superclass=clazz.getSuperclass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createGroovyObjectSupport</MethodName>
+            <MethodComment>/** 
+ * When an object doesn't implement the GroovyObject interface, we generate bytecode for the {@link GroovyObject} interface methods. Otherwise, the superclass is expected to implement them.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>MethodVisitor [mv]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;visitField;[ACC_PRIVATE + ACC_TRANSIENT, "metaClass", "Lgroovy/lang/MetaClass;", null, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addDelegateFields</MethodName>
+            <MethodComment>/** 
+ * Creates delegate fields for every closure defined in the map.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;visitField;[ACC_PRIVATE + ACC_FINAL, CLOSURES_MAP_FIELD, "Ljava/util/Map;", null, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>proxyName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>String [name=delegateClass != null ? delegateClass.getName() : superClass.getName()]</InnerVar>
+                <InnerVar>int [index=name.lastIndexOf('.')]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isImplemented</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>clazz</ParamName>
+                    <FieldType>Class</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Method[] [methods=clazz.getDeclaredMethods()]</InnerVar>
+                <InnerVar>Class [parent=clazz.getSuperclass()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodVisitor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exceptions</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object [key=Arrays.asList(name,desc)]</InnerVar>
+                <InnerVar>int [accessFlags=access]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>visitedMethods;add;[key]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createGetProxyTargetMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodVisitor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exceptions</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodVisitor [mv=super.visitMethod(ACC_PUBLIC | ACC_FINAL,name,desc,signature,exceptions)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitCode;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[GETFIELD, proxyName, DELEGATE_OBJECT_FIELD, BytecodeHelper.getTypeDescription(delegateClass)]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[ARETURN]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMaxs;[1, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitEnd;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerLen</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <FieldType>Type[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerLen</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arg</ParamName>
+                    <FieldType>Type</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createConstructor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodVisitor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>access</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exceptions</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type[] [args=Type.getArgumentTypes(desc)]</InnerVar>
+                <InnerVar>StringBuilder [newDesc=new StringBuilder("(")]</InnerVar>
+                <InnerVar>MethodVisitor [mv=super.visitMethod(access,name,newDesc.toString(),signature,exceptions)]</InnerVar>
+                <InnerVar>int [idx=1]</InnerVar>
+                <InnerVar>int [max=idx + 1 + (generateDelegateField ? 1 : 0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>newDesc;append;["Ljava/util/Map;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>newDesc;append;[")V"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitCode;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;initializeDelegateClosure;[mv, args]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESPECIAL, BytecodeHelper.getClassInternalName(superClass), "&lt;init&gt;", desc, false]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[RETURN]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMaxs;[max, max]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitEnd;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeDelegateClosure</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <FieldType>Type[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [idx=1 + getTypeArgsRegisterLength(args)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, idx]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[PUTFIELD, proxyName, CLOSURES_MAP_FIELD, "Ljava/util/Map;"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initializeDelegateObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <FieldType>Type[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [idx=2 + getTypeArgsRegisterLength(args)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, idx]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[PUTFIELD, proxyName, DELEGATE_OBJECT_FIELD, BytecodeHelper.getTypeDescription(delegateClass)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeArgsRegisterLength</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <FieldType>Type[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeDelegateCall</MethodName>
+            <MethodComment>/** 
+ * Generate a call to the delegate object.
+ */
+</MethodComment>
+            <ReturnType>MethodVisitor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exceptions</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>accessFlags</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodVisitor [mv=super.visitMethod(accessFlags,name,desc,signature,exceptions)]</InnerVar>
+                <InnerVar>int [size]</InnerVar>
+                <InnerVar>Type[] [args=Type.getArgumentTypes(desc)]</InnerVar>
+                <InnerVar>int [idx=1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[GETFIELD, proxyName, DELEGATE_OBJECT_FIELD, BytecodeHelper.getTypeDescription(delegateClass)]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLdcInsn;[name]</InnerMethodInvoke>
+                <InnerMethodInvoke>BytecodeHelper;pushConstant;[mv, args.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitTypeInsn;[ANEWARRAY, "java/lang/Object"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, "org/codehaus/groovy/runtime/InvokerHelper", "invokeMethod", "(Ljava/lang/Object;Ljava/lang/String;Ljava/lang/Object;)Ljava/lang/Object;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;unwrapResult;[mv, desc]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMaxs;[size, registerLen(args) + 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeDelegateToClosureCall</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MethodVisitor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>signature</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>exceptions</ParamName>
+                    <FieldType>String[]</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>accessFlags</ParamName>
+                    <FieldType>int</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MethodVisitor [mv=super.visitMethod(accessFlags,name,desc,signature,exceptions)]</InnerVar>
+                <InnerVar>int [stackSize=0]</InnerVar>
+                <InnerVar>Type[] [args=Type.getArgumentTypes(desc)]</InnerVar>
+                <InnerVar>int [arrayStore=args.length + 1]</InnerVar>
+                <InnerVar>int [idx=1]</InnerVar>
+                <InnerVar>int [arrayIndex=arrayStore]</InnerVar>
+                <InnerVar>Label [notNull=new Label()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitCode;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>BytecodeHelper;pushConstant;[mv, args.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitTypeInsn;[ANEWARRAY, "java/lang/Object"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, arrayStore]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[GETFIELD, proxyName, CLOSURES_MAP_FIELD, "Ljava/util/Map;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLdcInsn;[name]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, arrayStore]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitIntInsn;[ALOAD, arrayStore]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitJumpInsn;[IFNONNULL, notNull]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 0]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitFieldInsn;[GETFIELD, proxyName, CLOSURES_MAP_FIELD, "Ljava/util/Map;"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLdcInsn;["*"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEINTERFACE, "java/util/Map", "get", "(Ljava/lang/Object;)Ljava/lang/Object;", true]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, arrayStore]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitLabel;[notNull]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, arrayStore]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, BytecodeHelper.getClassInternalName(this.getClass()), "ensureClosure", "(Ljava/lang/Object;)Lgroovy/lang/Closure;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, arrayIndex]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKEVIRTUAL, "groovy/lang/Closure", "call", "([Ljava/lang/Object;)Ljava/lang/Object;", false]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;unwrapResult;[mv, desc]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMaxs;[stackSize, arrayStore + 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitEnd;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>unwrapResult</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <FieldType>MethodVisitor</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>desc</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Type [returnType=Type.getReturnType(desc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>proxy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>GroovyObject</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constructorArgs</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object[] [values=new Object[constructorArgs.length + 1]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[constructorArgs, 0, values, 0, constructorArgs.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>delegatingProxy</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>GroovyObject</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>delegate</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>constructorArgs</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object[] [values=new Object[constructorArgs.length + 2]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[constructorArgs, 0, values, 0, constructorArgs.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureClosure</MethodName>
+            <MethodComment>/** 
+ * Ensures that the provided object is wrapped into a closure if it's not a closure. Do not trust IDEs, this method is used in bytecode.
+ */
+</MethodComment>
+            <ReturnType>Closure</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLoadInsn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>Type</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getReturnInsn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>Type</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isPrimitive</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>arg</ParamName>
+                    <FieldType>Type</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWrappedClassDescriptor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <FieldType>Type</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>InnerLoader</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <FieldType>ClassLoader</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>defineClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>name</ParamName>
+                    <FieldType>String</FieldType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <FieldType>byte[]</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ReturnValueWrappingClosure</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>returnValue</ParamName>
+                    <FieldType>V</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>call</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>V</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <FieldType>Object</FieldType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

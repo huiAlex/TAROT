@@ -1,0 +1,134 @@
+/**
+     * Used to get the compiled plan
+     * @return map reduce plan built by the compiler
+     */
+
+/**
+     * Used to get the plan that was compiled
+     * @return physical plan
+     */
+
+/**
+     * The front-end method that the user calls to compile
+     * the plan. Assumes that all submitted plans have a Store
+     * operators as the leaf.
+     * @return A map reduce plan
+     *      *      *      */
+
+/**
+     * Compiles the plan below op into a MapReduce Operator
+     * and stores it in curMROp.
+     * @param op
+     *      *      *      */
+
+/**
+     * Connect the reduce MROpers to the leaf node in the map MROper mro
+     * by adding appropriate loads
+     * @param mergedPlans - The list of reduce MROpers
+     * @param mro - The map MROper
+     *      *      */
+
+/**
+     * Force an end to the current map reduce job with a store into a temporary
+     * file.
+     * @param fSpec Temp file to force a store into.
+     * @return MR operator that now is finished with a store.
+     *      */
+
+/**
+     * Starts a new MRoper and connects it to the old
+     * one by load-store. The assumption is that the
+     * store is already inserted into the old MROper.
+     * @param fSpec
+     * @param old
+     * @return
+     *      *      */
+
+/**
+     * Returns a temporary DFS Path
+     * @return
+     *      */
+
+/**
+     * Merges the map MROpers in the compiledInputs into a single
+     * merged map MRoper and returns a List with the merged map MROper
+     * as the first oper and the rest being reduce MROpers.
+     *
+     * Care is taken to remove the map MROpers that are merged from the
+     * MRPlan and their connections moved over to the merged map MROper.
+     *
+     * Merge is implemented as a sequence of binary merges.
+     * merge(PhyPlan finPlan, List lst) := finPlan,merge(p) foreach p in lst
+     *
+     * @param compiledInputs
+     * @return
+     *      *      */
+
+/**
+     * The merge of a list of map plans
+     * @param 
+     * @param 
+     * @param finPlan - Final Plan into which the list of plans is merged
+     * @param plans - list of map plans to be merged
+     *      */
+
+/**
+     * Compiles a split operator. The logic is to
+     * close the split job by replacing the split oper by
+     * a store and creating a new Map MRoper and return
+     * that as the current MROper to which other operators
+     * would be compiled into. The new MROper would be connected
+     * to the split job by load-store. Also add the split oper
+     * to the splitsSeen map.
+     * @param op - The split operator
+     *      */
+
+/**
+     * This is an operator which will have multiple inputs(= to number of join inputs)
+     * But it prunes off all inputs but the fragment input and creates separate MR jobs
+     * for each of the replicated inputs and uses these as the replicated files that
+     * are configured in the POFRJoin operator. It also sets that this is FRJoin job
+     * and some parametes associated with it.
+     */
+
+/** Leftmost relation is referred as base relation (this is the one fed into mappers.)
+     *  First, close all MROpers except for first one (referred as baseMROPer)
+     *  Then, create a MROper which will do indexing job (idxMROper)
+     *  Connect idxMROper before the mappedMROper in the MRPlan.
+     */
+
+/** Since merge-join works on two inputs there are exactly two MROper predecessors identified  as left and right.
+     *  Instead of merging two operators, both are used to generate a MR job each. First MR oper is run to generate on-the-fly index on right side.
+     *  Second is used to actually do the join. First MR oper is identified as rightMROper and second as curMROper.
+
+     *  1) RightMROper: If it is in map phase. It can be preceded only by POLoad. If there is anything else
+     *                  in physical plan, that is yanked and set as inner plans of joinOp.
+     *                  If it is reduce phase. Close this operator and start new MROper.
+     *  2) LeftMROper:  If it is in map phase, add the Join operator in it.
+     *                  If it is in reduce phase. Close it and start new MROper.
+     */
+
+/**
+     * For the counter job, it depends if it is row number or not.
+     * In case of being a row number, any previous jobs are saved
+     * and POCounter is added as a leaf on a map task.
+     * If it is not, then POCounter is added as a leaf on a reduce
+     * task (last sorting phase).
+     **/
+
+/**
+     * In case of PORank, it is closed any other previous job (containing
+     * POCounter as a leaf) and PORank is added on map phase.
+     **/
+
+/**
+     * Create Sampling job for skewed join.
+     */
+
+/**indTupIter
+         * Look for pattern POPackage->POForEach(if both are flatten), change it to POJoinPackage
+         * We can avoid materialize the input and construct the result of join on the fly
+         *
+         * @param mr - map-reduce plan to optimize
+         */
+

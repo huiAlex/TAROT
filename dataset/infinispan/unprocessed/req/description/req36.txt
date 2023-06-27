@@ -1,0 +1,16 @@
+Follow a  service registry  style approach to delegating lifecycle events so that modules can register for hooks.  The purpose behind this is that some modules need to perform some setup.  E.g., the  tree  module needs to register specific types with the Marshaller.  The  query  module needs to register an interceptor with the Cache if the Cache has enabled querying.  Etc.
+The approach is to use a JDK service registry style approach. The Core module defines a ModuleLifecycle interface:
+interface ModuleLifecycle {
+void cacheManagerStarting(GlobalComponentRegistry gcr);
+void cacheManagerStarted(GlobalComponentRegistry gcr);
+void cacheManagerStopping(GlobalComponentRegistry gcr);
+void cacheManagerStopped(GlobalComponentRegistry gcr);
+void cacheStarting(ComponentRegistry cr, String cacheName);
+void cacheStarted(ComponentRegistry cr, String cacheName);
+void cacheStopping(ComponentRegistry cr, String cacheName);
+void cacheStopped(ComponentRegistry cr, String cacheName);
+}
+each module would implement this interface.
+Registration  is performed by each module maintaining a infinispan-module-info.properties file in its classpath, containing:
+infinispan.module.lifecycle=&lt;ModuleLifecycle impl&gt;
+The DefaultCacheManager, when starting up, scans its classpath for  infinispan-module-info.properties  and registers all listeners.  Everytime the cache manager starts, stops, or caches start or stop, the appropriate callbacks are invoked.

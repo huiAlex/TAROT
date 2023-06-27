@@ -1,0 +1,1014 @@
+<Class>
+    <Id>1811</Id>
+    <Package>org.infinispan.client.hotrod</Package>
+    <ClassName>RemoteCache</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>BasicCache</SuperInterface>
+        <SuperInterface>K</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RemoteCache  /** 
+ * Provides remote reference to a Hot Rod server/cluster. It implements  {@link org.infinispan.Cache}, but given its nature (remote) some operations are not supported. All these unsupported operations are being overridden within this interface and documented as such. &lt;p/&gt; &lt;b&gt;New operations&lt;/b&gt;: besides the operations inherited from  {@link org.infinispan.Cache}, RemoteCache also adds new operations to optimize/reduce network traffic: e.g. versioned put operation. &lt;p/&gt; &lt;b&gt;Concurrency&lt;/b&gt;: implementors of this interface will support multi-threaded access, similar to the way  {@link org.infinispan.Cache} supports it.&lt;p/&gt; &lt;b&gt;Return values&lt;/b&gt;: previously existing values for certain  {@link java.util.Map} operations are not returned, nullis returned instead. E.g.  {@link java.util.Map#put(Object,Object)} returns the previous value associated to thesupplied key. In case of RemoteCache, this returns null. &lt;p/&gt; &lt;b&gt;Synthetic operations&lt;/b&gt;: aggregate operations are being implemented based on other Hot Rod operations. E.g. all the  {@link java.util.Map#putAll(java.util.Map)} is implemented through multiple individual puts. This means that thethese operations are not atomic and that they are costly, e.g. as the number of network round-trips is not one, but the size of the added map. All these synthetic operations are documented as such. &lt;p/&gt; &lt;b&gt;changing default behavior through  {@link org.infinispan.client.hotrod.Flag}s&lt;/b&gt;: it is possible to change the default cache behaviour by using flags on an per invocation basis. E.g. &lt;pre&gt; RemoteCache cache = getRemoteCache(); Object oldValue = cache.withFlags(Flag.FORCE_RETURN_VALUE).put(aKey, aValue); &lt;/pre&gt; In the previous example, using  {@link org.infinispan.client.hotrod.Flag#FORCE_RETURN_VALUE} will make the client toalso return previously existing value associated with &lt;tt&gt;aKey&lt;/tt&gt;. If this flag would not be present, Infinispan would return (by default) &lt;tt&gt;null&lt;/tt&gt;. This is in order to avoid fetching a possibly large object from the remote server, which might not be needed. The flags as set by the  {@link org.infinispan.client.hotrod.RemoteCache#withFlags(Flag...)}operation only apply for the very next operation executed &lt;b&gt;by the same thread&lt;/b&gt; on the RemoteCache. &lt;p/&gt; &lt;b&gt;&lt;a href="http://community.jboss.org/wiki/Eviction"&gt;Eviction and expiration&lt;/a&gt;&lt;/b&gt;: Unlike local  {@link org.infinispan.Cache} cache, which allows specifying time values with any granularity (as defined by {@link TimeUnit}), HotRod only supports seconds as time units. If a different time unit is used instead, HotRod will transparently convert it to seconds, using  {@link java.util.concurrent.TimeUnit#toSeconds(long)} method. This mightresult in loss of precision for values specified as nanos or milliseconds. &lt;br/&gt; Another fundamental difference is in the case of lifespan (naturally does NOT apply for max idle): If number of seconds is bigger than 30 days, this number of seconds is treated as UNIX time and so, represents the number of seconds since 1/1/1970. &lt;br/&gt; &lt;b&gt;Note on default expiration values:&lt;/b&gt; Due to limitations on the first version of the protocol, it's not possible for clients to rely on default lifespan and maxIdle values set on the server. This is because the protocol does not support a way to tell the server that no expiration lifespan and/or maxIdle were provided and that default values should be used. This will be resolved in a future revision of the protocol. In the mean time, the workaround is to explicitly provide the desired expiry lifespan/maxIdle values in each remote cache operation.
+ * @author Mircea.Markus@jboss.com
+ * @since 4.1
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>removeWithVersion</MethodName>
+            <MethodComment>/** 
+ * Removes the given entry only if its version matches the supplied version. A typical use case looks like this: &lt;pre&gt; VersionedEntry ve = remoteCache.getVersioned(key); //some processing remoteCache.removeWithVersion(key, ve.getVersion(); &lt;/pre&gt; Lat call (removeWithVersion) will make sure that the entry will only be removed if it hasn't been changed in between.
+ * @return true if the entry has been removed
+ * @see VersionedValue
+ * @see #getVersioned(Object)
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}&lt;p&gt; The returned value is only sent back if  {@link Flag#FORCE_RETURN_VALUE} is enabled.
+ */
+</MethodComment>
+            <ReturnType>V</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>remove</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}&lt;p&gt; This method requires 2 round trips to the server. The first to retrieve the value and version and a second to remove the key with the version if the value matches. If possible user should use {@link RemoteCache#getWithMetadata(Object)} and {@link RemoteCache#removeWithVersion(Object,long)}.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replace</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}&lt;p&gt; This method requires 2 round trips to the server. The first to retrieve the value and version and a second to replace the key with the version if the value matches. If possible user should use {@link RemoteCache#getWithMetadata(Object)} and{@link RemoteCache#replaceWithVersion(Object,Object,long)}.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replace</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}&lt;p&gt; This method requires 2 round trips to the server. The first to retrieve the value and version and a second to replace the key with the version if the value matches. If possible user should use {@link RemoteCache#getWithMetadata(Object)} and{@link RemoteCache#replaceWithVersion(Object,Object,long,long,TimeUnit,long,TimeUnit)}.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replace</MethodName>
+            <MethodComment>/** 
+ * {@inheritDoc}&lt;p&gt; This method requires 2 round trips to the server. The first to retrieve the value and version and a second to replace the key with the version if the value matches. If possible user should use {@link RemoteCache#getWithMetadata(Object)} and{@link RemoteCache#replaceWithVersion(Object,Object,long,long,TimeUnit,long,TimeUnit)} if possible.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>oldValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTime</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTimeUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeWithVersionAsync</MethodName>
+            <MethodComment>/** 
+ * @see #remove(Object,Object)
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersion</MethodName>
+            <MethodComment>/** 
+ * Replaces the given value only if its version matches the supplied version. See  {@link #removeWithVersion(Object,long)} for a sample usage of theversion-based methods.
+ * @param version numeric version that should match the one in the serverfor the operation to succeed
+ * @return true if the value has been replaced
+ * @see #getVersioned(Object)
+ * @see VersionedValue
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersion</MethodName>
+            <MethodComment>/** 
+ * A overloaded form of  {@link #replaceWithVersion(Object,Object,long)}which takes in lifespan parameters.
+ * @param key key to use
+ * @param newValue new value to be associated with the key
+ * @param version numeric version that should match the one in the serverfor the operation to succeed
+ * @param lifespanSeconds lifespan of the entry
+ * @return true if the value was replaced
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersion</MethodName>
+            <MethodComment>/** 
+ * A overloaded form of  {@link #replaceWithVersion(Object,Object,long)}which takes in lifespan and maximum idle time parameters.
+ * @param key key to use
+ * @param newValue new value to be associated with the key
+ * @param version numeric version that should match the one in the serverfor the operation to succeed
+ * @param lifespanSeconds lifespan of the entry
+ * @param maxIdleTimeSeconds the maximum amount of time this key is allowedto be idle for before it is considered as expired
+ * @return true if the value was replaced
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTimeSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersion</MethodName>
+            <MethodComment>/** 
+ * A overloaded form of  {@link #replaceWithVersion(Object,Object,long)}which takes in lifespan and maximum idle time parameters.
+ * @param key key to use
+ * @param newValue new value to be associated with the key
+ * @param version numeric version that should match the one in the serverfor the operation to succeed
+ * @param lifespan lifespan of the entry
+ * @param lifespanTimeUnit {@link java.util.concurrent.TimeUnit} for lifespan
+ * @param maxIdle the maximum amount of time this key is allowedto be idle for before it is considered as expired
+ * @param maxIdleTimeUnit {@link java.util.concurrent.TimeUnit} for maxIdle
+ * @return true if the value was replaced
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanTimeUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdle</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTimeUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersionAsync</MethodName>
+            <MethodComment>/** 
+ * @see #replaceWithVersion(Object,Object,long)
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersionAsync</MethodName>
+            <MethodComment>/** 
+ * @see #replaceWithVersion(Object,Object,long)
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceWithVersionAsync</MethodName>
+            <MethodComment>/** 
+ * @see #replaceWithVersion(Object,Object,long)
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newValue</ParamName>
+                    <ParamType>V</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>version</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleSeconds</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntries</MethodName>
+            <MethodComment>/** 
+ * @see #retrieveEntries(String,Object[],java.util.Set,int)
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;Object,Object&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filterConverterFactory</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntries</MethodName>
+            <MethodComment>/** 
+ * Retrieve entries from the server
+ * @param filterConverterFactory Factory name for the KeyValueFilterConverter or null for no filtering.
+ * @param filterConverterParams  Parameters to the KeyValueFilterConverter
+ * @param segments               The segments to iterate. If null all segments will be iterated. An empty set will filter out all entries.
+ * @param batchSize              The number of entries transferred from the server at a time.
+ * @return Iterator for the entries
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;Object,Object&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filterConverterFactory</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filterConverterParams</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntries</MethodName>
+            <MethodComment>/** 
+ * @see #retrieveEntries(String,Object[],java.util.Set,int)
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;Object,Object&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filterConverterFactory</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntriesByQuery</MethodName>
+            <MethodComment>/** 
+ * Retrieve entries from the server matching a query.
+ * @param filterQuery {@link Query}
+ * @param segments    The segments to iterate. If null all segments will be iterated. An empty set will filter out all entries.
+ * @param batchSize   The number of entries transferred from the server at a time.
+ * @return {@link CloseableIterator}
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;Object,Object&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>filterQuery</ParamName>
+                    <ParamType>Query</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>retrieveEntriesWithMetadata</MethodName>
+            <MethodComment>/** 
+ * Retrieve entries with metadata information
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;Object,MetadataValue&lt;Object&gt;&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>segments</ParamName>
+                    <ParamType>Integer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>batchSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getVersioned</MethodName>
+            <MethodComment>/** 
+ * Returns the  {@link VersionedValue} associated to the supplied key param, or null if it doesn't exist.
+ * @deprecated Use {@link #getWithMetadata(Object)} instead
+ */
+</MethodComment>
+            <ReturnType>V</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getWithMetadata</MethodName>
+            <MethodComment>/** 
+ * Returns the  {@link MetadataValue} associated to the supplied key param, or null if it doesn't exist.
+ */
+</MethodComment>
+            <ReturnType>V</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>keySet</MethodName>
+            <MethodComment>/** 
+ * @inheritDoc &lt;p&gt; Due to this set being backed by the remote cache, each invocation on this set may require remote invocations to retrieve or update the remote cache. The main benefit of this set being backed by the remote cache is that this set internally does not require having to store any keys locally in memory and allows for the user to iteratively retrieve keys from the cache which is more memory conservative. &lt;p&gt; If you do wish to create a copy of this set (requires all entries in memory), the user may invoke &lt;code&gt;keySet().stream().collect(Collectors.toSet())&lt;/code&gt; to copy the data locally. Then all operations on the resulting set will not require remote access, however updates will not be reflected from the remote cache. &lt;p&gt; NOTE: this method returns a  {@link CloseableIteratorSet} which requires the iterator, spliterator or streamreturned from it to be closed. Failure to do so may cause additional resources to not be freed.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>values</MethodName>
+            <MethodComment>/** 
+ * @inheritDoc &lt;p&gt; Due to this collection being backed by the remote cache, each invocation on this collection may require remote invocations to retrieve or update the remote cache. The main benefit of this collection being backed by the remote cache is that this collection internally does not require having to store any values locally in memory and allows for the user to iteratively retrieve values from the cache which is more memory conservative. &lt;p&gt; If you do wish to create a copy of this collection (requires all entries in memory), the user may invoke &lt;code&gt;values().stream().collect(Collectors.toList())&lt;/code&gt; to copy the data locally. Then all operations on the resulting list will not require remote access, however updates will not be reflected from the remote cache. &lt;p&gt; NOTE: this method returns a  {@link CloseableIteratorCollection} which requires the iterator, spliterator or streamreturned from it to be closed. Failure to do so may cause additional resources to not be freed.
+ */
+</MethodComment>
+            <ReturnType>V</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>entrySet</MethodName>
+            <MethodComment>/** 
+ * @inheritDoc &lt;p&gt; Due to this set being backed by the remote cache, each invocation on this set may require remote invocations to retrieve or update the remote cache. The main benefit of this set being backed by the remote cache is that this set internally does not require having to store any entries locally in memory and allows for the user to iteratively retrieve entries from the cache which is more memory conservative. &lt;p&gt; The  {@link CloseableIteratorSet#remove(Object)} method requires two round trips to the server to properly removean entry. This is because they first must retrieve the value and version to see if it matches and if it does remove it using it's version. &lt;p&gt; If you do wish to create a copy of this set (requires all entries in memory), the user may invoke &lt;code&gt;entrySet().stream().collect(Collectors.toSet())&lt;/code&gt; to copy the data locally. Then all operations on the resulting set will not require remote access, however updates will not be reflected from the remote cache. &lt;p&gt; NOTE: this method returns a  {@link CloseableIteratorSet} which requires the iterator, spliterator or streamreturned from it to be closed. Failure to do so may cause additional resources to not be freed.
+ */
+</MethodComment>
+            <ReturnType>Entry&lt;K,V&gt;</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAll</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation. The client iterates over the set of keys and calls put for each one of them. This results in operation not being atomic (if a failure happens after few puts it is not rolled back) and costly (for each key in the parameter map a remote call is performed).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAll</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation.
+ * @see #putAll(java.util.Map,long,java.util.concurrent.TimeUnit)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTime</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleTimeUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAllAsync</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation.
+ * @see #putAll(java.util.Map,long,java.util.concurrent.TimeUnit)
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAllAsync</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation.
+ * @see #putAll(java.util.Map,long,java.util.concurrent.TimeUnit)
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAllAsync</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation.
+ * @see #putAll(java.util.Map,long,java.util.concurrent.TimeUnit)
+ */
+</MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespan</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lifespanUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdle</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>maxIdleUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>putAll</MethodName>
+            <MethodComment>/** 
+ * Synthetic operation.
+ * @see #putAll(java.util.Map,long,java.util.concurrent.TimeUnit)
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>m</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ServerStatistics</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>withFlags</MethodName>
+            <MethodComment>/** 
+ * Applies one or more  {@link Flag}s to the scope of a single invocation.  See the  {@link Flag} enumeration to forinformation on available flags. &lt;p /&gt; Sample usage: &lt;pre&gt; remoteCache.withFlags(Flag.FORCE_RETURN_VALUE).put("hello", "world"); &lt;/pre&gt;
+ * @param flags
+ * @return the current RemoteCache instance to continue running operations on.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>flags</ParamName>
+                    <ParamType>Flag</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRemoteCacheManager</MethodName>
+            <MethodComment>/** 
+ * Returns the  {@link org.infinispan.client.hotrod.RemoteCacheManager} that created this cache.
+ */
+</MethodComment>
+            <ReturnType>RemoteCacheManager</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBulk</MethodName>
+            <MethodComment>/** 
+ * Bulk get operations, returns all the entries within the remote cache.
+ * @return the returned values depend on the configuration of the back-end infinispan servers. Read &lt;ahref="http://community.jboss.org/wiki/HotRodBulkGet-Design#Server_side"&gt;this&lt;/a&gt; for more details. The returned Map is unmodifiable.
+ * @deprecated Bulk retrievals can be quite expensive if for large data sets.Alternatively, the different &lt;code&gt;retrieveEntries*&lt;/code&gt; methods offer lazy, pull-style, methods that retrieve bulk data more efficiently.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getBulk</MethodName>
+            <MethodComment>/** 
+ * Same as  {@link #getBulk()}, but limits the returned set of values to the specified size. No ordering is guaranteed, and there is no guarantee that "size" elements are returned( e.g. if the number of elements in the back-end server is smaller that "size")
+ * @deprecated Bulk retrievals can be quite expensive if for large data sets.Alternatively, the different &lt;code&gt;retrieveEntries*&lt;/code&gt; methods offer lazy, pull-style, methods that retrieve bulk data more efficiently.
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>size</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAll</MethodName>
+            <MethodComment>/** 
+ * Retrieves all of the entries for the provided keys.  A key will not be present in the resulting map if the entry was not found in the cache.
+ * @param keys The keys to find values for
+ * @return The entries that were present for the given keys
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keys</ParamName>
+                    <ParamType>? extends K</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getProtocolVersion</MethodName>
+            <MethodComment>/** 
+ * Returns the HotRod protocol version supported by this RemoteCache implementation
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addClientListener</MethodName>
+            <MethodComment>/** 
+ * Add a client listener to receive events that happen in the remote cache. The listener object must be annotated with @ {@link org.infinispan.client.hotrod.annotation.ClientListener} annotation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>listener</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addClientListener</MethodName>
+            <MethodComment>/** 
+ * Add a client listener to receive events that happen in the remote cache. The listener object must be annotated with @ClientListener annotation.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>listener</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>filterFactoryParams</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>converterFactoryParams</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeClientListener</MethodName>
+            <MethodComment>/** 
+ * Remove a previously added client listener. If the listener was not added before, this operation is a no-op.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>listener</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getListeners</MethodName>
+            <MethodComment>/** 
+ * Returns a set with all the listeners registered by this client for the given cache.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execute</MethodName>
+            <MethodComment>/** 
+ * Executes a remote script passing a set of named parameters
+ */
+</MethodComment>
+            <ReturnType>T</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>scriptName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>params</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getCacheTopologyInfo</MethodName>
+            <MethodComment>/** 
+ * Returns  {@link CacheTopologyInfo} for this cache.
+ */
+</MethodComment>
+            <ReturnType>CacheTopologyInfo</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>streaming</MethodName>
+            <MethodComment>/** 
+ * Returns a cache where values are manipulated using  {@link java.io.InputStream} and {@link java.io.OutputStream}
+ */
+</MethodComment>
+            <ReturnType>K</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

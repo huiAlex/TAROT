@@ -1,0 +1,173 @@
+<Class>
+    <Id>798</Id>
+    <Package>org.drools.compiler.rule.builder.dialect.asm</Package>
+    <ClassName>ASMConsequenceBuilder</ClassName>
+    <SuperClass>AbstractASMConsequenceBuilder</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>createConsequenceBytecode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ruleContext</ParamName>
+                    <ParamType>RuleBuildContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>consequenceContext</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>InvokerDataProvider [data=new InvokerContext(consequenceContext)]</InnerVar>
+                <InnerVar>String [name=(String)consequenceContext.get("consequenceName")]</InnerVar>
+                <InnerVar>Declaration[] [declarations=(Declaration[])consequenceContext.get("declarations")]</InnerVar>
+                <InnerVar>ClassGenerator [generator=InvokerGenerator.createInvokerClassGenerator(data,ruleContext).setInterfaces(Consequence.class,CompiledInvoker.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>generator.addMethod(ACC_PUBLIC,"getName",generator.methodDescr(String.class),new ClassGenerator.MethodBody(){
+  public void body(  MethodVisitor mv){
+    push(name);
+    mv.visitInsn(ARETURN);
+  }
+}
+);addMethod;[ACC_PUBLIC, "evaluate", generator.methodDescr(null,KnowledgeHelper.class,WorkingMemory.class), new String[]{"java/lang/Exception"}, new GeneratorHelper.EvaluateMethod(){
+  public void body(  MethodVisitor mv){
+    mv.visitVarInsn(ALOAD,1);
+    invokeInterface(KnowledgeHelper.class,"getTuple",Tuple.class);
+    mv.visitVarInsn(ASTORE,3);
+    mv.visitVarInsn(ALOAD,1);
+    invokeInterface(KnowledgeHelper.class,"getMatch",Activation.class);
+    invokeInterface(Activation.class,"getTuple",Tuple.class);
+    invokeInterface(Tuple.class,"getTupleSink",Sink.class);
+    cast(RuleTerminalNode.class);
+    invokeVirtual(RuleTerminalNode.class,"getRequiredDeclarations",Declaration[].class);
+    mv.visitVarInsn(ASTORE,4);
+    final String[] globals=data.getGlobals();
+    final String[] globalTypes=data.getGlobalTypes();
+    final Boolean[] notPatterns=(Boolean[])consequenceContext.get("notPatterns");
+    int[] paramsPos=new int[declarations.length];
+    int offset=5;
+    for (int i=0; i &lt; declarations.length; i++) {
+      int factPos=offset;
+      int objPos=++offset;
+      paramsPos[i]=factPos;
+      mv.visitVarInsn(ALOAD,3);
+      mv.visitVarInsn(ALOAD,4);
+      push(i);
+      mv.visitInsn(AALOAD);
+      invokeInterface(Tuple.class,"get",InternalFactHandle.class,Declaration.class);
+      mv.visitVarInsn(ASTORE,factPos);
+      mv.visitVarInsn(ALOAD,4);
+      push(i);
+      mv.visitInsn(AALOAD);
+      mv.visitVarInsn(ALOAD,2);
+      cast(InternalWorkingMemory.class);
+      mv.visitVarInsn(ALOAD,factPos);
+      invokeInterface(InternalFactHandle.class,"getObject",Object.class);
+      String readMethod=declarations[i].getNativeReadMethodName();
+      boolean isObject=readMethod.equals("getValue");
+      String returnedType=isObject ? "Ljava/lang/Object;" : typeDescr(declarations[i].getTypeName());
+      mv.visitMethodInsn(INVOKEVIRTUAL,Declaration.class.getName().replace('.','/'),readMethod,"(L" + InternalWorkingMemory.class.getName().replace('.','/') + ";Ljava/lang/Object;)"+ returnedType);
+      if (isObject)       mv.visitTypeInsn(CHECKCAST,internalName(declarations[i].getTypeName()));
+      offset+=store(objPos,declarations[i].getTypeName());
+      if (notPatterns[i]) {
+        mv.visitVarInsn(ALOAD,1);
+        invokeInterface(KnowledgeHelper.class,"getWorkingMemory",WorkingMemory.class);
+        loadAsObject(objPos);
+        invokeInterface(WorkingMemory.class,"getFactHandle",FactHandle.class,Object.class);
+        cast(InternalFactHandle.class);
+        mv.visitVarInsn(ASTORE,factPos);
+      }
+    }
+    StringBuilder consequenceMethodDescr=new StringBuilder("(L" + KnowledgeHelper.class.getName().replace('.','/') + ";");
+    mv.visitVarInsn(ALOAD,1);
+    for (int i=0; i &lt; declarations.length; i++) {
+      load(paramsPos[i] + 1);
+      mv.visitVarInsn(ALOAD,paramsPos[i]);
+      consequenceMethodDescr.append(typeDescr(declarations[i].getTypeName())).append("L" + FactHandle.class.getName().replace('.','/') + ";");
+    }
+    for (int i=0; i &lt; globals.length; i++) {
+      mv.visitVarInsn(ALOAD,2);
+      push(globals[i]);
+      invokeInterface(WorkingMemory.class,"getGlobal",Object.class,String.class);
+      mv.visitTypeInsn(CHECKCAST,internalName(globalTypes[i]));
+      consequenceMethodDescr.append(typeDescr(globalTypes[i]));
+    }
+    consequenceMethodDescr.append(")V");
+    mv.visitMethodInsn(INVOKESTATIC,data.getInternalRuleClassName(),data.getMethodName(),consequenceMethodDescr.toString());
+    mv.visitInsn(RETURN);
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>body</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <ParamType>MethodVisitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;push;[name]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[ARETURN]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>body</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mv</ParamName>
+                    <ParamType>MethodVisitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [globals=data.getGlobals()]</InnerVar>
+                <InnerVar>String[] [globalTypes=data.getGlobalTypes()]</InnerVar>
+                <InnerVar>Boolean[] [notPatterns=(Boolean[])consequenceContext.get("notPatterns")]</InnerVar>
+                <InnerVar>int[] [paramsPos=new int[declarations.length]]</InnerVar>
+                <InnerVar>int [offset=5]</InnerVar>
+                <InnerVar>StringBuilder [consequenceMethodDescr=new StringBuilder("(L" + KnowledgeHelper.class.getName().replace('.','/') + ";")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeInterface;[KnowledgeHelper.class, "getTuple", Tuple.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, 3]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeInterface;[KnowledgeHelper.class, "getMatch", Activation.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeInterface;[Activation.class, "getTuple", Tuple.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeInterface;[Tuple.class, "getTupleSink", Sink.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;cast;[RuleTerminalNode.class]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;invokeVirtual;[RuleTerminalNode.class, "getRequiredDeclarations", Declaration[].class]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ASTORE, 4]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitVarInsn;[ALOAD, 1]</InnerMethodInvoke>
+                <InnerMethodInvoke>consequenceMethodDescr;append;[")V"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitMethodInsn;[INVOKESTATIC, data.getInternalRuleClassName(), data.getMethodName(), consequenceMethodDescr.toString()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mv;visitInsn;[RETURN]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,123 @@
+/**
+* StoreFuncs take records from Pig's processing and store them into a data store.  Most frequently
+* this is an HDFS file, but it could also be an HBase instance, RDBMS, etc.
+*/
+
+/**
+     * This method is called by the Pig runtime in the front end to convert the
+     * output location to an absolute path if the location is relative. The
+     * StoreFunc implementation is free to choose how it converts a relative
+     * location to an absolute location since this may depend on what the location
+     * string represent (hdfs path or some other data source).
+     *
+     *
+     * @param location location as provided in the "store" statement of the script
+     * @param curDir the current working direction based on any "cd" statements
+     * in the script before the "store" statement. If there are no "cd" statements
+     * in the script, this would be the home directory -
+     * 
+     * @return the absolute location based on the arguments passed
+     *      */
+
+/**
+     * Return the OutputFormat associated with StoreFunc.  This will be called
+     * on the front end during planning and on the backend during
+     * execution.
+     * @return the {@link OutputFormat} associated with StoreFunc
+     *      * OutputFormat
+     *
+     */
+
+/**
+     * Communicate to the storer the location where the data needs to be stored.
+     * The location string passed to the {@link StoreFunc} here is the
+     * return value of {@link StoreFunc#relToAbsPathForStoreLocation(String, Path)}
+     * This method will be called in the frontend and backend multiple times. Implementations
+     * should bear in mind that this method is called multiple times and should
+     * ensure there are no inconsistent side effects due to the multiple calls.
+     * {@link #checkSchema(ResourceSchema)} will be called before any call to
+     * {@link #setStoreLocation(String, Job)}.
+     *
+
+     * @param location Location returned by
+     * {@link StoreFunc#relToAbsPathForStoreLocation(String, Path)}
+     * @param job The {@link Job} object
+     *      */
+
+/**
+     * Set the schema for data to be stored.  This will be called on the
+     * front end during planning if the store is associated with a schema.
+     * A Store function should implement this function to
+     * check that a given schema is acceptable to it.  For example, it
+     * can check that the correct partition keys are included;
+     * a storage function to be written directly to an OutputFormat can
+     * make sure the schema will translate in a well defined way.  Default implementation
+     * is a no-op.
+     * @param s to be checked
+     *      * a detailed error message indicating what is wrong with the schema.
+     */
+
+/**
+     * Initialize StoreFunc to write data.  This will be called during
+     * execution on the backend before the call to putNext.
+     * @param writer RecordWriter to use.
+     *      */
+
+/**
+     * Write a tuple to the data store.
+     *
+     * @param t the tuple to store.
+     *      */
+
+/**
+     * This method will be called by Pig both in the front end and back end to
+     * pass a unique signature to the {@link StoreFunc} which it can use to store
+     * information in the {@link UDFContext} which it needs to store between
+     * various method invocations in the front end and back end. This method
+     * will be called before other methods in {@link StoreFunc}.  This is necessary
+     * because in a Pig Latin script with multiple stores, the different
+     * instances of store functions need to be able to find their (and only their)
+     * data in the UDFContext object.  The default implementation is a no-op.
+     * @param signature a unique signature to identify this StoreFunc
+     */
+
+/**
+     * This method will be called by Pig if the job which contains this store
+     * fails. Implementations can clean up output locations in this method to
+     * ensure that no incorrect/incomplete results are left in the output location.
+     * The default implementation  deletes the output location if it
+     * is a {@link FileSystem} location.
+     * @param location Location returned by
+     * {@link StoreFunc#relToAbsPathForStoreLocation(String, Path)}
+     * @param job The {@link Job} object - this should be used only to obtain
+     * cluster properties through {@link Job#getConfiguration()} and not to set/query
+     * any runtime job information.
+     */
+
+/**
+     * This method will be called by Pig if the job which contains this store
+     * is successful, and some cleanup of intermediate resources is required.
+     * Implementations can clean up output locations in this method to
+     * ensure that no incorrect/incomplete results are left in the output location.
+     * @param location Location returned by
+     * {@link StoreFunc#relToAbsPathForStoreLocation(String, Path)}
+     * @param job The {@link Job} object - this should be used only to obtain
+     * cluster properties through {@link Job#getConfiguration()} and not to set/query
+     * any runtime job information.
+     */
+
+/**
+     * Default implementation for {@link #cleanupOnFailure(String, Job)}
+     * and {@link #cleanupOnSuccess(String, Job)}.  This removes a file
+     * from HDFS.
+     * @param location file name (or URI) of file to remove
+     * @param job Hadoop job, used to access the appropriate file system.
+     *      */
+
+/**
+     * Issue a warning.  Warning messages are aggregated and reported to
+     * the user.
+     * @param msg String message of the warning
+     * @param warningEnum type of warning
+     */
+

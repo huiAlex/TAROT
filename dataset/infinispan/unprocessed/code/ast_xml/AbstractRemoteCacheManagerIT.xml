@@ -1,0 +1,696 @@
+<Class>
+    <Id>1527</Id>
+    <Package>org.infinispan.server.test.client.hotrod</Package>
+    <ClassName>AbstractRemoteCacheManagerIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AbstractRemoteCacheManagerIT  /** 
+ * Tests for HotRod client and its RemoteCacheManager API. Subclasses must provide a way to get the list of remote HotRod servers. &lt;p/&gt; Subclasses may be used in Client-Server mode or Hybrid mode where HotRod server runs as a library deployed in an application server.
+ * @author Richard Achmatowicz
+ * @author Martin Gencur
+ * @author Jozef Vilkolak
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>IPV6_REGEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>IPV4_REGEX</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>testCache</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getServers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RemoteInfinispanServer</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createRemoteCacheManagerConfigurationBuilder</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ConfigurationBuilder</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ConfigurationBuilder [config=new ConfigurationBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addServers;[config]</InnerMethodInvoke>
+                <InnerMethodInvoke>config.balancingStrategy("org.infinispan.server.test.client.hotrod.HotRodTestRequestBalancingStrategy").forceReturnValues(true).tcpNoDelay(false).tcpKeepAlive(true).transportFactory("org.infinispan.server.test.client.hotrod.HotRodTestTransportFactory").marshaller("org.infinispan.server.test.client.hotrod.HotRodTestMarshaller").asyncExecutorFactory().factoryClass("org.infinispan.server.test.client.hotrod.HotRodTestExecutorFactory").addExecutorProperty("infinispan.client.hotrod.default_executor_factory.pool_size","20").addExecutorProperty("infinispan.client.hotrod.default_executor_factory.queue_size","200000").keySizeEstimate(128);valueSizeEstimate;[1024]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDefaultConstructor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=createRemoteCacheManagerConfigurationBuilder().build()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm2=new RemoteCacheManager(false)]</InnerVar>
+                <InnerVar>RemoteCache [rc=rcm.getCache(testCache)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertTrue;[rcm.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertFalse;[rcm2.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEqualConfiguration;[conf, rc]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testConfigurationConstructors</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=createRemoteCacheManagerConfigurationBuilder().build()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(conf)]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm2=new RemoteCacheManager(conf,false)]</InnerVar>
+                <InnerVar>RemoteCache [rc=rcm.getCache(testCache)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertTrue;[rcm.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertFalse;[rcm2.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEqualConfiguration;[conf, rc]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testEmptyConfiguration</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ConfigurationBuilder [confBuilder=new ConfigurationBuilder()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(confBuilder.build())]</InnerVar>
+                <InnerVar>RemoteCache [rc=rcm.getCache(testCache)]</InnerVar>
+                <InnerVar>ConfigurationBuilder [builder=new ConfigurationBuilder()]</InnerVar>
+                <InnerVar>Configuration [defaultConf=builder.build()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addServers;[confBuilder]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addServers;[builder]</InnerMethodInvoke>
+                <InnerMethodInvoke>builder.balancingStrategy("org.infinispan.client.hotrod.impl.transport.tcp.RoundRobinBalancingStrategy").forceReturnValues(false).tcpNoDelay(true).transportFactory("org.infinispan.client.hotrod.impl.transport.tcp.TcpTransportFactory").marshaller("org.infinispan.commons.marshall.jboss.GenericJBossMarshaller").asyncExecutorFactory().factoryClass("org.infinispan.client.hotrod.impl.async.DefaultAsyncExecutorFactory").addExecutorProperty("infinispan.client.hotrod.default_executor_factory.pool_size","10").addExecutorProperty("infinispan.client.hotrod.default_executor_factory.queue_size","100000").keySizeEstimate(64);valueSizeEstimate;[512]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEqualConfiguration;[defaultConf, rc]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addServers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>builder</ParamName>
+                    <ParamType>ConfigurationBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testStartStop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Configuration [cfg=createRemoteCacheManagerConfigurationBuilder().build()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(cfg,false)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertTrue;["RemoteCacheManager should not be started initially", !rcm.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm;start;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["RemoteCacheManager should be started after calling start()", rcm.isStarted()]</InnerMethodInvoke>
+                <InnerMethodInvoke>rcm;stop;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;["RemoteCacheManager should be stopped after calling stop()", !rcm.isStarted()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testGetNonExistentCache</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(createRemoteCacheManagerConfigurationBuilder().build())]</InnerVar>
+                <InnerVar>RemoteCache [rc1=rcm.getCache("nonExistentCache")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDefaultLoadBalancing</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doTestDefaultLoadBalanding</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>InetSocketAddress [hostport0=new InetSocketAddress(getServers().get(0).getHotrodEndpoint().getInetAddress().getHostName(),getServers().get(0).getHotrodEndpoint().getPort())]</InnerVar>
+                <InnerVar>InetSocketAddress [hostport1=new InetSocketAddress(getServers().get(1).getHotrodEndpoint().getInetAddress().getHostName(),getServers().get(1).getHotrodEndpoint().getPort())]</InnerVar>
+                <InnerVar>TcpTransport [tt=null]</InnerVar>
+                <InnerVar>InetSocketAddress [sock_addr=null]</InnerVar>
+                <InnerVar>StringBuilder [serverAddrSequence=new StringBuilder()]</InnerVar>
+                <InnerVar>String [hostport0String=hostport0.getAddress().getHostAddress() + ":" + hostport0.getPort()]</InnerVar>
+                <InnerVar>String [hostport1String=hostport1.getAddress().getHostAddress() + ":" + hostport1.getPort()]</InnerVar>
+                <InnerVar>String [expectedSequence1=hostport0String + " " + hostport1String+ " "+ hostport0String]</InnerVar>
+                <InnerVar>String [expectedSequence2=hostport1String + " " + hostport0String+ " "+ hostport1String]</InnerVar>
+                <InnerVar>String [expectedSequenceLocalMode=hostport0String + " " + hostport0String+ " "+ hostport0String]</InnerVar>
+                <InnerVar>Configuration [cfg=createRemoteCacheManagerConfigurationBuilder().build()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(cfg)]</InnerVar>
+                <InnerVar>RemoteCache [rc=rcm.getCache(testCache)]</InnerVar>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ttf;releaseTransport;[tt]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverAddrSequence.append(sock_addr.getAddress().getHostAddress() + ":" + sock_addr.getPort());append;[" "]</InnerMethodInvoke>
+                <InnerMethodInvoke>ttf;releaseTransport;[tt]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverAddrSequence.append(sock_addr.getAddress().getHostAddress() + ":" + sock_addr.getPort());append;[" "]</InnerMethodInvoke>
+                <InnerMethodInvoke>ttf;releaseTransport;[tt]</InnerMethodInvoke>
+                <InnerMethodInvoke>serverAddrSequence;append;[sock_addr.getAddress().getHostAddress() + ":" + sock_addr.getPort()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testCustomLoadBalancing</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>doTestCustomLoadBalancing</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>InetSocketAddress [hostport0=new InetSocketAddress(getServers().get(0).getHotrodEndpoint().getInetAddress().getHostName(),getServers().get(0).getHotrodEndpoint().getPort())]</InnerVar>
+                <InnerVar>InetSocketAddress [hostport1=new InetSocketAddress(getServers().get(1).getHotrodEndpoint().getInetAddress().getHostName(),getServers().get(1).getHotrodEndpoint().getPort())]</InnerVar>
+                <InnerVar>TcpTransport [tt=null]</InnerVar>
+                <InnerVar>InetSocketAddress [sock_addr=null]</InnerVar>
+                <InnerVar>Configuration [cfg=createRemoteCacheManagerConfigurationBuilder().balancingStrategy("org.infinispan.server.test.client.hotrod.Node0OnlyBalancingStrategy").build()]</InnerVar>
+                <InnerVar>RemoteCacheManager [rcm=new RemoteCacheManager(cfg)]</InnerVar>
+                <InnerVar>RemoteCache [rc=rcm.getCache(testCache)]</InnerVar>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ttf;releaseTransport;[tt]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["load balancing first request: server address expected " + hostport0 + ", actual server address "+ sock_addr, sock_addr, hostport0]</InnerMethodInvoke>
+                <InnerMethodInvoke>ttf;releaseTransport;[tt]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["load balancing second request: server address expected " + hostport0 + ", actual server address"+ sock_addr, sock_addr, hostport0]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>assertEqualConfiguration</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>config</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [servers=getServerListProperty(rc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[config.balancingStrategyClass().getName(), getRequestBalancingStrategyProperty(rc)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNull;[config.balancingStrategy()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.forceReturnValues(), Boolean.parseBoolean(getForceReturnValueProperty(rc))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.tcpNoDelay(), Boolean.parseBoolean(getTcpNoDelayProperty(rc))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.tcpKeepAlive(), Boolean.parseBoolean(getTcpKeepAliveProperty(rc))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.maxRetries(), Integer.parseInt(getMaxRetries(rc))]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.asyncExecutorFactory().factoryClass().getName(), rc.getRemoteCacheManager().getConfiguration().asyncExecutorFactory().factoryClass().getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.transportFactory().getName(), getTransportFactoryProperty(rc)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;stats;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.keySizeEstimate(), getKeySizeEstimateProperty(rc)]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[config.valueSizeEstimate(), getValueSizeEstimateProperty(rc)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getRequestBalancingStrategyProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+                <InnerVar>FailoverRequestBalancingStrategy [rbs=ttf.getBalancer(RemoteCacheManager.cacheNameBytes())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getServerListProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+                <InnerVar>Collection&lt;SocketAddress&gt; [servers=ttf.getServers()]</InnerVar>
+                <InnerVar>StringBuilder [serverList=new StringBuilder()]</InnerVar>
+                <InnerVar>int [listSize=servers.size()]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForceReturnValueProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>boolean [forceReturn=getForceReturnValueField(of)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTcpNoDelayProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+                <InnerVar>boolean [tcpNoDelay=ttf.isTcpNoDelay()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTcpKeepAliveProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+                <InnerVar>boolean [tcpKeepAlive=ttf.isTcpKeepAlive()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMaxRetries</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TransportFactory [ttf=getTransportFactoryField(of)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransportFactoryProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TransportFactory [tf=getTransportFactoryField(of)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMarshallerProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>Marshaller [m=getMarshallerField(rci)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHashFunctionImplProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+                <InnerVar>OperationsFactory [of=getOperationsFactoryField(rci)]</InnerVar>
+                <InnerVar>TcpTransportFactory [ttf=(TcpTransportFactory)getTransportFactoryField(of)]</InnerVar>
+                <InnerVar>ConsistentHash [ch=ttf.getConsistentHash(((RemoteCacheImpl)rc).getName().getBytes())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getKeySizeEstimateProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getValueSizeEstimateProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rc</ParamName>
+                    <ParamType>RemoteCache</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>RemoteCacheImpl [rci=(RemoteCacheImpl)rc]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getOperationsFactoryField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>OperationsFactory</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rci</ParamName>
+                    <ParamType>RemoteCacheImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>OperationsFactory [fieldValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimateKeySizeField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rci</ParamName>
+                    <ParamType>RemoteCacheImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>int [fieldValue=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEstimateValueSizeField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rci</ParamName>
+                    <ParamType>RemoteCacheImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>int [fieldValue=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMarshallerField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Marshaller</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rci</ParamName>
+                    <ParamType>RemoteCacheImpl</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>Marshaller [fieldValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getForceReturnValueField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>of</ParamName>
+                    <ParamType>OperationsFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>boolean [fieldValue=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTransportFactoryField</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>TransportFactory</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>of</ParamName>
+                    <ParamType>OperationsFactory</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Field [field=null]</InnerVar>
+                <InnerVar>TransportFactory [fieldValue=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>field;setAccessible;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>resolve</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>InetSocketAddress</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>address</ParamName>
+                    <ParamType>InetSocketAddress</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

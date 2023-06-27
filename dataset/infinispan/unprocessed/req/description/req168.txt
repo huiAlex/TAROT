@@ -1,0 +1,6 @@
+Constructors that receive a thread pool from clients not shut it down on stop: it s a good rule of resource management for the creator of the resource (thread pool for us) to manage the shutdown as well.
+So here s how I think this can be solved:
+1. Add a new Ctor that besides the pool also has a flag to allow us to take ownership of the pool (i.e. we ll destroy it when the DistExec is shutdow)
+2. leave the current constructor as it is, make it internally invoke 1. with takeOwnership=true (this would preserve backward compatibility)
+3. amend the executor to only shutdown the thread pool if it has ownership
+4. document the threadpool ownership in all constructors

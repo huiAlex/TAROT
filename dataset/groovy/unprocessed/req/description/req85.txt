@@ -1,0 +1,75 @@
+add support for  @WithReadLock  and  @WithWriteLock  declarative synchronization
+As per the discussion here:
+I ll commit this myself, but am looking for feedback.
+This code:
+import  groovy.transform.*;
+public  class ResourceProvider {
+private   final  Map&lt; String ,  String &gt; data =  new  HashMap&lt; String ,  String &gt;();
+@WithReadLock
+public   String  getResource( String  key)  throws  Exception {
+return  data.get(key);
+}
+@WithWriteLock
+public  void refresh()  throws  Exception {
+//reload the resources into memory
+}
+}
+Becomes this Code:
+import  java.util.concurrent.locks.ReentrantReadWriteLock;
+import  java.util.concurrent.locks.ReadWriteLock;
+public  class ResourceProvider {
+private   final  ReadWriteLock $reentrantlock =  new  ReentrantReadWriteLock();
+private   final  Map&lt; String ,  String &gt; data =  new  HashMap&lt; String ,  String &gt;();
+public   String  getResource( String  key)  throws  Exception {
+$reentrantlock.readLock().lock();
+try  {
+return  data.get(key);
+}  finally  {
+$reentrantlock.readLock().unlock();
+}
+}
+public  void refresh()  throws  Exception {
+$reentrantlock.writeLock().lock();
+try  {
+//reload the resources into memory
+}  finally  {
+$reentrantlock.writeLock().unlock();
+}
+}
+}
+You can also specify your own lock, like so:
+import  groovy.transforms.*;
+public  class ResourceProvider {
+private   final  ReadWriteLock myLock =  new  ReentrantReadWriteLock();
+private   final  Map&lt; String ,  String &gt; data =  new  HashMap&lt; String ,  String &gt;();
+@WithReadLock( myLock )
+public   String  getResource( String  key)  throws  Exception {
+return  data.get(key);
+}
+@WithWriteLock( myLock )
+public  void refresh()  throws  Exception {
+//reload the resources into memory
+}
+}
+In which case the code becomes:
+public  class ResourceProvider {
+private   final  ReadWriteLock myLock =  new  ReentrantReadWriteLock();
+private   final  Map&lt; String ,  String &gt; data =  new  HashMap&lt; String ,  String &gt;();
+public   String  getResource( String  key)  throws  Exception {
+myLock.readLock().lock();
+try  {
+return  data.get(key);
+}  finally  {
+myLock.readLock().unlock();
+}
+}
+public  void refresh()  throws  Exception {
+myLock.writeLock().lock();
+try  {
+//reload the resources into memory
+}  finally  {
+myLock.writeLock().unlock();
+}
+}
+}
+.

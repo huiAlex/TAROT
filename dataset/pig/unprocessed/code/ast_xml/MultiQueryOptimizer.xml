@@ -1,0 +1,961 @@
+<Class>
+    <Id>87</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>MultiQueryOptimizer</ClassName>
+    <SuperClass>MROpPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MultiQueryOptimizer  /** 
+ * An optimizer that merges all or part splittee MapReduceOpers into splitter MapReduceOper. &lt;p&gt; The merge can produce a MROperPlan that has fewer MapReduceOpers than MapReduceOpers in the original MROperPlan. &lt;p&gt; The MRCompler generates multiple MapReduceOpers whenever it encounters a split operator and connects the single splitter MapReduceOper to one or more splittee MapReduceOpers using store/load operators: &lt;p&gt; ---- POStore (in splitter) -... ---- |        |    ...    | |        |    ...    | POLoad  POLoad ...  POLoad (in splittees) |        |           | &lt;p&gt; This optimizer merges those MapReduceOpers by replacing POLoad/POStore combination with POSplit operator.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>nig</FieldName>
+            <FieldType>NodeIdGenerator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>scope</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inIllustrator</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>MultiQueryOptimizer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>MROperPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inIllustrator</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [roots=plan.getRoots()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;info;["MR plan size before optimization: " + plan.size()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;info;["MR plan size after optimization: " + mPlan.size()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMROp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [mappers=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [multiLoadMROpers=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [mapReducers=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [successors=getPlan().getSuccessors(mr)]</InnerVar>
+                <InnerVar>int [numSplittees=successors.size()]</InnerVar>
+                <InnerVar>int [numMerges=0]</InnerVar>
+                <InnerVar>PhysicalPlan [splitterPl=isMapOnly(mr) ? mr.mapPlan : mr.reducePlan]</InnerVar>
+                <InnerVar>POStore [storeOp=(POStore)splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>POSplit [splitOp=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;info;["Merged " + numMerges + " out of total "+ (numSplittees + 1)+ " MR operators."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDiamondMROper</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [rtn=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeDiamondMROper</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>succs</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [pl=mr.mapPlan]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=mr.mapPlan.getLeaves().get(0)]</InnerVar>
+                <InnerVar>POStore [store=(POStore)leaf]</InnerVar>
+                <InnerVar>String [ofile=store.getSFile().getFileName()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [mrPreds=getPlan().getPredecessors(mr)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;remove;[leaf]</InnerMethodInvoke>
+                <InnerMethodInvoke>getPlan();remove;[mr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOneMapPart</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapper</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [splitterPl=isMapOnly(splitter) ? splitter.mapPlan : splitter.reducePlan]</InnerVar>
+                <InnerVar>POStore [storeOp=(POStore)splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [storePreds=splitterPl.getPredecessors(storeOp)]</InnerVar>
+                <InnerVar>PhysicalPlan [pl=mapper.mapPlan]</InnerVar>
+                <InnerVar>PhysicalOperator [load=pl.getRoots().get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [predsCopy=new ArrayList&lt;PhysicalOperator&gt;(storePreds)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [roots=pl.getRoots()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;remove;[load]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitterPl;remove;[storeOp]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOnlyMapperSplittee</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapper</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mergeOneMapPart;[mapper, splitter]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;removeAndReconnect;[mapper, splitter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOnlyMapReduceSplittee</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapReducer</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;mergeOneMapPart;[mapReducer, splitter]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setMapDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setReduceDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;removeAndReconnect;[mapReducer, splitter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeAllMapOnlySplittees</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mappers</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [splitterPl=isMapOnly(splitter) ? splitter.mapPlan : splitter.reducePlan]</InnerVar>
+                <InnerVar>PhysicalOperator [storeOp=splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [storePreds=splitterPl.getPredecessors(storeOp)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>splitOp;setInputs;[storePreds]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSplitteeMergeable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>splittee</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalOperator [leaf=splittee.mapPlan.getLeaves().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMergeList</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MapReduceOper</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapReducers</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [mergeNoCmbList=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [mergeCmbList=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [mergeDistList=new ArrayList&lt;MapReduceOper&gt;()]</InnerVar>
+                <InnerVar>int [max=Math.max(mergeNoCmbList.size(),mergeCmbList.size())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeMapReduceSplittees</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapReducers</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [mergeList=getMergeList(splitter,mapReducers)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeMapReduceSplittees</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapReducers</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [mergeList=getMergeList(splitter,mapReducers)]</InnerVar>
+                <InnerVar>MapReduceOper [mrOper=getMROper()]</InnerVar>
+                <InnerVar>MapReduceOper [splittee=mergeList.get(0)]</InnerVar>
+                <InnerVar>PhysicalPlan [pl=splittee.mapPlan]</InnerVar>
+                <InnerVar>POLoad [load=(POLoad)pl.getRoots().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mrOper.mapPlan;add;[load]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;mergeAllMapReduceSplittees;[mergeList, mrOper, getSplit()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasSameMapKeyType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>splittees</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;Byte&gt; [keyTypes=new HashSet&lt;Byte&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setIndexOnLRInSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>initial</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sameKeyType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index=initial]</InnerVar>
+                <InnerVar>List&lt;PhysicalPlan&gt; [pls=splitOp.getPlans()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOneMapPlanWithIndex</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pl</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>sameKeyType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalOperator [load=pl.getRoots().get(0)]</InnerVar>
+                <InnerVar>int [curIndex=index]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=pl.getLeaves().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;remove;[load]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitOp;addPlan;[pl]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOneReducePlanWithIndex</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>from</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>to</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initial</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapKeyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POPackage [pk=(POPackage)from.getRoots().get(0)]</InnerVar>
+                <InnerVar>Packager [fromPkgr=pk.getPkgr()]</InnerVar>
+                <InnerVar>int [total=current - initial]</InnerVar>
+                <InnerVar>MultiQueryPackager [toPkgr=(MultiQueryPackager)((POPackage)to.getRoots().get(0)).getPkgr()]</InnerVar>
+                <InnerVar>int [pkCount=0]</InnerVar>
+                <InnerVar>PODemux [demux=(PODemux)to.getLeaves().get(0)]</InnerVar>
+                <InnerVar>int [plCount=0]</InnerVar>
+                <InnerVar>PhysicalOperator [root=from.getRoots().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>from;remove;[pk]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addShiftedKeyInfoIndex</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pkg</ParamName>
+                    <ParamType>Packager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Map&lt;Integer,Pair&lt;Boolean,Map&lt;Integer,Integer&gt;&gt;&gt; [keyInfo=pkg.getKeyInfo()]</InnerVar>
+                <InnerVar>byte [newIndex=(byte)(index | PigNullableWritable.mqFlag)]</InnerVar>
+                <InnerVar>Set&lt;Integer&gt; [existingIndices=keyInfo.keySet()]</InnerVar>
+                <InnerVar>int [existingIndex=existingIndices.iterator().next()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>keyInfo;put;[Integer.valueOf(newIndex), keyInfo.get(existingIndex)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>OptimizerException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addShiftedKeyInfoIndex</MethodName>
+            <MethodComment>/** 
+ * @param initialIndex
+ * @param onePastEndIndex
+ * @param mpkg
+ * @throws OptimizerException
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>initialIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>onePastEndIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mpkgr</ParamName>
+                    <ParamType>MultiQueryPackager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Packager&gt; [pkgs=mpkgr.getPackagers()]</InnerVar>
+                <InnerVar>int [numIndices=(onePastEndIndex - initialIndex)]</InnerVar>
+                <InnerVar>int [end=numIndices]</InnerVar>
+                <InnerVar>int [i=0]</InnerVar>
+                <InnerVar>int [curIndex=initialIndex]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>OptimizerException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeOneCombinePlanWithIndex</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>from</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>to</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>initial</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>current</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapKeyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POPackage [cpk=(POPackage)from.getRoots().get(0)]</InnerVar>
+                <InnerVar>Packager [cpkgr=cpk.getPkgr()]</InnerVar>
+                <InnerVar>PODemux [demux=(PODemux)to.getLeaves().get(0)]</InnerVar>
+                <InnerVar>MultiQueryPackager [toPkgr=(MultiQueryPackager)((POPackage)to.getRoots().get(0)).getPkgr()]</InnerVar>
+                <InnerVar>boolean [isSameKeyType=toPkgr.isSameMapKeyType()]</InnerVar>
+                <InnerVar>int [total=current - initial]</InnerVar>
+                <InnerVar>int [pkCount=0]</InnerVar>
+                <InnerVar>int [plCount=0]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=from.getLeaves().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>from;remove;[cpk]</InnerMethodInvoke>
+                <InnerMethodInvoke>toPkgr;setSameMapKeyType;[isSameKeyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>toPkgr;setKeyType;[cpk.getPkgr().getKeyType()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>needCombiner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapReducers</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [needCombiner=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createDemuxPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sameKeyType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isCombiner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PODemux [demux=getDemux(isCombiner)]</InnerVar>
+                <InnerVar>POPackage [pkg=getMultiQueryPackage(sameKeyType,isCombiner)]</InnerVar>
+                <InnerVar>PhysicalPlan [pl=new PhysicalPlan()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;add;[pkg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeAllMapReduceSplittees</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mergeList</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [sameKeyType=hasSameMapKeyType(mergeList)]</InnerVar>
+                <InnerVar>PhysicalPlan [redPl=createDemuxPlan(sameKeyType,false)]</InnerVar>
+                <InnerVar>PhysicalPlan [comPl=needCombiner(mergeList) ? createDemuxPlan(sameKeyType,true) : null]</InnerVar>
+                <InnerVar>int [index=0]</InnerVar>
+                <InnerVar>PhysicalPlan [splitterPl=splitter.mapPlan]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>PhysicalOperator [storeOp=splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [storePreds=splitterPl.getPredecessors(storeOp)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debug;["Splittees have the same key type: " + sameKeyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;debug;["Splittees have combiner: " + (comPl != null)]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setMapDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setReduceDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;setMapKeyTypeForSplitter;[splitter, mergeList]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;info;["Requested parallelism of splitter: " + splitter.getRequestedParallelism()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setMapKeyTypeForSplitter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mergeList</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeSingleMapReduceSplittee</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mapReduce</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitter</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>splitOp</ParamName>
+                    <ParamType>POSplit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PhysicalPlan [splitterPl=splitter.mapPlan]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>PhysicalOperator [storeOp=splitterPl.getLeaves().get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [storePreds=splitterPl.getPredecessors(storeOp)]</InnerVar>
+                <InnerVar>PhysicalPlan [pl=mapReduce.mapPlan]</InnerVar>
+                <InnerVar>PhysicalOperator [load=pl.getRoots().get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pl;remove;[load]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitOp;addPlan;[pl]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setMapDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>splitter;setReduceDone;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;removeAndReconnect;[mapReduce, splitter]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeAndReconnect</MethodName>
+            <MethodComment>/** 
+ * Removes the specified MR operator from the plan after the merge. Connects its predecessors and successors to the merged MR operator
+ * @param mr the MR operator to remove
+ * @param newMR the MR operator to be connected to the predecessors andthe successors of the removed operator
+ * @throws VisitorException if connect operation fails
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newMR</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;MapReduceOper&gt; [mapperSuccs=getPlan().getSuccessors(mr)]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [mapperPreds=getPlan().getPredecessors(mr)]</InnerVar>
+                <InnerVar>ArrayList&lt;MapReduceOper&gt; [succsCopy=null]</InnerVar>
+                <InnerVar>ArrayList&lt;MapReduceOper&gt; [predsCopy=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>getPlan();remove;[mr]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;mergeMROperProperties;[mr, newMR]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>mergeMROperProperties</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>from</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>to</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isMapOnly</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSingleLoadMapperPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pl</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSinglePredecessor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSplit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POSplit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMROper</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MapReduceOper</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POStore</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getDemux</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PODemux</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inCombiner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PODemux [demux=new PODemux(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>demux;setInCombiner;[inCombiner]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMultiQueryPackage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POPackage</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sameMapKeyType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inCombiner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>POPackage [pkg=new POPackage(new OperatorKey(scope,nig.getNextNodeId(scope)))]</InnerVar>
+                <InnerVar>MultiQueryPackager [pkgr=new MultiQueryPackager()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pkgr;setInCombiner;[inCombiner]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;setSameMapKeyType;[sameMapKeyType]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkg;setPkgr;[pkgr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

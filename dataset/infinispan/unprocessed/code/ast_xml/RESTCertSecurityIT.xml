@@ -1,0 +1,393 @@
+<Class>
+    <Id>3018</Id>
+    <Package>org.infinispan.server.test.security.rest</Package>
+    <ClassName>RESTCertSecurityIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RESTCertSecurityIT  /** 
+ * Tests CLIENT-CERT security for REST endpoint as is configured via "auth-method" attribute on "rest-connector" element in datagrid subsystem. &lt;p/&gt; In order to configure CLIENT-CERT security, we add a new security-domain in the security subsystem and a new https connector in the web subsystem. This is done via XSL transformations. &lt;p/&gt; Client authenticates himself with client.keystore file. Server contains ca.jks file in security subsystem as a truststore and keystore_server.jks file in the REST connector as a certificate file. How to create and inspect those files is described e.g. at http://docs.oracle.com/javase/6/docs/technotes/guides/security/jsse/JSSERefGuide.html &lt;p/&gt; Password for all the files is the same: "secret" The user is allowed to connect to the secured REST endpoint with "client1" alias cos the server has this alias registered in its truststore. There's also another alias "test2" which is not signed by the CA, and therefore won't be accepted. &lt;p/&gt; The REST endpoint requires users to be in "REST" role which is defined in roles.properties.
+ * @author &lt;a href="mailto:mgencur@redhat.com"&gt;Martin Gencur&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>CONTAINER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEY_A</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEY_B</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEY_C</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEY_D</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>client1Alias</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>client2Alias</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>client1</FieldName>
+            <FieldType>CloseableHttpClient</FieldType>
+        </Field>
+        <Field>
+            <FieldName>client2</FieldName>
+            <FieldType>CloseableHttpClient</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testSecuredReadWriteOperations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HttpResponse [resp=get(client1,keyAddress(KEY_A),HttpStatus.SC_OK)]</InnerVar>
+                <InnerVar>String [content=new BufferedReader(new InputStreamReader(resp.getEntity().getContent())).readLine()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;put;[client1, keyAddress(KEY_A), HttpStatus.SC_OK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;put;[client2, keyAddress(KEY_B), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;put;[client1, keyAddressUnsecured(KEY_B), HttpStatus.SC_UNAUTHORIZED]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;post;[client1, keyAddress(KEY_C), HttpStatus.SC_OK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;post;[client2, keyAddress(KEY_D), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["data", content]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;get;[client2, keyAddress(KEY_A), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;get;[client1, keyAddressUnsecured(KEY_A), HttpStatus.SC_UNAUTHORIZED]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;head;[client2, keyAddress(KEY_A), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;head;[client1, keyAddressUnsecured(KEY_A), HttpStatus.SC_UNAUTHORIZED]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;head;[client1, keyAddress(KEY_A), HttpStatus.SC_OK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;delete;[client2, keyAddress(KEY_A), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;delete;[client1, keyAddress(KEY_A), HttpStatus.SC_OK]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;delete;[client1, keyAddress(KEY_C), HttpStatus.SC_OK]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testValidCertificateAccess</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;put;[client1, keyAddress(KEY_A), HttpStatus.SC_OK]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testInvalidCertificateAccess</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;put;[client2, keyAddress(KEY_A), HttpStatus.SC_FORBIDDEN]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>keyAddress</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>keyAddressUnsecured</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>handleIOException</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>e</ParamName>
+                    <ParamType>IOException</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>put</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>httpClient</ParamName>
+                    <ParamType>CloseableHttpClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uri</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponse [response]</InnerVar>
+                <InnerVar>HttpPut [put=new HttpPut(uri)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>put;setEntity;[new StringEntity("data","UTF-8")]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>post</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>httpClient</ParamName>
+                    <ParamType>CloseableHttpClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uri</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponse [response]</InnerVar>
+                <InnerVar>HttpPost [post=new HttpPost(uri)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>post;setEntity;[new StringEntity("data","UTF-8")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[expectedCode, response.getStatusLine().getStatusCode()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>httpClient</ParamName>
+                    <ParamType>CloseableHttpClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uri</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponse [response]</InnerVar>
+                <InnerVar>HttpGet [get=new HttpGet(uri)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[expectedCode, response.getStatusLine().getStatusCode()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>delete</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>httpClient</ParamName>
+                    <ParamType>CloseableHttpClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uri</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponse [response]</InnerVar>
+                <InnerVar>HttpDelete [delete=new HttpDelete(uri)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[expectedCode, response.getStatusLine().getStatusCode()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>head</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HttpResponse</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>httpClient</ParamName>
+                    <ParamType>CloseableHttpClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>uri</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>expectedCode</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>HttpResponse [response]</InnerVar>
+                <InnerVar>HttpHead [head=new HttpHead(uri)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[expectedCode, response.getStatusLine().getStatusCode()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>securedClient</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CloseableHttpClient</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>alias</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClassLoader [tccl=Thread.currentThread().getContextClassLoader()]</InnerVar>
+                <InnerVar>SSLContext [ctx=SSLContext.getInstance("TLS")]</InnerVar>
+                <InnerVar>JBossJSSESecurityDomain [jsseSecurityDomain=new JBossJSSESecurityDomain("client_cert_auth")]</InnerVar>
+                <InnerVar>KeyManager[] [keyManagers=jsseSecurityDomain.getKeyManagers()]</InnerVar>
+                <InnerVar>TrustManager[] [trustManagers=jsseSecurityDomain.getTrustManagers()]</InnerVar>
+                <InnerVar>HostnameVerifier [verifier=(hostname,sslSession) -&gt; true]</InnerVar>
+                <InnerVar>ConnectionSocketFactory [sslssf=new SSLConnectionSocketFactory(ctx,verifier)]</InnerVar>
+                <InnerVar>ConnectionSocketFactory [plainsf=new PlainConnectionSocketFactory()]</InnerVar>
+                <InnerVar>Registry&lt;ConnectionSocketFactory&gt; [sr=RegistryBuilder.&lt;ConnectionSocketFactory&gt;create().register("http",plainsf).register("https",sslssf).build()]</InnerVar>
+                <InnerVar>HttpClientConnectionManager [pcm=new PoolingHttpClientConnectionManager(sr)]</InnerVar>
+                <InnerVar>CloseableHttpClient [httpClient=HttpClients.custom().setConnectionManager(pcm).build()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>jsseSecurityDomain;setKeyStoreURL;[tccl.getResource("keystore_client.jks").getPath()]</InnerMethodInvoke>
+                <InnerMethodInvoke>jsseSecurityDomain;setKeyStorePassword;["secret"]</InnerMethodInvoke>
+                <InnerMethodInvoke>jsseSecurityDomain;setClientAlias;[alias]</InnerMethodInvoke>
+                <InnerMethodInvoke>jsseSecurityDomain;setTrustStoreURL;[tccl.getResource("ca.jks").getPath()]</InnerMethodInvoke>
+                <InnerMethodInvoke>jsseSecurityDomain;setTrustStorePassword;["secret"]</InnerMethodInvoke>
+                <InnerMethodInvoke>jsseSecurityDomain;reloadKeyAndTrustStore;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>ctx;init;[keyManagers, trustManagers, null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

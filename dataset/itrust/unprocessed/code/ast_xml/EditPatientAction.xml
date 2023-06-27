@@ -1,0 +1,213 @@
+<Class>
+    <Id>462</Id>
+    <Package>edu.ncsu.csc.itrust.action</Package>
+    <ClassName>EditPatientAction</ClassName>
+    <SuperClass>PatientBaseAction</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>EditPatientAction  /** 
+ * Edits a patient Used by editPatient.jsp
+ * @author laurenhayward
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>validator</FieldName>
+            <FieldType>PatientValidator</FieldType>
+        </Field>
+        <Field>
+            <FieldName>patientDAO</FieldName>
+            <FieldType>PatientDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>personnelDAO</FieldName>
+            <FieldType>PersonnelDAO</FieldType>
+        </Field>
+        <Field>
+            <FieldName>loggedInMID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>emailutil</FieldName>
+            <FieldType>EmailUtil</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>EditPatientAction</MethodName>
+            <MethodComment>/** 
+ * The super class validates the patient id
+ * @param factory The DAOFactory used to create the DAOs for this action.
+ * @param loggedInMID The MID of the user who is authorizing this action.
+ * @param pidString The MID of the patient being edited.
+ * @throws iTrustException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <ParameterType>DAOFactory factory</ParameterType>
+                <ParameterType>long loggedInMID</ParameterType>
+                <ParameterType>String pidString</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updateInformation</MethodName>
+            <MethodComment>/** 
+ * Takes the information out of the PatientBean param and updates the patient's information
+ * @param p the new patient information
+ * @throws iTrustException
+ * @throws FormValidationException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <ParameterType>PatientBean p</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>p;setMID;[pid]</InnerMethodInvoke>
+                <InnerMethodInvoke>validator;validate;[p]</InnerMethodInvoke>
+                <InnerMethodInvoke>patientDAO;editPatient;[p, loggedInMID]</InnerMethodInvoke>
+                <InnerMethodInvoke>emailutil;sendEmail;[makeEmail()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+                <ExceptionType>FormValidationException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPatient</MethodName>
+            <MethodComment>/** 
+ * Returns a PatientBean for the patient
+ * @return the PatientBean
+ * @throws DBException
+ */
+</MethodComment>
+            <ReturnType>PatientBean</ReturnType>
+            <ParameterList>
+                <ParameterType></ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>makeEmail</MethodName>
+            <MethodComment>/** 
+ * Creates and e-mail to inform the patient that their information has been updated.
+ * @return the email with the notice
+ * @throws DBException
+ */
+</MethodComment>
+            <ReturnType>Email</ReturnType>
+            <ParameterList>
+                <ParameterType></ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Email [email=new Email()]</InnerVar>
+                <InnerVar>List&lt;PatientBean&gt; [reps=patientDAO.getRepresenting(pid)]</InnerVar>
+                <InnerVar>PatientBean [pb=patientDAO.getPatient(pid)]</InnerVar>
+                <InnerVar>List&lt;String&gt; [toAddrs=new ArrayList&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>toAddrs;add;[pb.getEmail()]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setFrom;["no-reply@itrust.com"]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setToList;[toAddrs]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setSubject;[String.format("Patient Information Updated")]</InnerMethodInvoke>
+                <InnerMethodInvoke>email;setBody;["Dear " + pb.getFullName() + ",\n\tYour patient record information has been updated. "+ "Please login to iTrust to see who has viewed your records."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>editMessageFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <ParameterType>String filter</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PatientBean [b=this.getPatient()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>b;setMessageFilter;[filter]</InnerMethodInvoke>
+                <InnerMethodInvoke>this;updateInformation;[b]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>iTrustException</ExceptionType>
+                <ExceptionType>FormValidationException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasHistory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <ParameterType></ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getHistory</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PatientHistoryBean</ReturnType>
+            <ParameterList>
+                <ParameterType></ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getEmployeeName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <ParameterType>long mid</ParameterType>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>DBException</ExceptionType>
+                <ExceptionType>iTrustException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

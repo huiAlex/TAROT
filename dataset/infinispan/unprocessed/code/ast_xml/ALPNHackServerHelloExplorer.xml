@@ -1,0 +1,383 @@
+<Class>
+    <Id>1397</Id>
+    <Package>io.netty.handler.ssl</Package>
+    <ClassName>ALPNHackServerHelloExplorer</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ALPNHackServerHelloExplorer  /** 
+ * Hacks up ALPN support into the server hello message This has two different usage modes, one is adding a selected protocol into the extensions, the other is removing all mention of ALPN and retuning the selected protocol. This dual mode does not make for the cleanest code but removes the need to have duplicate nearly identical methods. The if the selected protocol is set then this will be added. If the selected protocol is null then ALPN will be parsed and removed. &lt;p&gt; We only care about TLS 1.2, as TLS 1.1 is not allowed to use ALPN. &lt;p&gt; Super hacky, but slightly less hacky than modifying the boot class path
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList>
+        <Method>
+            <MethodName>ALPNHackServerHelloExplorer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addAlpnExtensionsToServerHello</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectedAlpnProtocol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [out=new ByteArrayOutputStream()]</InnerVar>
+                <InnerVar>ByteBuffer [input=ByteBuffer.wrap(source)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SSLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removeAlpnExtensionsFromServerHello</MethodName>
+            <MethodComment>/** 
+ * removes the ALPN extensions from the server hello
+ * @param source
+ * @return
+ * @throws SSLException
+ */
+</MethodComment>
+            <ReturnType>byte[]</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectedAlpnProtocol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [out=new ByteArrayOutputStream()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SSLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exploreHandshake</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>recordLength</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>selectedAlpnProtocol</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte [handshakeType=input.get()]</InnerVar>
+                <InnerVar>int [handshakeLength=getInt24(input)]</InnerVar>
+                <InnerVar>int [old=input.limit()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[handshakeType]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[0]</InnerMethodInvoke>
+                <InnerMethodInvoke>input;limit;[handshakeLength + input.position()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;exploreServerHello;[input, selectedAlpnProtocol, out]</InnerMethodInvoke>
+                <InnerMethodInvoke>input;limit;[old]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SSLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exploreServerHello</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>alpnProtocolReference</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte [helloMajorVersion=input.get()]</InnerVar>
+                <InnerVar>byte [helloMinorVersion=input.get()]</InnerVar>
+                <InnerVar>String [existingAlpn=null]</InnerVar>
+                <InnerVar>ByteArrayOutputStream [extensionsOutput=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[helloMajorVersion]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[helloMinorVersion]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;processByteVector8;[input, out]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[input.get() &amp; 0xFF]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[input.get() &amp; 0xFF]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[input.get() &amp; 0xFF]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SSLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractRecords</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ByteBuffer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>data</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;ByteBuffer&gt; [ret=new ArrayList&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>exploreExtensions</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>extensionOut</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>removeAlpn</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ByteArrayOutputStream [out=new ByteArrayOutputStream()]</InnerVar>
+                <InnerVar>String [ret=null]</InnerVar>
+                <InnerVar>int [length=getInt16(input)]</InnerVar>
+                <InnerVar>int [originalLength=length]</InnerVar>
+                <InnerVar>byte[] [data=out.toByteArray()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[(length &gt;&gt; 8) &amp; 0xFF]</InnerMethodInvoke>
+                <InnerMethodInvoke>out;write;[length &amp; 0xFF]</InnerMethodInvoke>
+                <InnerMethodInvoke>extensionOut;write;[data, 0, data.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>SSLException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readByteVector8</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=getInt8(input)]</InnerVar>
+                <InnerVar>byte[] [data=new byte[length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>input;get;[data]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInt8</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInt16</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getInt24</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processByteVector8</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [int8=getInt8(input)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>out;write;[int8 &amp; 0xFF]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;processByteVector;[input, int8, out]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processByteVector</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>ByteArrayOutputStream</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createNewOutputRecords</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ByteBuffer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>newFirstMessage</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>records</ParamName>
+                    <ParamType>ByteBuffer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [length=newFirstMessage.length]</InnerVar>
+                <InnerVar>byte[] [newData=new byte[length]]</InnerVar>
+                <InnerVar>ByteBuffer [ret=ByteBuffer.wrap(newData)]</InnerVar>
+                <InnerVar>ByteBuffer [oldHello=records.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ret;put;[oldHello.get()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;put;[oldHello.get()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;put;[oldHello.get()]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;put;[(byte)((newFirstMessage.length &gt;&gt; 8) &amp; 0xFF)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;put;[(byte)(newFirstMessage.length &amp; 0xFF)]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;put;[newFirstMessage]</InnerMethodInvoke>
+                <InnerMethodInvoke>ret;flip;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

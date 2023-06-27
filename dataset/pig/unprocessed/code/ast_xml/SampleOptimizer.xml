@@ -1,0 +1,141 @@
+<Class>
+    <Id>461</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>SampleOptimizer</ClassName>
+    <SuperClass>MROpPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SampleOptimizer  /** 
+ * A visitor to optimize plans that have a sample job that immediately follows a load/store only MR job.  These kinds of plans are generated for order bys, and will soon be generated for joins that need to sample their data first.  These can be changed so that the RandomSampleLoader subsumes the loader used in the first job and then removes the first job.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>opsToRemove</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>opsToRemove</FieldName>
+            <FieldType>MapReduceOper</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>SampleOptimizer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>MROperPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMROp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [pos=mr.mapPlan.getRoots()]</InnerVar>
+                <InnerVar>PhysicalOperator [po=pos.get(0)]</InnerVar>
+                <InnerVar>POLoad [load=(POLoad)po]</InnerVar>
+                <InnerVar>String [loadFunc=load.getLFile().getFuncName()]</InnerVar>
+                <InnerVar>String [loadFile=load.getLFile().getFileName()]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [preds=mPlan.getPredecessors(mr)]</InnerVar>
+                <InnerVar>MapReduceOper [pred=preds.get(0)]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [predPreds=mPlan.getPredecessors(pred)]</InnerVar>
+                <InnerVar>List&lt;MapReduceOper&gt; [succs=mPlan.getSuccessors(mr)]</InnerVar>
+                <InnerVar>MapReduceOper [succ=succs.get(0)]</InnerVar>
+                <InnerVar>List&lt;PhysicalOperator&gt; [loads=pred.mapPlan.getRoots()]</InnerVar>
+                <InnerVar>PhysicalOperator [r=loads.get(0)]</InnerVar>
+                <InnerVar>POLoad [predLoad=(POLoad)r]</InnerVar>
+                <InnerVar>POLoad [succLoad=null]</InnerVar>
+                <InnerVar>String[] [rslargs=new String[2]]</InnerVar>
+                <InnerVar>FileSpec [predFs=predLoad.getLFile()]</InnerVar>
+                <InnerVar>FileSpec [fs=new FileSpec(predFs.getFileName(),new FuncSpec(loadFunc,rslargs))]</InnerVar>
+                <InnerVar>POLoad [newLoad=new POLoad(load.getOperatorKey(),load.getRequestedParallelism(),fs)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mr.UDFs;add;[rslargs[0]]</InnerMethodInvoke>
+                <InnerMethodInvoke>newLoad;setSignature;[predLoad.getSignature()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newLoad;setLimit;[predLoad.getLimit()]</InnerMethodInvoke>
+                <InnerMethodInvoke>newLoad;setSignature;[predLoad.getSignature()]</InnerMethodInvoke>
+                <InnerMethodInvoke>opsToRemove;add;[pred]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>scan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mr</ParamName>
+                    <ParamType>MapReduceOper</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>op</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fileName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

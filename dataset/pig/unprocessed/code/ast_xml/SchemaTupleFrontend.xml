@@ -1,0 +1,300 @@
+<Class>
+    <Id>569</Id>
+    <Package>org.apache.pig.data</Package>
+    <ClassName>SchemaTupleFrontend</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>SchemaTupleFrontend  /** 
+ * This class is to be used at job creation time. It provides the API that lets code register Schemas with pig to be generated. It is necessary to register these Schemas and reducers.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stf</FieldName>
+            <FieldType>SchemaTupleFrontend</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemasToGenerate</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>schemasToGenerate</FieldName>
+            <FieldType>Pair&lt;SchemaKey,Boolean&gt;</FieldType>
+        </Field>
+        <Field>
+            <FieldName>codeDir</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContext</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+        <Field>
+            <FieldName>conf</FieldName>
+            <FieldType>Configuration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>pigContextToReset</FieldName>
+            <FieldType>PigContext</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>internalRegisterToGenerateIfPossible</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>udfSchema</ParamName>
+                    <ParamType>Schema</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isAppendable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>type</ParamName>
+                    <ParamType>GenContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Pair&lt;SchemaKey,Boolean&gt; [key=Pair.make(new SchemaKey(udfSchema),isAppendable)]</InnerVar>
+                <InnerVar>Pair&lt;Integer,Set&lt;GenContext&gt;&gt; [pr=schemasToGenerate.get(key)]</InnerVar>
+                <InnerVar>int [id=SchemaTupleClassGenerator.getNextGlobalClassIdentifier()]</InnerVar>
+                <InnerVar>Set&lt;GenContext&gt; [contexts=Sets.newHashSet()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>contexts;add;[GenContext.FORCE_LOAD]</InnerMethodInvoke>
+                <InnerMethodInvoke>contexts;add;[type]</InnerMethodInvoke>
+                <InnerMethodInvoke>schemasToGenerate;put;[key, Pair.make(Integer.valueOf(id),contexts)]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;debug;["Registering " + (isAppendable ? "Appendable" : "") + "Schema for generation ["+ udfSchema+ "] with id ["+ id+ "] and context: "+ type]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSchemasToGenerate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Pair&lt;SchemaKey,Boolean&gt;</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>SchemaTupleFrontendGenHelper</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>codeDir;deleteOnExit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;debug;["Temporary directory for generated code created: " + codeDir.getAbsolutePath()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>internalCopyAllGeneratedToDistributedCache</MethodName>
+            <MethodComment>/** 
+ * This method copies all class files present in the local temp directory to the distributed cache. All copied files will have a symlink of their name. No files will be copied if the current job is being run from local mode.
+ * @param pigContext
+ * @param conf
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>StringBuilder [serialized=new StringBuilder()]</InnerVar>
+                <InnerVar>boolean [first=true]</InnerVar>
+                <InnerVar>String [toSer=serialized.toString()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Starting process to move generated code to distributed cacche"]</InnerMethodInvoke>
+                <InnerMethodInvoke>DistributedCache;createSymlink;[conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>LOG;info;["Setting key [" + GENERATED_CLASSES_KEY + "] with classes to deserialize ["+ toSer+ "]"]</InnerMethodInvoke>
+                <InnerMethodInvoke>conf;set;[GENERATED_CLASSES_KEY, toSer]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>generateAll</MethodName>
+            <MethodComment>/** 
+ * This sets into motion the generation of all "registered" Schemas. All code will be generated into the temporary directory.
+ * @return true of false depending on if there are any files to copy to the distributed cache
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>schemasToGenerate</ParamName>
+                    <ParamType>Pair&lt;SchemaKey,Boolean&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [filesToShip=false]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>LOG;info;["Generating all registered Schemas."]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>reset</MethodName>
+            <MethodComment>/** 
+ * This allows the frontend/backend process to be repeated if on the same JVM (as in testing).
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>schemasToGenerate;clear;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>registerToGenerateIfPossible</MethodName>
+            <MethodComment>/** 
+ * This method "registers" a Schema to be generated. It allows a portions of the code to register a Schema for generation without knowing whether code generation is enabled. A unique ID will be passed back that can be used internally to refer to generated SchemaTuples (such as in the case of serialization and deserialization). The context is necessary to allow the client to restrict where generated code can be used.
+ * @param udfSchema       This is the Schema of a Tuple that we will potentially generate
+ * @param isAppendable    This specifies whether or not we want the SchemaTuple to be appendable
+ * @param context         This is the context in which users should be able to access the SchemaTuple
+ * @return  identifier
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>udfSchema</ParamName>
+                    <ParamType>Schema</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>isAppendable</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>GenContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;stripAliases;[udfSchema]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stripAliases</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>s</ParamName>
+                    <ParamType>Schema</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>copyAllGeneratedToDistributedCache</MethodName>
+            <MethodComment>/** 
+ * This must be called when the code has been generated and the generated code needs to be shipped to the cluster, so that it may be used by the mappers and reducers.
+ * @param pigContext
+ * @param conf
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SchemaTupleFrontendGenHelper [stfgh=new SchemaTupleFrontendGenHelper(pigContext,conf)]</InnerVar>
+                <InnerVar>Properties [prop=pigContext.getProperties()]</InnerVar>
+                <InnerVar>String [value=conf.get(GENERATED_CLASSES_KEY)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>stfgh;generateAll;[stf.getSchemasToGenerate()]</InnerMethodInvoke>
+                <InnerMethodInvoke>stfgh;internalCopyAllGeneratedToDistributedCache;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>lazyReset</MethodName>
+            <MethodComment>/** 
+ * This is a method which caches a PigContext object that has had relevant key values set by SchemaTupleBackend. This is necessary because in some cases, multiple cycles of jobs might run in the JVM, but the PigContext object may be shared, so we want to make sure to undo any changes we have made to it.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

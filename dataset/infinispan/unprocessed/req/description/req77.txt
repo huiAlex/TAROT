@@ -1,0 +1,6 @@
+Currently, we allow the user to customize the mapping of keys to CH segments with a custom  Hash  function. But the Hash function doesn t give the user direct control over where a key is mapped, the ultimate location depends on the CH implementation. The CH implementation is also customizable, but it s much harder for the user to get right.
+We should replace the Hash with something like this:
+public     interface   SegmentMapper {
+public     int   getSegment(Object key,   int   numSegments);
+This should also be easier to implement than the  Grouper  interface we have now, when the user only needs co-location and doesn t need additional grouping features like  cache.getGroup(name) .
+I think this should also help internally, e.g. to replace the  GroupingConsistentHash  that needs to be re-created on every topology update with a constant  SegmentMapper  wrapper. It might also help to compute the segment of a key only once and save it in the context, instead of computing it every time we need to know the location of a key.

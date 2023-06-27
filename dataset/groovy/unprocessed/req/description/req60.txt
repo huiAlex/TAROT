@@ -1,0 +1,47 @@
+Groovy makes working with regular expressions much easier than Java, but there are still a couple of holes in the 1.6 implementation.
+I ve attached a patch that adds a couple of simple methods that make regular expressions much easier to use.
+One of the most common use cases is to search a string for a regular expression pattern.  If a match is found, then do something with the matched value.
+Currently in groovy, the recommended way to do this is to create a matcher and then use indexes to work with any matches that might be found:
+assert  10292  == ( New York, NY 10292  =~ /\d
+{5}/) &#91;0&#93;
+If you try to do that on a string that doesn t actually match the regular expression, you ll get an IndexOutOfBoundException.  To be safe, you need to check matcher.find() (not matches as that requires the entire string to match!) to see if the string is actually in there:
+def m = ( New York, NY  =~ /\d{5}
+/) &#91;0&#93;
+def zip
+if (m.find())
+{
+zip = m
+}
+It also has inconsistent behavior if the regular expression happens to have capture groups in it.  Then it returns an array containing the match and the capture groups, forcing you to index into that array to actually get the match you want:
+assert  c  == ( foo car baz  =~ /(.)ar/) &#91;0&#93;  &#91;1&#93;
+Groovy has already added closure aware replace method to the String class.  The patch adds a complimentary find method to string that will return the string matched by the closure without needing to worry about matcher objects and array indexes.
+You can either call it without a closure to get the full found match back (even if it has groups in it):
+assert  10292  ==  New York, NY 10292 .find(/\d
+{5}/)
+It safely returns a null if the match isn t found, which can clean up boilerplate safety checks quite a bit.  The user can check for null using groovy truth if they want to:
+def zip =  New York, NY .find(/\d{5}
+/)   // returns null
+if (zip)
+{ ... }
+If you want to work with capture groups, or manipulate the value, you can pass a closure to the find method that will be passed the full match as well as any capture groups (just as the collection based regular expression methods work):
+// no capture groups, only the match is passed to the closure
+assert  bar  ==  foo bar baz .find(/.ar/)
+{ match -&gt; return match }
+// one capture group
+assert  b  ==  foo bar baz .find(/(.)ar/)
+{ match, firstLetter -&gt; return firstLetter }
+// many capture groups, all passed to the closure after the full match
+assert  2339999  ==  adsf 233-9999 adsf .find(/(\d
+{3})?-?(\d{3}
+)-(\d
+{4}
+)/)
+{ match, areaCode, exchange, stationNumber -&gt;
+assert  233-9999  == match
+assert null == areaCode
+assert  233  == exchange
+assert  9999  == stationNumber
+return  $exchange$stationNumber
+}
+The patch also includes a number of unit tests to exercise and demonstrate the functionality.
+I get the most traffic on my blog to a post that I did explaning regular expressions in groovy, and I think that people struggle a bit with the current implementation.  I think this patch makes working with regular expressions much easier and more intuitive.   .

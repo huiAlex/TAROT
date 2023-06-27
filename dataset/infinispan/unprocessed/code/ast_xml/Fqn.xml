@@ -1,0 +1,824 @@
+<Class>
+    <Id>726</Id>
+    <Package>org.infinispan.tree</Package>
+    <ClassName>Fqn</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>Comparable</SuperInterface>
+        <SuperInterface>Fqn</SuperInterface>
+        <SuperInterface>Serializable</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>Fqn  /** 
+ * A Fully Qualified Name (Fqn) is a list of names (typically Strings but can be any Object), which represent a path to a particular  {@link Node} in a {@link TreeCache}. &lt;p/&gt; This name can be absolute (i.e., relative from the root node -  {@link #ROOT}), or relative to any node in the cache. Reading the documentation on each API call that makes use of  {@link Fqn}s will tell you whether the API expects a relative or absolute Fqn. &lt;p/&gt; For instance, using this class to fetch a particular node might look like this.  (Here data on "Joe" is kept under the "Smith" surname node, under the "people" tree.) &lt;pre&gt; Fqn&lt;String&gt; abc = Fqn.fromString("/people/Smith/Joe/"); Node joesmith = Cache.getRoot().getChild(abc); &lt;/pre&gt; Alternatively, the same Fqn could be constructed using a List&lt;Object&gt; or varargs: &lt;pre&gt; Fqn&lt;String&gt; abc = Fqn.fromElements("people", "Smith", "Joe"); &lt;/pre&gt; This is a bit more efficient to construct. &lt;p/&gt; Note that&lt;br&gt; &lt;p/&gt; &lt;code&gt;Fqn&lt;String&gt; f = Fqn.fromElements("/a/b/c");&lt;/code&gt; &lt;p/&gt; is &lt;b&gt;not&lt;/b&gt; the same as &lt;p/&gt; &lt;code&gt;Fqn&lt;String&gt; f = Fqn.fromString("/a/b/c");&lt;/code&gt; &lt;p/&gt; The former will result in a single Fqn, called "/a/b/c" which hangs directly under Fqn.ROOT. &lt;p/&gt; The latter will result in 3 Fqns, called "a", "b" and "c", where "c" is a child of "b", "b" is a child of "a", and "a" hangs off Fqn.ROOT. &lt;p/&gt; Another way to look at it is that the "/" separarator is only parsed when it forms part of a String passed in to Fqn.fromString() and not otherwise. &lt;p/&gt; &lt;B&gt;Best practices&lt;/B&gt;: Always creating Fqns - even when using some factory methods - can be expensive in the long run, and as far as possible we recommend that client code holds on to their Fqn references and reuse them.  E.g.: &lt;code&gt; // BAD!! for (int i=0; i&lt;someBigNumber; i++) { cache.get(Fqn.fromString("/a/b/c"), "key" + i); } &lt;/code&gt; instead, do: &lt;code&gt; // Much better Fqn f = Fqn.fromString("/a/b/c"); for (int i=0; i&lt;someBigNumber; i++) { cache.get(f, "key" + i); } &lt;/code&gt;
+ * @author (various)
+ * @since 4.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SEPARATOR</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>elements</FieldName>
+            <FieldType>Object[]</FieldType>
+        </Field>
+        <Field>
+            <FieldName>hash_code</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ROOT</FieldName>
+            <FieldType>Fqn</FieldType>
+        </Field>
+        <Field>
+            <FieldName>stringRepresentation</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_ARRAY</FieldName>
+            <FieldType>Object[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>Fqn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>elements</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Fqn</MethodName>
+            <MethodComment>/** 
+ * If safe is false, Collections.unmodifiableList() is used to wrap the list passed in.  This is an optimisation so Fqn.fromString(), probably the most frequently used factory method, doesn't end up needing to use the unmodifiableList() since it creates the list internally.
+ * @param names List of names
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>names</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>Fqn</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>base</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relative</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[base.elements, 0, elements, 0, base.elements.length]</InnerMethodInvoke>
+                <InnerMethodInvoke>System;arraycopy;[relative, 0, elements, base.elements.length, relative.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromList</MethodName>
+            <MethodComment>/** 
+ * Retrieves an Fqn that represents the list of elements passed in.
+ * @param names list of elements that comprise the Fqn
+ * @return an Fqn
+ * @since 4.0
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>names</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromElements</MethodName>
+            <MethodComment>/** 
+ * Retrieves an Fqn that represents the array of elements passed in.
+ * @param elements array of elements that comprise the Fqn
+ * @return an Fqn
+ * @since 4.0
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>elements</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object[] [copy=new Object[elements.length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[elements, 0, copy, 0, elements.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromRelativeFqn</MethodName>
+            <MethodComment>/** 
+ * Retrieves an Fqn that represents the absolute Fqn of the relative Fqn passed in.
+ * @param base     base Fqn
+ * @param relative relative Fqn
+ * @return an Fqn
+ * @since 4.0
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>base</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relative</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromRelativeList</MethodName>
+            <MethodComment>/** 
+ * Retrieves an Fqn that represents the List&lt;Object&gt; of elements passed in, relative to the base Fqn.
+ * @param base             base Fqn
+ * @param relativeElements relative List&lt;Object&gt; of elements
+ * @return an Fqn
+ * @since 4.0
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>base</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativeElements</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromRelativeElements</MethodName>
+            <MethodComment>/** 
+ * Retrieves an Fqn that represents the array of elements passed in, relative to the base Fqn.
+ * @param base             base Fqn
+ * @param relativeElements relative elements
+ * @return an Fqn
+ * @since 4.0
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>base</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>relativeElements</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fromString</MethodName>
+            <MethodComment>/** 
+ * Returns a new Fqn from a string, where the elements are deliminated by one or more separator ( {@link #SEPARATOR}) characters.&lt;br&gt;&lt;br&gt; Example use:&lt;br&gt; &lt;pre&gt; Fqn.fromString("/a/b/c/"); &lt;/pre&gt;&lt;br&gt; is equivalent to:&lt;br&gt; &lt;pre&gt; Fqn.fromElements("a", "b", "c"); &lt;/pre&gt;
+ * @param stringRepresentation String representation of the Fqn
+ * @return an Fqn&lt;String&gt; constructed from the string representation passed in
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stringRepresentation</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [toMatch=stringRepresentation.startsWith(SEPARATOR) ? stringRepresentation.substring(1) : stringRepresentation]</InnerVar>
+                <InnerVar>Object[] [el=toMatch.split(SEPARATOR)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAncestor</MethodName>
+            <MethodComment>/** 
+ * Obtains an ancestor of the current Fqn.  Literally performs &lt;code&gt;elements.subList(0, generation)&lt;/code&gt; such that if &lt;code&gt; generation == Fqn.size() &lt;/code&gt; then the return value is the Fqn itself (current generation), and if &lt;code&gt; generation == Fqn.size() - 1 &lt;/code&gt; then the return value is the same as &lt;code&gt; Fqn.getParent() &lt;/code&gt; i.e., just one generation behind the current generation. &lt;code&gt; generation == 0 &lt;/code&gt; would return Fqn.ROOT.
+ * @param generation the generation of the ancestor to retrieve
+ * @return an ancestor of the current Fqn
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>generation</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSubFqn</MethodName>
+            <MethodComment>/** 
+ * Obtains a sub-Fqn from the given Fqn.  Literally performs &lt;code&gt;elements.subList(startIndex, endIndex)&lt;/code&gt;
+ * @param startIndex starting index
+ * @param endIndex   end index
+ * @return a subFqn
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>startIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>endIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [len=endIndex - startIndex]</InnerVar>
+                <InnerVar>Object[] [el=new Object[len]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[elements, startIndex, el, 0, len]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>size</MethodName>
+            <MethodComment>/** 
+ * @return the number of elements in the Fqn.  The root node contains zero.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>get</MethodName>
+            <MethodComment>/** 
+ * @param n index of the element to return
+ * @return Returns the nth element in the Fqn.
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>n</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLastElement</MethodName>
+            <MethodComment>/** 
+ * @return the last element in the Fqn.
+ * @see #getLastElementAsString
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hasElement</MethodName>
+            <MethodComment>/** 
+ * @param element element to find
+ * @return true if the Fqn contains this element, false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>element</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>indexOf</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>element</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>equals</MethodName>
+            <MethodComment>/** 
+ * Returns true if obj is a Fqn with the same elements.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>obj</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Fqn [other=(Fqn)obj]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>hashCode</MethodName>
+            <MethodComment>/** 
+ * Returns a hash code with Fqn elements.
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>toString</MethodName>
+            <MethodComment>/** 
+ * Returns this Fqn as a string, prefixing the first element with a  {@link Fqn#SEPARATOR} and joining each subsequentelement with a  {@link Fqn#SEPARATOR}. If this is the root Fqn, returns  {@link Fqn#SEPARATOR}. Example: &lt;pre&gt; new Fqn(new Object[] { "a", "b", "c" }).toString(); // "/a/b/c" Fqn.ROOT.toString(); // "/" &lt;/pre&gt;
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isChildOf</MethodName>
+            <MethodComment>/** 
+ * Returns true if this Fqn is child of parentFqn. Example usage: &lt;pre&gt; Fqn&lt;String&gt; f1 = Fqn.fromString("/a/b"); Fqn&lt;String&gt; f2 = Fqn.fromString("/a/b/c"); assertTrue(f1.isChildOf(f2)); assertFalse(f1.isChildOf(f1)); assertFalse(f2.isChildOf(f1)); &lt;/pre&gt;
+ * @param parentFqn candidate parent to test against
+ * @return true if the target is a child of parentFqn
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentFqn</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isDirectChildOf</MethodName>
+            <MethodComment>/** 
+ * Returns true if this Fqn is a &lt;i&gt;direct&lt;/i&gt; child of a given Fqn.
+ * @param parentFqn parentFqn to compare with
+ * @return true if this is a direct child, false otherwise.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentFqn</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isChildOrEquals</MethodName>
+            <MethodComment>/** 
+ * Returns true if this Fqn is equals or the child of parentFqn. Example usage: &lt;pre&gt; Fqn&lt;String&gt; f1 = Fqn.fromString("/a/b"); Fqn&lt;String&gt; f2 = Fqn.fromString("/a/b/c"); assertTrue(f1.isChildOrEquals(f2)); assertTrue(f1.isChildOrEquals(f1)); assertFalse(f2.isChildOrEquals(f1)); &lt;/pre&gt;
+ * @param parentFqn candidate parent to test against
+ * @return true if this Fqn is equals or the child of parentFqn.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentFqn</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Object[] [parentEl=parentFqn.elements]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>calculateHashCode</MethodName>
+            <MethodComment>/** 
+ * Calculates a hash code by summing the hash code of all elements.
+ * @return a calculated hashcode
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [hashCode=19]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStringRepresentation</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>elements</ParamName>
+                    <ParamType>Object[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [builder=new StringBuilder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getParent</MethodName>
+            <MethodComment>/** 
+ * Returns the parent of this Fqn. The parent of the root node is  {@link #ROOT}. Examples: &lt;pre&gt; Fqn&lt;String&gt; f1 = Fqn.fromString("/a"); Fqn&lt;String&gt; f2 = Fqn.fromString("/a/b"); assertEquals(f1, f2.getParent()); assertEquals(Fqn.ROOT, f1.getParent().getParent()); assertEquals(Fqn.ROOT, Fqn.ROOT.getParent()); &lt;/pre&gt;
+ * @return the parent Fqn
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>root</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isRoot</MethodName>
+            <MethodComment>/** 
+ * Returns true if this is a root Fqn.
+ * @return true if the Fqn is Fqn.ROOT.
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getLastElementAsString</MethodName>
+            <MethodComment>/** 
+ * If this is the root, returns  {@link Fqn#SEPARATOR}.
+ * @return a String representation of the last element that makes up this Fqn.
+ */
+</MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>peekElements</MethodName>
+            <MethodComment>/** 
+ * Peeks into the elements that build up this Fqn.  The list returned is read-only, to maintain the immutable nature of Fqn.
+ * @return an unmodifiable list
+ */
+</MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compareTo</MethodName>
+            <MethodComment>/** 
+ * Compares this Fqn to another
+ */
+</MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>fqn</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>replaceAncestor</MethodName>
+            <MethodComment>/** 
+ * Creates a new Fqn whose ancestor has been replaced with the new ancestor passed in.
+ * @param oldAncestor old ancestor to replace
+ * @param newAncestor nw ancestor to replace with
+ * @return a new Fqn with ancestors replaced.
+ */
+</MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>oldAncestor</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>newAncestor</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Fqn [subFqn=this.getSubFqn(oldAncestor.size(),size())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>writeObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>output</ParamName>
+                    <ParamType>ObjectOutput</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>fqn</ParamName>
+                    <ParamType>Fqn</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>output;writeInt;[fqn.elements.length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Fqn</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>input</ParamName>
+                    <ParamType>ObjectInput</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [size=input.readInt()]</InnerVar>
+                <InnerVar>Object[] [elements=new Object[size]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTypeClasses</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Class&lt;? extends Fqn&gt;</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

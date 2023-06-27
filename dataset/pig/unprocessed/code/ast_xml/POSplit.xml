@@ -1,0 +1,445 @@
+<Class>
+    <Id>192</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators</Package>
+    <ClassName>POSplit</ClassName>
+    <SuperClass>PhysicalOperator</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>POSplit  /** 
+ * The MapReduce Split operator. &lt;p&gt; The assumption here is that the logical to physical translation will create this dummy operator with just the filename using which the input branch will be stored and used for loading Also the translation should make sure that appropriate filter operators are configured as outputs of this operator using the conditions specified in the LOSplit. So LOSplit will be converted into: |        |           | Filter1  Filter2 ... Filter3 |        |    ...    | |        |    ...    | ---- POSplit -... ---- This is different than the existing implementation where the POSplit writes to sidefiles after filtering and then loads the appropriate file. &lt;p&gt; The approach followed here is as good as the old approach if not better in many cases because of the availability of attachinInputs. An optimization that can ensue is if there are multiple loads that load the same file, they can be merged into one and then the operators that take input from the load can be stored. This can be used when the mapPlan executes to read the file only once and attach the resulting tuple as inputs to all the operators that take input from this load. In some cases where the conditions are exclusive and some outputs are ignored, this approach can be worse. But this leads to easier management of the Split and also allows to reuse this data stored from the split job whenever necessary.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>serialVersionUID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>splitStore</FieldName>
+            <FieldType>FileSpec</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myPlans</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>myPlans</FieldName>
+            <FieldType>PhysicalPlan</FieldType>
+        </Field>
+        <Field>
+            <FieldName>processedSet</FieldName>
+            <FieldType>BitSet</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inpEOP</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>POSplit</MethodName>
+            <MethodComment>/** 
+ * Constructs an operator with the specified key
+ * @param k the operator key
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>k</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>POSplit</MethodName>
+            <MethodComment>/** 
+ * Constructs an operator with the specified key and degree of parallelism
+ * @param k the operator key
+ * @param rp the degree of parallelism requested
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>k</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>POSplit</MethodName>
+            <MethodComment>/** 
+ * Constructs an operator with the specified key and inputs
+ * @param k the operator key
+ * @param inp the inputs that this operator will read data from
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>k</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inp</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>POSplit</MethodName>
+            <MethodComment>/** 
+ * Constructs an operator with the specified key, degree of parallelism and inputs
+ * @param k the operator key
+ * @param rp the degree of parallelism requested
+ * @param inp the inputs that this operator will read data from
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>k</ParamName>
+                    <ParamType>OperatorKey</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>rp</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>inp</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>v</ParamName>
+                    <ParamType>PhyPlanVisitor</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>v;visitSplit;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>name</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supportsMultipleInputs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>supportsMultipleOutputs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSplitStore</MethodName>
+            <MethodComment>/** 
+ * Returns the name of the file associated with this operator
+ * @return the FileSpec associated with this operator
+ */
+</MethodComment>
+            <ReturnType>FileSpec</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSplitStore</MethodName>
+            <MethodComment>/** 
+ * Sets the name of the file associated with this operator
+ * @param splitStore the FileSpec used to store the data
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>splitStore</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPlans</MethodName>
+            <MethodComment>/** 
+ * Returns the list of nested plans.
+ * @return the list of the nested plans
+ * @see org.apache.pig.backend.hadoop.executionengine.physicalLayer.plans.PlanPrinter
+ */
+</MethodComment>
+            <ReturnType>PhysicalPlan</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPlan</MethodName>
+            <MethodComment>/** 
+ * Appends the specified plan to the end of the nested input plan list
+ * @param inPlan plan to be appended to the list
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myPlans;add;[inPlan]</InnerMethodInvoke>
+                <InnerMethodInvoke>processedSet;set;[myPlans.size() - 1]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>removePlan</MethodName>
+            <MethodComment>/** 
+ * Removes plan from the nested input plan list
+ * @param plan plan to be removed
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>myPlans;remove;[plan]</InnerMethodInvoke>
+                <InnerMethodInvoke>processedSet;clear;[myPlans.size()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNextTuple</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Result</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>processPlan</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Result</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>int [idx=processedSet.nextClearBit(0)]</InnerVar>
+                <InnerVar>PhysicalOperator [leaf=myPlans.get(idx).getLeaves().get(0)]</InnerVar>
+                <InnerVar>Result [res=runPipeline(leaf)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>runPipeline</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Result</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>leaf</ParamName>
+                    <ParamType>PhysicalOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Result [res=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStreamCloseResult</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Result</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Result [res=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clone</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>POSplit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>POSplit [opClone=(POSplit)super.clone()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>illustratorMarkup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>in</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>out</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>eqClassIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

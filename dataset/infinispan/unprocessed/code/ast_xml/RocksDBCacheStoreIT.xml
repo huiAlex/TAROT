@@ -1,0 +1,216 @@
+<Class>
+    <Id>3924</Id>
+    <Package>org.infinispan.server.test.cs.rocksdb</Package>
+    <ClassName>RocksDBCacheStoreIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RocksDBCacheStoreIT  /** 
+ * Tests RocksDB cache store.
+ * @author Michal Linhard (mlinhard@redhat.com)
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>controller</FieldName>
+            <FieldType>ContainerController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>dataDir</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>expiredDir</FieldName>
+            <FieldType>File</FieldType>
+        </Field>
+        <Field>
+            <FieldName>clientMarshaller</FieldName>
+            <FieldType>TestMarshaller</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>removeDataFilesIfExists</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Util;recursiveFileRemove;[dataDir]</InnerMethodInvoke>
+                <InnerMethodInvoke>Util;recursiveFileRemove;[expiredDir]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDataSurvivesRestart</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanCacheManager [managerJmx=server.getCacheManager("local")]</InnerVar>
+                <InnerVar>RemoteInfinispanCache [cacheJmx=managerJmx.getCache("testcache")]</InnerVar>
+                <InnerVar>RemoteCache&lt;String,String&gt; [cache=createManager().getCache()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller;start;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, cacheJmx.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;put;["key1", "1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;put;["key2", "2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;put;["key3", "3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["1", cache.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["2", cache.get("key2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["3", cache.get("key3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;tracef;["Stored via Hot Rod:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[dataDir.exists()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[dataDir.isDirectory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[expiredDir.exists()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[expiredDir.isDirectory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;stop;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;start;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["1", cache.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["2", cache.get("key2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["3", cache.get("key3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;stop;[CONTAINER]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testDataRetrievableViaRocksDbApi</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteInfinispanCacheManager [managerJmx=server.getCacheManager("local")]</InnerVar>
+                <InnerVar>RemoteInfinispanCache [cacheJmx=managerJmx.getCache("testcache")]</InnerVar>
+                <InnerVar>RemoteCache&lt;String,String&gt; [cache=createManager().getCache()]</InnerVar>
+                <InnerVar>RocksDB [db=RocksDB.open(new Options(),dataDir.getAbsolutePath())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>controller;start;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, cacheJmx.getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;put;["key1", "1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["1", cache.get("key1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>System.out;println;["Stored via Hot Rod:"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[dataDir.exists()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[dataDir.isDirectory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[expiredDir.exists()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[expiredDir.isDirectory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>controller;stop;[CONTAINER]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;tracef;["RocksDB file " + dataDir.getAbsolutePath() + " contents:"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>objectFromByteBuffer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>buf</ParamName>
+                    <ParamType>byte[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>offset</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>length</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>byte[] [bytes=new byte[length]]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>System;arraycopy;[buf, offset, bytes, 0, length]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isMarshallable</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>objectToBuffer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ByteBuffer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>estimatedSize</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createManager</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RemoteCacheManager</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ConfigurationBuilder [cfgBuild=ITestUtils.createConfigBuilder(server.getHotrodEndpoint().getInetAddress().getHostName(),server.getHotrodEndpoint().getPort())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>cfgBuild;marshaller;[clientMarshaller]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

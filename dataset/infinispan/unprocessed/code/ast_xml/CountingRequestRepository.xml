@@ -1,0 +1,129 @@
+<Class>
+    <Id>3823</Id>
+    <Package>org.infinispan.util</Package>
+    <ClassName>CountingRequestRepository</ClassName>
+    <SuperClass>RequestRepository</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CountingRequestRepository  /** 
+ * Dispatcher that counts actually ongoing unicast RPCs. Its purpose is to isolate RPCs started before {@link #advanceGenerationAndAwait(long,TimeUnit)} and those afterwards. It can handle staggered calls as well.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>generation</FieldName>
+            <FieldType>AtomicLong</FieldType>
+        </Field>
+        <Field>
+            <FieldName>requests</FieldName>
+            <FieldType>Map</FieldType>
+        </Field>
+        <Field>
+            <FieldName>requests</FieldName>
+            <FieldType>Long</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>replaceDispatcher</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>CountingRequestRepository</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>cacheManager</ParamName>
+                    <ParamType>EmbeddedCacheManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>GlobalComponentRegistry [gcr=cacheManager.getGlobalComponentRegistry()]</InnerVar>
+                <InnerVar>JGroupsTransport [transport=(JGroupsTransport)gcr.getComponent(Transport.class)]</InnerVar>
+                <InnerVar>RequestRepository [requestRepository=(RequestRepository)TestingUtil.extractField(JGroupsTransport.class,transport,"requests")]</InnerVar>
+                <InnerVar>CountingRequestRepository [instance=new CountingRequestRepository(requestRepository)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>TestingUtil;replaceField;[instance, "requests", transport, JGroupsTransport.class]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>CountingRequestRepository</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>requestRepository</ParamName>
+                    <ParamType>RequestRepository</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>requestRepository;forEach;[this::addRequest]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addRequest</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>request</ParamName>
+                    <ParamType>?</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>requests;compute;[generation.get(), (generation,map) -&gt; {
+  if (map == null) {
+    map=new ConcurrentHashMap&lt;&gt;();
+  }
+  map.put(request.getRequestId(),request);
+  return map;
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>advanceGenerationAndAwait</MethodName>
+            <MethodComment>/** 
+ * Wait until we get responses for all started requests.
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>timeout</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>timeUnit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [lastGen=generation.getAndIncrement()]</InnerVar>
+                <InnerVar>Map&lt;Long,Request&lt;?&gt;&gt; [lastGenRequests=requests.getOrDefault(lastGen,Collections.emptyMap())]</InnerVar>
+                <InnerVar>long [now=System.nanoTime()]</InnerVar>
+                <InnerVar>long [deadline=now + timeUnit.toNanos(timeout)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

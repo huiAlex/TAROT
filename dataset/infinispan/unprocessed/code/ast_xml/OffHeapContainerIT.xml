@@ -1,0 +1,117 @@
+<Class>
+    <Id>478</Id>
+    <Package>org.infinispan.server.test.cache.container</Package>
+    <ClassName>OffHeapContainerIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>OffHeapContainerIT  /** 
+ * Basic off-heap tests
+ * @author vjuranek
+ * @since 9.2
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>remoteCacheManager</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testBasicOps</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,String&gt; [rc=remoteCacheManager.getCache("off-heap-bounded")]</InnerVar>
+                <InnerVar>MetadataValue&lt;String&gt; [meta=rc.getWithMetadata("keyA")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rc;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["keyA", "A"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["keyB", "B"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["keyC", "C"]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["keyD", "D"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[3, rc.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertNull;["Key A should be evicted from cache", rc.get("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["B", rc.get("keyB")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["C", rc.get("keyC")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["D", rc.get("keyD")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertFalse;[rc.containsKey("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[rc.containsKey("keyB")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;replace;["keyB", "B", "BB"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["BB", rc.get("keyB")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;putIfAbsent;["keyB", "BBB"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["BB", rc.get("keyB")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;putIfAbsent;["keyA", "AA"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["AA", rc.get("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[rc.replaceWithVersion("keyA","AAA",meta.getVersion())]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["AAA", rc.get("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;replace;["keyA", "AAAA"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertFalse;[rc.replaceWithVersion("keyA","AAA",meta.getVersion())]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["AAAA", rc.get("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;put;["keyA", "AAAAA", 10, TimeUnit.MILLISECONDS, 20, TimeUnit.MILLISECONDS]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[rc.containsKey("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;remove;["keyA"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertFalse;[rc.containsKey("keyA")]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, rc.size()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testPutAndGetBulk</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>RemoteCache&lt;String,Integer&gt; [rc=remoteCacheManager.getCache("off-heap-default")]</InnerVar>
+                <InnerVar>Map&lt;String,Integer&gt; [values=new HashMap&lt;&gt;()]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [keys=rc.keySet()]</InnerVar>
+                <InnerVar>CloseableIterator&lt;Map.Entry&lt;Object,Object&gt;&gt; [iter=rc.retrieveEntries(null,100)]</InnerVar>
+                <InnerVar>Map&lt;String,Integer&gt; [keyVal=new HashMap&lt;&gt;(100)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>rc;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>IntStream.range(0,100);forEach;[i -&gt; values.put("key" + i,i)]</InnerMethodInvoke>
+                <InnerMethodInvoke>rc;putAll;[values]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[100, rc.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[100, keys.size()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[keys.contains("key0")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[keys.contains("key50")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertTrue;[keys.contains("key99")]</InnerMethodInvoke>
+                <InnerMethodInvoke>IntStream.range(0,100);forEach;[i -&gt; {
+  assertTrue(keyVal.containsKey("key" + i));
+  assertEquals(new Integer(i),keyVal.get("key" + i));
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

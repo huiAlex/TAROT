@@ -1,0 +1,80 @@
+<Class>
+    <Id>4060</Id>
+    <Package>org.infinispan.server.endpoint.subsystem</Package>
+    <ClassName>CacheDisablingCascadeHandler</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>OperationStepHandler</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CacheDisablingCascadeHandler  /** 
+ * @author gustavonalle
+ * @since 8.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>modelNodeOp</FieldName>
+            <FieldType>BiFunction</FieldType>
+        </Field>
+        <Field>
+            <FieldName>modelNodeOp</FieldName>
+            <FieldType>ModelNode</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CacheDisablingCascadeHandler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>modelNodeOp</ParamName>
+                    <ParamType>ModelNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>execute</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>OperationContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operation</ParamName>
+                    <ParamType>ModelNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PathAddress [address=PathAddress.pathAddress(operation.require(ModelDescriptionConstants.OP_ADDR))]</InnerVar>
+                <InnerVar>ModelNode [cacheNames=operation.get(ModelKeys.CACHE_NAMES)]</InnerVar>
+                <InnerVar>Resource [endpointResource=context.readResourceForUpdate(PathAddress.EMPTY_ADDRESS)]</InnerVar>
+                <InnerVar>Stream&lt;Resource.ResourceEntry&gt; [connectorResources=endpointResource.getChildTypes().stream().flatMap(type -&gt; endpointResource.getChildren(type).stream())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>connectorResources;forEach;[resourceEntry -&gt; {
+  ModelNode list=resourceEntry.getModel().get(ModelKeys.IGNORED_CACHES);
+  ModelNode result=modelNodeOp.apply(list,cacheNames);
+  PathElement pathElement=resourceEntry.getPathElement();
+  ModelNode op=Operations.createWriteAttributeOperation(PathAddress.pathAddress(address,pathElement),ModelKeys.IGNORED_CACHES,result);
+  context.addStep(op,new CacheIgnoreReadWriteHandler(CommonConnectorResource.IGNORED_CACHES),OperationContext.Stage.MODEL);
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>OperationFailedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

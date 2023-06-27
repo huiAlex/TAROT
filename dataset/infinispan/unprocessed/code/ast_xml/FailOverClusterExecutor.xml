@@ -1,0 +1,376 @@
+<Class>
+    <Id>4095</Id>
+    <Package>org.infinispan.manager.impl</Package>
+    <ClassName>FailOverClusterExecutor</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ClusterExecutor</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>FailOverClusterExecutor  /** 
+ * Cluster Executor that submits to a single node at a time, but allows for automatic failover up to a certain number of times. The subsequent node where the retry is chosen at random. &lt;p&gt; This executor currently only functions properly when using a single submission cluster executor such as {@link LocalClusterExecutor} and {@link SingleClusterExecutor}
+ * @author wburns
+ * @since 9.1
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isTrace</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>executor</FieldName>
+            <FieldType>ClusterExecutor</FieldType>
+        </Field>
+        <Field>
+            <FieldName>failOverCount</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>FailOverClusterExecutor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>executor</ParamName>
+                    <ParamType>ClusterExecutor</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>failOverCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>submit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>Runnable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CompletableFuture&lt;Void&gt; [future=new CompletableFuture&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;submit;[command, future, failOverCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>submit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>command</ParamName>
+                    <ParamType>Runnable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>future</ParamName>
+                    <ParamType>Void</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>retriesLeft</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>executor.submit(command);whenComplete;[(v,t) -&gt; {
+  if (t != null) {
+    if (t instanceof TimeoutException) {
+      log.tracef("Command %s was met with timeout",command);
+      future.completeExceptionally(t);
+    }
+ else     if (retriesLeft &gt; 0) {
+      log.tracef("Retrying command %s - retries left %d",command,retriesLeft);
+      submit(command,future,retriesLeft - 1);
+    }
+ else {
+      log.tracef("No retries left for command %s, passing last exception to user",command);
+      future.completeExceptionally(t);
+    }
+  }
+ else {
+    log.tracef("Command %s completed successfully",command);
+    future.complete(null);
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>submitConsumer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>callable</ParamName>
+                    <ParamType>? super EmbeddedCacheManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>triConsumer</ParamName>
+                    <ParamType>? super Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>CompletableFuture&lt;Void&gt; [future=new CompletableFuture&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;submitConsumer;[callable, triConsumer, future, failOverCount]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>submitConsumer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>function</ParamName>
+                    <ParamType>? super EmbeddedCacheManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>triConsumer</ParamName>
+                    <ParamType>? super Address</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>future</ParamName>
+                    <ParamType>Void</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>retriesLeft</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>executor.submitConsumer(function,triConsumer);whenComplete;[(v,t) -&gt; {
+  if (t != null) {
+    if (t instanceof TimeoutException) {
+      log.tracef("Function %s was met with timeout",function);
+      future.completeExceptionally(t);
+    }
+ else     if (retriesLeft &gt; 0) {
+      log.tracef("Retrying function %s - retries left %d",function,retriesLeft);
+      submitConsumer(function,triConsumer,future,retriesLeft - 1);
+    }
+ else {
+      log.tracef("No retries left for function %s, passing last exception to user",function);
+      future.completeExceptionally(t);
+    }
+  }
+ else {
+    log.tracef("Function %s completed successfully",function);
+    future.complete(null);
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>timeout</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>time</ParamName>
+                    <ParamType>long</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>TimeUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.timeout(time,unit)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>singleNodeSubmission</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>singleNodeSubmission</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>failOverCount</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>allNodeSubmission</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterTargets</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>predicate</ParamName>
+                    <ParamType>? super Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.filterTargets(predicate)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterTargets</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>policy</ParamName>
+                    <ParamType>ClusterExecutionPolicy</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.filterTargets(policy)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IllegalStateException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterTargets</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>policy</ParamName>
+                    <ParamType>ClusterExecutionPolicy</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>predicate</ParamName>
+                    <ParamType>? super Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.filterTargets(policy,predicate)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IllegalStateException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>filterTargets</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>addresses</ParamName>
+                    <ParamType>Address</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.filterTargets(addresses)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>noFilter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClusterExecutor</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ClusterExecutor [newExecutor=executor.noFilter()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

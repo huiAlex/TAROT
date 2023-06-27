@@ -1,0 +1,314 @@
+<Class>
+    <Id>543</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.physicalLayer.relationalOperators</Package>
+    <ClassName>MultiQueryPackager</ClassName>
+    <SuperClass>Packager</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MultiQueryPackager  /** 
+ * The package operator that packages the globally rearranged tuples into output format as required by multi-query de-multiplexer. &lt;p&gt; This operator is used when merging multiple Map-Reduce splittees into a Map-only splitter during multi-query optimization. The package operators of the reduce plans of the splittees form an indexed package list inside this operator. When this operator receives an input, it extracts the index from the key and calls the corresponding package to get the output data. &lt;p&gt; Due to the recursive nature of multi-query optimization, this operator may be contained in another multi-query packager. &lt;p&gt; The successor of this operator must be a PODemux operator which knows how to consume the output of this operator.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>serialVersionUID</FieldName>
+            <FieldType>long</FieldType>
+        </Field>
+        <Field>
+            <FieldName>idxPart</FieldName>
+            <FieldType>int</FieldType>
+        </Field>
+        <Field>
+            <FieldName>packagers</FieldName>
+            <FieldType>List</FieldType>
+        </Field>
+        <Field>
+            <FieldName>packagers</FieldName>
+            <FieldType>Packager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isKeyWrapped</FieldName>
+            <FieldType>ArrayList</FieldType>
+        </Field>
+        <Field>
+            <FieldName>isKeyWrapped</FieldName>
+            <FieldType>Boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>sameMapKeyType</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>inCombiner</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>keyWritable</FieldName>
+            <FieldType>PigNullableWritable</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>addPackager</MethodName>
+            <MethodComment>/** 
+ * Appends the specified package object to the end of the package list.
+ * @param pack package to be appended to the list
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pkgr</ParamName>
+                    <ParamType>Packager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>packagers;add;[pkgr]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addPackager</MethodName>
+            <MethodComment>/** 
+ * Appends the specified package object to the end of the package list.
+ * @param pack package to be appended to the list
+ * @param mapKeyType the map key type associated with the package
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pkgr</ParamName>
+                    <ParamType>Packager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>mapKeyType</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>packagers;add;[pkgr]</InnerMethodInvoke>
+                <InnerMethodInvoke>isKeyWrapped;add;[mapKeyType == DataType.TUPLE ? false : true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getPackagers</MethodName>
+            <MethodComment>/** 
+ * Returns the list of packages.
+ * @return the list of the packages
+ */
+</MethodComment>
+            <ReturnType>Packager</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNext</MethodName>
+            <MethodComment>/** 
+ * Constructs the output tuple from the inputs. &lt;p&gt; The output is consumed by for the demultiplexer operator (PODemux) in the format (key, {bag of tuples}) where key is an indexed WritableComparable, not the wrapped value as a pig type.
+ */
+</MethodComment>
+            <ReturnType>Result</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>byte [origIndex=keyWritable.getIndex()]</InnerVar>
+                <InnerVar>int [index=(int)origIndex]</InnerVar>
+                <InnerVar>Packager [pkgr=packagers.get(index)]</InnerVar>
+                <InnerVar>PigNullableWritable [curKey=keyWritable]</InnerVar>
+                <InnerVar>Result [res=pkgr.getNext()]</InnerVar>
+                <InnerVar>Tuple [tuple=(Tuple)res.result]</InnerVar>
+                <InnerVar>Object [obj=tuple.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>pkgr;attachInput;[curKey, bags, readOnce]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;detachInput;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;detachInput;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getIsKeyWrappedList</MethodName>
+            <MethodComment>/** 
+ * Returns the list of booleans that indicates if the key needs to unwrapped for the corresponding plan.
+ * @return the list of isKeyWrapped boolean values
+ */
+</MethodComment>
+            <ReturnType>Boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addIsKeyWrappedList</MethodName>
+            <MethodComment>/** 
+ * Adds a list of IsKeyWrapped boolean values
+ * @param lst the list of boolean values to add
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>lst</ParamName>
+                    <ParamType>Boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setInCombiner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>inCombiner</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isInCombiner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>setSameMapKeyType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sameMapKeyType</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isSameMapKeyType</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getNumInputs</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>int</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>index</ParamName>
+                    <ParamType>byte</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getValueTuple</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>keyWritable</ParamName>
+                    <ParamType>PigNullableWritable</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ntup</ParamName>
+                    <ParamType>NullableTuple</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>origIndex</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [index=origIndex &amp; idxPart]</InnerVar>
+                <InnerVar>PigNullableWritable [newKey=keyWritable]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

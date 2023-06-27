@@ -1,0 +1,469 @@
+<Class>
+    <Id>196</Id>
+    <Package>org.codehaus.groovy.transform</Package>
+    <ClassName>CategoryASTTransformation</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ASTTransformation</SuperInterface>
+        <SuperInterface>Opcodes</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CategoryASTTransformation  /** 
+ * Handles generation of code for the @Category annotation. &lt;p&gt; Transformation logic is as follows: &lt;ul&gt; &lt;li&gt;all non-static methods converted to static ones with an additional 'self' parameter&lt;/li&gt; &lt;li&gt;references to 'this' changed to the additional 'self' parameter&lt;/li&gt; &lt;/ul&gt;
+ * @author Alex Tkachman
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>thisExpression</FieldName>
+            <FieldType>VariableExpression</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>createThisExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>VariableExpression</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>VariableExpression [expr=new VariableExpression("$this")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>expr;setClosureSharedVariable;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visit</MethodName>
+            <MethodComment>/** 
+ * Property invocations done on 'this' reference are transformed so that the invocations at runtime are done on the additional parameter 'self'
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>nodes</ParamName>
+                    <ParamType>ASTNode[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AnnotationNode [annotation=(AnnotationNode)nodes[0]]</InnerVar>
+                <InnerVar>ClassNode [parent=(ClassNode)nodes[1]]</InnerVar>
+                <InnerVar>ClassNode [targetClass=getTargetClass(source,annotation)]</InnerVar>
+                <InnerVar>LinkedList&lt;Set&lt;String&gt;&gt; [varStack=new LinkedList&lt;Set&lt;String&gt;&gt;()]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [names=new HashSet&lt;String&gt;()]</InnerVar>
+                <InnerVar>Reference [parameter=new Reference()]</InnerVar>
+                <InnerVar>ClassCodeExpressionTransformer [expressionTransformer=new ClassCodeExpressionTransformer(){
+  protected SourceUnit getSourceUnit(){
+    return source;
+  }
+  private void addVariablesToStack(  Parameter[] params){
+    Set&lt;String&gt; names=new HashSet&lt;String&gt;();
+    names.addAll(varStack.getLast());
+    for (    Parameter param : params) {
+      names.add(param.getName());
+    }
+    varStack.add(names);
+  }
+  @Override public void visitCatchStatement(  CatchStatement statement){
+    varStack.getLast().add(statement.getVariable().getName());
+    super.visitCatchStatement(statement);
+    varStack.getLast().remove(statement.getVariable().getName());
+  }
+  @Override public void visitMethod(  MethodNode node){
+    addVariablesToStack(node.getParameters());
+    super.visitMethod(node);
+    varStack.removeLast();
+  }
+  @Override public void visitBlockStatement(  BlockStatement block){
+    Set&lt;String&gt; names=new HashSet&lt;String&gt;();
+    names.addAll(varStack.getLast());
+    varStack.add(names);
+    super.visitBlockStatement(block);
+    varStack.remove(names);
+  }
+  @Override public void visitClosureExpression(  ClosureExpression ce){
+    addVariablesToStack(ce.getParameters());
+    super.visitClosureExpression(ce);
+    varStack.removeLast();
+  }
+  @Override public void visitDeclarationExpression(  DeclarationExpression expression){
+    if (expression.isMultipleAssignmentDeclaration()) {
+      TupleExpression te=expression.getTupleExpression();
+      List&lt;Expression&gt; list=te.getExpressions();
+      for (      Expression arg : list) {
+        VariableExpression ve=(VariableExpression)arg;
+        varStack.getLast().add(ve.getName());
+      }
+    }
+ else {
+      VariableExpression ve=expression.getVariableExpression();
+      varStack.getLast().add(ve.getName());
+    }
+    super.visitDeclarationExpression(expression);
+  }
+  @Override public void visitForLoop(  ForStatement forLoop){
+    Expression exp=forLoop.getCollectionExpression();
+    exp.visit(this);
+    Parameter loopParam=forLoop.getVariable();
+    if (loopParam != null) {
+      varStack.getLast().add(loopParam.getName());
+    }
+    super.visitForLoop(forLoop);
+  }
+  @Override public void visitExpressionStatement(  ExpressionStatement es){
+    Expression exp=es.getExpression();
+    if (exp instanceof DeclarationExpression) {
+      exp.visit(this);
+    }
+    super.visitExpressionStatement(es);
+  }
+  @Override public Expression transform(  Expression exp){
+    if (exp instanceof VariableExpression) {
+      VariableExpression ve=(VariableExpression)exp;
+      if (ve.getName().equals("this"))       return thisExpression;
+ else {
+        if (!varStack.getLast().contains(ve.getName())) {
+          return new PropertyExpression(thisExpression,ve.getName());
+        }
+      }
+    }
+ else     if (exp instanceof PropertyExpression) {
+      PropertyExpression pe=(PropertyExpression)exp;
+      if (pe.getObjectExpression() instanceof VariableExpression) {
+        VariableExpression vex=(VariableExpression)pe.getObjectExpression();
+        if (vex.isThisExpression()) {
+          pe.setObjectExpression(thisExpression);
+          return pe;
+        }
+      }
+    }
+ else     if (exp instanceof ClosureExpression) {
+      ClosureExpression ce=(ClosureExpression)exp;
+      ce.getVariableScope().putReferencedLocalVariable((Parameter)parameter.get());
+      Parameter[] params=ce.getParameters();
+      if (params == null) {
+        params=Parameter.EMPTY_ARRAY;
+      }
+ else       if (params.length == 0) {
+        params=new Parameter[]{new Parameter(ClassHelper.OBJECT_TYPE,"it")};
+      }
+      addVariablesToStack(params);
+      ce.getCode().visit(this);
+      varStack.removeLast();
+    }
+    return super.transform(exp);
+  }
+}
+]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>thisExpression;setType;[targetClass]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;add;[names]</InnerMethodInvoke>
+                <InnerMethodInvoke>new VariableScopeVisitor(source,true);visitClass;[parent]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSourceUnit</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SourceUnit</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addVariablesToStack</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>params</ParamName>
+                    <ParamType>Parameter[]</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [names=new HashSet&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>names;addAll;[varStack.getLast()]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;add;[names]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitCatchStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>statement</ParamName>
+                    <ParamType>CatchStatement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>varStack.getLast();add;[statement.getVariable().getName()]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack.getLast();remove;[statement.getVariable().getName()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitMethod</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>MethodNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addVariablesToStack;[node.getParameters()]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;removeLast;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitBlockStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>block</ParamName>
+                    <ParamType>BlockStatement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;String&gt; [names=new HashSet&lt;String&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>names;addAll;[varStack.getLast()]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;add;[names]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;remove;[names]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitClosureExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ce</ParamName>
+                    <ParamType>ClosureExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;addVariablesToStack;[ce.getParameters()]</InnerMethodInvoke>
+                <InnerMethodInvoke>varStack;removeLast;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitDeclarationExpression</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>expression</ParamName>
+                    <ParamType>DeclarationExpression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitForLoop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>forLoop</ParamName>
+                    <ParamType>ForStatement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [exp=forLoop.getCollectionExpression()]</InnerVar>
+                <InnerVar>Parameter [loopParam=forLoop.getVariable()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>exp;visit;[this]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitExpressionStatement</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>es</ParamName>
+                    <ParamType>ExpressionStatement</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [exp=es.getExpression()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>transform</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Expression</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>exp</ParamName>
+                    <ParamType>Expression</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>ensureNoInstanceFieldOrProperty</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parent</ParamName>
+                    <ParamType>ClassNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>boolean [valid=true]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addUnsupportedError</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ASTNode</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>unit</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>unit.getErrorCollector();addErrorAndContinue;[new SyntaxErrorMessage(new SyntaxException("The @Category transformation does not support instance " + (node instanceof FieldNode ? "fields" : "properties") + " but found ["+ getName(node)+ "]",node.getLineNumber(),node.getColumnNumber()),unit)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getName</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>String</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>node</ParamName>
+                    <ParamType>ASTNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTargetClass</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ClassNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>source</ParamName>
+                    <ParamType>SourceUnit</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>annotation</ParamName>
+                    <ParamType>AnnotationNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Expression [value=annotation.getMember("value")]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

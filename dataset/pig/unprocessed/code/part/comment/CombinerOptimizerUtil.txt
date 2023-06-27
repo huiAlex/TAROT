@@ -1,0 +1,140 @@
+/**
+     * Algebraic functions and distinct in nested plan of a foreach are
+     * partially computed in the map and combine phase. A new foreach statement
+     * with initial and intermediate forms of algebraic functions are added to
+     * map and combine plans respectively.
+     *
+     * If bag portion of group-by result is projected or a non algebraic
+     * expression/udf has bag as input, combiner will not be used. This is
+     * because the use of combiner in such case is likely to degrade performance
+     * as there will not be much reduction in data size in combine stage to
+     * offset the cost of the additional number of times (de)serialization is
+     * done.
+     *
+     * Major areas for enhancement:
+     * 1. use of combiner in cogroup
+     * 2. queries with order-by, limit or sort in a nested foreach after group-by
+     * 3. case where group-by is followed by filter that has algebraic expression
+     */
+
+/**
+     * Translate POForEach in combiner into a POPartialAgg
+     * @param combineFE
+     * @return partial aggregate operator
+     *      */
+
+/**
+     * find algebraic operators and also check if the foreach statement is
+     * suitable for combiner use
+     * @param feInners inner plans of foreach
+     * @return null if plan is not combinable, otherwise list of combinable operators
+     *      */
+
+/**
+     * Look for a algebraic POUserFunc as successor to this project, called
+     * recursively to skip any other projects seen on the way.
+     * @param proj project
+     * @param pplan physical plan
+     * @return null if any operator other POProject or algebraic POUserFunc is
+     * found while going down the plan, otherwise algebraic POUserFunc is returned
+     */
+
+/**
+     * Create a new foreach with same scope,alias as given foreach
+     * add an inner plan that projects the group column, which is going to be
+     * the first input
+     * @param foreach source foreach
+     * @param keyType type for group-by key
+     * @return new POForeach
+     */
+
+/**
+     * Create new plan and  add to it the clones of operator algeOp  and its
+     * predecessors from the physical plan pplan .
+     * @param algeOp algebraic operator
+     * @param pplan physical plan that has algeOp
+     * @return new plan
+     *      *      */
+
+/**
+     * Recursively clone op and its predecessors from pplan and add them to newplan
+     * @param op
+     * @param pplan
+     * @param newplan
+     * @return
+     *      *      */
+
+/**
+     * add algebraic functions with appropriate projection to new foreach in combiner
+     * @param cfe - the new foreach in combiner
+     * @param op2newpos - mapping of physical operator to position in input
+     *      *      */
+
+/**
+     * Replace old POLocalRearrange with new pre-combine LR,
+     * add new map foreach, new map-local-rearrange, and connect them
+     *
+     * @param mapPlan
+     * @param preCombinerLR
+     * @param mfe
+     * @param mapAgg
+     * @param mlr
+     *      */
+
+/**
+     * @param rearrange
+     * @return
+     */
+
+/**
+     * @param op
+     * @param index
+     * @param plan
+     *      */
+
+/**
+     * Change the algebriac function type for algebraic functions in map and combine
+     * In map and combine the algebraic functions will be leaf of the plan
+     * @param fe
+     * @param type
+     *      */
+
+/**
+     * create new Local rearrange by cloning existing rearrange and
+     * add plan for projecting the key
+     * @param rearrange
+     * @return
+     *      *      */
+
+/**
+     * Checks if there is something that prevents the use of algebraic interface,
+     * and looks for the PODistinct that can be used as algebraic
+     */
+
+/**
+     * A visitor to replace
+     * Project[bag][*]
+     *  |
+     *  |---PODistinct[bag]
+     * with
+     * POUserFunc(org.apache.pig.builtin.Distinct)[DataBag]
+     */
+
+/**
+         * @return the distinct
+         */
+
+/**
+         * @param plan
+         * @param walker
+         */
+
+/**
+         * @param physicalPlan
+         */
+
+/**
+         * @param plan
+         * @param walker
+         */
+

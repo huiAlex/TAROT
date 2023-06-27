@@ -1,0 +1,228 @@
+<Class>
+    <Id>56</Id>
+    <Package>org.apache.pig.backend.hadoop.accumulo</Package>
+    <ClassName>AccumuloStorage</ClassName>
+    <SuperClass>AbstractAccumuloStorage</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AccumuloStorage  /** 
+ * Basic PigStorage implementation that uses Accumulo as the backing store. &lt;p&gt; When writing data, the first entry in the  {@link Tuple} is treated as the rowin the Accumulo key, while subsequent entries in the tuple are handled as columns in that row.  {@link Map}s are expanded, placing the map key in the column family and the map value in the Accumulo value. Scalars are placed directly into the value with an empty column qualifier. If the columns argument on the constructor is omitted, null or the empty String, no column family is provided on the Keys created for Accumulo &lt;/p&gt; &lt;p&gt; When reading data, if aggregateColfams is true, elements in the same row and column family are aggregated into a single  {@link Map}. This will result in a {@link Tuple} of length (unique_column_families + 1) for the given row. IfaggregateColfams is false, column family and column qualifier are concatenated (separated by a colon), and placed into a  {@link Map}. This will result in a  {@link Tuple} with two entries, where the latter element has anumber of elements equal to the number of columns in the given row. &lt;/p&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Logger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>COLON</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_TEXT</FieldName>
+            <FieldType>Text</FieldType>
+        </Field>
+        <Field>
+            <FieldName>EMPTY_DATA_BYTE_ARRAY</FieldName>
+            <FieldType>DataByteArray</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_cfHolder</FieldName>
+            <FieldType>Text</FieldType>
+        </Field>
+        <Field>
+            <FieldName>_cqHolder</FieldName>
+            <FieldType>Text</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>AccumuloStorage</MethodName>
+            <MethodComment>/** 
+ * Creates an AccumuloStorage which writes all values in a  {@link Tuple}with an empty column family and doesn't group column families together on read (creates on  {@link Map} for all columns)
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ParseException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>AccumuloStorage</MethodName>
+            <MethodComment>/** 
+ * Create an AccumuloStorage with a CSV of columns-families to use on write and whether columns in a row should be grouped by family on read.
+ * @param columns A comma-separated list of column families to use when writing data, aligned to the n'th entry in the tuple
+ * @param aggregateColfams Should unique column qualifier and value pairs be grouped together by column family when reading data
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columns</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ParseException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>AccumuloStorage</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>columnStr</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>args</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ParseException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getTuple</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Tuple</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>key</ParamName>
+                    <ParamType>Key</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>value</ParamName>
+                    <ParamType>Value</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>SortedMap&lt;Key,Value&gt; [rowKVs=WholeRowIterator.decodeRow(key,value)]</InnerVar>
+                <InnerVar>Tuple [tuple=TupleFactory.getInstance().newTuple(columns.size() + 1)]</InnerVar>
+                <InnerVar>Text [cfHolder=new Text()]</InnerVar>
+                <InnerVar>Text [cqHolder=new Text()]</InnerVar>
+                <InnerVar>Text [row=key.getRow()]</InnerVar>
+                <InnerVar>int [tupleOffset=0]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>tuple;set;[tupleOffset, new DataByteArray(Text.decode(row.getBytes(),0,row.getLength()))]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>configureInputFormat</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>AccumuloInputFormat;addIterator;[job, new IteratorSetting(100,WholeRowIterator.class)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getMutations</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Mutation</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>tuple</ParamName>
+                    <ParamType>Tuple</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ResourceFieldSchema[] [fieldSchemas=(schema == null) ? null : schema.getFields()]</InnerVar>
+                <InnerVar>Iterator&lt;Object&gt; [tupleIter=tuple.iterator()]</InnerVar>
+                <InnerVar>Mutation [mutation=new Mutation(objectToText(tupleIter.next(),(null == fieldSchemas) ? null : fieldSchemas[0]))]</InnerVar>
+                <InnerVar>int [tupleOffset=1]</InnerVar>
+                <InnerVar>Iterator&lt;Column&gt; [columnIter=columns.iterator()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addColumn</MethodName>
+            <MethodComment>/** 
+ * Adds the given column family, column qualifier and value to the given mutation
+ * @param mutation
+ * @param colfam
+ * @param colqual
+ * @param columnValue
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>mutation</ParamName>
+                    <ParamType>Mutation</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colfam</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>colqual</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>columnValue</ParamName>
+                    <ParamType>Value</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mutation;put;[_cfHolder, _cqHolder, columnValue]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

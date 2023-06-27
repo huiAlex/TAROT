@@ -1,0 +1,170 @@
+<Class>
+    <Id>3432</Id>
+    <Package>org.infinispan.marshall.core</Package>
+    <ClassName>JBossMarshaller</ClassName>
+    <SuperClass>AbstractJBossMarshaller</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>StreamingMarshaller</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>JBossMarshaller  /** 
+ * A JBoss Marshalling based marshaller that is oriented at internal, embedded, Infinispan usage. It uses of a custom object table for Infinispan based Externalizer instances that are either internal or user defined. &lt;p /&gt; The reason why this is implemented specially in Infinispan rather than resorting to Java serialization or even the more efficient JBoss serialization is that a lot of efficiency can be gained when a majority of the serialization that occurs has to do with a small set of known types such as  {@link org.infinispan.transaction.xa.GlobalTransaction} or{@link org.infinispan.commands.ReplicableCommand}, and class type information can be replaced with simple magic numbers. &lt;p/&gt; Unknown types (typically user data) falls back to Java serialization.
+ * @author Galder Zamarreño
+ * @author Sanne Grinovero
+ * @since 4.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>globalCfg</FieldName>
+            <FieldType>GlobalConfiguration</FieldType>
+        </Field>
+        <Field>
+            <FieldName>marshaller</FieldName>
+            <FieldType>GlobalMarshaller</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>JBossMarshaller</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>JBossMarshaller</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>marshaller</ParamName>
+                    <ParamType>GlobalMarshaller</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>globalCfg</ParamName>
+                    <ParamType>GlobalConfiguration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>start</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>ClassResolver [classResolver=globalCfg.serialization().classResolver()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseCfg;setClassExternalizerFactory;[new SerializeWithExtFactory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>baseCfg;setObjectTable;[new ObjectTable(){
+  @Override public Writer getObjectWriter(  Object object) throws IOException {
+    BiConsumer&lt;ObjectOutput,Object&gt; writer=marshaller.findWriter(object);
+    return writer != null ? writer::accept : null;
+  }
+  @Override public Object readObject(  Unmarshaller unmarshaller) throws IOException, ClassNotFoundException {
+    AdvancedExternalizer&lt;Object&gt; ext=marshaller.findExternalizerIn(unmarshaller);
+    return ext.readObject(unmarshaller);
+  }
+}
+]</InnerMethodInvoke>
+                <InnerMethodInvoke>baseCfg;setClassResolver;[classResolver]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getObjectWriter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Writer</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>object</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>BiConsumer&lt;ObjectOutput,Object&gt; [writer=marshaller.findWriter(object)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>readObject</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>unmarshaller</ParamName>
+                    <ParamType>Unmarshaller</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AdvancedExternalizer&lt;Object&gt; [ext=marshaller.findExternalizerIn(unmarshaller)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stop</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>baseCfg;setClassResolver;[null]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>isMarshallableCandidate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>o</ParamName>
+                    <ParamType>Object</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,159 @@
+<Class>
+    <Id>3418</Id>
+    <Package>org.infinispan.executors</Package>
+    <ClassName>DefaultExecutorFactory</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>SecurityAwareExecutorFactory</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>DefaultExecutorFactory  /** 
+ * Default executor factory that creates executors using the JDK Executors service.
+ * @author Manik Surtani
+ * @author Tristan Tarrant
+ * @since 4.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>counter</FieldName>
+            <FieldType>AtomicInteger</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>getExecutor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ExecutorService</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getExecutor</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ExecutorService</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>p</ParamName>
+                    <ParamType>Properties</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>AccessControlContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>TypedProperties [tp=TypedProperties.toTypedProperties(p)]</InnerVar>
+                <InnerVar>int [maxThreads=tp.getIntProperty("maxThreads",1)]</InnerVar>
+                <InnerVar>int [queueSize=tp.getIntProperty("queueSize",100000)]</InnerVar>
+                <InnerVar>int [coreThreads=queueSize == 0 ? 1 : tp.getIntProperty("coreThreads",maxThreads)]</InnerVar>
+                <InnerVar>long [keepAliveTime=tp.getLongProperty("keepAliveTime",60000)]</InnerVar>
+                <InnerVar>int [threadPrio=tp.getIntProperty("threadPriority",Thread.MIN_PRIORITY)]</InnerVar>
+                <InnerVar>String [threadNamePrefix=tp.getProperty("threadNamePrefix",tp.getProperty("componentName","Thread"))]</InnerVar>
+                <InnerVar>String [threadNameSuffix=tp.getProperty("threadNameSuffix","")]</InnerVar>
+                <InnerVar>BlockingQueue&lt;Runnable&gt; [queue=queueSize == 0 ? new SynchronousQueue&lt;Runnable&gt;() : new LinkedBlockingQueue&lt;Runnable&gt;(queueSize)]</InnerVar>
+                <InnerVar>ThreadFactory [tf=new ThreadFactory(){
+  private Thread createThread(  Runnable r){
+    String threadName=threadNamePrefix + "-" + counter.getAndIncrement()+ threadNameSuffix;
+    Thread th=new Thread(r,threadName);
+    th.setDaemon(true);
+    th.setPriority(threadPrio);
+    return th;
+  }
+  @Override public Thread newThread(  Runnable r){
+    final Runnable runnable=r;
+    final AccessControlContext acc;
+    if (System.getSecurityManager() != null &amp;&amp; (acc=context) != null) {
+      return AccessController.doPrivileged(new PrivilegedAction&lt;Thread&gt;(){
+        @Override public Thread run(){
+          return createThread(runnable);
+        }
+      }
+,acc);
+    }
+ else {
+      return createThread(runnable);
+    }
+  }
+}
+]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createThread</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Thread</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Runnable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String [threadName=threadNamePrefix + "-" + counter.getAndIncrement()+ threadNameSuffix]</InnerVar>
+                <InnerVar>Thread [th=new Thread(r,threadName)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>th;setDaemon;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>th;setPriority;[threadPrio]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>newThread</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Thread</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>r</ParamName>
+                    <ParamType>Runnable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Runnable [runnable=r]</InnerVar>
+                <InnerVar>AccessControlContext [acc]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Thread</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,173 @@
+<Class>
+    <Id>520</Id>
+    <Package>org.infinispan.query.affinity</Package>
+    <ClassName>AffinityErrorHandler</ClassName>
+    <SuperClass>WrappingErrorHandler</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AffinityErrorHandler  /** 
+ * Handles errors occurred in the  {@link AffinityIndexManager}.
+ * @since 9.0
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rpcManager</FieldName>
+            <FieldType>RpcManager</FieldType>
+        </Field>
+        <Field>
+            <FieldName>asyncExecutor</FieldName>
+            <FieldType>ExecutorService</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>AffinityErrorHandler</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>handler</ParamName>
+                    <ParamType>ErrorHandler</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initialize</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>rpcManager</ParamName>
+                    <ParamType>RpcManager</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>asyncExecutor</ParamName>
+                    <ParamType>ExecutorService</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>errorOccurred</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>ErrorContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>AffinityIndexManager [affinityIndexManager=(AffinityIndexManager)context.getIndexManager()]</InnerVar>
+                <InnerVar>ShardAddress [localShardAddress=affinityIndexManager.getLocalShardAddress()]</InnerVar>
+                <InnerVar>List&lt;LuceneWork&gt; [failed=this.extractFailedWorks(context)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>this;clearLockIfNeeded;[affinityIndexManager]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;debugf;["Retrying operations %s at %s", failed, affinityIndexManager.getLocalShardAddress()]</InnerMethodInvoke>
+                <InnerMethodInvoke>CompletableFuture.supplyAsync(() -&gt; {
+  affinityIndexManager.performOperations(failed,null,true,true);
+  return null;
+}
+,asyncExecutor);whenComplete;[(aVoid,error) -&gt; {
+  if (error == null) {
+    log.debugf("Operation %s completed at %s",failed,localShardAddress);
+  }
+ else {
+    log.errorf(error,"Error reapplying operation %s at %s",failed,localShardAddress);
+  }
+}
+]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>clearLockIfNeeded</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>affinityIndexManager</ParamName>
+                    <ParamType>AffinityIndexManager</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;Address&gt; [members=rpcManager.getMembers()]</InnerVar>
+                <InnerVar>Address [lockHolder=affinityIndexManager.getLockHolder()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;debugf;["Current members are %s, lock holder is %s", members, lockHolder]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>extractFailedWorks</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>LuceneWork</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>errorContext</ParamName>
+                    <ParamType>ErrorContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;LuceneWork&gt; [failingOperations=errorContext.getFailingOperations()]</InnerVar>
+                <InnerVar>LuceneWork [operationAtFault=errorContext.getOperationAtFault()]</InnerVar>
+                <InnerVar>List&lt;LuceneWork&gt; [failed=new ArrayList&lt;&gt;(failingOperations)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>failed;add;[operationAtFault]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldHandle</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>context</ParamName>
+                    <ParamType>ErrorContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Throwable [throwable=context.getThrowable()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

@@ -1,0 +1,187 @@
+<Class>
+    <Id>1089</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.spark.optimizer</Package>
+    <ClassName>CombinerOptimizer</ClassName>
+    <SuperClass>SparkOpPlanVisitor</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>CombinerOptimizer  /** 
+ * This class goes through the physical plan are replaces GlobalRearrange with ReduceBy where there are algebraic operations.
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOG</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>CombinerOptimizer</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>plan</ParamName>
+                    <ParamType>SparkOperPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>visitSparkOp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>sparkOp</ParamName>
+                    <ParamType>SparkOperator</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addCombiner</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>phyPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [leaves=phyPlan.getLeaves()]</InnerVar>
+                <InnerVar>List&lt;POGlobalRearrange&gt; [glrs=PlanHelper.getPhysicalOperators(phyPlan,POGlobalRearrange.class)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>CloneNotSupportedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>fixReduceSideFE</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>postReduceFE</ParamName>
+                    <ParamType>POForEach</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>algebraicOps</ParamName>
+                    <ParamType>Pair&lt;PhysicalOperator,PhysicalPlan&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>int [i=1]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>postReduceFE;setResultType;[DataType.TUPLE]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>convertToMapSideForEach</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>physicalPlan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>poPackage</ParamName>
+                    <ParamType>POPackage</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>LinkedList&lt;PhysicalOperator&gt; [operatorsToRemove=new LinkedList&lt;&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>physicalPlan;removeAndReconnect;[poPackage]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>updatePackager</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reduceOperator</ParamName>
+                    <ParamType>POReduceBySpark</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lrearrange</ParamName>
+                    <ParamType>POLocalRearrange</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Packager [pkgr=reduceOperator.getPKGOp().getPkgr()]</InnerVar>
+                <InnerVar>Map&lt;Integer,Pair&lt;Boolean,Map&lt;Integer,Integer&gt;&gt;&gt; [keyInfo=pkgr.getKeyInfo()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>keyInfo;put;[Integer.valueOf(lrearrange.getIndex()), new Pair&lt;Boolean,Map&lt;Integer,Integer&gt;&gt;(lrearrange.isProjectStar(),lrearrange.getProjectedColsMap())]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;setKeyInfo;[keyInfo]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;setKeyTuple;[lrearrange.isKeyTuple()]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgr;setKeyCompound;[lrearrange.isKeyCompound()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>OptimizerException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getAlgebraicSuccessor</MethodName>
+            <MethodComment>/** 
+ * Look for a algebraic POUserFunc that is the leaf of an input plan.
+ * @param pplan physical plan
+ * @return null if any operator other POProject or non-algebraic POUserFunc isfound while going down the plan, otherwise algebraic POUserFunc is returned
+ */
+</MethodComment>
+            <ReturnType>POUserFunc</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pplan</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;PhysicalOperator&gt; [leaves=pplan.getLeaves()]</InnerVar>
+                <InnerVar>PhysicalOperator [succ=leaves.get(0)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

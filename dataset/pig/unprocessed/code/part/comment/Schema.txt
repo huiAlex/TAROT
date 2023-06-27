@@ -1,0 +1,390 @@
+/**
+ * The Schema class encapsulates the notion of a schema for a relational operator.
+ * A schema is a list of columns that describe the output of a relational operator.
+ * Each column in the relation is represented as a FieldSchema, a static class inside
+ * the Schema. A column by definition has an alias, a type and a possible schema (if the
+ * column is a bag or a tuple). In addition, each column in the schema has a unique
+ * auto generated name used for tracking the lineage of the column in a sequence of
+ * statements.
+ *
+ * The lineage of the column is tracked using a map of the predecessors' columns to
+ * the operators that generate the predecessor columns. The predecessor columns are the
+ * columns required in order to generate the column under consideration.  Similarly, a
+ * reverse lookup of operators that generate the predecessor column to the predecessor
+ * column is maintained.
+ */
+
+/**
+     * @param fields List of field schemas that describes the fields.
+     */
+
+/**
+     * Create a schema with only one field.
+     * @param fieldSchema field to put in this schema.
+     */
+
+/**
+     * Copy Constructor.
+     * @param s source schema
+     */
+
+/**
+     * Given an alias name, find the associated FieldSchema.
+     * @param alias Alias to look up.
+     * @return FieldSchema, or null if no such alias is in this tuple.
+     */
+
+/**
+     * Given an alias name, find the associated FieldSchema. If exact name is 
+     * not found see if any field matches the part of the 'namespaced' alias.
+     * eg. if given alias is nm::a , and schema is (a,b). It will return 
+     * FieldSchema of a.
+     * if given alias is nm::a and schema is (nm2::a, b), it will return null
+     * @param alias Alias to look up.
+     * @return FieldSchema, or null if no such alias is in this tuple.
+     */
+
+/**
+     * Given a field number, find the associated FieldSchema.
+     *
+     * @param fieldNum
+     *            Field number to look up.
+     * @return FieldSchema for this field.
+     *      *             if the field number exceeds the number of fields in the
+     *             tuple.
+     */
+
+/**
+     * Find the number of fields in the schema.
+     *
+     * @return number of fields.
+     */
+
+/**
+     * Reconcile this schema with another schema.  The schema being reconciled
+     * with should have the same number of columns.  The use case is where a
+     * schema already exists but may not have alias and or type information.  If
+     * an alias exists in this schema and a new one is given, then the new one
+     * will be used.  Similarly with types, though this needs to be used
+     * carefully, as types should not be lightly changed.
+     * @param other Schema to reconcile with.
+     *      */
+
+/***
+     * For two schemas to be equal, they have to be deeply equal.
+     * Use Schema.equals(Schema schema,
+                         Schema other,
+                         boolean relaxInner,
+                         boolean relaxAlias)
+       if relaxation of aliases is a requirement.
+     */
+
+/**
+     * Make a deep copy of a schema.
+     *      */
+
+/**
+     * no-op if indentLevel is negative.
+     * otherwise, print newline and 4*indentLevel spaces.
+     */
+
+/**
+     * Given an alias, find the associated position of the field schema.
+     *
+     * @param alias
+     *            alias of the FieldSchema.
+     * @return position of the FieldSchema.
+     */
+
+/**
+     * Given an alias, find the associated position of the field schema.
+     * It uses getFieldSubNameMatch to look for subName matches as well.
+     * @param alias
+     *            alias of the FieldSchema.
+     * @return position of the FieldSchema.
+     */
+
+/**
+     * Recursively compare two schemas to check if the input schema 
+     * can be cast to the cast schema
+     * @param cast schema of the cast operator
+     * @param  input schema of the cast input
+     * @return true or falsew!
+     */
+
+/**
+     * Recursively compare two schemas for equality
+     * @param schema
+     * @param other
+     * @param relaxInner if true, inner schemas will not be checked
+     * @param relaxAlias if true, aliases will not be checked
+     * @return true if schemas are equal, false otherwise
+     */
+
+/***
+     * Merge this schema with the other schema
+     * @param other the other schema to be merged with
+     * @param otherTakesAliasPrecedence true if aliases from the other
+     *                                  schema take precedence
+     * @return the merged schema, null if they are not compatible
+     */
+
+/***
+     * Recursively merge two schemas
+     * @param schema the initial schema
+     * @param other the other schema to be merged with
+     * @param otherTakesAliasPrecedence true if aliases from the other
+     *                                  schema take precedence
+     * @return the merged schema, null if they are not compatible
+     */
+
+/***
+     * Recursively merge two schemas
+     * @param schema the initial schema
+     * @param other the other schema to be merged with
+     * @param otherTakesAliasPrecedence true if aliases from the other
+     *                                  schema take precedence
+     * @param allowDifferentSizeMerge allow merging of schemas of different types
+     * @param allowIncompatibleTypes 1) if types in schemas are not compatible
+     *                               they will be treated as ByteArray (untyped)
+     *                               2) if schemas in schemas are not compatible
+     *                               and allowIncompatibleTypes is true
+     *                               those inner schemas in the output
+     *                               will be null.
+     * @return the merged schema this can be null if one schema is null and
+     *         allowIncompatibleTypes is true
+     *
+     *      */
+
+/***
+     * Merge two aliases. If one of aliases is null, return the other.
+     * Otherwise check the precedence condition
+     * @param alias
+     * @param other
+     * @param otherTakesPrecedence
+     * @return
+     */
+
+/**
+     * Merges collection of schemas using their column aliases 
+     * (unlike mergeSchema(..) functions which merge using positions)
+     * Schema will not be merged if types are incompatible, 
+     * as per DataType.mergeType(..)
+     * For Tuples and Bags, SubSchemas have to be equal be considered compatible
+     * @param schemas - list of schemas to be merged using their column alias
+     * @return merged schema
+     *      */
+
+/**
+     * Merges two schemas using their column aliases 
+     * (unlike mergeSchema(..) functions which merge using positions)
+     * Schema will not be merged if types are incompatible, 
+     * as per DataType.mergeType(..)
+     * For Tuples and Bags, SubSchemas have to be equal be considered compatible
+     * @param schema1
+     * @param schema2
+     * @return Merged Schema
+     *      */
+
+/**
+     * Schema will not be merged if types are incompatible, 
+     * as per DataType.mergeType(..)
+     * For Tuples and Bags, SubSchemas have to be equal be considered compatible
+     * Aliases are assumed to be same for both
+     * @param fs1
+     * @param fs2
+     * @return
+     *      */
+
+/**
+     * If one of the aliases is of form 'nm::str1', and other is of the form
+     * 'str1', this returns str1
+     * @param alias1
+     * @param alias2
+     * @return merged alias
+     *      */
+
+/**
+     * Utility function that calls schema.getFiled(alias), and converts 
+     * {@link FrontendException} to {@link SchemaMergeException}
+     * @param schema
+     * @param alias
+     * @return FieldSchema
+     *      */
+
+/**
+     * 
+     * @param topLevelType DataType type of the top level element
+     * @param innerTypes DataType types of the inner level element
+     * @return nested schema representing type of top level element at first level and inner schema
+	 * representing types of inner element(s)
+     */
+
+/***
+     * Recursively prefix merge two schemas
+     * @param other the other schema to be merged with
+     * @param otherTakesAliasPrecedence true if aliases from the other
+     *                                  schema take precedence
+     * @return the prefix merged schema this can be null if one schema is null and
+     *         allowIncompatibleTypes is true
+     *
+     *      */
+
+/**
+     * Recursively set NULL type to the specifid type in a schema
+     * @param s the schema whose NULL type has to be set 
+     * @param t the specified type
+     */
+
+/**
+     * @return the twoLevelAccess
+     * @deprecated twoLevelAccess is no longer needed
+     */
+
+/**
+     * @param twoLevelAccess the twoLevelAccess to set
+     * @deprecated twoLevelAccess is no longer needed
+     */
+
+/**
+     * Look for a FieldSchema instance in the schema hierarchy which has the given canonical name.
+     * @param canonicalName canonical name
+     * @return the FieldSchema instance found
+     */
+
+/**
+         * 
+         */
+
+/**
+         * Alias for this field.
+         */
+
+/**
+         * Datatype, using codes from {@link org.apache.pig.data.DataType}.
+         */
+
+/**
+         * If this is a tuple itself, it can have a schema. Otherwise this field
+         * must be null.
+         */
+
+/**
+         * Canonical name.  This name uniquely identifies a field throughout
+         * the query.  Unlike a an alias, it cannot be changed.  It will
+         * change when the field is transformed in some way (such as being
+         * used in an arithmetic expression or passed to a udf).  At that
+         * point a new canonical name will be generated for the field.
+         */
+
+/**
+         * Canonical namer object to generate new canonical names on
+         * request. In order to ensure unique and consistent names, across
+         * all field schema objects, the object is made static.
+         */
+
+/**
+         * Constructor for any type.
+         * 
+         * @param a
+         *            Alias, if known. If unknown leave null.
+         * @param t
+         *            Type, using codes from
+         *            {@link org.apache.pig.data.DataType}.
+         */
+
+/**
+         * Constructor for tuple fields.
+         * 
+         * @param a
+         *            Alias, if known. If unknown leave null.
+         * @param s
+         *            Schema of this tuple.
+         */
+
+/**
+         * Constructor for tuple fields.
+         * 
+         * @param a
+         *            Alias, if known. If unknown leave null.
+         * @param s
+         *            Schema of this tuple.
+         * @param t
+         *            Type, using codes from
+         *            {@link org.apache.pig.data.DataType}.
+         * 
+         */
+
+/**
+         * Copy Constructor.
+         * 
+         * @param fs
+         *           Source FieldSchema
+         * 
+         */
+
+/**
+         *  Two field schemas are equal if types and schemas
+         *  are equal in all levels.
+         *
+         *  In order to relax alias equivalent requirement,
+         *  instead use equals(FieldSchema fschema,
+                               FieldSchema fother,
+                               boolean relaxInner,
+                               boolean relaxAlias)
+          */
+
+/**
+         * Recursively compare two schemas to check if the input schema 
+         * can be cast to the cast schema
+         * @param castFs schema of the cast operator
+         * @param  inputFs schema of the cast input
+         * @return true or falsew!
+         */
+
+/***
+         * Compare two field schema for equality
+         * @param fschema
+         * @param fother
+         * @param relaxInner If true, we don't check inner tuple schemas
+         * @param relaxAlias If true, we don't check aliases
+         * @return true if FieldSchemas are equal, false otherwise
+         */
+
+/**
+         * Make a deep copy of this FieldSchema and return it.
+         * @return clone of the this FieldSchema.
+         *          */
+
+/***
+        * Recursively prefix merge two schemas
+        * @param otherFs the other field schema to be merged with
+        * @return the prefix merged field schema this can be null if one schema is null and
+        *         allowIncompatibleTypes is true
+        *
+        *         */
+
+/***
+         * Recursively prefix merge two schemas
+         * @param otherFs the other field schema to be merged with
+         * @param otherTakesAliasPrecedence true if aliases from the other
+         *                                  field schema take precedence
+         * @return the prefix merged field schema this can be null if one schema is null and
+         *         allowIncompatibleTypes is true
+         *
+         *          */
+
+/**
+         * Recursively set NULL type to the specifid type 
+         * @param fs the field schema whose NULL type has to be set 
+         * @param t the specified type
+         */
+
+/**
+         * Find a field schema instance in this FieldSchema hierarchy (including "this")
+         * that matches the given canonical name.
+         * 
+         * @param canonicalName canonical name
+         * @return the FieldSchema instance found
+         */
+

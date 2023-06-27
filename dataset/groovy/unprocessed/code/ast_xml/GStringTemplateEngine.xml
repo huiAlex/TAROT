@@ -1,0 +1,318 @@
+<Class>
+    <Id>728</Id>
+    <Package>groovy.text</Package>
+    <ClassName>GStringTemplateEngine</ClassName>
+    <SuperClass>TemplateEngine</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>GStringTemplateEngine  /** 
+ * Processes template source files substituting variables and expressions into placeholders in a template source text to produce the desired output using a streaming approach. This engine has equivalent functionality to the {@link SimpleTemplateEngine} but creates the template using writableclosures making it potentially more scalable for large templates or in streaming scenarios. &lt;p&gt; The template engine uses JSP style &amp;lt;% %&amp;gt; script and &amp;lt;%= %&amp;gt; expression syntax or GString style expressions. The variable '&lt;code&gt;out&lt;/code&gt;' is bound to the writer that the template is being written to. &lt;p&gt; Frequently, the template source will be in a file but here is a simple example providing the template as a string: &lt;pre&gt; def binding = [ firstname : "Grace", lastname  : "Hopper", accepted  : true, title     : 'Groovy for COBOL programmers' ] def engine = new groovy.text.GStringTemplateEngine() def text = '''\ Dear &amp;lt;%= firstname %&amp;gt; $lastname, We &amp;lt;% if (accepted) print 'are pleased' else print 'regret' %&amp;gt; \ to inform you that your paper entitled '$title' was ${ accepted ? 'accepted' : 'rejected' }. The conference committee. ''' def template = engine.createTemplate(text).make(binding) println template.toString() &lt;/pre&gt; This example uses a mix of the JSP style and GString style placeholders but you can typically use just one style if you wish. Running this example will produce this output: &lt;pre&gt; Dear Grace Hopper, We are pleased to inform you that your paper entitled 'Groovy for COBOL programmers' was accepted. The conference committee. &lt;/pre&gt; The template engine can also be used as the engine for  {@link groovy.servlet.TemplateServlet} by placing thefollowing in your &lt;code&gt;web.xml&lt;/code&gt; file (plus a corresponding servlet-mapping element): &lt;pre&gt; &amp;lt;servlet&amp;gt; &amp;lt;servlet-name&amp;gt;GStringTemplate&amp;lt;/servlet-name&amp;gt; &amp;lt;servlet-class&amp;gt;groovy.servlet.TemplateServlet&amp;lt;/servlet-class&amp;gt; &amp;lt;init-param&amp;gt; &amp;lt;param-name&amp;gt;template.engine&amp;lt;/param-name&amp;gt; &amp;lt;param-value&amp;gt;groovy.text.GStringTemplateEngine&amp;lt;/param-value&amp;gt; &amp;lt;/init-param&amp;gt; &amp;lt;/servlet&amp;gt; &lt;/pre&gt; In this case, your template source file should be HTML with the appropriate embedded placeholders.
+ * @author tug@wilson.co.uk
+ * @author Paul King
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>parentLoader</FieldName>
+            <FieldType>ClassLoader</FieldType>
+        </Field>
+        <Field>
+            <FieldName>counter</FieldName>
+            <FieldType>AtomicInteger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>reuseClassLoader</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+        <Field>
+            <FieldName>template</FieldName>
+            <FieldType>Closure</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>GStringTemplateEngine</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>GStringTemplateEngine</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>parentLoader</ParamName>
+                    <ParamType>ClassLoader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createTemplate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Template</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CompilationFailedException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>GStringTemplate</MethodName>
+            <MethodComment>/** 
+ * Turn the template into a writable Closure When executed the closure evaluates all the code embedded in the template and then writes a GString containing the fixed and variable items to the writer passed as a parameter &lt;p&gt; For example: &lt;p&gt; '&lt;%= "test" %&gt; of expr and &lt;% test = 1 %&gt;${test} script.' &lt;p&gt; would compile into: &lt;p&gt; { out -&gt; out &lt;&lt; "${"test"} of expr and "; test = 1 ; out &lt;&lt; "${test} script."}.asWritable()
+ * @param reader
+ * @param parentLoader
+ * @throws CompilationFailedException
+ * @throws ClassNotFoundException
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>parentLoader</ParamName>
+                    <ParamType>ClassLoader</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>StringBuilder [templateExpressions=new StringBuilder("package groovy.tmp.templates\n def getTemplate() { return { out -&gt; out &lt;&lt; \"\"\"")]</InnerVar>
+                <InnerVar>boolean [writingString=true]</InnerVar>
+                <InnerVar>GroovyClassLoader [loader=reuseClassLoader &amp;&amp; parentLoader instanceof GroovyClassLoader ? (GroovyClassLoader)parentLoader : ((GroovyClassLoader)AccessController.doPrivileged(new PrivilegedAction(){
+  public Object run(){
+    return new GroovyClassLoader(parentLoader);
+  }
+}
+))]</InnerVar>
+                <InnerVar>Class [groovyClass]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>templateExpressions;append;["}}"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>CompilationFailedException</ExceptionType>
+                <ExceptionType>ClassNotFoundException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Object</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>appendCharacter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>c</ParamName>
+                    <ParamType>char</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateExpressions</ParamName>
+                    <ParamType>StringBuilder</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>writingString</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>templateExpressions;append;[c]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseGSstring</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>writingString</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateExpressions</ParamName>
+                    <ParamType>StringBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseSection</MethodName>
+            <MethodComment>/** 
+ * Parse a &lt;% .... %&gt; section if we are writing a GString close and append ';' then write the section as a statement
+ * @param pendingC
+ * @param reader
+ * @param writingString
+ * @param templateExpressions
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>pendingC</ParamName>
+                    <ParamType>int</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>writingString</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateExpressions</ParamName>
+                    <ParamType>StringBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>templateExpressions;append;[(char)pendingC]</InnerMethodInvoke>
+                <InnerMethodInvoke>templateExpressions;append;[";\n "]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>parseExpression</MethodName>
+            <MethodComment>/** 
+ * Parse a &lt;%= .... %&gt; expression
+ * @param reader
+ * @param writingString
+ * @param templateExpressions
+ * @throws IOException
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>reader</ParamName>
+                    <ParamType>Reader</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>writingString</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>templateExpressions</ParamName>
+                    <ParamType>StringBuilder</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>templateExpressions;append;["${"]</InnerMethodInvoke>
+                <InnerMethodInvoke>templateExpressions;append;['}']</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>make</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Writable</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>make</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Writable</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>map</ParamName>
+                    <ParamType>Map</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Closure [template=((Closure)this.template.clone()).asWritable()]</InnerVar>
+                <InnerVar>Binding [binding=new Binding(map)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>template;setDelegate;[binding]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

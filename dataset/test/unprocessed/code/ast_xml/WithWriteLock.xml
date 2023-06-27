@@ -1,0 +1,13 @@
+<Class>
+    <Id>752</Id>
+    <Package>groovy.transform</Package>
+    <ClassName>WithWriteLock</ClassName>
+    <ClassComment>WithWriteLock  /** 
+ * This annotation is used in conjunction with  {@link WithReadLock} to support read and write synchronization on a method.&lt;p&gt; To use this annotation, declare  {@code @WithWriteLock} on your method. The method may be either an instance method ora static method. The resulting method will allow only one thread access to the method at a time, and will wait to access the method until any other read locks have been released. &lt;p&gt; This annotation is a declarative wrapper around the JDK's &lt;code&gt;java.util.concurrent.locks.ReentrantReadWriteLock&lt;/code&gt;. Objects containing this annotation will have a ReentrantReadWriteLock field named &lt;code&gt;$reentrantLock&lt;/code&gt; added to the class, and method access is protected by the lock. If the method is static then the field is static and named &lt;code&gt;$REENTRANTLOCK&lt;/code&gt;. &lt;p&gt; The annotation takes an optional parameter for the name of the field. This field must exist on the class and must be of type ReentrantReadWriteLock. &lt;p&gt; To understand how this annotation works, it is convenient to think in terms of the source code it replaces. The following is a typical usage of this annotation from Groovy: &lt;pre&gt; import groovy.transform.*; public class ResourceProvider { private final Map&amp;lt;String, String&amp;gt; data = new HashMap&amp;lt;String, String&amp;gt;(); {@code @WithReadLock}public String getResource(String key) throws Exception { return data.get(key); } {@code @WithWriteLock}public void refresh() throws Exception { //reload the resources into memory } } &lt;/pre&gt; As part of the Groovy compiler, code resembling this is produced: &lt;pre&gt; import java.util.concurrent.locks.ReentrantReadWriteLock; import java.util.concurrent.locks.ReadWriteLock; public class ResourceProvider { private final ReadWriteLock $reentrantlock = new ReentrantReadWriteLock(); private final Map&amp;lt;String, String&amp;gt; data = new HashMap&amp;lt;String, String&amp;gt;(); public String getResource(String key) throws Exception { $reentrantlock.readLock().lock(); try { return data.get(key); } finally { $reentrantlock.readLock().unlock(); } } public void refresh() throws Exception { $reentrantlock.writeLock().lock(); try { //reload the resources into memory } finally { $reentrantlock.writeLock().unlock(); } } } &lt;/pre&gt;
+ * @author Hamlet D'Arcy
+ * @since 1.8.0
+ */
+</ClassComment>
+    <FieldList/>
+    <MethodList/>
+</Class>

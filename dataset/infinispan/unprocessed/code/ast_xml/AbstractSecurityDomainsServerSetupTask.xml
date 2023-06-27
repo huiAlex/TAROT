@@ -1,0 +1,238 @@
+<Class>
+    <Id>688</Id>
+    <Package>org.infinispan.test.integration.security.tasks</Package>
+    <ClassName>AbstractSecurityDomainsServerSetupTask</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>ServerSetupTask</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>AbstractSecurityDomainsServerSetupTask  /** 
+ * {@link ServerSetupTask} instance for security domain setup. It supports JSSE configuration, JASPI authenticationconfiguration and stacks of login-modules (classic authentication), policy-modules and (role-)mapping-modules.
+ * @author &lt;a href="mailto:jcacek@redhat.com"&gt;Josef Cacek&lt;/a&gt;
+ * @author &lt;a href="mailto:vchepeli@redhat.com"&gt;Vitalii Chepeliuk&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>LOGGER</FieldName>
+            <FieldType>Logger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>ROLE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>SUBSYSTEM_SECURITY</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>managementClient</FieldName>
+            <FieldType>ManagementClient</FieldType>
+        </Field>
+        <Field>
+            <FieldName>securityDomains</FieldName>
+            <FieldType>SecurityDomain[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setup</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>managementClient</ParamName>
+                    <ParamType>ManagementClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;ModelNode&gt; [updates=new LinkedList&lt;ModelNode&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>CoreUtils;applyUpdates;[updates, managementClient.getControllerClient()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>tearDown</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>managementClient</ParamName>
+                    <ParamType>ManagementClient</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>containerId</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;ModelNode&gt; [updates=new ArrayList&lt;ModelNode&gt;()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>CoreUtils;applyUpdates;[updates, managementClient.getControllerClient()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createJaspiAuthnNodes</MethodName>
+            <MethodComment>/** 
+ * Creates authenticaton=&gt;jaspi node and its child nodes.
+ * @param securityConfigurations
+ * @return
+ */
+</MethodComment>
+            <ReturnType>ModelNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>securityConfigurations</ParamName>
+                    <ParamType>JaspiAuthn</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>domainName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>List&lt;ModelNode&gt; [steps=new ArrayList&lt;ModelNode&gt;()]</InnerVar>
+                <InnerVar>PathAddress [domainAddress=PathAddress.pathAddress().append(SUBSYSTEM,SUBSYSTEM_SECURITY).append(Constants.SECURITY_DOMAIN,domainName)]</InnerVar>
+                <InnerVar>PathAddress [jaspiAddress=domainAddress.append(Constants.AUTHENTICATION,Constants.JASPI)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>steps;add;[Util.createAddOperation(jaspiAddress)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSecurityModelNode</MethodName>
+            <MethodComment>/** 
+ * Creates a  {@link ModelNode} with the security component configuration. If the securityConfigurations array isempty or null, then null is returned.
+ * @param securityComponent name of security component (e.g. {@link Constants#AUTHORIZATION})
+ * @param subnodeName       name of the security component subnode, which holds module configurations (e.g. {@link Constants#POLICY_MODULES})
+ * @param flagAttributeName name of attribute to which the value of {@link SecurityModule#getFlag()} is set
+ * @param flagDefaultValue  default value for flagAttributeName attr.
+ * @param securityModules   configurations
+ * @return ModelNode instance or null
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>securityComponent</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>subnodeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flagAttributeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>flagDefaultValue</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>securityModules</ParamName>
+                    <ParamType>SecurityModule[]</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>domainName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>operations</ParamName>
+                    <ParamType>ModelNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>PathAddress [address=PathAddress.pathAddress().append(SUBSYSTEM,SUBSYSTEM_SECURITY).append(Constants.SECURITY_DOMAIN,domainName).append(securityComponent,Constants.CLASSIC)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>operations;add;[Util.createAddOperation(address)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createJSSENode</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>ModelNode</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jsse</ParamName>
+                    <ParamType>JSSE</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>domainName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>ModelNode [securityComponentNode=new ModelNode()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>securityComponentNode.get(OP);set;[ADD]</InnerMethodInvoke>
+                <InnerMethodInvoke>securityComponentNode.get(OP_ADDR);add;[SUBSYSTEM, SUBSYSTEM_SECURITY]</InnerMethodInvoke>
+                <InnerMethodInvoke>securityComponentNode.get(OP_ADDR);add;[Constants.SECURITY_DOMAIN, domainName]</InnerMethodInvoke>
+                <InnerMethodInvoke>securityComponentNode.get(OP_ADDR);add;[Constants.JSSE, Constants.CLASSIC]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addSecureStore;[jsse.getTrustStore(), Constants.TRUSTSTORE, securityComponentNode]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;addSecureStore;[jsse.getKeyStore(), Constants.KEYSTORE, securityComponentNode]</InnerMethodInvoke>
+                <InnerMethodInvoke>securityComponentNode.get(OPERATION_HEADERS).get(ALLOW_RESOURCE_SERVICE_RESTART);set;[true]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>addSecureStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>secureStore</ParamName>
+                    <ParamType>SecureStore</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>storeName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>jsseNode</ParamName>
+                    <ParamType>ModelNode</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getSecurityDomains</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>SecurityDomain[]</ReturnType>
+            <ParameterList/>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

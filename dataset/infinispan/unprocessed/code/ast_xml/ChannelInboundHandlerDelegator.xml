@@ -1,0 +1,77 @@
+<Class>
+    <Id>2562</Id>
+    <Package>org.infinispan.server.router.router.impl.rest.handlers</Package>
+    <ClassName>ChannelInboundHandlerDelegator</ClassName>
+    <SuperClass>SimpleChannelInboundHandler</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>ChannelInboundHandlerDelegator  /** 
+ * Handler responsible for dispatching requests into proper REST handlers.
+ * @author Sebastian Łaskawiec
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>logger</FieldName>
+            <FieldType>RouterLogger</FieldType>
+        </Field>
+        <Field>
+            <FieldName>routingTable</FieldName>
+            <FieldType>RoutingTable</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>ChannelInboundHandlerDelegator</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>routingTable</ParamName>
+                    <ParamType>RoutingTable</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>channelRead0</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>ctx</ParamName>
+                    <ParamType>ChannelHandlerContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>msg</ParamName>
+                    <ParamType>FullHttpRequest</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>String[] [uriSplitted=msg.uri().split("/")]</InnerVar>
+                <InnerVar>String [context=uriSplitted[2]]</InnerVar>
+                <InnerVar>Optional&lt;Route&lt;PrefixedRouteSource,NettyRestServerRouteDestination&gt;&gt; [route=routingTable.streamRoutes(PrefixedRouteSource.class,NettyRestServerRouteDestination.class).filter(r -&gt; r.getRouteSource().getRoutePrefix().equals(context)).findAny()]</InnerVar>
+                <InnerVar>NettyRestServerRouteDestination [routeDestination=route.orElseThrow(() -&gt; logger.noRouteFound()).getRouteDesitnation()]</InnerVar>
+                <InnerVar>Http11RequestHandler [restHandler=routeDestination.getRestServer().getRestChannelInitializer().getHttp11To2UpgradeHandler().getHttp1Handler()]</InnerVar>
+                <InnerVar>String [uriWithoutMultiTenantPrefix=""]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>logger;debugf;["Decoded context %s", context]</InnerMethodInvoke>
+                <InnerMethodInvoke>msg;setUri;[uriWithoutMultiTenantPrefix]</InnerMethodInvoke>
+                <InnerMethodInvoke>restHandler;channelRead0;[ctx, msg]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

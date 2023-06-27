@@ -1,0 +1,123 @@
+<Class>
+    <Id>273</Id>
+    <Package>org.infinispan.server.router.profiling.configuration</Package>
+    <ClassName>TwoServersWithSslSni</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface>PerfTestConfiguration</SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment></ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>KEYSTORE_LOCATION_FOR_HOTROD_1</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>TRUSTSTORE_LOCATION_FOT_HOTROD_1</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEYSTORE_LOCATION_FOR_HOTROD_2</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>KEYSTORE_PASSWORD</FieldName>
+            <FieldType>char[]</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>initServers</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>HotRodServer</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>HotRodServer [hotrodServer1=HotRodTestingUtil.startHotRodServerWithoutTransport()]</InnerVar>
+                <InnerVar>HotRodServer [hotrodServer2=HotRodTestingUtil.startHotRodServerWithoutTransport()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initRoutes</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>Set&lt;Route&lt;? extends RouteSource,? extends RouteDestination&gt;&gt;</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>servers</ParamName>
+                    <ParamType>HotRodServer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>Set&lt;Route&lt;? extends RouteSource,? extends RouteDestination&gt;&gt; [routes=new HashSet&lt;&gt;()]</InnerVar>
+                <InnerVar>NettyHandlerRouteDestination [hotrod1Destination=new NettyHandlerRouteDestination("hotrod1",servers.get(0).getInitializer())]</InnerVar>
+                <InnerVar>SniNettyRouteSource [hotrod1Source=new SniNettyRouteSource("hotrod1",KEYSTORE_LOCATION_FOR_HOTROD_1,KEYSTORE_PASSWORD)]</InnerVar>
+                <InnerVar>NettyHandlerRouteDestination [hotrod2Destination=new NettyHandlerRouteDestination("hotrod2",servers.get(1).getInitializer())]</InnerVar>
+                <InnerVar>SniNettyRouteSource [hotrod2Source=new SniNettyRouteSource("hotrod2",KEYSTORE_LOCATION_FOR_HOTROD_2,KEYSTORE_PASSWORD)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>routes;add;[new Route&lt;&gt;(hotrod1Source,hotrod1Destination)]</InnerMethodInvoke>
+                <InnerMethodInvoke>routes;add;[new Route&lt;&gt;(hotrod2Source,hotrod2Destination)]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initRouter</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MultiTenantRouter</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>routes</ParamName>
+                    <ParamType>Set&lt;Route&lt;? extends RouteSource,? extends RouteDestination&gt;&gt;</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MultiTenantRouterConfigurationBuilder [routerConfigurationBuilder=new MultiTenantRouterConfigurationBuilder()]</InnerVar>
+                <InnerVar>MultiTenantRouter [router=new MultiTenantRouter(routerConfigurationBuilder.build())]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>routerConfigurationBuilder.hotrod().port(0);ip;[InetAddress.getLoopbackAddress()]</InnerMethodInvoke>
+                <InnerMethodInvoke>routes.get().stream();forEach;[r -&gt; routerConfigurationBuilder.routing().add(r)]</InnerMethodInvoke>
+                <InnerMethodInvoke>router;start;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>initClient</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>RemoteCacheManager</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>router</ParamName>
+                    <ParamType>MultiTenantRouter</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>routes</ParamName>
+                    <ParamType>Set&lt;Route&lt;? extends RouteSource,? extends RouteDestination&gt;&gt;</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>servers</ParamName>
+                    <ParamType>HotRodServer</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>InetAddress [ip=router.flatMap(r -&gt; r.getRouter(Router.Protocol.HOT_ROD)).flatMap(r -&gt; r.getIp()).get()]</InnerVar>
+                <InnerVar>int [port=router.flatMap(r -&gt; r.getRouter(Router.Protocol.HOT_ROD)).flatMap(r -&gt; r.getPort()).get()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

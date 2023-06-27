@@ -1,0 +1,153 @@
+<Class>
+    <Id>174</Id>
+    <Package>org.infinispan.server.test.cs.remote</Package>
+    <ClassName>RemoteCacheStoreIT</ClassName>
+    <SuperClass></SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>RemoteCacheStoreIT  /** 
+ * Tests remote cache store under the following circumstances: &lt;p/&gt; passivation == true --cache entries should get to the remote cache store only when evicted preload == false --after server restart, entries should be be preloaded to the cache purge == false --all entries should remain in the cache store after server restart (must be false so that we can test preload) &lt;p/&gt; Other attributes like singleton, shared, fetch-state do not make sense in single node cluster.
+ * @author &lt;a href="mailto:mgencur@redhat.com"&gt;Martin Gencur&lt;/a&gt;
+ * @author &lt;a href="mailto:tsykora@redhat.com"&gt;Tomas Sykora&lt;/a&gt;
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>CONTAINER_LOCAL</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>CONTAINER_REMOTE</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOCAL_CACHE_MANAGER</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>LOCAL_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>READONLY_CACHE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>mc</FieldName>
+            <FieldType>MemcachedClient</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>RemoteCache</FieldType>
+        </Field>
+        <Field>
+            <FieldName>cache</FieldName>
+            <FieldType>Object</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server1</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>server2</FieldName>
+            <FieldType>RemoteInfinispanServer</FieldType>
+        </Field>
+        <Field>
+            <FieldName>controller</FieldName>
+            <FieldType>ContainerController</FieldType>
+        </Field>
+        <Field>
+            <FieldName>rcm1</FieldName>
+            <FieldType>RemoteCacheManager</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>setUp</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=new ConfigurationBuilder().addServer().host(server2.getHotrodEndpoint().getInetAddress().getHostName()).port(server2.getHotrodEndpoint().getPort()).build()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testReadOnly</MethodName>
+            <MethodComment>/** 
+ * Test for read-only attribute of store - if true, no entries will be written into store
+ */
+</MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar>Configuration [conf=new ConfigurationBuilder().addServer().host(server1.getHotrodEndpoint().getInetAddress().getHostName()).port(server1.getHotrodEndpoint().getPort()).build()]</InnerVar>
+                <InnerVar>RemoteCache&lt;String,String&gt; [rc1=rcm1.getCache(READONLY_CACHE_NAME)]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [allKeys=new HashSet&lt;&gt;()]</InnerVar>
+                <InnerVar>Set&lt;String&gt; [storedKeys=rc1.keySet()]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(LOCAL_CACHE_MANAGER).getDefaultCache().getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, server1.getCacheManager(LOCAL_CACHE_MANAGER).getCache(READONLY_CACHE_NAME).getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, server1.getCacheManager(LOCAL_CACHE_MANAGER).getCache(READONLY_CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>allKeys;removeAll;[storedKeys]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>testPassivateAfterEviction</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>null;assertCleanCacheAndStore;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;set;["k1", "v1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;set;["k2", "v2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(LOCAL_CACHE_MANAGER).getDefaultCache().getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;set;["k3", "v3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[2, server1.getCacheManager(LOCAL_CACHE_MANAGER).getCache(LOCAL_CACHE_NAME).getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[1, server2.getCacheManager(LOCAL_CACHE_MANAGER).getDefaultCache().getNumberOfEntriesInMemory()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v1", mc.get("k1")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v2", mc.get("k2")]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;["v3", mc.get("k3")]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;delete;["k1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;delete;["k2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;delete;["k3"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>assertCleanCacheAndStore</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>mc;delete;["k1"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;delete;["k2"]</InnerMethodInvoke>
+                <InnerMethodInvoke>mc;delete;["k3"]</InnerMethodInvoke>
+                <InnerMethodInvoke>cache;clear;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server1.getCacheManager(LOCAL_CACHE_MANAGER).getCache(LOCAL_CACHE_NAME).getNumberOfEntries()]</InnerMethodInvoke>
+                <InnerMethodInvoke>null;assertEquals;[0, server2.getCacheManager(LOCAL_CACHE_MANAGER).getDefaultCache().getNumberOfEntries()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>

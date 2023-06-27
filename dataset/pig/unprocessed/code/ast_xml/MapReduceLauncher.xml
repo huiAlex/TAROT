@@ -1,0 +1,425 @@
+<Class>
+    <Id>945</Id>
+    <Package>org.apache.pig.backend.hadoop.executionengine.mapReduceLayer</Package>
+    <ClassName>MapReduceLauncher</ClassName>
+    <SuperClass>Launcher</SuperClass>
+    <SuperInterfaceList>
+        <SuperInterface></SuperInterface>
+    </SuperInterfaceList>
+    <ClassComment>MapReduceLauncher  /** 
+ * Main class that launches pig for Map Reduce
+ */
+</ClassComment>
+    <FieldList>
+        <Field>
+            <FieldName>SUCCEEDED_FILE_NAME</FieldName>
+            <FieldType>String</FieldType>
+        </Field>
+        <Field>
+            <FieldName>log</FieldName>
+            <FieldType>Log</FieldType>
+        </Field>
+        <Field>
+            <FieldName>aggregateWarning</FieldName>
+            <FieldType>boolean</FieldType>
+        </Field>
+    </FieldList>
+    <MethodList>
+        <Method>
+            <MethodName>MapReduceLauncher</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType></ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>Utils;addShutdownHookWithPriority;[new HangingJobKiller(), PigImplConstants.SHUTDOWN_HOOK_JOB_KILL_PRIORITY]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>kill</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>killJob</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>jobID</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>conf</ParamName>
+                    <ParamType>Configuration</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>BackendException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getError</MethodName>
+            <MethodComment>/** 
+ * Get the exception that caused a failure on the backend for a store location (if any).
+ */
+</MethodComment>
+            <ReturnType>Exception</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>spec</ParamName>
+                    <ParamType>FileSpec</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>launchPig</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>PigStats</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>php</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>grpName</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>long [sleepTime=500]</InnerVar>
+                <InnerVar>MROperPlan [mrp=compile(php,pc)]</InnerVar>
+                <InnerVar>Configuration [conf=ConfigurationUtil.toConfiguration(pc.getProperties())]</InnerVar>
+                <InnerVar>MRExecutionEngine [exe=(MRExecutionEngine)pc.getExecutionEngine()]</InnerVar>
+                <InnerVar>Properties [defaultProperties=new Properties()]</InnerVar>
+                <InnerVar>JobConf [defaultJobConf=exe.getLocalConf()]</InnerVar>
+                <InnerVar>JobClient [statsJobClient=new JobClient(exe.getJobConf())]</InnerVar>
+                <InnerVar>JobControlCompiler [jcc=new JobControlCompiler(pc,conf,ConfigurationUtil.toConfiguration(defaultProperties))]</InnerVar>
+                <InnerVar>MRIntermediateDataVisitor [intermediateVisitor=new MRIntermediateDataVisitor(mrp)]</InnerVar>
+                <InnerVar>List&lt;Job&gt; [failedJobs=new LinkedList&lt;Job&gt;()]</InnerVar>
+                <InnerVar>List&lt;NativeMapReduceOper&gt; [failedNativeMR=new LinkedList&lt;NativeMapReduceOper&gt;()]</InnerVar>
+                <InnerVar>List&lt;Job&gt; [completeFailedJobsInThisRun=new LinkedList&lt;Job&gt;()]</InnerVar>
+                <InnerVar>List&lt;Job&gt; [succJobs=new LinkedList&lt;Job&gt;()]</InnerVar>
+                <InnerVar>int [totalMRJobs=mrp.size()]</InnerVar>
+                <InnerVar>int [numMRJobsCompl=0]</InnerVar>
+                <InnerVar>double [lastProg=-1]</InnerVar>
+                <InnerVar>long [scriptSubmittedTimestamp=System.currentTimeMillis()]</InnerVar>
+                <InnerVar>JobControlThreadExceptionHandler [jctExceptionHandler=new JobControlThreadExceptionHandler()]</InnerVar>
+                <InnerVar>boolean [stop_on_failure=Boolean.valueOf(pc.getProperties().getProperty("stop.on.failure","false"))]</InnerVar>
+                <InnerVar>boolean [stoppedOnFailure=false]</InnerVar>
+                <InnerVar>boolean [failed=false]</InnerVar>
+                <InnerVar>Map&lt;Enum,Long&gt; [warningAggMap=new HashMap&lt;Enum,Long&gt;()]</InnerVar>
+                <InnerVar>int [ret=failed ? ((succJobs != null &amp;&amp; succJobs.size() &gt; 0) ? ReturnCode.PARTIAL_FAILURE : ReturnCode.FAILURE) : ReturnCode.SUCCESS]</InnerVar>
+                <InnerVar>PigStats [pigStats=PigStatsUtil.getPigStats(ret)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>ConfigurationValidator;validatePigProperties;[pc.getProperties()]</InnerMethodInvoke>
+                <InnerMethodInvoke>Utils;recomputeProperties;[defaultJobConf, defaultProperties]</InnerMethodInvoke>
+                <InnerMethodInvoke>MRScriptState.get();addWorkflowAdjacenciesToConf;[mrp, conf]</InnerMethodInvoke>
+                <InnerMethodInvoke>PigStats;start;[pc.getExecutionEngine().instantiatePigStats()]</InnerMethodInvoke>
+                <InnerMethodInvoke>MRPigStatsUtil;startCollection;[pc, statsJobClient, jcc, mrp]</InnerMethodInvoke>
+                <InnerMethodInvoke>intermediateVisitor;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>MRScriptState.get();emitProgressUpdatedNotification;[100]</InnerMethodInvoke>
+                <InnerMethodInvoke>log;info;["100% complete"]</InnerMethodInvoke>
+                <InnerMethodInvoke>MRPigStatsUtil;stopCollection;[true]</InnerMethodInvoke>
+                <InnerMethodInvoke>jcc;reset;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>ExecException</ExceptionType>
+                <ExceptionType>JobCreationException</ExceptionType>
+                <ExceptionType>Exception</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>run</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList/>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>UDFContext;setUdfContext;[udfContext.clone()]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>stopJobsOnFailure</MethodName>
+            <MethodComment>/** 
+ * If stop_on_failure is enabled and any job has failed, it stops other jobs.
+ * @param stop_on_failure whether it's enabled.
+ * @return true if there were failed jobs and stop_on_failure is enabled
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>stop_on_failure</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>InterruptedException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>notifyProgress</MethodName>
+            <MethodComment>/** 
+ * Log the progress and notify listeners if there is sufficient progress
+ * @param prog current progress
+ * @param lastProg progress last time
+ */
+</MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>prog</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>lastProg</ParamName>
+                    <ParamType>double</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>explain</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>php</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>ps</ParamName>
+                    <ParamType>PrintStream</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>format</ParamName>
+                    <ParamType>String</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>verbose</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MROperPlan [mrp=compile(php,pc)]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>log;trace;["Entering MapReduceLauncher.explain"]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>compile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>MROperPlan</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>php</ParamName>
+                    <ParamType>PhysicalPlan</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pc</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>MRCompiler [comp=new MRCompiler(php,pc)]</InnerVar>
+                <InnerVar>MROperPlan [plan=comp.getMRPlan()]</InnerVar>
+                <InnerVar>String [lastInputChunkSize=pc.getProperties().getProperty("last.input.chunksize",JoinPackager.DEFAULT_CHUNK_SIZE)]</InnerVar>
+                <InnerVar>String [prop=pc.getProperties().getProperty(PigConfiguration.PIG_EXEC_NO_COMBINER)]</InnerVar>
+                <InnerVar>SampleOptimizer [so=new SampleOptimizer(plan,pc)]</InnerVar>
+                <InnerVar>POPackageAnnotator [pkgAnnotator=new POPackageAnnotator(plan)]</InnerVar>
+                <InnerVar>LastInputStreamingOptimizer [liso=new MRCompiler.LastInputStreamingOptimizer(plan,lastInputChunkSize)]</InnerVar>
+                <InnerVar>KeyTypeDiscoveryVisitor [kdv=new KeyTypeDiscoveryVisitor(plan)]</InnerVar>
+                <InnerVar>NoopFilterRemover [fRem=new NoopFilterRemover(plan)]</InnerVar>
+                <InnerVar>boolean [isMultiQuery=Boolean.valueOf(pc.getProperties().getProperty(PigConfiguration.PIG_OPT_MULTIQUERY,"true"))]</InnerVar>
+                <InnerVar>NoopStoreRemover [sRem=new NoopStoreRemover(plan)]</InnerVar>
+                <InnerVar>EndOfAllInputSetter [checker=new EndOfAllInputSetter(plan)]</InnerVar>
+                <InnerVar>boolean [isAccum=Boolean.valueOf(pc.getProperties().getProperty("opt.accumulator","true"))]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke>comp;compile;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>comp;aggregateScalarsFiles;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>comp;connectSoftLink;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>comp.getMessageCollector();logMessages;[MessageType.Warning, aggregateWarning, log]</InnerMethodInvoke>
+                <InnerMethodInvoke>so;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>pkgAnnotator;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>liso;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>kdv;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>fRem;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>sRem;visit;[]</InnerMethodInvoke>
+                <InnerMethodInvoke>checker;visit;[]</InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>PlanException</ExceptionType>
+                <ExceptionType>IOException</ExceptionType>
+                <ExceptionType>VisitorException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>shouldMarkOutputDir</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>boolean</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>createSuccessFile</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>store</ParamName>
+                    <ParamType>POStore</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>IOException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>computeWarningAggregate</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>aggMap</ParamName>
+                    <ParamType>Enum</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar></InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType></ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+        <Method>
+            <MethodName>getStats</MethodName>
+            <MethodComment></MethodComment>
+            <ReturnType>void</ReturnType>
+            <ParameterList>
+                <Parameter>
+                    <ParamName>job</ParamName>
+                    <ParamType>Job</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>errNotDbg</ParamName>
+                    <ParamType>boolean</ParamType>
+                </Parameter>
+                <Parameter>
+                    <ParamName>pigContext</ParamName>
+                    <ParamType>PigContext</ParamType>
+                </Parameter>
+            </ParameterList>
+            <InnerVarList>
+                <InnerVar>JobID [MRJobID=job.getAssignedJobID()]</InnerVar>
+                <InnerVar>String [jobMessage=job.getMessage()]</InnerVar>
+                <InnerVar>Exception [backendException=null]</InnerVar>
+            </InnerVarList>
+            <InnerMethodInvokeList>
+                <InnerMethodInvoke></InnerMethodInvoke>
+            </InnerMethodInvokeList>
+            <ThrowExceptionList>
+                <ExceptionType>ExecException</ExceptionType>
+            </ThrowExceptionList>
+        </Method>
+    </MethodList>
+</Class>
